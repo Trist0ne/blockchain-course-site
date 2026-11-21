@@ -169,7 +169,7 @@
              el('div', { class: 'btn-row', style: 'margin-top:0' }, el('button', { class: 'btn', type: 'button', id: 'key-again', text: 'Download the key again', onclick: function () { Kit.download(g.keyName, g.keyText); } }))]),
 
       g.code ? el('section', { class: 'panel', id: 'step-code' }, el('h2', { text: (n++) + '. Write down the class code' }),
-        el('p', null, 'Students type it at every sign-in. It goes on the board.'),
+        el('p', null, 'It goes on the board. Students type it the first time they use a computer; that computer then remembers it.'),
         el('div', { class: 'hexblock', style: 'font-size:1.3rem;font-weight:650;text-align:center', id: 'class-code', text: g.code }),
         el('div', { class: 'btn-row' }, el('button', { class: 'btn', type: 'button', text: 'Copy the code', onclick: function () { Kit.copy(g.code).then(function () { codeCopied.textContent = 'Copied.'; }); } }), codeCopied),
         el('p', { class: 'small muted', style: 'margin-top:.5rem' }, 'It is shown only now and stored nowhere. If you lose it, come back to this page and make a new one.')) : null,
@@ -195,7 +195,7 @@
       el('section', { class: 'panel', id: 'step-next' }, el('h2', { text: (n++) + '. Before the first day' }),
         el('ul', null,
           el('li', null, el('a', { href: 'ref/seed-backup.html', target: '_blank', text: 'Print the seed phrase backup cards' }), ', one per student (four to a sheet).'),
-          el('li', null, g.code ? 'Give each student a handle, and write the class code on the board.' : 'Give each student a handle. With no inbox, they hand in their work as codes (Copy or Download).'),
+          el('li', null, g.code ? 'Write the class code on the board. Students choose their own handle (firstname.lastname) and type the code once per computer.' : 'Students choose their own handle (firstname.lastname). With no inbox, they hand in their work as codes (Copy or Download).'),
           el('li', null, 'To see results, open ', el('code', { text: 'instructor/dashboard/index.html' }), ' from your copy of the course repo and load the class key.')))];
     // replaceChildren prints a skipped step as the word "null", so drop the gaps first
     $('out').replaceChildren.apply($('out'), parts.filter(Boolean));

@@ -12,10 +12,10 @@
   var Kit = {};
   var enc = new TextEncoder();
   var dec = new TextDecoder();
-  Kit.version = '0.7.0';
+  Kit.version = '0.8.0';
   /* Which course commit this site was cut from. tools/cut_delivery.py rewrites this line; 'dev' means an uncut working copy.
      Every record carries it, so a class can always be graded with the course repo as it was when the class was cut. */
-  Kit.build = { commit: '8add9cafa853', date: '2026-11-21' };
+  Kit.build = { commit: '254ce9f3f751', date: '2026-11-21' };
   /* Where this file was loaded from, so pages at any depth can link to shared pages such as setup.html. */
   var here = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
   Kit.base = here.replace(/kit\.js(\?.*)?$/, '');
@@ -235,9 +235,12 @@
     if (Kit.identity()) return Promise.resolve(Kit.me());
     return new Promise(function (resolve) {
       var inbox = Kit.inbox();
-      var codeIn = inbox ? el('input', { type: 'text', class: 'mono', placeholder: 'four words, from the board', autocomplete: 'off', id: 'kit-code' }) : null;
+      /* The class code is a shared classroom secret, not a personal one, so this computer may remember it.
+         (The seed phrase is never remembered.) */
+      var codeKey = 'code:' + (Kit.cls().classId || ''), savedCode = inbox ? Kit.store.get(codeKey, '') : '';
+      var codeIn = inbox ? el('input', { type: 'text', class: 'mono', placeholder: 'four words, from the board', autocomplete: 'off', id: 'kit-code', value: savedCode || null }) : null;
       var phraseIn = el('textarea', { class: 'mono', rows: '2', placeholder: 'your 12 words, in order', id: 'kit-phrase', spellcheck: 'false', autocomplete: 'off' });
-      var handleIn = el('input', { type: 'text', class: 'mono', placeholder: 'e.g. falcon-07', autocomplete: 'off', maxlength: '40', id: 'kit-handle' });
+      var handleIn = el('input', { type: 'text', class: 'mono', placeholder: 'firstname.lastname', autocomplete: 'off', maxlength: '40', id: 'kit-handle' });
       var msg = el('div', { id: 'kit-msg' }), panel;
 
       function fail(text) { msg.replaceChildren(el('div', { class: 'callout bad', text: text })); }
@@ -246,8 +249,8 @@
         if (!inbox) return Promise.resolve('');
         var code = Kit.normCode(codeIn.value);
         if (!code) { fail('Enter the class code your instructor wrote on the board.'); return Promise.resolve(null); }
-        return Kit.unlockToken(inbox.locked, code).then(function () { return code; },
-          function () { fail('That class code doesn\'t unlock this class. Check the spelling against the board.'); return null; });
+        return Kit.unlockToken(inbox.locked, code).then(function () { Kit.store.set(codeKey, code); return code; },
+          function () { Kit.store.del(codeKey); fail('That class code doesn\'t unlock this class. Check the spelling against the board.'); return null; });
       }
       function finish(code, phrase, newHandle) {
         saveIdentity({ phrase: phrase, code: code });
@@ -297,7 +300,7 @@
       panel = panelAtTop('kit-signin', [
         el('h2', { text: 'Sign in' }),
         el('p', { class: 'muted small', text: 'You sign in the way people sign in to blockchain apps: with a key only you hold. There is no account and no password, and nothing is remembered on this computer.' }),
-        codeIn ? el('label', { class: 'field' }, el('span', { text: 'Class code' }), codeIn) : null,
+        codeIn ? el('label', { class: 'field' }, el('span', { text: savedCode ? 'Class code (remembered on this computer)' : 'Class code (from the board; you type it once per computer)' }), codeIn) : null,
         el('label', { class: 'field' }, el('span', { text: 'Your seed phrase (the 12 words on your backup card)' }), phraseIn),
         el('div', { class: 'callout bad', text: NEVER }),
         el('div', { class: 'btn-row' }, el('button', { class: 'btn primary', type: 'button', id: 'kit-go', text: 'Sign in', onclick: function () {
@@ -309,16 +312,16 @@
         } })),
         el('div', { class: 'first-time' },
           el('h3', { text: 'First time?' }),
-          el('p', { class: 'muted small', text: 'Enter the handle your instructor gave you' + (inbox ? ' and the class code above' : '') + '. You only do this once: after today you sign in with your 12 words.' }),
+          el('p', { class: 'muted small', text: 'Choose your handle: firstname.lastname' + (inbox ? ', and enter the class code above' : '') + '. You only do this once: after today you sign in with your 12 words. Only your instructors see your handle.' }),
           el('div', { class: 'inline-form' }, handleIn,
             el('button', { class: 'btn', type: 'button', id: 'kit-create', text: 'Create my seed phrase', onclick: function () {
               var h = Kit.normHandle(handleIn.value);
-              if (h.length < 2) return fail('Handles are 2–40 characters: letters, digits, dot, dash or underscore.');
+              if (h.length < 2) return fail('Enter your handle as firstname.lastname (letters, digits, dot, dash or underscore).');
               checkCode().then(function (code) { if (code !== null) stepCreate(code, h); });
             } }))),
         msg
       ]);
-      (codeIn || phraseIn).focus();
+      (codeIn && !savedCode ? codeIn : phraseIn).focus();
     });
   };
 

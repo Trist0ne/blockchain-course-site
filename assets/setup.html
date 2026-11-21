@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Set up this class</title>
 <link rel="icon" href="kit/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="kit/house.css">
+<link rel="stylesheet" href="kit/house.css?v=f05aa992809b">
 <script src="kit/class.js"></script>
-<script src="items.js"></script>
-<script src="kit/kit.js"></script>
-<script src="kit/lib/wallet-lib.js"></script>
-<script src="kit/lib/course-words.js"></script>
-<script src="kit/wallet.js"></script>
+<script src="items.js?v=f05aa992809b"></script>
+<script src="kit/kit.js?v=f05aa992809b"></script>
+<script src="kit/lib/wallet-lib.js?v=f05aa992809b"></script>
+<script src="kit/lib/course-words.js?v=f05aa992809b"></script>
+<script src="kit/wallet.js?v=f05aa992809b"></script>
 </head>
 <body>
 <main class="page">
@@ -112,7 +112,7 @@
   function loadScript(src) { return new Promise(function (ok, bad) { var x = el('script', { src: src }); x.onload = ok; x.onerror = function () { bad(new Error('Could not load ' + src)); }; document.head.appendChild(x); }); }
   function siteQuizRevs() {   // { quizId: rev }, read from each quiz's own data file
     var quizzes = (window.BC_ITEMS || []).filter(function (i) { return i.kind === 'quiz'; }), revs = {};
-    return quizzes.reduce(function (p, q) { return p.then(function () { return loadScript(q.data); }).then(function () { revs[q.id] = (window.BC_QUIZ || {}).rev || null; }); }, Promise.resolve()).then(function () { return revs; });
+    return quizzes.reduce(function (p, q) { return p.then(function () { return loadScript(Kit.asset(q.data)); }).then(function () { revs[q.id] = (window.BC_QUIZ || {}).rev || null; }); }, Promise.resolve()).then(function () { return revs; });
   }
   $('s-answers').addEventListener('change', function () {
     var f = this.files[0], st = $('answers-status'); answers = null; if (!f) return;

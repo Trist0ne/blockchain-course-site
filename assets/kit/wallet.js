@@ -45,15 +45,16 @@
     return w.every(function (x) { return realWords[x] === 1; });
   }
 
-  function fromPhrase(phrase) {
-    phrase = normPhrase(phrase);
+  function fromPhrase(phrase, path) {
+    phrase = normPhrase(phrase); path = path || PATH;
     if (!validPhrase(phrase)) throw new Error('That is not a valid 12-word course seed phrase. Check the spelling and the order.');
-    var key = L.HDKey.fromMasterSeed(L.mnemonicToSeedSync(phrase)).derive(PATH);
+    var key = L.HDKey.fromMasterSeed(L.mnemonicToSeedSync(phrase)).derive(path);
     var priv = key.privateKey;
     var address = addressOf(L.secp256k1.getPublicKey(priv, false));
     return {
       address: address,
-      path: PATH,
+      pub: Kit.hex.from(L.secp256k1.getPublicKey(priv, true)),   // 33 bytes: what others seal to
+      path: path,
       /* Open something sealed to this account with sealTo(). Only the holder of these words can. */
       open: function (token) { return openSealed(token, priv); },
       /* Returns the usual Ethereum signature: 0x + r (32 bytes) + s (32) + v (1 byte, 27 or 28). */
@@ -86,17 +87,19 @@
       return c.deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: salt, info: SEAL_INFO }, hk, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
     });
   }
-  function sealTo(pubBytes, obj) {
+  function sealTo(pub, obj, prefix) {
+    var pubBytes = typeof pub === 'string' ? Kit.hex.toBytes(pub) : pub;
     var eph = L.secp256k1.keygen(), iv = root.crypto.getRandomValues(new Uint8Array(12));
     return sealKey(L.secp256k1.getSharedSecret(eph.secretKey, pubBytes), eph.publicKey).then(function (k) {
       return root.crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, k, enc.encode(JSON.stringify(obj)));
-    }).then(function (ct) { return ['BCS1', Kit.b64u.from(eph.publicKey), Kit.b64u.from(iv), Kit.b64u.from(ct)].join('.'); });
+    }).then(function (ct) { return [prefix || 'BCS1', Kit.b64u.from(eph.publicKey), Kit.b64u.from(iv), Kit.b64u.from(ct)].join('.'); });
   }
   function openSealed(token, priv) {
     var p = String(token).split('.');
-    if (p.length !== 4 || p[0] !== 'BCS1') return Promise.reject(new Error('Not sealed to an account'));
-    var epk = Kit.b64u.toBytes(p[1]);
-    return sealKey(L.secp256k1.getSharedSecret(priv, epk), epk).then(function (k) {
+    if (p.length !== 4 || !/^BC(S1|2)$/.test(p[0])) return Promise.reject(new Error('Not sealed to an account'));
+    var epk;
+    try { epk = Kit.b64u.toBytes(p[1]); Kit.b64u.toBytes(p[2]); Kit.b64u.toBytes(p[3]); } catch (e) { return Promise.reject(new Error('Not sealed to an account')); }
+    return Promise.resolve().then(function () { return sealKey(L.secp256k1.getSharedSecret(priv, epk), epk); }).then(function (k) {
       return root.crypto.subtle.decrypt({ name: 'AES-GCM', iv: Kit.b64u.toBytes(p[2]) }, k, Kit.b64u.toBytes(p[3]));
     }).then(function (pt) { return JSON.parse(new TextDecoder().decode(pt)); });
   }
@@ -129,6 +132,13 @@
   /* A strong, sayable class code: four seed-phrase words (44 bits). */
   function newClassCode() { return L.generateMnemonic(WORDS, 128).split(' ').slice(0, 4).join('-'); }
 
-  Kit.wallet = { PATH: PATH, newPhrase: newPhrase, validPhrase: validPhrase, looksReal: looksReal, normPhrase: normPhrase, fromPhrase: fromPhrase,
+  /* True when `signature` over `message` was made by the account at `address`. */
+  function signedBy(message, signature, address) {
+    try { return recover(message, signature).toLowerCase() === String(address).toLowerCase(); } catch (e) { return false; }
+  }
+
+  /* Separate derivation paths keep the three kinds of account apart even if someone reuses words:
+     a student (account 0), a class's instructors (account 1), the course's answer keys (account 2). */
+  Kit.wallet = { PATH: PATH, CLASS_PATH: "m/44'/60'/1'/0/0", COURSE_PATH: "m/44'/60'/2'/0/0", signedBy: signedBy, newPhrase: newPhrase, validPhrase: validPhrase, looksReal: looksReal, normPhrase: normPhrase, fromPhrase: fromPhrase,
     recover: recover, recoverPub: recoverPub, sealTo: sealTo, toChecksum: toChecksum, personalHash: personalHash, siwe: siwe, newClassCode: newClassCode };
 })(typeof window !== 'undefined' ? window : globalThis);

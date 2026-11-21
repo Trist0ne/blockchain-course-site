@@ -5,39 +5,42 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Class results</title>
 <link rel="icon" href="kit/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="kit/house.css?v=f05aa992809b">
+<link rel="stylesheet" href="kit/house.css?v=42196de95e4e">
 <script src="kit/class.js"></script>
-<script src="items.js?v=f05aa992809b"></script>
-<script src="kit/kit.js?v=f05aa992809b"></script>
-<script src="kit/lib/wallet-lib.js?v=f05aa992809b"></script>
-<script src="kit/lib/course-words.js?v=f05aa992809b"></script>
-<script src="kit/wallet.js?v=f05aa992809b"></script>
-<script src="kit/btc.js?v=f05aa992809b"></script>
+<script src="items.js?v=42196de95e4e"></script>
+<script src="kit/kit.js?v=42196de95e4e"></script>
+<script src="kit/lib/wallet-lib.js?v=42196de95e4e"></script>
+<script src="kit/lib/course-words.js?v=42196de95e4e"></script>
+<script src="kit/wallet.js?v=42196de95e4e"></script>
+<script src="kit/btc.js?v=42196de95e4e"></script>
 </head>
 <body>
 <main class="page wide">
   <div class="page-head">
-    <div class="eyebrow"><span class="tag accent">Instructor</span><span class="tag">Needs the class key</span></div>
+    <div class="eyebrow"><span class="tag accent">Instructor</span><span class="tag">Sign in with the instructor seed phrase</span></div>
     <h1>Class results</h1>
-    <p class="lede">Load the class key and this page does the rest: it fetches the class's records, decrypts them, checks every student's signature, grades, and totals the class. It holds no secrets itself, and everything happens in this browser.</p>
+    <p class="lede">Sign in and this page does the rest: it fetches the class's records, decrypts them, checks every student's signature, grades, and totals the class. It holds no secrets itself, and everything happens in this browser.</p>
   </div>
 
-  <section class="panel">
-    <h2>Open the class</h2>
-    <label class="field"><span>Class key file (<code>&lt;class&gt;.private.jwk.json</code>)</span><input type="file" id="keyfile" accept=".json,application/json"></label>
-    <div id="key-status" class="small muted">No key loaded.</div>
+  <section class="panel" id="signin">
+    <h2>Instructor sign-in</h2>
+    <form id="staff-form">
+      <label class="field"><span>Instructor seed phrase (this class's 12 words)</span><textarea class="mono" id="staff-phrase" rows="2" spellcheck="false" autocomplete="off" placeholder="the instructors' 12 words, in order"></textarea></label>
+      <div class="btn-row" style="margin-top:0"><button class="btn primary" type="submit" id="staff-go">Sign in</button></div>
+    </form>
+    <div id="key-status" class="small muted" style="margin-top:.5rem">Not signed in. The words are held for this browser session only.</div>
     <div id="load-status"></div>
   </section>
 
   <div id="results"></div>
 
   <details class="panel" id="other">
-    <summary style="cursor:pointer;font-weight:650">Other ways to load records, and adding answer keys</summary>
+    <summary style="cursor:pointer;font-weight:650">Other ways to load records</summary>
     <h3>Records</h3>
-    <p class="small muted">Normally the class key fetches everything. Use these for codes students handed in by hand, for a class with no inbox, or for a class set up before the key could unlock the token.</p>
+    <p class="small muted">Normally signing in fetches everything. Use these for codes students handed in by hand, or for a class with no inbox.</p>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:.75rem">
       <label class="field"><span>Class repo (owner/name)</span><input type="text" id="repo" placeholder="you/bc-2027-02"></label>
-      <label class="field"><span>Token (Issues read and write; stays in this tab)</span><input type="password" id="token" placeholder="only if the key can't unlock it"></label>
+      <label class="field"><span>Token (Issues read and write; stays in this tab)</span><input type="password" id="token" placeholder="only if signing in can't unlock it"></label>
     </div>
     <details class="hint" style="margin-bottom:.75rem"><summary>GitLab or a self-hosted server</summary>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:.75rem;margin-top:.5rem">
@@ -51,11 +54,6 @@
     </div>
     <label class="field" style="margin-top:.75rem"><span>Paste hand-in codes (any text containing them)</span><textarea class="mono" id="paste" rows="3"></textarea></label>
     <div class="btn-row" style="margin-top:0"><button class="btn" type="button" id="addpaste">Add pasted</button></div>
-    <h3>Answer keys</h3>
-    <p class="small muted">Normally stored in the class at setup. If they weren't, choose <code>instructor/answer-keys.json</code> from the course repo here, then store them so no instructor needs the file again.</p>
-    <label class="field"><span>Answer keys file</span><input type="file" id="answerfile" accept=".json,application/json"></label>
-    <div id="answer-status" class="small muted"></div>
-    <div class="btn-row" style="margin-top:.5rem"><button class="btn" type="button" id="storekeys" hidden>Store these answer keys in the class</button></div>
   </details>
 </main>
 
@@ -72,7 +70,7 @@
   function loadScript(src) { return new Promise(function (ok, bad) { var s = el('script', { src: src }); s.onload = ok; s.onerror = function () { bad(new Error('Could not load ' + src)); }; document.head.appendChild(s); }); }
   var ready = Promise.all(items.filter(function (i) { return i.kind === 'lab' && i.data; }).map(function (i) { return loadScript(Kit.asset(i.data)); }));
 
-  var state = { priv: null, privJwk: null, pubJwk: null, adminKey: null, token: '', raw: [], seen: {}, fileKeys: {}, last: null };
+  var state = { staff: null, token: '', raw: [], seen: {}, last: null };
   function status(msg, cls2) { $('load-status').replaceChildren(el('div', { class: 'callout ' + (cls2 || 'info'), text: msg })); }
   function token() { return state.token || $('token').value.trim(); }
   function inboxCfg() {
@@ -81,26 +79,29 @@
     return { platform: gl ? 'gitlab' : 'github', host: $('host').value.trim() || (gl ? 'gitlab.com' : 'github.com'), repo: repo };
   }
 
-  /* ---- The class key opens everything: the records, the inbox token and the stored answer keys ---- */
-  $('keyfile').addEventListener('change', function () {
-    var f = this.files[0]; if (!f) return;
-    f.text().then(function (t) {
-      var jwk = JSON.parse(t), pub = { kty: jwk.kty, crv: jwk.crv, x: jwk.x, y: jwk.y };
-      if (cls.publicKey && (cls.publicKey.x !== jwk.x || cls.publicKey.y !== jwk.y)) throw new Error('it is the key for a different class. This site is class ' + (cls.classId || '?') + '.');
-      return Kit.importPrivate(jwk).then(function (k) {
-        return Kit.adminKey(k, pub).then(function (ak) { state.priv = k; state.privJwk = jwk; state.pubJwk = pub; state.adminKey = ak; });
-      }).then(function () {
-        var sealed = cls.inbox && cls.inbox.sealed;
-        return sealed ? Kit.unseal(sealed, state.priv).then(function (o) { state.token = o.token || ''; }, function () { state.token = ''; }) : null;
-      });
-    }).then(function () {
-      $('key-status').replaceChildren(el('span', { class: 'solved-badge', id: 'key-ok', text: '✓ Key loaded: ' + f.name }));
-      paintStoreButton();
+  /* ---- The instructor words open everything: the records, the inbox token and the stored answer keys ---- */
+  function signIn(phrase, quiet) {
+    var acct;
+    try {
+      if (Kit.wallet.looksReal(phrase)) { $('staff-phrase').value = ''; throw new Error('Stop: that looks like a real wallet\'s seed phrase. Never type one into a website.'); }
+      acct = Kit.staffFrom(phrase);
+    } catch (e) {
+      if (!quiet) $('key-status').replaceChildren(el('div', { class: 'callout bad', text: /valid 12-word/.test(e.message) ? 'That isn\'t a valid phrase: 12 course words, in order.' : e.message }));
+      return Promise.resolve();
+    }
+    state.staff = acct; Kit.session.set('staff', Kit.wallet.normPhrase(phrase));
+    $('staff-form').hidden = true; $('staff-phrase').value = '';
+    $('key-status').replaceChildren(el('span', { class: 'solved-badge', id: 'key-ok', text: '✓ Signed in as this class\'s instructor (' + Kit.short(acct.address) + ') ' }),
+      el('button', { class: 'icon-btn', type: 'button', id: 'staff-out', text: 'Sign out', onclick: function () { Kit.session.del('staff'); location.reload(); } }));
+    var sealed = cls.inbox && cls.inbox.sealed;
+    return (sealed ? acct.open(sealed).then(function (o) { state.token = o.token || ''; }, function () { state.token = ''; }) : Promise.resolve()).then(function () {
       if (inboxCfg() && (state.token || !cls.inbox)) return fetchInbox();
-      if (inboxCfg()) { status('This class was set up before the key could unlock its inbox token. Open "Other ways to load records" below and paste a token, or fetch without one if the class repo is public.', 'warn'); $('other').open = true; }
+      if (inboxCfg()) { status('Couldn\'t unlock this class\'s inbox token. Open "Other ways to load records" below and paste a token, or fetch without one if the class repo is public.', 'warn'); $('other').open = true; }
       render();
-    }).catch(function (e) { $('key-status').replaceChildren(el('div', { class: 'callout bad', text: 'Can\'t use that file: ' + e.message })); });
-  });
+    });
+  }
+  $('staff-form').addEventListener('submit', function (e) { e.preventDefault(); signIn($('staff-phrase').value, false); });
+  if (Kit.session.get('staff', '')) signIn(Kit.session.get('staff', ''), true);   // still signed in from earlier in this browser session
 
   function addRaw(text, meta) {
     var found = String(text).match(Kit.TOKEN_RE) || [], added = 0;
@@ -132,7 +133,7 @@
   function takeHandIns(text, source) {
     var before = state.raw.length, n = addRaw(text, { source: source, time: null });
     var fresh = state.raw.slice(before), cfg = inboxCfg();
-    if (!n || !state.priv || !cfg || !token()) return Promise.resolve({ n: n, stored: 0, can: false });
+    if (!n || !state.staff || !cfg || !token()) return Promise.resolve({ n: n, stored: 0, can: false });
     return fresh.reduce(function (p, r) {
       return p.then(function (k) {
         return openRecord(r).then(function (rec) {
@@ -143,7 +144,7 @@
     }, Promise.resolve(0)).then(function (stored) { return { n: n, stored: stored, can: true }; });
   }
   function reportHandIns(r, what) {
-    status(r.n + ' new ' + what + (r.n ? r.can ? '; ' + r.stored + ' saved into the class.' : '. Load the class key first to save them into the class: for now they are only in this tab.' : '.'), r.n ? (r.can ? 'ok' : 'warn') : 'warn');
+    status(r.n + ' new ' + what + (r.n ? r.can ? '; ' + r.stored + ' saved into the class.' : '. Sign in first to save them into the class: for now they are only in this tab.' : '.'), r.n ? (r.can ? 'ok' : 'warn') : 'warn');
     render();
   }
   $('files').addEventListener('change', function () {
@@ -153,35 +154,6 @@
   });
   $('addpaste').addEventListener('click', function () { var t = $('paste').value; $('paste').value = ''; takeHandIns(t, 'handed in (pasted)').then(function (r) { reportHandIns(r, 'codes'); }); });
   $('clear').addEventListener('click', function () { state.raw = []; state.seen = {}; render(); status('Cleared.'); });
-
-  /* ---- Answer keys from a file: a fallback, and the way to add them to a class that has none ---- */
-  function paintStoreButton() { $('storekeys').hidden = !(Object.keys(state.fileKeys).length && state.adminKey && token() && inboxCfg()); }
-  $('answerfile').addEventListener('change', function () {
-    var f = this.files[0]; if (!f) return;
-    f.text().then(function (t) {
-      var b = JSON.parse(t);
-      if (!b || !b.keys) throw new Error('this is not an answer-keys file');
-      state.fileKeys = b.keys;
-      var n = Object.keys(b.keys).length;
-      $('answer-status').replaceChildren(el('span', { class: 'solved-badge', id: 'answer-ok', text: '✓ ' + n + (n === 1 ? ' quiz key' : ' quiz keys') + ' loaded from the file.' }));
-      paintStoreButton(); render();
-    }).catch(function (e) { $('answer-status').replaceChildren(el('div', { class: 'callout bad', text: 'Could not read that file: ' + e.message })); });
-  });
-  $('storekeys').addEventListener('click', function () {
-    var cfg = inboxCfg(), ids = Object.keys(state.fileKeys), btn = this; btn.disabled = true;
-    ids.reduce(function (p, qid) {
-      return p.then(function (n) {
-        return Kit.sealAdmin({ action: 'keys', quiz: qid, key: state.fileKeys[qid], at: new Date().toISOString() }, state.adminKey, state.pubJwk)
-          .then(function (code) { addRaw(code, { source: 'this session', time: null });
-            return Kit.postToInbox(cfg, token(), '[admin] keys ' + qid, 'Answer key, readable only with the class key. Do not edit.\n\n```\n' + code + '\n```\n'); })
-          .then(function () { return n + 1; }, function () { return n; });
-      });
-    }, Promise.resolve(0)).then(function (n) {
-      btn.disabled = false;
-      $('answer-status').replaceChildren(el('div', { class: 'callout ' + (n === ids.length ? 'ok' : 'warn'), id: 'keys-stored', text: n + ' of ' + ids.length + ' answer keys stored in the class. From now on the class key is all an instructor needs.' }));
-      render();
-    });
-  });
 
   /* ---- Grading ---- */
   function normShort(s) { return String(s || '').toLowerCase().replace(/[\s,_]/g, '').replace(/(satoshis|satoshi|sats|sat)$/, ''); }
@@ -201,7 +173,7 @@
 
   /* Record an instructor decision about an account, and save it to the class so it lasts and other instructors see it. */
   function decide(action, address, handle) {
-    return Kit.sealAdmin({ action: action, address: address, handle: handle, at: new Date().toISOString() }, state.adminKey, state.pubJwk).then(function (code) {
+    return Kit.staffRecord({ action: action, address: address, handle: handle, at: new Date().toISOString() }, state.staff).then(function (code) {
       addRaw(code, { source: 'this session', time: null });
       var cfg = inboxCfg();
       if (!cfg || !token()) { status('Decision applied in this tab only. It could not be saved to the class: there is no token to write with.', 'warn'); return; }
@@ -211,19 +183,19 @@
     }).then(render);
   }
   function openRecord(r) {
-    return Kit.unseal(r.token, state.priv).then(function (env) {
-      if (env && env.admin) return Kit.openAdmin(env, state.adminKey).then(function (rec) { return Object.assign({}, r, { admin: rec }); });
+    return state.staff.open(r.token).then(function (env) {
+      if (env && env.admin) return Kit.openStaffRecord(env).then(function (rec) { return Object.assign({}, r, { admin: rec }); });
       return Kit.checkSubmission(env).then(function (c) {
         return Object.assign({}, r, { p: c.p, address: c.address, when: r.time || c.p.at, pub: Kit.wallet.recoverPub(env.siwe.message, env.siwe.signature) });
       });
     }).catch(function (e) {
-      return Object.assign({}, r, { err: e && e.message && !/operation/i.test(e.name + e.message) ? e.message : 'cannot decrypt (different class key, or edited)' });
+      return Object.assign({}, r, { err: e && e.message && !/operation/i.test(e.name + e.message) ? e.message : 'cannot be opened (made for a different class, or edited)' });
     });
   }
 
   function render() {
     var out = $('results');
-    if (!state.priv) { out.replaceChildren(state.raw.length ? el('section', { class: 'panel' }, el('div', { class: 'callout warn', text: state.raw.length + ' codes loaded. Load the class key to read them.' })) : ''); return; }
+    if (!state.staff) { out.replaceChildren(state.raw.length ? el('section', { class: 'panel' }, el('div', { class: 'callout warn', text: state.raw.length + ' codes loaded. Sign in to read them.' })) : ''); return; }
     if (!state.raw.length) { out.replaceChildren(); return; }
     ready.then(function () { return Promise.all(state.raw.map(openRecord)); }).then(function (recs) {
       var problems = [], students = {}, quizzes = {}, stale = {}, builds = {}, nokey = {}, pubOf = {};
@@ -233,10 +205,9 @@
       var good = recs.filter(function (r) { return r.p; }).sort(byTime);
       var admin = recs.filter(function (r) { return r.admin; }).sort(function (a, b) { return a.admin.at < b.admin.at ? -1 : 1; });
 
-      /* Answer keys: the ones stored in the class (latest per quiz), unless a file was loaded here. */
+      /* Answer keys: the ones stored in the class (latest per quiz). */
       var keys = {}, stored = 0;
       admin.forEach(function (r) { if (r.admin.action === 'keys' && r.admin.quiz) { if (!keys[r.admin.quiz]) stored++; keys[r.admin.quiz] = r.admin.key; } });
-      Object.keys(state.fileKeys).forEach(function (q) { keys[q] = state.fileKeys[q]; });
 
       /* Registrations: an account keeps the first handle it registered. A handle lists its accounts in the order they registered. */
       var nameOf = {}, regAt = {}, accountsOf = {}, subs = {}, reasonOf = {};
@@ -331,14 +302,14 @@
       el('div', { class: 'btn-row' },
         el('button', { class: 'btn primary', type: 'button', id: 'publish', disabled: !canPublish, text: 'Publish results to students', onclick: publish }),
         el('button', { class: 'btn', type: 'button', text: 'Download CSV', onclick: function () { Kit.download('class-results.csv', csv([head].concat(rows))); } })),
-      el('p', { class: 'small muted', id: 'publish-status', style: 'margin-top:.5rem', text: canPublish ? 'Students see nothing until you publish. Each student then sees their own scores and the class averages on the class site. Publish again whenever you want to update them.' : 'Publishing needs the class\'s inbox token, which the class key unlocks on classes set up with the current setup page.' }))];
+      el('p', { class: 'small muted', id: 'publish-status', style: 'margin-top:.5rem', text: canPublish ? 'Students see nothing until you publish. Each student then sees their own scores and the class averages on the class site. Publish again whenever you want to update them.' : 'Publishing needs the class\'s inbox token, which signing in unlocks.' }))];
 
     /* The class's site is a frozen snapshot. Answer keys for a different version of a quiz must not grade it. */
     if (R.stale.length) sections.unshift(el('section', { class: 'panel', id: 'stale' }, el('div', { class: 'callout bad' },
       el('b', { text: 'Not graded: ' + R.stale.join(', ') + '. ' }),
-      'The answer keys are for a different version than this class took. Use instructor/answer-keys.json from the course repo at this site\'s build (' + Kit.build.commit + ').')));
+      'The answer keys stored in the class are for a different version of that quiz than this class took.')));
     if (R.nokey.length) sections.unshift(el('section', { class: 'panel', id: 'nokey' }, el('div', { class: 'callout warn' },
-      el('b', { text: 'Quiz answers received but not graded: ' + R.nokey.join(', ') + '. ' }), 'This class has no answer keys stored for them. Add them under "Other ways to load records, and adding answer keys" below.')));
+      el('b', { text: 'Quiz answers received but not graded: ' + R.nokey.join(', ') + '. ' }), 'This class has no answer keys stored for them. Whoever has the course repo can add them: open instructor/setup.html there, enter this class\'s repo and the instructor seed phrase.')));
 
     /* Handles registered by more than one account: a lost seed phrase, or someone using another student's handle. */
     if (R.contested.length) sections.push(el('section', { class: 'panel', id: 'contested' }, el('h2', { text: 'Handles registered by more than one account' }),
@@ -407,7 +378,7 @@
         return Kit.wallet.sealTo(R.pubOf[addr], { mine: mine, cls: shared }).then(function (blob) { entries[addr.toLowerCase()] = blob; });
       }));
     })).then(function () {
-      return Kit.signResults({ v: 1, classId: cls.classId || null, build: Kit.build.commit, at: at, entries: entries }, state.privJwk);
+      return Kit.signResults({ v: 1, classId: cls.classId || null, build: Kit.build.commit, at: at, entries: entries }, state.staff);
     }).then(function (signed) {
       return Kit.postToInbox(inboxCfg(), token(), '[results] ' + at.slice(0, 16).replace('T', ' '), 'Published results. Each student can read only their own. Do not edit.\n\n```\n' + signed + '\n```\n', ['results']);
     }).then(function (r) {

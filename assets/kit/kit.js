@@ -12,10 +12,10 @@
   var Kit = {};
   var enc = new TextEncoder();
   var dec = new TextDecoder();
-  Kit.version = '0.15.0';
+  Kit.version = '0.16.0';
   /* Which course commit this site was cut from. tools/cut_delivery.py rewrites this line; 'dev' means an uncut working copy.
      Every record carries it, so a class can always be graded with the course repo as it was when the class was cut. */
-  Kit.build = { commit: 'f05aa992809b', date: '2026-11-21' };
+  Kit.build = { commit: '42196de95e4e', date: '2026-11-21' };
   /* A file of this site, named by build, so a page never pairs with another build's copy of it. */
   Kit.asset = function (path) { return path + (Kit.build.commit === 'dev' ? '' : '?v=' + Kit.build.commit); };
   /* Where this file was loaded from, so pages at any depth can link to shared pages such as setup.html. */
@@ -41,7 +41,7 @@
   Kit.session = storage('sessionStorage');
   /* What this computer remembers about one class: handles registered here, the class code, what was handed in, answers
      in progress. Kept apart per class (by the class key), so a new class on the same computer starts clean. */
-  function scope() { var k = (root.BC_CLASS || {}).publicKey; return 'c:' + String((k && k.x) || 'none').slice(0, 16) + ':'; }
+  function scope() { return 'c:' + String((root.BC_CLASS || {}).classKey || 'none').slice(0, 16) + ':'; }
   Kit.mine = {
     get: function (k, d) { return Kit.store.get(scope() + k, d); },
     set: function (k, v) { Kit.store.set(scope() + k, v); },
@@ -212,7 +212,7 @@
 
     var top = el('header', { class: 'topbar' },
       el('a', { class: 'brand', href: opts.home || '#' }, el('span', { class: 'brand-mark', 'aria-hidden': 'true', html: BRAND_SVG }), el('span', { text: c.course || 'Blockchain Technology' })),
-      opts.crumbs ? el('span', { class: 'crumbs', text: opts.crumbs }) : null,
+      opts.crumbs ? el('span', { class: 'crumbs' }, opts.home && opts.crumbs !== 'Home' ? el('a', { href: opts.home, id: 'kit-home-link', text: 'Home' }) : null, opts.home && opts.crumbs !== 'Home' ? ' / ' : null, opts.crumbs) : null,
       el('span', { class: 'topbar-spacer' }),
       opts.noHandle ? null : chip,
       themeBtn
@@ -230,9 +230,9 @@
     });
     if (opts.title) document.title = opts.title + ' · ' + (c.course || 'Blockchain Technology');
     /* A class repo fresh from the template has no settings file yet. Say so, and point the instructor at setup. */
-    if (!c.publicKey && !opts.noSetupNotice) main.insertBefore(el('div', { class: 'callout warn', id: 'kit-unconfigured', style: 'margin:0 0 1rem' },
-      el('b', { text: 'This class isn\'t set up yet. ' }), 'You can look around, but nothing can be submitted. Instructors: ',
-      el('a', { href: Kit.base + '../setup.html', text: 'set up this class' }), '.'), main.firstChild);
+    if (!c.classKey && !opts.noSetupNotice) main.insertBefore(el('div', { class: 'callout warn', id: 'kit-unconfigured', style: 'margin:0 0 1rem' },
+      el('b', { text: 'This class isn\'t set up yet. ' }), 'You can look around, but nothing can be handed in. Instructors: set it up from your copy of the course repo (open ',
+      el('code', { text: 'instructor/setup.html' }), ').'), main.firstChild);
     return main;
   };
 
@@ -430,52 +430,15 @@
     ]);
   };
 
-  /* ---------- Sealing to the class key ---------- */
-  var INFO = enc.encode('bc-course-submission-v1');
-  var CURVE = { name: 'ECDH', namedCurve: 'P-256' };
-  function aesKey(priv, pub, salt) {
-    return subtle().deriveBits({ name: 'ECDH', public: pub }, priv, 256).then(function (bits) {
-      return subtle().importKey('raw', bits, 'HKDF', false, ['deriveKey']);
-    }).then(function (hk) {
-      return subtle().deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: salt, info: INFO }, hk, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
-    });
-  }
-  Kit.TOKEN_RE = /BC1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g;
-
-  Kit.seal = function (obj, publicJwk) {
-    var s = subtle(), eph, epk;
-    var pubJwk = { kty: publicJwk.kty, crv: publicJwk.crv, x: publicJwk.x, y: publicJwk.y };
-    return Promise.all([
-      s.importKey('jwk', pubJwk, CURVE, false, []),
-      s.generateKey(CURVE, true, ['deriveBits'])
-    ]).then(function (r) {
-      eph = r[1];
-      return s.exportKey('raw', eph.publicKey).then(function (raw) { epk = new Uint8Array(raw); return aesKey(eph.privateKey, r[0], epk); });
-    }).then(function (key) {
-      var iv = root.crypto.getRandomValues(new Uint8Array(12));
-      return s.encrypt({ name: 'AES-GCM', iv: iv }, key, enc.encode(JSON.stringify(obj))).then(function (ct) {
-        return ['BC1', Kit.b64u.from(epk), Kit.b64u.from(iv), Kit.b64u.from(ct)].join('.');
-      });
-    });
+  /* ---------- Sealing to the class ----------
+     The class key is an account like any other, derived from the instructors' seed phrase. Its public key is in the
+     class settings, so any page can seal a record that only the instructors can open (kit/wallet.js: sealTo). */
+  Kit.TOKEN_RE = /BC2\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g;
+  Kit.seal = function (obj, key) {
+    key = key || Kit.cls().classKey;
+    if (!key) return Promise.reject(new Error('this class is not set up'));
+    return Kit.wallet.sealTo(key, obj, 'BC2');
   };
-  Kit.unseal = function (token, privateKey) {
-    var p = String(token).trim().split('.');
-    if (p.length !== 4 || p[0] !== 'BC1') return Promise.reject(new Error('Not a submission code'));
-    var s = subtle(), epkBytes = Kit.b64u.toBytes(p[1]);
-    return s.importKey('raw', epkBytes, CURVE, false, []).then(function (epk) {
-      return aesKey(privateKey, epk, epkBytes);
-    }).then(function (key) {
-      return s.decrypt({ name: 'AES-GCM', iv: Kit.b64u.toBytes(p[2]) }, key, Kit.b64u.toBytes(p[3]));
-    }).then(function (pt) { return JSON.parse(dec.decode(pt)); });
-  };
-  Kit.newClassKeys = function () {
-    return subtle().generateKey(CURVE, true, ['deriveBits']).then(function (kp) {
-      return Promise.all([subtle().exportKey('jwk', kp.publicKey), subtle().exportKey('jwk', kp.privateKey)]);
-    }).then(function (r) {
-      return { publicJwk: { kty: r[0].kty, crv: r[0].crv, x: r[0].x, y: r[0].y }, privateJwk: r[1] };
-    });
-  };
-  Kit.importPrivate = function (jwk) { return subtle().importKey('jwk', jwk, CURVE, false, ['deriveBits']); };
 
   /* ---------- Class inbox: a write token that ships locked; the class code unlocks it ---------- */
   var KDF_ITER = 300000;
@@ -534,46 +497,41 @@
     return Kit.unlockToken(inbox.locked, id.code);
   };
 
-  /* ---------- Instructor records: decisions, answer keys ----------
-     Authenticated with a key only the class private key can derive (ECDH with the class's own public key, then
-     HKDF), so a student holding the shared inbox token cannot forge one. Sealed like any other record. */
-  Kit.adminKey = function (privateKey, publicJwk) {
-    var c = subtle();
-    return c.importKey('jwk', { kty: publicJwk.kty, crv: publicJwk.crv, x: publicJwk.x, y: publicJwk.y }, CURVE, false, [])
-      .then(function (pub) { return c.deriveBits({ name: 'ECDH', public: pub }, privateKey, 256); })
-      .then(function (bits) { return c.importKey('raw', bits, 'HKDF', false, ['deriveKey']); })
-      .then(function (hk) { return c.deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(0), info: enc.encode('bc-course-admin-v1') }, hk, { name: 'HMAC', hash: 'SHA-256', length: 256 }, false, ['sign', 'verify']); });
+  /* ---------- Instructors ----------
+     An instructor signs in to the results page with the class's instructor seed phrase. `staff` below is that
+     account: { address, pub, sign, open }. */
+  Kit.staffFrom = function (phrase) {
+    var c = Kit.cls(), acct = Kit.wallet.fromPhrase(phrase, Kit.wallet.CLASS_PATH);
+    if (c.classAddress && acct.address.toLowerCase() !== String(c.classAddress).toLowerCase()) throw new Error('Those are not this class\'s instructor words.');
+    return acct;
   };
-  Kit.sealAdmin = function (record, adminKey, publicJwk) {
+  /* Instructor records (decisions, answer keys): signed by the class account, so a student holding the shared inbox
+     token cannot forge one, and sealed like any other record. */
+  Kit.staffRecord = function (record, staff) {
     var text = JSON.stringify(record);
-    return subtle().sign('HMAC', adminKey, enc.encode(text)).then(function (mac) { return Kit.seal({ v: 2, admin: text, mac: Kit.b64u.from(mac) }, publicJwk); });
+    return Kit.seal({ v: 3, admin: text, sig: staff.sign(text) }, staff.pub);   // the instructors' own public key is the class key
   };
-  Kit.openAdmin = function (env, adminKey) {
-    return subtle().verify('HMAC', adminKey, Kit.b64u.toBytes(env.mac || ''), enc.encode(env.admin)).then(function (ok) {
-      if (!ok) throw new Error('forged instructor record (not made with the class key)');
-      return JSON.parse(env.admin);
-    });
+  Kit.openStaffRecord = function (env) {
+    if (!Kit.wallet.signedBy(env.admin, env.sig, Kit.cls().classAddress)) return Promise.reject(new Error('forged instructor record (not signed with the class\'s instructor words)'));
+    return Promise.resolve(JSON.parse(env.admin));
   };
 
   /* ---------- Published results ----------
      The instructor publishes one record: every student's results, each sealed to that student's own account, the
-     whole thing signed with the class key (ECDSA P-256). A student's page checks the signature against the class
-     public key in the settings, then opens its own entry. Nobody else can read it, and nobody can fake it. */
-  var RESULTS_RE = /BCR1\.([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)/;
-  var ECDSA = { name: 'ECDSA', namedCurve: 'P-256' }, ECDSA_SIG = { name: 'ECDSA', hash: 'SHA-256' };
-  Kit.signResults = function (obj, privateJwk) {
-    var text = JSON.stringify(obj), bare = { kty: privateJwk.kty, crv: privateJwk.crv, x: privateJwk.x, y: privateJwk.y, d: privateJwk.d };
-    return subtle().importKey('jwk', bare, ECDSA, false, ['sign']).then(function (k) { return subtle().sign(ECDSA_SIG, k, enc.encode(text)); })
-      .then(function (sig) { return 'BCR1.' + Kit.b64u.from(enc.encode(text)) + '.' + Kit.b64u.from(sig); });
+     whole thing signed by the class account. A student's page checks the signature against the class address in the
+     settings, then opens its own entry. Nobody else can read it, and nobody can fake it. */
+  var RESULTS_RE = /BCR2\.([A-Za-z0-9_-]+)\.(0x[0-9a-f]{130})/;
+  Kit.signResults = function (obj, staff) {
+    var text = JSON.stringify(obj);
+    return Promise.resolve('BCR2.' + Kit.b64u.from(enc.encode(text)) + '.' + staff.sign(text));
   };
-  Kit.readResults = function (text, publicJwk) {
+  Kit.readResults = function (text) {
     var m = RESULTS_RE.exec(String(text));
     if (!m) return Promise.resolve(null);
-    var body, sig;
-    try { body = Kit.b64u.toBytes(m[1]); sig = Kit.b64u.toBytes(m[2]); } catch (e) { return Promise.resolve(null); } // mangled: ignore it
-    return subtle().importKey('jwk', { kty: publicJwk.kty, crv: publicJwk.crv, x: publicJwk.x, y: publicJwk.y }, ECDSA, false, ['verify'])
-      .then(function (k) { return subtle().verify(ECDSA_SIG, k, sig, body); })
-      .then(function (ok) { return ok ? JSON.parse(dec.decode(body)) : null; }, function () { return null; });
+    try {
+      var body = dec.decode(Kit.b64u.toBytes(m[1]));
+      return Promise.resolve(Kit.wallet.signedBy(body, m[2], Kit.cls().classAddress) ? JSON.parse(body) : null);
+    } catch (e) { return Promise.resolve(null); }   // mangled: ignore it
   };
   /* The label on the signed-in student's own records: 's-' and the first 8 hex digits of their account. */
   Kit.myLabel = function () { return 's-' + Kit.who().slice(2, 10); };
@@ -621,7 +579,7 @@
       return list.reduce(function (found, it) {   // newest first; the first one that is genuine and has an entry for us
         return found.then(function (hit) {
           if (hit) return hit;
-          return Kit.readResults(it.body, c.publicKey).then(function (r) {
+          return Kit.readResults(it.body).then(function (r) {
             var mine = r && r.classId === (c.classId || null) && r.entries && r.entries[me.address.toLowerCase()];
             if (!mine) return null;
             return me.open(mine).then(function (o) { return { at: r.at, mine: o.mine, cls: o.cls }; }, function () { return null; });
@@ -659,7 +617,7 @@
         resources: [Kit.wallet.siwe.niUri(digest)]
       });
       var env = { v: 2, body: body, siwe: { message: message, signature: me.sign(message) } };
-      return Kit.seal(env, c.publicKey).then(function (code) { return { code: code, message: message }; });
+      return Kit.seal(env).then(function (code) { return { code: code, message: message }; });
     });
   };
   Kit.statementFor = function (item, classId) { return 'Submit ' + item + ' to class ' + (classId || 'none') + '.'; };
@@ -684,8 +642,8 @@
   /* Send one submission and show the result in `target`. One click for the student. */
   Kit.submit = function (target, payload, label) {
     var c = Kit.cls(), inbox = Kit.inbox(), id = Kit.identity(), me = Kit.me(), tag = Kit.short(me.address);
-    if (!c.publicKey) {
-      target.replaceChildren(el('div', { class: 'callout warn', text: 'This copy of the course has no class key, so submissions are switched off. Your instructor sets this up for each class.' }));
+    if (!c.classKey) {
+      target.replaceChildren(el('div', { class: 'callout warn', text: 'This class isn\'t set up yet, so nothing can be handed in. Your instructor sets it up.' }));
       return Promise.resolve(null);
     }
     target.replaceChildren(el('p', { class: 'muted small', text: 'Signing and sending…' }));
@@ -693,6 +651,14 @@
     function signedBox() { return el('details', { class: 'hint' }, el('summary', { text: 'What you just signed' }),
       el('p', { class: 'small muted', text: 'An EIP-4361 "Sign-In with Ethereum" message. Signing it moves no money and costs nothing: it only proves that the holder of your key made this submission.' }),
       el('div', { class: 'artifact', text: sub.message })); }
+    /* The way back, once something is handed in. Empty for a registration, which happens before there is anywhere to go back from.
+       (An element, never null: replaceChildren would print null as text.) */
+    function homeRow() {
+      var row = el('div', { class: 'btn-row' });
+      if (payload.kind !== 'register') row.append(el('a', { class: 'btn', id: 'kit-home', href: Kit.base + '../start.html', text: '← Back to your course home' }));
+      else row.hidden = true;
+      return row;
+    }
     function manual(why) {
       var status = el('span', { class: 'muted small' }), fname = payload.item + '-' + me.address.slice(2, 10) + '.txt';
       target.replaceChildren(
@@ -701,7 +667,7 @@
           el('button', { class: 'btn primary', type: 'button', text: 'Copy code', onclick: function () { Kit.copy(sub.code).then(function () { status.textContent = 'Copied.'; }); } }),
           el('button', { class: 'btn', type: 'button', text: 'Download .txt', onclick: function () { Kit.download(fname, label + '\n' + sub.code + '\n'); } }), status),
         el('details', { class: 'hint' }, el('summary', { text: 'Show the encrypted code' }), el('div', { class: 'hexblock', id: 'kit-code-out', text: sub.code })),
-        signedBox());
+        homeRow(), signedBox());
       return { sent: false, code: sub.code };
     }
     return Kit.buildSubmission(payload).then(function (s) {
@@ -715,7 +681,7 @@
       }).then(function (res) {
         var when = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         Kit.mine.set('sent:' + payload.item + ':' + (payload.part || '') + ':' + Kit.who(), { ref: res.ref, at: when });
-        target.replaceChildren(el('div', { class: 'callout ok' }, el('b', { text: 'Submitted ✓ ' }), 'Received as ' + res.ref + ' at ' + when + '.'), signedBox());
+        target.replaceChildren(el('div', { class: 'callout ok' }, el('b', { text: 'Submitted ✓ ' }), 'Received as ' + res.ref + ' at ' + when + '.'), homeRow(), signedBox());
         return { sent: true, ref: res.ref, code: sub.code };
       }, function (e) {
         if (/ (403|429)$/.test(e.message)) return manual('The class inbox is limiting how fast the class can submit (' + e.message + '). Wait a minute and press Submit again.');

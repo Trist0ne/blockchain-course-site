@@ -296,8 +296,21 @@ label.check { display: flex; gap: 0.5rem; align-items: center; margin: 0.6rem 0 
 label.check input { accent-color: var(--accent); }
 #kit-identity table.data th { width: 9rem; text-transform: none; letter-spacing: 0; font-size: 0.85rem; }
 #kit-identity td.mono { word-break: break-all; }
-details.door { margin-top: 0.75rem; }
-details.door > summary { color: var(--ink); }
-details.door[open] { padding-bottom: 0.75rem; }
+/* Sign-in takes over the page: nothing else shows until it is done. */
+main.kit-gated > :not(#kit-signin):not(#kit-unconfigured) { display: none !important; }
+main.kit-gated #kit-signin { max-width: 36rem; margin: clamp(0.5rem, 6vh, 4rem) auto 0; padding: clamp(1.2rem, 3vw, 2rem); }
+#kit-signin h2 { font-size: 1.35rem; margin-bottom: 0.6rem; }
+ol.kit-steps { list-style: none; display: flex; gap: 0.4rem 1.1rem; flex-wrap: wrap; padding: 0; margin: 0 0 1.1rem; font-size: 0.8rem; color: var(--ink-3); }
+ol.kit-steps li { display: flex; align-items: center; gap: 0.4rem; }
+ol.kit-steps li span { width: 1.45rem; height: 1.45rem; border-radius: 50%; border: 1px solid var(--line-strong); display: grid; place-items: center; font-family: var(--mono); font-size: 0.75rem; }
+ol.kit-steps li.now { color: var(--ink); font-weight: 650; }
+ol.kit-steps li.now span { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+ol.kit-steps li.done span { background: var(--ok-tint); color: var(--ok); border-color: transparent; }
+.kit-links { margin: 1rem 0 0; padding-top: 0.75rem; border-top: 1px solid var(--line); color: var(--ink-3); }
+.kit-rules { padding-left: 1.1rem; margin: 0.25rem 0 0; color: var(--ink-2); }
+.kit-rules li { margin: 0.2rem 0; }
+.kit-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 0.75rem; max-width: 24rem; }
+#kit-signin ol.words { margin: 1rem 0; }
+#kit-signin ol.words li { font-size: 1.05rem; padding: 0.45rem 0.7rem; }
 #kit-msg .callout { margin-bottom: 0.25rem; }
 #kit-signin .callout.bad { margin-bottom: 0.25rem; }

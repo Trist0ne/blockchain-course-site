@@ -12,10 +12,10 @@
   var Kit = {};
   var enc = new TextEncoder();
   var dec = new TextDecoder();
-  Kit.version = '0.12.0';
+  Kit.version = '0.13.0';
   /* Which course commit this site was cut from. tools/cut_delivery.py rewrites this line; 'dev' means an uncut working copy.
      Every record carries it, so a class can always be graded with the course repo as it was when the class was cut. */
-  Kit.build = { commit: '4ac64f2551b9', date: '2026-11-21' };
+  Kit.build = { commit: '7cd78722f8ff', date: '2026-11-21' };
   /* Where this file was loaded from, so pages at any depth can link to shared pages such as setup.html. */
   var here = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
   Kit.base = here.replace(/kit\.js(\?.*)?$/, '');
@@ -247,125 +247,169 @@
   var NEVER = 'Never type a real wallet\'s seed phrase into a web page: not this one, not any. A real phrase controls real money. This course uses its own words, which work the same way but can\'t open a real wallet.';
   var REAL = 'Stop: that looks like a real wallet\'s seed phrase. Never type one into a website. Nothing was stored or sent, but if those words protect real money, treat them as exposed to this computer. This course uses its own words: the 12 on your backup card.';
 
+  /* While someone is signing in, the sign-in is the only thing on the page. */
+  function gate(on) { var m = document.querySelector('main'); if (m) m.classList.toggle('kit-gated', !!on); }
+  function stepper(n) {
+    return el('ol', { class: 'kit-steps', 'aria-label': 'Step ' + n + ' of 3' }, ['Your handle', 'Your seed phrase', 'Check it'].map(function (t, i) {
+      return el('li', { class: i + 1 === n ? 'now' : i + 1 < n ? 'done' : null, 'aria-current': i + 1 === n ? 'step' : null }, el('span', { text: String(i + 1) }), t);
+    }));
+  }
+
   Kit.signIn = function () {
     if (Kit.identity()) return Promise.resolve(Kit.me());
     return new Promise(function (resolve) {
       var inbox = Kit.inbox();
       /* The class code is a shared classroom secret, not a personal one, so this computer may remember it.
          (The seed phrase is never remembered.) */
-      var codeKey = 'code', savedCode = inbox ? Kit.mine.get(codeKey, '') : '';
-      var codeIn = inbox ? el('input', { type: 'text', class: 'mono', placeholder: 'four words, from the board', autocomplete: 'off', id: 'kit-code', value: savedCode || null }) : null;
-      var phraseIn = el('textarea', { class: 'mono', rows: '2', placeholder: 'your 12 words, in order', id: 'kit-phrase', spellcheck: 'false', autocomplete: 'off' });
-      var handleIn = el('input', { type: 'text', class: 'mono', placeholder: 'firstname.lastname', autocomplete: 'off', maxlength: '40', id: 'kit-handle' });
-      var msg = el('div', { id: 'kit-msg' }), panel;
+      var codeVal = inbox ? Kit.mine.get('code', '') : '', savedCode = !!codeVal;
+      var known = Kit.mine.all('name:');
+      var msg = el('div', { id: 'kit-msg' });
+      var panel = panelAtTop('kit-signin', []);
+      gate(true);
 
       function fail(text) { msg.replaceChildren(el('div', { class: 'callout bad', text: text })); }
+      function codeField() {
+        if (!inbox) return null;
+        var input = el('input', { type: 'text', class: 'mono', placeholder: 'four words, from the board', autocomplete: 'off', id: 'kit-code', value: codeVal || null });
+        input.addEventListener('input', function () { codeVal = input.value; });
+        return el('label', { class: 'field' }, el('span', { text: savedCode ? 'Class code (remembered on this computer)' : 'Class code (on the board)' }), input);
+      }
       /* Resolves with the checked class code ('' when the class has no inbox), or null after showing why not. */
       function checkCode() {
         if (!inbox) return Promise.resolve('');
-        var code = Kit.normCode(codeIn.value);
+        var code = Kit.normCode(codeVal);
         if (!code) { fail('Enter the class code your instructor wrote on the board.'); return Promise.resolve(null); }
-        return Kit.unlockToken(inbox.locked, code).then(function () { Kit.mine.set(codeKey, code); return code; },
-          function () { Kit.mine.del(codeKey); fail('That class code doesn\'t unlock this class. Check the spelling against the board.'); return null; });
+        return Kit.unlockToken(inbox.locked, code).then(function () { Kit.mine.set('code', code); return code; },
+          function () { Kit.mine.del('code'); fail('That class code doesn\'t unlock this class. Check the spelling against the board.'); return null; });
       }
       function finish(code, phrase, newHandle, reason) {
         saveIdentity({ phrase: phrase, code: code });
         var me = Kit.me();
         if (newHandle) { Kit.mine.set('name:' + me.address, newHandle); meCache = null; me = Kit.me(); }
-        panel.remove(); if (Kit._paintChip) Kit._paintChip();
+        panel.remove(); gate(false); if (Kit._paintChip) Kit._paintChip();
         if (newHandle) Kit.register(reason);
         resolve(me);
       }
-      function stepCreate(code, handle, reason) {
-        var phrase = Kit.wallet.newPhrase(), words = phrase.split(' '), addr = Kit.wallet.fromPhrase(phrase).address;
-        function stepWrite() {
+      function links(list) {
+        var p = el('p', { class: 'kit-links small' });
+        list.forEach(function (l, i) {
+          if (i) p.append(' · ');
+          p.append(el('a', { href: '#', id: l[0], text: l[1], onclick: function (e) { e.preventDefault(); msg.replaceChildren(); l[2](); } }));
+        });
+        return p;
+      }
+
+      /* ---- Returning student: class code (usually remembered) and the 12 words ---- */
+      function viewSignIn() {
+        var phraseIn = el('textarea', { class: 'mono', rows: '2', placeholder: 'your 12 words, in order', id: 'kit-phrase', spellcheck: 'false', autocomplete: 'off' });
+        panel.replaceChildren(
+          el('h2', { text: 'Sign in' }),
+          el('form', { onsubmit: function (e) {
+            e.preventDefault();
+            checkCode().then(function (code) {
+              if (code === null) return;
+              if (Kit.wallet.looksReal(phraseIn.value)) { phraseIn.value = ''; return fail(REAL); }
+              if (!Kit.wallet.validPhrase(phraseIn.value)) return fail('That isn\'t a valid 12-word course phrase. One wrong or misspelled word fails the built-in checksum. Check the spelling and the order against your card.');
+              finish(code, Kit.wallet.normPhrase(phraseIn.value), null);
+            });
+          } },
+            codeField(),
+            el('label', { class: 'field' }, el('span', { text: 'Your seed phrase (the 12 words on your backup card)' }), phraseIn),
+            el('p', { class: 'small muted', text: 'Course words only. Never type a real wallet\'s seed phrase into a web page.' }),
+            el('div', { class: 'btn-row', style: 'margin-top:0' }, el('button', { class: 'btn primary', type: 'submit', id: 'kit-go', text: 'Sign in' }))),
+          msg,
+          links([['kit-to-first', 'First time here?', function () { viewHandle('new'); }], ['kit-to-lost', 'Lost your seed phrase?', function () { viewHandle('lost'); }]]));
+        (inbox && !savedCode ? panel.querySelector('#kit-code') : phraseIn).focus();
+      }
+
+      /* ---- Step 1 of 3: who you are. The same step starts a replacement for a lost phrase. ---- */
+      function viewHandle(reason) {
+        var lost = reason === 'lost';
+        var handleIn = el('input', { type: 'text', class: 'mono', placeholder: 'firstname.lastname', autocomplete: 'off', maxlength: '40', id: lost ? 'kit-handle-lost' : 'kit-handle' });
+        panel.replaceChildren(
+          stepper(1),
+          el('h2', { text: lost ? 'Replace a lost seed phrase' : 'Welcome. Let\'s set you up.' }),
+          lost ? el('div', { class: 'callout warn', style: 'margin:0 0 .75rem' }, 'Nobody can recover a seed phrase, so you make a new one under the same handle. Your earlier work is kept. ', el('b', { text: 'Tell your instructor afterwards: they have to approve it.' }))
+            : el('p', { text: 'You sign in to this course the way people sign in to blockchain apps: with a seed phrase only you hold. No account, no password. It takes about two minutes, once.' }),
+          el('form', { onsubmit: function (e) {
+            e.preventDefault();
+            var h = Kit.normHandle(handleIn.value);
+            if (h.length < 2) return fail('Enter your handle as firstname.lastname (letters, digits, dot, dash or underscore).');
+            if (!lost && known.indexOf(h) >= 0) return fail('This computer has already registered ' + h + ' in this class. If you have your 12 words, sign in with them. If you lost them, choose "Lost your seed phrase?" below.');
+            checkCode().then(function (code) { if (code !== null) viewWords(code, h, reason); });
+          } },
+            el('label', { class: 'field' }, el('span', { text: lost ? 'Your handle, exactly as you registered it' : 'Your handle: firstname.lastname' }), handleIn),
+            codeField(),
+            el('div', { class: 'btn-row', style: 'margin-top:0' }, el('button', { class: 'btn primary', type: 'submit', id: lost ? 'kit-replace' : 'kit-create', text: 'Continue' }))),
+          msg,
+          links(lost ? [['kit-to-signin', 'I have my seed phrase after all', viewSignIn]]
+            : [['kit-to-signin', 'I already have a seed phrase', viewSignIn], ['kit-to-lost', 'Lost your seed phrase?', function () { viewHandle('lost'); }]]));
+        handleIn.focus();
+      }
+
+      /* ---- Step 2 of 3: the words ---- */
+      function viewWords(code, handle, reason) {
+        var phrase = Kit.wallet.newPhrase(), words = phrase.split(' ');
+        function show() {
+          msg.replaceChildren();
           panel.replaceChildren(
-            el('h2', { text: 'Your seed phrase' }),
-            el('p', { text: 'These 12 words are your identity for this course. Write them on your backup card, by hand, in order.' }),
+            stepper(2),
+            el('h2', { text: 'Write these 12 words on your card' }),
+            el('p', { text: 'In order, by hand. They are your sign-in for the whole course.' }),
             wordGrid(phrase),
-            el('div', { class: 'callout warn', text: 'From now on you sign in with these words and nothing else. Anyone who has them can submit as you. If you lose them, your instructor has to reset you.' }),
-            el('div', { class: 'callout bad', text: NEVER }),
-            el('p', { class: 'small muted', style: 'margin-top:.75rem' }, 'Your account: ', el('code', { text: addr }),
-              '. The words are a number; the number derives a private key; the key derives this address, exactly as in a real wallet. The words themselves come from the course\'s own list, so they work only here. Copy the first and last characters of the account onto your card.'),
-            el('div', { class: 'btn-row' }, el('button', { class: 'btn primary', type: 'button', id: 'kit-written', text: 'I have written them down', onclick: stepConfirm })));
+            el('ul', { class: 'small kit-rules' },
+              el('li', null, el('b', { text: 'Don\'t photograph or type them anywhere. ' }), 'Anyone who has them can hand in work as you.'),
+              el('li', null, el('b', { text: 'Don\'t lose the card. ' }), 'Nobody can look the words up for you, not even your instructor.'),
+              el('li', { text: 'These are course words. They work like a real wallet\'s seed phrase, but can\'t open one.' })),
+            el('div', { class: 'btn-row' }, el('button', { class: 'btn primary', type: 'button', id: 'kit-written', text: 'I\'ve written them down', onclick: check })));
+          panel.querySelector('#kit-written').focus();
         }
-        /* Check the backup, as real wallets do: the words are hidden and two of them are asked for. */
-        function stepConfirm() {
+        /* ---- Step 3 of 3: check the backup, as real wallets do. The words are hidden and two are asked for. ---- */
+        function check() {
           var picks = Kit.shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], Math.random).slice(0, 2).sort(function (x, y) { return x - y; });
           var inputs = picks.map(function (i) { return el('input', { type: 'text', class: 'mono kit-confirm', 'data-n': String(i + 1), autocomplete: 'off', spellcheck: 'false', 'aria-label': 'Word ' + (i + 1) }); });
-          var m2 = el('div');
-          function done() {
-            var ok = picks.every(function (i, k) { return inputs[k].value.trim().toLowerCase() === words[i]; });
-            if (ok) finish(code, phrase, handle, reason);
-            else m2.replaceChildren(el('div', { class: 'callout bad', text: 'Those don\'t match what you were shown. Check your card, or go back and look at the words again.' }));
-          }
           panel.replaceChildren(
-            el('h2', { text: 'Check your backup' }),
-            el('p', { text: 'Read these two words back from your card. A backup you have never checked is a backup you can\'t trust.' }),
-            el('form', { onsubmit: function (e) { e.preventDefault(); done(); } },
-              el('div', { style: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:.75rem;max-width:26rem' },
-                picks.map(function (i, k) { return el('label', { class: 'field' }, el('span', { text: 'Word ' + (i + 1) }), inputs[k]); })),
+            stepper(3),
+            el('h2', { text: 'Read two words back from your card' }),
+            el('p', { class: 'muted', text: 'A backup you have never checked is a backup you can\'t trust.' }),
+            el('form', { onsubmit: function (e) {
+              e.preventDefault();
+              if (picks.every(function (i, k) { return inputs[k].value.trim().toLowerCase() === words[i]; })) finish(code, phrase, handle, reason);
+              else fail('Those don\'t match. Check your card, or go back and look at the words again.');
+            } },
+              el('div', { class: 'kit-two' }, picks.map(function (i, k) { return el('label', { class: 'field' }, el('span', { text: 'Word ' + (i + 1) }), inputs[k]); })),
               el('div', { class: 'btn-row', style: 'margin-top:0' },
-                el('button', { class: 'btn primary', type: 'submit', text: 'Continue' }),
-                el('button', { class: 'btn', type: 'button', text: 'Show the words again', onclick: stepWrite }))),
-            m2);
+                el('button', { class: 'btn primary', type: 'submit', text: 'Finish' }),
+                el('button', { class: 'btn', type: 'button', text: 'Show the words again', onclick: show }))),
+            msg);
           inputs[0].focus();
         }
-        stepWrite();
+        show();
       }
-      /* Three doors: sign in (the usual one), first time, and lost phrase. Each new-account door says what it does. */
-      var known = Kit.mine.all('name:'), newHere = !savedCode && !known.length;
-      var lostIn = el('input', { type: 'text', class: 'mono', placeholder: 'firstname.lastname', autocomplete: 'off', maxlength: '40', id: 'kit-handle-lost' });
-      function begin(input, reason) {
-        var h = Kit.normHandle(input.value);
-        if (h.length < 2) return fail('Enter your handle as firstname.lastname (letters, digits, dot, dash or underscore).');
-        if (reason === 'new' && known.indexOf(h) >= 0) return fail('This computer has already registered ' + h + '. If you have your 12 words, sign in with them above. If you lost them, use "Lost your seed phrase?" below.');
-        checkCode().then(function (code) { if (code !== null) stepCreate(code, h, reason); });
-      }
-      panel = panelAtTop('kit-signin', [
-        el('h2', { text: 'Sign in' }),
-        el('p', { class: 'muted small', text: 'You sign in the way people sign in to blockchain apps: with a key only you hold. There is no account and no password, and your seed phrase is never remembered on this computer.' }),
-        codeIn ? el('label', { class: 'field' }, el('span', { text: savedCode ? 'Class code (remembered on this computer)' : 'Class code (from the board; you type it once per computer)' }), codeIn) : null,
-        el('label', { class: 'field' }, el('span', { text: 'Your seed phrase (the 12 words on your backup card)' }), phraseIn),
-        el('div', { class: 'callout bad', text: NEVER }),
-        el('div', { class: 'btn-row' }, el('button', { class: 'btn primary', type: 'button', id: 'kit-go', text: 'Sign in', onclick: function () {
-          checkCode().then(function (code) {
-            if (code === null) return;
-            if (Kit.wallet.looksReal(phraseIn.value)) { phraseIn.value = ''; return fail(REAL); }
-            if (!Kit.wallet.validPhrase(phraseIn.value)) return fail('That isn\'t a valid 12-word course phrase. One wrong or misspelled word fails the built-in checksum. Check the spelling and the order against your card.');
-            finish(code, Kit.wallet.normPhrase(phraseIn.value), null);
-          });
-        } })),
-        msg,
-        el('details', { class: 'hint door', id: 'kit-first', open: newHere },
-          el('summary', { text: 'First time? Create your seed phrase' }),
-          el('p', { class: 'muted small', text: 'Choose your handle: firstname.lastname' + (inbox ? ', and enter the class code above' : '') + '. You do this once. After today you sign in with your 12 words. Only your instructors see your handle.' }),
-          el('div', { class: 'inline-form' }, handleIn,
-            el('button', { class: 'btn', type: 'button', id: 'kit-create', text: 'Create my seed phrase', onclick: function () { begin(handleIn, 'new'); } }))),
-        el('details', { class: 'hint door', id: 'kit-lost' },
-          el('summary', { text: 'Lost your seed phrase?' }),
-          el('p', { class: 'small', text: 'Nobody can recover a seed phrase: not you, not your instructor. You make a new one under the same handle instead.' }),
-          el('ul', { class: 'small muted' },
-            el('li', { text: 'Your earlier work is kept.' }),
-            el('li', { text: 'Tell your instructor straight away. They approve the new seed phrase, and your old one stops working for new submissions.' }),
-            el('li', { text: 'Work you submit before they approve is saved, and counts once they do.' })),
-          el('div', { class: 'inline-form' }, lostIn,
-            el('button', { class: 'btn', type: 'button', id: 'kit-replace', text: 'Make a new seed phrase', onclick: function () { begin(lostIn, 'lost'); } })))
-      ]);
-      (codeIn && !savedCode ? codeIn : phraseIn).focus();
+
+      /* A computer that has never been used for this class starts with the welcome; any other with sign-in. */
+      if (!savedCode && !known.length) viewHandle('new'); else viewSignIn();
     });
   };
 
   /* Tell the instructor which handle this account belongs to. Sent when a phrase is created: reason is 'new' for a
-     first registration and 'lost' when it replaces a lost phrase. */
+     first registration and 'lost' when it replaces a lost phrase. A first registration that goes through needs
+     nothing from the student, so it shrinks to one line that goes away by itself. */
   Kit.register = function (reason) {
     var me = Kit.me(), out = el('div'), p, lost = reason === 'lost';
     p = panelAtTop('kit-registered', [
       el('div', { class: 'panel-head' }, el('h2', { text: (lost ? 'New seed phrase for ' : 'Registering ') + (me.handle || 'your account') }), el('button', { class: 'icon-btn', type: 'button', text: 'Close', onclick: function () { p.remove(); } })),
       lost ? el('div', { class: 'callout warn', id: 'kit-tell', style: 'margin:0 0 .75rem' }, el('b', { text: 'Tell your instructor now. ' }), 'They need to approve this new seed phrase. Until they do, your new work is saved but not counted. Your earlier work is kept.')
-        : el('p', { class: 'muted small', text: 'This links your handle to your account for your instructor. It happens once.' }),
+        : el('p', { class: 'muted small', text: 'Linking your handle to your account for your instructor.' }),
       out]);
-    return Kit.submit(out, { kind: 'register', item: 'register', data: { handle: me.handle, reason: lost ? 'lost' : 'new' } }, 'Registration');
+    return Kit.submit(out, { kind: 'register', item: 'register', data: { handle: me.handle, reason: lost ? 'lost' : 'new' } }, 'Registration').then(function (r) {
+      if (r && r.sent && !lost) {
+        var note = el('div', { class: 'callout ok', id: 'kit-registered', style: 'margin:0 0 1rem' }, el('b', { text: 'You\'re set up, ' + me.handle + '. ' }), 'From now on you sign in with your 12 words.');
+        p.replaceWith(note);
+        setTimeout(function () { note.remove(); }, 12000);
+      }
+      return r;
+    });
   };
 
   Kit.identityPanel = function () {

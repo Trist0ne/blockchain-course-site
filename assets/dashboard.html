@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instructor dashboard</title>
+<link rel="icon" href="kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="kit/house.css">
+<script src="kit/kit.js"></script>
+<script src="kit/lib/wallet-lib.js"></script>
+<script src="kit/lib/course-words.js"></script>
+<script src="kit/wallet.js"></script>
+<script src="kit/btc.js"></script>
+<script src="labs/graders.js"></script>
+</head>
+<body>
+<main class="page wide">
+  <div class="page-head">
+    <div class="eyebrow"><span class="tag accent">Instructor</span><span class="tag">Needs the class key</span></div>
+    <h1>Class results</h1>
+    <p class="lede">Pulls sealed submissions from the class inbox (or from codes students handed in), decrypts them with the class private key, checks each student's signature, grades them, and totals the class. This page holds no secrets: without the class key it can read nothing. The inbox is the class's database: registrations, submissions and your reset decisions are all records in it. Everything happens in this browser: nothing is uploaded anywhere.</p>
+  </div>
+
+  <section class="panel">
+    <h2>1. Class key</h2>
+    <label class="field"><span>Class private key (<code>&lt;class&gt;.private.jwk.json</code>)</span><input type="file" id="keyfile" accept=".json,application/json"></label>
+    <div id="key-status" class="small muted">No key loaded.</div>
+    <label class="field" style="margin-top:.75rem"><span>Answer keys for quizzes (<code>answer-keys-&lt;build&gt;.json</code>)</span><input type="file" id="answerfile" accept=".json,application/json"></label>
+    <div id="answer-status" class="small muted">No answer keys loaded. Registrations and challenge flags are still checked; quizzes are not graded.</div>
+  </section>
+
+  <section class="panel">
+    <h2>2. Submissions</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:.75rem">
+      <label class="field"><span>Class repo (owner/name)</span><input type="text" id="repo" placeholder="you/bc-2027-02"></label>
+      <label class="field"><span>Token (Issues read and write on that repo)</span><input type="password" id="token" placeholder="the class's inbox token works"></label>
+    </div>
+    <p class="small muted" style="margin-top:0">The token stays in this tab. A public class repo can be read without one, but saving your reset decisions needs it.</p>
+    <details class="hint" style="margin-bottom:.75rem"><summary>GitLab or a self-hosted server</summary>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:.75rem;margin-top:.5rem">
+        <label class="field"><span>Platform</span><select id="platform"><option value="github">GitHub</option><option value="gitlab">GitLab</option></select></label>
+        <label class="field"><span>Host</span><input type="text" id="host" placeholder="github.com, gitlab.com or your own"></label>
+      </div></details>
+    <div class="btn-row" style="margin-top:0">
+      <button class="btn primary" type="button" id="fetch">Fetch inbox</button>
+      <span class="muted small">or</span>
+      <label class="btn" style="cursor:pointer">Add submission files<input type="file" id="files" multiple accept=".txt,text/plain" hidden></label>
+    </div>
+    <label class="field" style="margin-top:.75rem"><span>…or paste submission codes (any text containing them)</span><textarea class="mono" id="paste" rows="3"></textarea></label>
+    <div class="btn-row" style="margin-top:0"><button class="btn" type="button" id="addpaste">Add pasted</button><button class="btn" type="button" id="clear">Clear all</button></div>
+    <div id="load-status"></div>
+  </section>
+
+  <div id="results"></div>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var el = Kit.el, $ = function (id) { return document.getElementById(id); };
+  Kit.chrome({ title: 'Instructor dashboard', crumbs: 'Instructor · Class results', noHandle: true });
+
+  /* ---- Load answer keys and lab graders (script tags work from a plain file) ---- */
+  function loadScript(src) { return new Promise(function (ok, bad) { var s = el('script', { src: src }); s.onload = ok; s.onerror = function () { bad(new Error('Could not load ' + src)); }; document.head.appendChild(s); }); }
+  /* Lab graders come from this same site, so they are always the version this class's students used. */
+  var ready = Promise.all((window.BC_LAB_FILES || []).map(loadScript));
+
+  var state = { priv: null, pubJwk: null, adminKey: null, raw: [], seen: {}, keys: {} };
+
+  /* Instructor decisions are authenticated with a key only the class private key can derive (ECDH with the class's
+     own public key, then HKDF), so a student holding the shared inbox token cannot forge one. */
+  function deriveAdminKey(priv, pubJwk) {
+    var c = crypto.subtle, curve = { name: 'ECDH', namedCurve: 'P-256' };
+    return c.importKey('jwk', pubJwk, curve, false, []).then(function (pub) { return c.deriveBits({ name: 'ECDH', public: pub }, priv, 256); })
+      .then(function (bits) { return c.importKey('raw', bits, 'HKDF', false, ['deriveKey']); })
+      .then(function (hk) { return c.deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(0), info: new TextEncoder().encode('bc-course-admin-v1') }, hk, { name: 'HMAC', hash: 'SHA-256', length: 256 }, false, ['sign', 'verify']); });
+  }
+  $('keyfile').addEventListener('change', function () {
+    var f = this.files[0]; if (!f) return;
+    f.text().then(function (t) {
+      var jwk = JSON.parse(t), pub = { kty: jwk.kty, crv: jwk.crv, x: jwk.x, y: jwk.y };
+      return Kit.importPrivate(jwk).then(function (k) { return deriveAdminKey(k, pub).then(function (ak) { state.priv = k; state.pubJwk = pub; state.adminKey = ak; }); });
+    }).then(function () {
+      $('key-status').replaceChildren(el('span', { class: 'solved-badge', text: '✓ Key loaded: ' + f.name })); render();
+    }).catch(function (e) { $('key-status').replaceChildren(el('div', { class: 'callout bad', text: 'Not a usable private key: ' + e.message })); });
+  });
+
+  $('answerfile').addEventListener('change', function () {
+    var f = this.files[0]; if (!f) return;
+    f.text().then(function (t) {
+      var b = JSON.parse(t);
+      if (!b || !b.keys) throw new Error('this is not an answer-keys file');
+      state.keys = b.keys;
+      var n = Object.keys(b.keys).length, same = b.build === Kit.build.commit;
+      $('answer-status').replaceChildren(el('span', { class: same ? 'solved-badge' : '', id: 'answer-ok', text: '✓ ' + n + (n === 1 ? ' quiz key' : ' quiz keys') + ' loaded, made for build ' + b.build + '.' }),
+        same ? '' : el('div', { class: 'callout warn', id: 'answer-warn', text: 'This site is build ' + Kit.build.commit + '. Keys from another build still grade any quiz that hasn\'t changed between the two; changed ones are flagged, not graded.' }));
+      render();
+    }).catch(function (e) { $('answer-status').replaceChildren(el('div', { class: 'callout bad', text: 'Could not read that file: ' + e.message })); });
+  });
+
+  function addRaw(text, meta) {
+    var found = String(text).match(Kit.TOKEN_RE) || [], added = 0;
+    found.forEach(function (tok) {
+      if (state.seen[tok]) return; state.seen[tok] = 1; added++;
+      state.raw.push(Object.assign({ token: tok }, meta));
+    });
+    return added;
+  }
+  function status(msg, cls) { $('load-status').replaceChildren(el('div', { class: 'callout ' + (cls || 'info'), text: msg })); }
+
+  function inboxCfg() {
+    var gl = $('platform').value === 'gitlab', repo = $('repo').value.trim().replace(/^\/|\/$/g, '');
+    if (!(gl ? /^[\w.-]+(\/[\w.-]+)+$/ : /^[\w.-]+\/[\w.-]+$/).test(repo)) return null;
+    return { platform: gl ? 'gitlab' : 'github', host: $('host').value.trim() || (gl ? 'gitlab.com' : 'github.com'), repo: repo };
+  }
+  $('fetch').addEventListener('click', function () {
+    var cfg = inboxCfg(), token = $('token').value.trim();
+    if (!cfg) return status('Enter the class repo as owner/name.', 'bad');
+    var gl = cfg.platform === 'gitlab', host = cfg.host, repo = cfg.repo;
+    var headers = {}, url;
+    if (gl) { // GitLab REST v4. Includes confidential issues when the token belongs to a project member (Reporter or above).
+      if (token) headers.Authorization = 'Bearer ' + token;
+      url = function (n) { return 'https://' + host + '/api/v4/projects/' + encodeURIComponent(repo) + '/issues?scope=all&per_page=100&page=' + n; };
+    } else {
+      headers.Accept = 'application/vnd.github+json'; if (token) headers.Authorization = 'Bearer ' + token;
+      var api = host === 'github.com' ? 'https://api.github.com' : 'https://' + host + '/api/v3';
+      url = function (n) { return api + '/repos/' + repo + '/issues?state=all&per_page=100&page=' + n; };
+    }
+    var added = 0, issues = 0;
+    status('Fetching the inbox…');
+    (function page(n) {
+      return fetch(url(n), { headers: headers }).then(function (r) {
+        if (!r.ok) throw new Error(host + ' answered ' + r.status + (r.status === 404 ? ' (wrong repo, or the token cannot see it)' : r.status === 401 ? ' (bad token)' : ''));
+        return r.json();
+      }).then(function (list) {
+        list.forEach(function (it) {
+          if (it.pull_request || !/^\[(submit|admin)\]/.test(it.title || '')) return;
+          issues++;
+          if (gl) added += addRaw(it.description || '', { source: '#' + it.iid, time: it.created_at });
+          else added += addRaw(it.body || '', { source: '#' + it.number, time: it.created_at });
+        });
+        return list.length === 100 ? page(n + 1) : null;
+      });
+    })(1).then(function () { status(issues + ' records in the inbox, ' + added + ' new.', 'ok'); render(); })
+      .catch(function (e) { status('Fetch failed: ' + e.message, 'bad'); });
+  });
+  $('files').addEventListener('change', function () {
+    var fs = Array.prototype.slice.call(this.files), added = 0;
+    Promise.all(fs.map(function (f) { return f.text().then(function (t) { added += addRaw(t, { source: 'file ' + f.name, time: null }); }); }))
+      .then(function () { status(fs.length + ' files, ' + added + ' new codes.', 'ok'); render(); });
+    this.value = '';
+  });
+  $('addpaste').addEventListener('click', function () { var n = addRaw($('paste').value, { source: 'pasted', time: null }); $('paste').value = ''; status(n + ' new codes.', n ? 'ok' : 'warn'); render(); });
+  $('clear').addEventListener('click', function () { state.raw = []; state.seen = {}; render(); status('Cleared.'); });
+
+  /* ---- Grading ---- */
+  function normShort(s) { return String(s || '').toLowerCase().replace(/[\s,_]/g, '').replace(/(satoshis|satoshi|sats|sat)$/, ''); }
+  function sameSet(a, b) { a = (a || []).slice().sort(); b = (b || []).slice().sort(); return a.length === b.length && a.every(function (x, i) { return x === b[i]; }); }
+  function gradeQuiz(key, answers) {
+    var per = {}, score = 0, max = 0;
+    Object.keys(key.questions).forEach(function (qid) {
+      var k = key.questions[qid], a = answers[qid], ok = false;
+      if (k.type === 'single') ok = a === k.answer[0];
+      else if (k.type === 'multi') ok = Array.isArray(a) && sameSet(a, k.answer);
+      else if (k.type === 'order') ok = Array.isArray(a) && a.join() === k.answer.join();
+      else if (k.type === 'short') ok = k.accept.map(normShort).indexOf(normShort(a)) >= 0;
+      per[qid] = { ok: ok, answer: a }; max += k.points; if (ok) score += k.points;
+    });
+    return { score: score, max: max, per: per };
+  }
+
+  /* Record an instructor decision about an account, and save it to the inbox so it lasts and other instructors see it. */
+  function decide(action, address, handle) {
+    var rec = JSON.stringify({ action: action, address: address, handle: handle, at: new Date().toISOString() });
+    return crypto.subtle.sign('HMAC', state.adminKey, new TextEncoder().encode(rec)).then(function (mac) {
+      return Kit.seal({ v: 2, admin: rec, mac: Kit.b64u.from(mac) }, state.pubJwk);
+    }).then(function (code) {
+      addRaw(code, { source: 'this session', time: null });
+      var cfg = inboxCfg(), token = $('token').value.trim();
+      if (!cfg || !token) { status('Decision applied in this tab only. To save it, enter the inbox repo and a token that can write issues, then decide again.', 'warn'); return; }
+      return Kit.postToInbox(cfg, token, '[admin] ' + action + ' ' + handle, 'Instructor decision. Do not edit.\n\n```\n' + code + '\n```\n')
+        .then(function (r) { status('Decision saved to the inbox as ' + r.ref + '.', 'ok'); },
+          function (e) { status('Decision applied in this tab but NOT saved to the inbox (' + e.message + ').', 'warn'); });
+    }).then(render);
+  }
+  function openRecord(r) {
+    return Kit.unseal(r.token, state.priv).then(function (env) {
+      if (env && env.admin) {
+        return crypto.subtle.verify('HMAC', state.adminKey, Kit.b64u.toBytes(env.mac || ''), new TextEncoder().encode(env.admin)).then(function (ok) {
+          if (!ok) throw new Error('forged instructor decision (not made with the class key)');
+          return Object.assign({}, r, { admin: JSON.parse(env.admin) });
+        });
+      }
+      return Kit.checkSubmission(env).then(function (c) { return Object.assign({}, r, { p: c.p, address: c.address, when: r.time || c.p.at }); });
+    }).catch(function (e) {
+      return Object.assign({}, r, { err: e && e.message && !/operation/i.test(e.name + e.message) ? e.message : 'cannot decrypt (different class key, or edited)' });
+    });
+  }
+
+  function render() {
+    var out = $('results');
+    if (!state.raw.length) { out.replaceChildren(); return; }
+    if (!state.priv) { out.replaceChildren(el('section', { class: 'panel' }, el('div', { class: 'callout warn', text: state.raw.length + ' codes loaded. Load the class private key to read them.' }))); return; }
+    ready.then(function () { return Promise.all(state.raw.map(openRecord)); }).then(function (recs) {
+      var problems = [], students = {}, quizzes = {}, stale = {}, builds = {}, nokey = {};
+      recs.filter(function (r) { return r.p; }).forEach(function (r) { builds[r.p.build || 'unknown'] = 1; });
+      recs.filter(function (r) { return r.err; }).forEach(function (r) { problems.push([r.source, r.err]); });
+      var byTime = function (a, b) { return a.when < b.when ? -1 : a.when > b.when ? 1 : 0; };
+      var good = recs.filter(function (r) { return r.p; }).sort(byTime);
+
+      /* Registrations: an account keeps the first handle it registered. A handle lists its accounts in the order they registered. */
+      var nameOf = {}, regAt = {}, accountsOf = {}, subs = {}, reasonOf = {};
+      good.forEach(function (r) {
+        if (r.p.kind !== 'register') { subs[r.address] = (subs[r.address] || 0) + 1; return; }
+        var h = Kit.normHandle((r.p.data || {}).handle);
+        if (!h || nameOf[r.address]) return;
+        nameOf[r.address] = h; regAt[r.address] = r.when; reasonOf[r.address] = (r.p.data || {}).reason || 'new'; (accountsOf[h] = accountsOf[h] || []).push(r.address);
+      });
+      /* Instructor decisions, latest wins. */
+      var decision = {};
+      recs.filter(function (r) { return r.admin; }).sort(function (a, b) { return a.admin.at < b.admin.at ? -1 : 1; })
+        .forEach(function (r) { decision[r.admin.address] = r.admin.action; });
+      function statusOf(addr) {
+        var h = nameOf[addr];
+        if (!h) return 'unregistered';
+        return decision[addr] || (accountsOf[h][0] === addr ? 'accept' : 'pending');
+      }
+      /* A replacement takes over from the moment it registered: after that, the account before it no longer counts.
+         Otherwise whoever holds a lost seed phrase could keep submitting as the student. */
+      var cutoff = {};
+      Object.keys(accountsOf).forEach(function (h) {
+        var acc = accountsOf[h].filter(function (a) { return statusOf(a) === 'accept'; });
+        acc.forEach(function (a, i) { if (acc[i + 1]) cutoff[a] = regAt[acc[i + 1]]; });
+      });
+      var late = {};
+      function stu(key, handle) { return students[key] || (students[key] = { handle: handle, accounts: {}, quiz: {}, flags: {}, last: '' }); }
+
+      var jobs = good.map(function (r) {
+        var p = r.p, when = r.when, st = statusOf(r.address);
+        if (p.kind === 'register' || st === 'pending' || st === 'reject') return null;
+        if (cutoff[r.address] && when >= cutoff[r.address]) { late[r.address] = (late[r.address] || 0) + 1; return null; }
+        var s = st === 'unregistered' ? stu(r.address, '(unregistered)') : stu('h:' + nameOf[r.address], nameOf[r.address]);
+        s.accounts[r.address] = 1;
+        if (when > s.last) s.last = when;
+        if (p.kind === 'quiz') {
+          var key = state.keys[p.item];
+          if (!key) { nokey[p.item] = 1; return null; }
+          if ((p.data || {}).rev !== key.rev) { stale[p.item + ' (site build ' + (p.build || 'unknown') + ')'] = 1; return null; }
+          var g = gradeQuiz(key, (p.data || {}).answers || {});
+          var prev = s.quiz[p.item];
+          if (!prev || when > prev.when) s.quiz[p.item] = { when: when, g: g, source: r.source };
+          quizzes[p.item] = key;
+          return null;
+        }
+        if (p.kind === 'flag') {
+          var lab = (window.BC_LABS || {})[p.item];
+          if (!lab) { problems.push([r.source, 'no grader for lab ' + p.item]); return null; }
+          return lab.grade(p).then(function (res) {
+            var fk = p.item + ':' + res.flag;
+            if (res.ok) { var cur = s.flags[fk]; if (!cur || when < cur.when) s.flags[fk] = { when: when, points: res.points }; }
+            else if (res.stale) stale[p.item + ' (site build ' + (p.build || 'unknown') + ')'] = 1;
+            else problems.push([r.source, s.handle + ': wrong flag for ' + fk]);
+          });
+        }
+        problems.push([r.source, 'unknown submission kind']);
+        return null;
+      });
+      /* Registered accounts with no work yet still appear, so the instructor can see who has signed up. */
+      Object.keys(nameOf).forEach(function (a) { if (statusOf(a) === 'accept') stu('h:' + nameOf[a], nameOf[a]).accounts[a] = 1; });
+      var contested = Object.keys(accountsOf).filter(function (h) { return accountsOf[h].length > 1; }).map(function (h) {
+        return { handle: h, accounts: accountsOf[h].map(function (a) { return { address: a, at: regAt[a], status: statusOf(a), subs: subs[a] || 0, reason: reasonOf[a], replaced: !!cutoff[a], late: late[a] || 0 }; }) };
+      });
+      return Promise.all(jobs).then(function () { return { students: students, quizzes: quizzes, problems: problems, contested: contested, n: recs.length, stale: Object.keys(stale), builds: Object.keys(builds), nokey: Object.keys(nokey) }; });
+    }).then(paint);
+  }
+
+  function paint(R) {
+    var out = $('results'), list = Object.keys(R.students).map(function (k) { return R.students[k]; });
+    var quizIds = Object.keys(R.quizzes).sort();
+    list.forEach(function (s) {
+      s.quizPts = quizIds.reduce(function (t, q) { return t + (s.quiz[q] ? s.quiz[q].g.score : 0); }, 0);
+      s.ctfPts = Object.keys(s.flags).reduce(function (t, f) { return t + s.flags[f].points; }, 0);
+    });
+    list.sort(function (a, b) { return b.ctfPts - a.ctfPts || b.quizPts - a.quizPts || a.handle.localeCompare(b.handle); });
+
+    var head = ['Handle', 'Account'].concat(quizIds, ['CTF pts', 'Flags', 'Last activity']);
+    var rows = list.map(function (s) {
+      return [s.handle, Object.keys(s.accounts).join(' ')].concat(
+        quizIds.map(function (q) { return s.quiz[q] ? s.quiz[q].g.score + '/' + s.quiz[q].g.max : '·'; }),
+        [String(s.ctfPts), Object.keys(s.flags).sort().join(' ') || '·', s.last ? s.last.replace('T', ' ').slice(0, 16) : '·']);
+    });
+    var shown = rows.map(function (r) { var c = r.slice(); c[1] = c[1].split(' ').map(function (a) { return Kit.short(a); }).join(' + '); return c; });
+
+    var sections = [el('section', { class: 'panel', id: 'class-table' },
+      el('div', { class: 'panel-head' }, el('h2', { text: 'Class' }), el('span', { class: 'muted small', text: list.length + ' students · ' + R.n + ' records · every one signature-checked · site build ' + (R.builds.join(', ') || 'unknown') })),
+      el('div', { class: 'table-wrap' }, table(head, shown, [2])),
+      el('div', { class: 'btn-row' }, el('button', { class: 'btn', type: 'button', text: 'Download CSV', onclick: function () { Kit.download('class-results.csv', csv([head].concat(rows))); } }))
+    )];
+
+    /* The class's site is a frozen snapshot. If a quiz or lab has changed in the course repo since, grading here would be wrong. */
+    if (R.stale.length) sections.unshift(el('section', { class: 'panel', id: 'stale' }, el('div', { class: 'callout bad' },
+      el('b', { text: 'Not graded: ' + R.stale.join(', ') + '. ' }),
+      'The answer keys you loaded are for a different version of that quiz than this class took. Load the answer-keys file made for this site\'s build (' + Kit.build.commit + '): the course repo keeps one per build in instructor/answer-keys/.')));
+    if (R.nokey.length) sections.unshift(el('section', { class: 'panel', id: 'nokey' }, el('div', { class: 'callout warn' },
+      el('b', { text: 'Quiz answers received but not graded: ' + R.nokey.join(', ') + '. ' }), 'Load the answer keys file in step 1 to grade them.')));
+
+    /* Handles registered by more than one account: a lost seed phrase, or someone using another student's handle. */
+    if (R.contested.length) sections.push(el('section', { class: 'panel', id: 'contested' }, el('h2', { text: 'Handles registered by more than one account' }),
+      el('p', { class: 'small muted', text: 'The first account to register a handle is accepted. A later one waits here, and nothing it submits is counted until you decide. Check with the student in person first.' }),
+      el('ul', { class: 'small muted' },
+        el('li', { text: 'Accept if the student lost their seed phrase and made a new one. Their earlier work is kept, their new work counts (including anything submitted while waiting), and the old seed phrase stops counting from the moment the new one was registered.' }),
+        el('li', { text: 'Reject if it isn\'t them. Nothing from that account counts.' })),
+      R.contested.map(function (c) {
+        return el('div', { class: 'contest', 'data-handle': c.handle }, el('h3', { text: c.handle }),
+          el('div', { class: 'table-wrap' }, el('table', { class: 'data' }, el('tbody', null, c.accounts.map(function (a, i) {
+            var label = a.status === 'accept' ? (a.replaced ? 'replaced' : 'accepted') : a.status === 'reject' ? 'rejected' : 'waiting for you';
+            var why = i === 0 ? 'registered first, ' : a.reason === 'lost' ? 'says they lost their seed phrase; registered ' : 'registered as a new student (unexpected); ';
+            return el('tr', { 'data-status': a.status, 'data-reason': a.reason, 'data-replaced': a.replaced ? 'yes' : 'no' }, el('td', { class: 'mono', text: Kit.short(a.address, 6) }),
+              el('td', { text: why + String(a.at).replace('T', ' ').slice(0, 16) }),
+              el('td', { text: a.subs + (a.subs === 1 ? ' submission' : ' submissions') + (a.late ? ' (' + a.late + ' after it was replaced, not counted)' : '') }),
+              el('td', null, el('span', { class: 'tag ' + (a.status === 'accept' && !a.replaced ? 'ok' : a.status === 'pending' ? 'accent' : ''), text: label })),
+              el('td', null,
+                a.status !== 'accept' ? el('button', { class: 'icon-btn', type: 'button', text: 'Accept', onclick: function () { decide('accept', a.address, c.handle); } }) : null, ' ',
+                a.status !== 'reject' ? el('button', { class: 'icon-btn', type: 'button', text: 'Reject', onclick: function () { decide('reject', a.address, c.handle); } }) : null));
+          })))));
+      })));
+
+    /* Item analysis: which questions the class missed, and the most popular wrong answer. */
+    quizIds.forEach(function (qid) {
+      var key = R.quizzes[qid], subs = list.map(function (s) { return s.quiz[qid]; }).filter(Boolean);
+      var rowsQ = Object.keys(key.questions).map(function (k, i) {
+        var Q = key.questions[k], right = 0, wrong = {};
+        subs.forEach(function (s) {
+          var r = s.g.per[k]; if (r.ok) { right++; return; }
+          var lab = r.answer == null ? '(blank)' : Q.type === 'short' ? String(r.answer) : Q.type === 'single' ? (Q.labels[r.answer] || r.answer) : Q.type === 'multi' ? [].concat(r.answer).map(function (x) { return Q.labels[x] || x; }).join(' + ') : 'wrong order';
+          wrong[lab] = (wrong[lab] || 0) + 1;
+        });
+        var top = Object.keys(wrong).sort(function (a, b) { return wrong[b] - wrong[a]; })[0];
+        var pct = subs.length ? Math.round(100 * right / subs.length) : 0;
+        return [String(i + 1), Q.prompt.length > 70 ? Q.prompt.slice(0, 68) + '…' : Q.prompt, pct + '%', top ? top + ' (' + wrong[top] + ')' : '·'];
+      });
+      sections.push(el('section', { class: 'panel' },
+        el('div', { class: 'panel-head' }, el('h2', { text: key.title }), el('span', { class: 'muted small', text: subs.length + ' submitted' })),
+        el('div', { class: 'table-wrap' }, table(['#', 'Question', 'Correct', 'Most common wrong answer'], rowsQ, [2]))));
+    });
+
+    if (R.problems.length) sections.push(el('section', { class: 'panel' }, el('h2', { text: 'Needs a look' }),
+      el('div', { class: 'table-wrap' }, table(['Source', 'Issue'], R.problems))));
+    out.replaceChildren.apply(out, sections);
+  }
+
+  function table(head, rows, numCols) {
+    numCols = numCols || [];
+    return el('table', { class: 'data' },
+      el('thead', null, el('tr', null, head.map(function (h, i) { return el('th', { class: numCols.indexOf(i) >= 0 ? 'num' : null, text: h }); }))),
+      el('tbody', null, rows.map(function (r) { return el('tr', null, r.map(function (c, i) { return el('td', { class: numCols.indexOf(i) >= 0 ? 'num' : i === 1 && /^0x/.test(c) ? 'mono' : null, text: c }); })); })));
+  }
+  function csv(rows) { return rows.map(function (r) { return r.map(function (c) { c = String(c); return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(','); }).join('\n') + '\n'; }
+
+})();
+</script>
+</body>
+</html>

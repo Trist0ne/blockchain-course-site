@@ -6,6 +6,7 @@
 <title>Instructor dashboard</title>
 <link rel="icon" href="kit/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="kit/house.css">
+<script src="kit/class.js"></script>
 <script src="kit/kit.js"></script>
 <script src="kit/lib/wallet-lib.js"></script>
 <script src="kit/lib/course-words.js"></script>
@@ -59,7 +60,13 @@
 (function () {
   'use strict';
   var el = Kit.el, $ = function (id) { return document.getElementById(id); };
-  Kit.chrome({ title: 'Instructor dashboard', crumbs: 'Instructor · Class results', noHandle: true });
+  Kit.chrome({ title: 'Class results', crumbs: 'Instructor · Class results', home: 'start.html', noHandle: true });
+  /* On a class site the settings say where the records are, so there is nothing to type. */
+  (function () {
+    var inbox = Kit.cls().inbox;
+    if (!inbox) return;
+    $('repo').value = inbox.repo || ''; $('platform').value = inbox.platform || 'github'; $('host').value = inbox.host || '';
+  })();
 
   /* ---- Load answer keys and lab graders (script tags work from a plain file) ---- */
   function loadScript(src) { return new Promise(function (ok, bad) { var s = el('script', { src: src }); s.onload = ok; s.onerror = function () { bad(new Error('Could not load ' + src)); }; document.head.appendChild(s); }); }

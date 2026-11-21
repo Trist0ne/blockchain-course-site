@@ -3,36 +3,53 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Class results</title>
+<title>Instructor dashboard</title>
 <link rel="icon" href="kit/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="kit/house.css?v=42196de95e4e">
+<link rel="stylesheet" href="kit/house.css?v=f1524a7a15d6">
 <script src="kit/class.js"></script>
-<script src="items.js?v=42196de95e4e"></script>
-<script src="kit/kit.js?v=42196de95e4e"></script>
-<script src="kit/lib/wallet-lib.js?v=42196de95e4e"></script>
-<script src="kit/lib/course-words.js?v=42196de95e4e"></script>
-<script src="kit/wallet.js?v=42196de95e4e"></script>
-<script src="kit/btc.js?v=42196de95e4e"></script>
+<script src="items.js?v=f1524a7a15d6"></script>
+<script src="kit/kit.js?v=f1524a7a15d6"></script>
+<script src="kit/lib/wallet-lib.js?v=f1524a7a15d6"></script>
+<script src="kit/lib/course-words.js?v=f1524a7a15d6"></script>
+<script src="kit/wallet.js?v=f1524a7a15d6"></script>
+<script src="kit/btc.js?v=f1524a7a15d6"></script>
 </head>
 <body>
 <main class="page wide">
   <div class="page-head">
-    <div class="eyebrow"><span class="tag accent">Instructor</span><span class="tag">Sign in with the instructor seed phrase</span></div>
-    <h1>Class results</h1>
-    <p class="lede">Sign in and this page does the rest: it fetches the class's records, decrypts them, checks every student's signature, grades, and totals the class. It holds no secrets itself, and everything happens in this browser.</p>
+    <div class="eyebrow"><span class="tag accent">Instructor</span></div>
+    <h1>Instructor dashboard</h1>
+    <p class="lede">Sign in with this class's instructor seed phrase. While this page is open it collects the class's work, checks every signature, grades it and sends each student their results. There is nothing to press.</p>
   </div>
 
   <section class="panel" id="signin">
     <h2>Instructor sign-in</h2>
     <form id="staff-form">
-      <label class="field"><span>Instructor seed phrase (this class's 12 words)</span><textarea class="mono" id="staff-phrase" rows="2" spellcheck="false" autocomplete="off" placeholder="the instructors' 12 words, in order"></textarea></label>
-      <div class="btn-row" style="margin-top:0"><button class="btn primary" type="submit" id="staff-go">Sign in</button></div>
+      <span class="pw-label">Instructor seed phrase (this class's 12 words)</span>
+      <div id="staff-slot"></div>
+      <div class="btn-row"><button class="btn primary" type="submit" id="staff-go">Sign in</button></div>
     </form>
     <div id="key-status" class="small muted" style="margin-top:.5rem">Not signed in. The words are held for this browser session only.</div>
+    <div id="auto-status" class="small muted" data-state="off" data-n="0" style="margin-top:.35rem"></div>
     <div id="load-status"></div>
   </section>
 
+  <div id="days-slot"></div>
   <div id="results"></div>
+
+  <section class="panel" id="tools">
+    <h2>Running the class</h2>
+    <p><a href="ref/seed-backup.html">Print seed phrase backup cards</a><br><span class="muted small">Four to a sheet. Each student writes their 12 words on one.</span></p>
+    <p><a href="start.html">The student home</a><br><span class="muted small">The course map your students see.</span></p>
+    <details class="hint"><summary>A student lost their seed phrase</summary>
+      <ol class="small">
+        <li>If they are still signed in anywhere, their handle in the top bar opens "Your course identity", where they can show the words and copy them again.</li>
+        <li>Otherwise they choose "Lost your seed phrase?" at sign-in, enter their handle and make a new seed phrase.</li>
+        <li>Confirm in person that it is them, then press Accept on their handle on this page. Their earlier work is kept, and the old words stop counting.</li>
+      </ol></details>
+    <details class="hint"><summary>Setting up, adding answer keys, or replacing the inbox token</summary>
+      <p class="small">Done from the private course repo, by whoever has it: open <code>instructor/setup.html</code> in your copy and enter this class's repo. That page holds the quiz answer keys, which is why it is not part of this site.</p></details>
+  </section>
 
   <details class="panel" id="other">
     <summary style="cursor:pointer;font-weight:650">Other ways to load records</summary>
@@ -61,7 +78,8 @@
 (function () {
   'use strict';
   var el = Kit.el, $ = function (id) { return document.getElementById(id); };
-  Kit.chrome({ title: 'Class results', crumbs: 'Instructor · Class results', home: 'start.html', noHandle: true });
+  Kit.chrome({ title: 'Instructor dashboard', crumbs: 'Instructor dashboard', home: 'start.html', noHandle: true });
+  var staffIn = Kit.phraseInput({ id: 'staff-phrase' }); $('staff-slot').appendChild(staffIn);
   var cls = Kit.cls(), items = window.BC_ITEMS || [];
   /* On a class site the settings say where the records are, so there is nothing to type. */
   if (cls.inbox) { $('repo').value = cls.inbox.repo || ''; $('platform').value = cls.inbox.platform || 'github'; $('host').value = cls.inbox.host || ''; }
@@ -70,7 +88,11 @@
   function loadScript(src) { return new Promise(function (ok, bad) { var s = el('script', { src: src }); s.onload = ok; s.onerror = function () { bad(new Error('Could not load ' + src)); }; document.head.appendChild(s); }); }
   var ready = Promise.all(items.filter(function (i) { return i.kind === 'lab' && i.data; }).map(function (i) { return loadScript(Kit.asset(i.data)); }));
 
-  var state = { staff: null, token: '', raw: [], seen: {}, last: null };
+  var state = { staff: null, token: '', raw: [], seen: {}, last: null, opened: {}, pubJson: null, publishing: false, again: false };
+  /* The class state (which days are unlocked, which quizzes are closed) and where it and the published results are kept. */
+  var CS = { open: {}, closed: {}, at: '' }, csRef = null, resRef = null, stateQ = Promise.resolve(), POLL = 30000;
+  function auto(st, msg) { var a = $('auto-status'); a.setAttribute('data-state', st); if (msg != null) a.textContent = msg; }
+  function clock() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
   function status(msg, cls2) { $('load-status').replaceChildren(el('div', { class: 'callout ' + (cls2 || 'info'), text: msg })); }
   function token() { return state.token || $('token').value.trim(); }
   function inboxCfg() {
@@ -83,24 +105,24 @@
   function signIn(phrase, quiet) {
     var acct;
     try {
-      if (Kit.wallet.looksReal(phrase)) { $('staff-phrase').value = ''; throw new Error('Stop: that looks like a real wallet\'s seed phrase. Never type one into a website.'); }
+      if (Kit.wallet.looksReal(phrase)) { staffIn.clear(); throw new Error('Stop: that looks like a real wallet\'s seed phrase. Never type one into a website.'); }
       acct = Kit.staffFrom(phrase);
     } catch (e) {
       if (!quiet) $('key-status').replaceChildren(el('div', { class: 'callout bad', text: /valid 12-word/.test(e.message) ? 'That isn\'t a valid phrase: 12 course words, in order.' : e.message }));
       return Promise.resolve();
     }
     state.staff = acct; Kit.session.set('staff', Kit.wallet.normPhrase(phrase));
-    $('staff-form').hidden = true; $('staff-phrase').value = '';
+    $('staff-form').hidden = true; staffIn.clear();
     $('key-status').replaceChildren(el('span', { class: 'solved-badge', id: 'key-ok', text: '✓ Signed in as this class\'s instructor (' + Kit.short(acct.address) + ') ' }),
       el('button', { class: 'icon-btn', type: 'button', id: 'staff-out', text: 'Sign out', onclick: function () { Kit.session.del('staff'); location.reload(); } }));
     var sealed = cls.inbox && cls.inbox.sealed;
     return (sealed ? acct.open(sealed).then(function (o) { state.token = o.token || ''; }, function () { state.token = ''; }) : Promise.resolve()).then(function () {
       if (inboxCfg() && (state.token || !cls.inbox)) return fetchInbox();
       if (inboxCfg()) { status('Couldn\'t unlock this class\'s inbox token. Open "Other ways to load records" below and paste a token, or fetch without one if the class repo is public.', 'warn'); $('other').open = true; }
-      render();
+      return render();
     });
   }
-  $('staff-form').addEventListener('submit', function (e) { e.preventDefault(); signIn($('staff-phrase').value, false); });
+  $('staff-form').addEventListener('submit', function (e) { e.preventDefault(); signIn(staffIn.getPhrase(), false); });
   if (Kit.session.get('staff', '')) signIn(Kit.session.get('staff', ''), true);   // still signed in from earlier in this browser session
 
   function addRaw(text, meta) {
@@ -111,23 +133,85 @@
     });
     return added;
   }
-  function fetchInbox() {
+  /* quiet: a background check. It says nothing unless something is wrong, and redraws only if something changed. */
+  function fetchInbox(quiet) {
+    quiet = quiet === true;
     var cfg = inboxCfg();
     if (!cfg) { status('Enter the class repo as owner/name.', 'bad'); return Promise.resolve(); }
-    var added = 0, n = 0;
-    status('Fetching the class\'s records…');
+    var added = 0, n = 0, newState = null, pubs = [];
+    if (!quiet) status('Fetching the class\'s records…');
     return (function page(p) {
       return Kit.listInbox(cfg, token(), { page: p }).then(function (list) {
-        list.forEach(function (it) {
+        list.forEach(function (it) {   // newest first
+          if (/^\[state\]/.test(it.title)) { var st = newState ? null : Kit.readState(it.body); if (st && st.classId === (cls.classId || null)) newState = { ref: it.ref, st: st }; return; }
+          if (/^\[results\]/.test(it.title)) { pubs.push(it); return; }
           if (!/^\[(submit|admin)\]/.test(it.title)) return;
           n++; added += addRaw(it.body, { source: it.ref, time: it.time });
         });
         return list.length === 100 ? page(p + 1) : null;
       });
-    })(1).then(function () { status(n + ' records in the class, ' + added + ' new.', 'ok'); render(); },
-      function (e) { status('Couldn\'t fetch the records: ' + e.message + (/ 404$/.test(e.message) ? ' (wrong repo, or a token is needed to see it)' : / 401$/.test(e.message) ? ' (the token was refused: it may have expired)' : ''), 'bad'); render(); });
+    })(1).then(function () {
+      /* The published results are one record, kept up to date in place: find this class's newest genuine one. */
+      return resRef ? null : pubs.reduce(function (q, it) {
+        return q.then(function (hit) { return hit || Kit.readResults(it.body).then(function (r) { if (r && r.classId === (cls.classId || null)) resRef = it.ref; return !!resRef; }, function () { return false; }); });
+      }, Promise.resolve(false));
+    }).then(function () {
+      var changed = false;
+      if (newState) { csRef = newState.ref; if (newState.st.at > CS.at) { CS = { open: newState.st.open || {}, closed: newState.st.closed || {}, at: newState.st.at }; changed = true; } }
+      if (!quiet) status(n + ' records in the class, ' + added + ' new.', 'ok');
+      else if (/callout bad/.test($('load-status').innerHTML)) status('Connected again.', 'ok');
+      if (!quiet || added || changed || !state.last) return render();
+      auto($('auto-status').getAttribute('data-state'), $('auto-status').textContent.replace(/Last checked [^.]+\./, 'Last checked ' + clock() + '.'));
+    }, function (e) { status('Couldn\'t fetch the records: ' + e.message + (/ 404$/.test(e.message) ? ' (wrong repo, or a token is needed to see it)' : / 401$/.test(e.message) ? ' (the token was refused: it may have expired)' : ''), 'bad'); if (!quiet) return render(); });
   }
-  $('fetch').addEventListener('click', fetchInbox);
+  $('fetch').addEventListener('click', function () { fetchInbox(); });
+  /* While the page is open it keeps itself up to date: every half minute, and at once when you come back to it. */
+  function check() { if (state.staff && !document.hidden && inboxCfg() && (token() || !cls.inbox)) fetchInbox(true); }
+  setInterval(check, POLL); window.addEventListener('focus', check);
+
+  /* ---- Unlocking days and closing quizzes: one signed record, kept up to date in place ---- */
+  function saveState(change) {
+    auto('busy'); change(CS); CS.at = new Date().toISOString(); paintDays();
+    var cfg = inboxCfg();
+    if (!cfg || !token()) { status('Changed in this tab only: there is no token to save it to the class with, so students won\'t see it.', 'warn'); return render(); }
+    stateQ = stateQ.then(function () {
+      var body = 'Which days are unlocked and which quizzes are closed. Kept up to date by the instructor dashboard. Do not edit.\n\n```\n'
+        + Kit.signState({ v: 1, classId: cls.classId || null, open: CS.open, closed: CS.closed, at: CS.at }, state.staff) + '\n```\n';
+      return csRef ? Kit.updateInbox(cfg, token(), csRef, body) : Kit.postToInbox(cfg, token(), '[state] days and quizzes', body, ['state']).then(function (r) { csRef = r.ref; });
+    }).then(function () { status('Saved. Students see it the next time their page checks (within two minutes) or when they reload.', 'ok'); },
+      function (e) { status('That change was NOT saved to the class (' + e.message + '), so students won\'t see it. Try again.', 'bad'); }).then(render);
+    return stateQ;
+  }
+  function paintDays() {
+    var slot = $('days-slot');
+    if (!state.staff) return slot.replaceChildren();
+    var L = state.last, list = L ? L.list : [], days = window.BC_DAYS || [], n = list.filter(function (s) { return s.handle !== '(unregistered)'; }).length;
+    function hm(t) { var d = new Date(t); return isNaN(d) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + d.toLocaleDateString([], { day: 'numeric', month: 'short' }); }
+    slot.replaceChildren(el('section', { class: 'panel', id: 'days' },
+      el('div', { class: 'panel-head' }, el('h2', { text: 'Course days' }), el('span', { class: 'muted small', text: n + (n === 1 ? ' student' : ' students') + ' registered' })),
+      el('p', { class: 'small muted', text: 'Students see a day\'s quizzes and challenges once you unlock it. Flags score as they come in. A quiz\'s scores go to students when you close it, and answers handed in after that don\'t count.' }),
+      days.map(function (d) {
+        var open = CS.open[String(d.n)], mine = items.filter(function (it) { return it.day === d.n; });
+        return el('div', { class: 'dayrow' + (open ? ' open' : ''), 'data-day': String(d.n), 'data-open': open ? 'yes' : 'no' },
+          el('div', { class: 'dayrow-head' },
+            el('span', { class: 'daynum', text: 'Day ' + d.n }), el('b', { text: d.title }),
+            el('span', { class: 'tag ' + (open ? 'ok' : ''), text: open ? 'Unlocked ' + hm(open) : 'Locked' }),
+            el('button', { class: 'btn' + (open ? '' : ' accent'), type: 'button', 'data-unlock': String(d.n), text: open ? 'Lock again' : 'Unlock day ' + d.n,
+              onclick: function () { saveState(function (c) { if (open) delete c.open[String(d.n)]; else c.open[String(d.n)] = new Date().toISOString(); }); } })),
+          mine.length ? el('ul', { class: 'dayitems' }, mine.map(function (it) {
+            if (it.kind === 'quiz') {
+              var closed = CS.closed[it.id], got = list.filter(function (s) { return s.quiz[it.id]; }).length;
+              return el('li', { 'data-item': it.id }, el('span', { class: 'tag', text: 'Quiz' }), el('a', { href: it.href, text: it.title }),
+                el('span', { class: 'muted small', text: got + ' handed in' + (closed ? ' · closed ' + hm(closed) + ', scores sent' : ' · open, scores not sent yet') }),
+                el('button', { class: 'icon-btn', type: 'button', 'data-close': it.id, text: closed ? 'Reopen' : 'Close and send scores',
+                  onclick: function () { saveState(function (c) { if (closed) delete c.closed[it.id]; else c.closed[it.id] = new Date().toISOString(); }); } }));
+            }
+            var fl = Object.keys(it.flags || {});
+            return el('li', { 'data-item': it.id }, el('span', { class: 'tag', text: 'Challenge' }), el('a', { href: it.href, text: it.title }),
+              el('span', { class: 'muted small', text: fl.map(function (f, i) { return 'flag ' + (i + 1) + ': ' + list.filter(function (s) { return s.flags[it.id + ':' + f]; }).length + ' captured'; }).join(' · ') }));
+          })) : el('p', { class: 'muted small dayempty', text: 'No quizzes or challenges yet.' }));
+      })));
+  }
   /* Codes handed in by hand are saved into the class too, so they are there for every instructor, every later
      session and every published result. Only genuine student records are saved: anything else stays in this tab. */
   function takeHandIns(text, source) {
@@ -153,7 +237,7 @@
     this.value = '';
   });
   $('addpaste').addEventListener('click', function () { var t = $('paste').value; $('paste').value = ''; takeHandIns(t, 'handed in (pasted)').then(function (r) { reportHandIns(r, 'codes'); }); });
-  $('clear').addEventListener('click', function () { state.raw = []; state.seen = {}; render(); status('Cleared.'); });
+  $('clear').addEventListener('click', function () { state.raw = []; state.seen = {}; state.opened = {}; state.last = null; render(); status('Cleared.'); });
 
   /* ---- Grading ---- */
   function normShort(s) { return String(s || '').toLowerCase().replace(/[\s,_]/g, '').replace(/(satoshis|satoshi|sats|sat)$/, ''); }
@@ -182,7 +266,8 @@
           function (e) { status('Decision applied in this tab but NOT saved to the class (' + e.message + ').', 'warn'); });
     }).then(render);
   }
-  function openRecord(r) {
+  function openRecord(r) { return state.opened[r.token] || (state.opened[r.token] = openRecord1(r)); }
+  function openRecord1(r) {
     return state.staff.open(r.token).then(function (env) {
       if (env && env.admin) return Kit.openStaffRecord(env).then(function (rec) { return Object.assign({}, r, { admin: rec }); });
       return Kit.checkSubmission(env).then(function (c) {
@@ -195,9 +280,11 @@
 
   function render() {
     var out = $('results');
-    if (!state.staff) { out.replaceChildren(state.raw.length ? el('section', { class: 'panel' }, el('div', { class: 'callout warn', text: state.raw.length + ' codes loaded. Sign in to read them.' })) : ''); return; }
-    if (!state.raw.length) { out.replaceChildren(); return; }
-    ready.then(function () { return Promise.all(state.raw.map(openRecord)); }).then(function (recs) {
+    if (!state.staff) { out.replaceChildren(state.raw.length ? el('section', { class: 'panel' }, el('div', { class: 'callout warn', text: state.raw.length + ' codes loaded. Sign in to read them.' })) : ''); return Promise.resolve(); }
+    auto('busy');
+    if (!state.raw.length) { out.replaceChildren(); state.last = null; paintDays(); auto('idle', 'Nothing handed in yet. This page checks for new work every 30 seconds. Last checked ' + clock() + '.'); return Promise.resolve(); }
+    var closedAt = {}; Object.keys(CS.closed).forEach(function (q) { closedAt[q] = Date.parse(CS.closed[q]); });
+    return ready.then(function () { return Promise.all(state.raw.map(openRecord)); }).then(function (recs) {
       var problems = [], students = {}, quizzes = {}, stale = {}, builds = {}, nokey = {}, pubOf = {};
       recs.filter(function (r) { return r.p; }).forEach(function (r) { builds[r.p.build || 'unknown'] = 1; pubOf[r.address] = r.pub; });
       recs.filter(function (r) { return r.err; }).forEach(function (r) { problems.push([r.source, r.err]); });
@@ -245,6 +332,7 @@
         if (p.kind === 'quiz') {
           var key = keys[p.item];
           if (!key) { nokey[p.item] = 1; return null; }
+          if (closedAt[p.item] && Date.parse(when) >= closedAt[p.item]) { problems.push([r.source, s.handle + ': handed in ' + p.item + ' after it was closed (not counted)']); return null; }
           if ((p.data || {}).rev !== key.rev) { stale[p.item] = 1; return null; }
           var g = gradeQuiz(key, (p.data || {}).answers || {});
           var prev = s.quiz[p.item];
@@ -274,7 +362,7 @@
         return { students: students, quizzes: quizzes, problems: problems, contested: contested, n: recs.length, stale: Object.keys(stale), builds: Object.keys(builds),
           nokey: Object.keys(nokey), pubOf: pubOf, stored: stored };
       });
-    }).then(paint);
+    }).then(paint).catch(function (e) { auto('idle'); status('Something went wrong reading the records: ' + e.message, 'bad'); });
   }
 
   function paint(R) {
@@ -294,15 +382,12 @@
         [String(s.ctfPts), Object.keys(s.flags).sort().join(' ') || '·', s.last ? s.last.replace('T', ' ').slice(0, 16) : '·']);
     });
     var shown = rows.map(function (r) { var c = r.slice(); c[1] = c[1].split(' ').map(function (a) { return Kit.short(a); }).join(' + '); return c; });
-    var canPublish = !!(token() && inboxCfg() && list.length);
 
     var sections = [el('section', { class: 'panel', id: 'class-table' },
       el('div', { class: 'panel-head' }, el('h2', { text: 'Class' }), el('span', { class: 'muted small', text: list.length + ' students · ' + R.n + ' records · every one signature-checked · site build ' + (R.builds.join(', ') || 'unknown') })),
       el('div', { class: 'table-wrap' }, table(head, shown, [2])),
       el('div', { class: 'btn-row' },
-        el('button', { class: 'btn primary', type: 'button', id: 'publish', disabled: !canPublish, text: 'Publish results to students', onclick: publish }),
-        el('button', { class: 'btn', type: 'button', text: 'Download CSV', onclick: function () { Kit.download('class-results.csv', csv([head].concat(rows))); } })),
-      el('p', { class: 'small muted', id: 'publish-status', style: 'margin-top:.5rem', text: canPublish ? 'Students see nothing until you publish. Each student then sees their own scores and the class averages on the class site. Publish again whenever you want to update them.' : 'Publishing needs the class\'s inbox token, which signing in unlocks.' }))];
+        el('button', { class: 'btn', type: 'button', text: 'Download CSV', onclick: function () { Kit.download('class-results.csv', csv([head].concat(rows))); } })))];
 
     /* The class's site is a frozen snapshot. Answer keys for a different version of a quiz must not grade it. */
     if (R.stale.length) sections.unshift(el('section', { class: 'panel', id: 'stale' }, el('div', { class: 'callout bad' },
@@ -354,38 +439,60 @@
     if (R.problems.length) sections.push(el('section', { class: 'panel' }, el('h2', { text: 'Needs a look' }),
       el('div', { class: 'table-wrap' }, table(['Source', 'Issue'], R.problems))));
     out.replaceChildren.apply(out, sections);
+    paintDays();
+    return publish();
   }
 
-  /* ---- Publish: each student's results sealed to their own account, the whole record signed with the class key ---- */
+  /* ---- Publishing, by itself: each student's results sealed to their own account, the whole record signed by the class.
+     It is one record, replaced in place whenever what students should see has changed. Flags are included as soon as
+     they are checked; a quiz is included once it is closed. ---- */
   function publish() {
-    var L = state.last, list = L.list, quizIds = L.quizIds, R = L.R, say = $('publish-status'), btn = $('publish');
-    var n = list.filter(function (s) { return s.handle !== '(unregistered)'; }).length || 1;
+    var L = state.last, cfg = inboxCfg();
+    if (!L || !L.list.length) return auto('idle', 'Nothing to send to students yet. Last checked ' + clock() + '.');
+    if (!cfg || !token()) return auto('off', 'Graded here, but students can\'t be sent their results: that needs the class\'s inbox token, which signing in normally unlocks.');
+    var list = L.list, R = L.R, quizIds = L.quizIds.filter(function (q) { return CS.closed[q]; });
+    var named = list.filter(function (s) { return s.handle !== '(unregistered)'; }), n = named.length || 1;
     var clsQ = {}, clsF = {}, ctfTotal = 0;
     quizIds.forEach(function (q) {
       var got = list.map(function (s) { return s.quiz[q]; }).filter(Boolean);
       clsQ[q] = { title: R.quizzes[q].title, n: got.length, max: got.length ? got[0].g.max : 0, avg: got.length ? Math.round(10 * got.reduce(function (t, x) { return t + x.g.score; }, 0) / got.length) / 10 : 0 };
     });
     list.forEach(function (s) { ctfTotal += s.ctfPts; Object.keys(s.flags).forEach(function (f) { clsF[f] = (clsF[f] || 0) + 1; }); });
-    var shared = { students: n, quizzes: clsQ, flags: clsF, ctfAvg: Math.round(10 * ctfTotal / n) / 10 };
-    var at = new Date().toISOString(), entries = {};
-    btn.disabled = true; say.textContent = 'Sealing each student\'s results…';
-    Promise.all(list.map(function (s) {
+    var board = named.filter(function (s) { return s.ctfPts > 0; }).sort(function (a, b) { return b.ctfPts - a.ctfPts || a.handle.localeCompare(b.handle); }).slice(0, 10).map(function (s) { return { handle: s.handle, pts: s.ctfPts }; });
+    var shared = { students: n, quizzes: clsQ, flags: clsF, ctfAvg: Math.round(10 * ctfTotal / n) / 10, board: board };
+    var people = list.map(function (s) {
       var mine = { handle: s.handle, quizzes: {}, flags: {}, ctf: s.ctfPts };
       quizIds.forEach(function (q) { if (s.quiz[q]) { var per = {}; Object.keys(s.quiz[q].g.per).forEach(function (k) { per[k] = s.quiz[q].g.per[k].ok; }); mine.quizzes[q] = { score: s.quiz[q].g.score, max: s.quiz[q].g.max, per: per }; } });
-      Object.keys(s.flags).forEach(function (f) { mine.flags[f] = s.flags[f].points; });
-      return Promise.all(Object.keys(s.accounts).map(function (addr) {
-        if (!R.pubOf[addr]) return null;
-        return Kit.wallet.sealTo(R.pubOf[addr], { mine: mine, cls: shared }).then(function (blob) { entries[addr.toLowerCase()] = blob; });
-      }));
-    })).then(function () {
-      return Kit.signResults({ v: 1, classId: cls.classId || null, build: Kit.build.commit, at: at, entries: entries }, state.staff);
-    }).then(function (signed) {
-      return Kit.postToInbox(inboxCfg(), token(), '[results] ' + at.slice(0, 16).replace('T', ' '), 'Published results. Each student can read only their own. Do not edit.\n\n```\n' + signed + '\n```\n', ['results']);
-    }).then(function (r) {
-      say.replaceChildren(el('span', { class: 'solved-badge', id: 'published', text: 'Published ✓ (' + r.ref + ', ' + Object.keys(entries).length + ' accounts). Students see it the next time they open the class site.' }));
-    }, function (e) { say.replaceChildren(el('span', { class: 'callout bad', text: 'Could not publish: ' + e.message })); })
-      .then(function () { btn.disabled = false; });
+      Object.keys(s.flags).sort().forEach(function (f) { mine.flags[f] = s.flags[f].points; });
+      return { mine: mine, to: Object.keys(s.accounts).filter(function (a) { return R.pubOf[a]; }).sort() };
+    });
+    var json = JSON.stringify([cls.classKey, shared, people]);
+    if (json === state.pubJson) return auto('idle', sentLine());
+    if (state.publishing) { state.again = true; return; }
+    state.publishing = true;
+    var entries = {}, at = new Date().toISOString(), mark;
+    return Kit.sha256(new TextEncoder().encode(json)).then(function (d) {
+      mark = Kit.hex.from(d);
+      if (resRef && Kit.session.get('sent', '') === mark) return 'same';   // this browser already sent exactly this
+      return Promise.all(people.map(function (p) {
+        return Promise.all(p.to.map(function (addr) { return Kit.wallet.sealTo(R.pubOf[addr], { mine: p.mine, cls: shared }).then(function (blob) { entries[addr.toLowerCase()] = blob; }); }));
+      })).then(function () {
+        return Kit.signResults({ v: 1, classId: cls.classId || null, build: Kit.build.commit, at: at, entries: entries }, state.staff);
+      }).then(function (signed) {
+        var body = 'Published results. Each student can read only their own. Kept up to date by the instructor dashboard. Do not edit.\n\n```\n' + signed + '\n```\n';
+        return resRef ? Kit.updateInbox(cfg, token(), resRef, body) : Kit.postToInbox(cfg, token(), '[results] kept up to date', body, ['results']).then(function (r) { resRef = r.ref; });
+      });
+    }).then(function (same) {
+      state.pubJson = json; Kit.session.set('sent', mark); if (same !== 'same') { state.sentAt = clock(); $('auto-status').setAttribute('data-n', String(+$('auto-status').getAttribute('data-n') + 1)); }
+      state.publishing = false;
+      if (state.again) { state.again = false; return publish(); }
+      auto('idle', sentLine());
+    }, function (e) {
+      state.publishing = false; state.again = false;
+      auto('idle', 'Graded here, but sending results to students failed (' + e.message + '). It will try again at the next check.');
+    });
   }
+  function sentLine() { return '✓ Live. New work is graded and each student\'s results are sent to them as it arrives' + (state.sentAt ? ' (last sent ' + state.sentAt + ')' : '') + '. Last checked ' + clock() + '.'; }
 
   function table(head, rows, numCols) {
     numCols = numCols || [];

@@ -314,3 +314,60 @@ ol.kit-steps li.done span { background: var(--ok-tint); color: var(--ok); border
 #kit-signin ol.words li { font-size: 1.05rem; padding: 0.45rem 0.7rem; }
 #kit-msg .callout { margin-bottom: 0.25rem; }
 #kit-signin .callout.bad { margin-bottom: 0.25rem; }
+
+/* ---------- Typing a seed phrase: one box per word ---------- */
+.pw-label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--ink-2); margin-bottom: 0.4rem; }
+.pw-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.4rem; }
+.pw-grid.few { grid-template-columns: repeat(auto-fit, minmax(9rem, 12rem)); }
+@media (min-width: 40rem) { .pw-grid:not(.few) { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+label.pw { display: flex; align-items: center; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface); overflow: hidden; }
+label.pw:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+label.pw span { flex: none; width: 1.9rem; text-align: center; font-family: var(--mono); font-size: 0.72rem; color: var(--ink-3); align-self: stretch; display: grid; place-items: center; border-right: 1px solid var(--line); background: var(--surface-2); }
+label.pw input { border: 0; border-radius: 0; padding: 0.45rem 0.5rem; width: 100%; min-width: 0; font-size: 0.95rem; background: transparent; outline: none; }
+label.pw.ok { border-color: var(--ok); } label.pw.ok span { background: var(--ok-tint); color: var(--ok); }
+label.pw.bad { border-color: var(--bad); } label.pw.bad span { background: var(--bad-tint); color: var(--bad); }
+.pw-suggest { min-height: 2.1rem; display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; margin-top: 0.5rem; font-size: 0.85rem; }
+.pw-pick { font: inherit; font-family: var(--mono); font-size: 0.85rem; padding: 0.15rem 0.6rem; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); cursor: pointer; }
+.pw-pick.first { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); font-weight: 650; }
+.pw-none { color: var(--bad); }
+
+/* A locked day's page shows its notice and nothing else. */
+main.kit-locked > :not(#kit-gate):not(#kit-signin):not(#kit-registered) { display: none !important; }
+.foot a { color: inherit; }
+
+/* Instructor dashboard: the days of the course. */
+.dayrow { border-top: 1px solid var(--line); padding: 0.7rem 0; }
+.dayrow-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.dayrow-head .btn { margin-left: auto; padding: 0.3rem 0.8rem; font-size: 0.85rem; }
+.daynum { font-family: var(--mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); min-width: 3.6rem; }
+.dayrow:not(.open) .dayrow-head b { color: var(--ink-2); font-weight: 600; }
+.dayitems { list-style: none; margin: 0.5rem 0 0 4.2rem; padding: 0; display: grid; gap: 0.35rem; }
+.dayitems li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.dayempty { margin: 0.25rem 0 0 4.2rem; }
+@media (max-width: 40rem) { .dayitems, .dayempty { margin-left: 0; } }
+
+/* Student home: the course map. */
+.scorebar { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 0 0 1rem; }
+.scorebar .stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.6rem 0.9rem; min-width: 8.5rem; }
+.scorebar .stat b { display: block; font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+.scorebar .stat span { font-size: 0.78rem; color: var(--ink-3); }
+.map { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+.day { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.8rem 0.9rem; display: flex; flex-direction: column; gap: 0.5rem; min-height: 8rem; }
+.day[data-open="no"] { background: var(--surface-2); border-style: dashed; color: var(--ink-3); }
+.day-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+.day h3 { margin: 0; font-size: 1rem; }
+.day[data-open="no"] h3 { color: var(--ink-2); }
+.day .lock { font-size: 0.8rem; display: flex; align-items: center; gap: 0.35rem; margin-top: auto; }
+.mapitem { display: block; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 0.5rem 0.6rem; text-decoration: none; color: var(--ink); }
+a.mapitem:hover { border-color: var(--accent); }
+.mapitem .t { font-weight: 600; font-size: 0.92rem; display: block; }
+.mapitem .s { font-size: 0.78rem; color: var(--ink-3); display: block; margin-top: 0.15rem; }
+.mapitem.done { border-color: var(--ok); }
+.flags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
+.flag { display: inline-flex; align-items: center; gap: 0.3rem; font-family: var(--mono); font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--ink-3); }
+.flag svg { width: 0.8rem; height: 0.8rem; fill: none; stroke: currentColor; stroke-width: 2; }
+.flag.sent { border-color: var(--accent); color: var(--accent); }
+.flag.got { background: var(--ok-tint); border-color: var(--ok); color: var(--ok); font-weight: 650; }
+.flag.got svg { fill: currentColor; }
+tr.me td { background: var(--accent-tint); font-weight: 650; }
+.day .lock svg { flex: none; width: 0.95rem; height: 0.95rem; fill: none; stroke: currentColor; stroke-width: 2; }

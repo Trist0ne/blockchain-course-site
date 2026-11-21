@@ -12,10 +12,10 @@
   var Kit = {};
   var enc = new TextEncoder();
   var dec = new TextDecoder();
-  Kit.version = '0.16.0';
+  Kit.version = '0.18.0';
   /* Which course commit this site was cut from. tools/cut_delivery.py rewrites this line; 'dev' means an uncut working copy.
      Every record carries it, so a class can always be graded with the course repo as it was when the class was cut. */
-  Kit.build = { commit: '42196de95e4e', date: '2026-11-21' };
+  Kit.build = { commit: 'f1524a7a15d6', date: '2026-11-21' };
   /* A file of this site, named by build, so a page never pairs with another build's copy of it. */
   Kit.asset = function (path) { return path + (Kit.build.commit === 'dev' ? '' : '?v=' + Kit.build.commit); };
   /* Where this file was loaded from, so pages at any depth can link to shared pages such as setup.html. */
@@ -219,7 +219,7 @@
     );
     document.body.insertBefore(top, document.body.firstChild);
     document.body.appendChild(el('footer', { class: 'foot' },
-      el('span', { text: (c.course || 'Blockchain Technology') + (c.classId ? ' · class ' + c.classId : '') }),
+      el('span', null, (c.course || 'Blockchain Technology') + (c.classId ? ' · class ' + c.classId : '') + ' · ', el('a', { href: Kit.base + '../dashboard.html', id: 'kit-staff-link', text: 'Instructors' })),
       el('span', null, 'Press ', el('kbd', { text: 'P' }), ' for projector view · kit v' + Kit.version + ' · build ' + Kit.build.commit)
     ));
     document.addEventListener('keydown', function (e) {
@@ -246,6 +246,70 @@
     return p;
   }
   function wordGrid(phrase) { return el('ol', { class: 'words' }, phrase.split(' ').map(function (w) { return el('li', { text: w }); })); }
+
+  /* ---------- Typing a seed phrase: one box per word, the way wallets do it ----------
+     Suggestions come from the course word list as you type. Tab, Enter or Space takes the suggestion and moves on;
+     four letters are always enough, so the box completes itself; Backspace in an empty box goes back; pasting a whole
+     phrase fills every box. Kit.phraseInput({ id, numbers }) returns the element, with getPhrase(), words(), clear()
+     and focusFirst(). The first box has the given id; `numbers` labels the boxes (default 1 to 12). */
+  Kit.phraseInput = function (opts) {
+    opts = opts || {};
+    var WORDS = root.BC_WORDS || [], numbers = opts.numbers || [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    var hint = el('div', { class: 'pw-suggest', 'aria-live': 'polite' }), boxes = [], active = 0;
+    function matches(v) { if (!v) return []; var out = []; for (var i = 0; i < WORDS.length && out.length < 6; i++) if (WORDS[i].indexOf(v) === 0) out.push(WORDS[i]); return out; }
+    function isWord(v) { return WORDS.indexOf(v) >= 0; }
+    function paint(i) {
+      var v = boxes[i].value, m = matches(v), box = boxes[i].parentNode;
+      box.classList.toggle('ok', isWord(v)); box.classList.toggle('bad', !!v && !m.length);
+      if (i !== active) return;
+      hint.replaceChildren.apply(hint, !v ? [el('span', { class: 'muted', text: 'Start typing word ' + numbers[i] + '. Tab or Enter completes it.' })]
+        : !m.length ? [el('span', { class: 'pw-none', text: '"' + v + '" isn\'t a course word. Check your card.' })]
+        : m.map(function (w, k) { return el('button', { type: 'button', class: 'pw-pick' + (k === 0 ? ' first' : ''), tabindex: '-1', text: w, onmousedown: function (e) { e.preventDefault(); take(i, w, true); } }); }));
+    }
+    function go(i) { if (i >= 0 && i < boxes.length) { boxes[i].focus(); boxes[i].select(); } }
+    function take(i, w, advance) { boxes[i].value = w; paint(i); if (advance) { if (i + 1 < boxes.length) go(i + 1); else if (opts.onDone) opts.onDone(); } }
+    numbers.forEach(function (n, i) {
+      var input = el('input', { type: 'text', class: 'mono ' + (opts.boxClass || ''), id: i === 0 ? opts.id : (opts.id ? opts.id + '-' + (i + 1) : null), 'data-n': String(n),
+        autocomplete: 'off', autocapitalize: 'none', autocorrect: 'off', spellcheck: 'false', 'aria-label': 'Word ' + n });
+      boxes.push(input);
+      input.addEventListener('focus', function () { active = i; paint(i); });
+      input.addEventListener('input', function () {
+        var raw = input.value.toLowerCase().replace(/[^a-z\s]/g, '').replace(/^\s+/, ''), parts = raw.trim().split(/\s+/).filter(Boolean);
+        if (/\s/.test(raw) && parts.length) {   // a space, or a pasted phrase: spread the words over the boxes from here
+          for (var k = 0; k < parts.length && i + k < boxes.length; k++) { boxes[i + k].value = parts[k]; paint(i + k); }
+          var next = Math.min(i + parts.length, boxes.length - 1);
+          if (parts.length === 1 && !isWord(parts[0])) next = i;   // a space after a half-typed word: stay and show why
+          active = next; go(next); paint(next);
+          return;
+        }
+        input.value = raw; active = i;
+        var m = matches(raw);
+        /* A whole word that cannot be the start of a longer one moves on by itself. A half-typed word never does:
+           someone who keeps typing must not find the rest of it in the next box. */
+        if (m.length === 1 && m[0] === raw && document.activeElement === input) return take(i, raw, true);
+        paint(i);
+      });
+      input.addEventListener('keydown', function (e) {
+        var v = input.value, m = matches(v);
+        if (e.key === 'Backspace' && !v && i > 0) { e.preventDefault(); go(i - 1); return; }
+        if ((e.key === 'Enter' || e.key === ' ' || (e.key === 'Tab' && !e.shiftKey)) && v) {
+          if (!isWord(v) && m.length) { input.value = m[0]; paint(i); }
+          if (e.key === 'Tab') return;                       // the browser moves to the next box by itself
+          if (e.key === 'Enter' && i === boxes.length - 1) return;   // Enter in the last box submits the form
+          e.preventDefault();
+          if (isWord(input.value)) go(i + 1);
+        }
+      });
+    });
+    var grid = el('div', { class: 'pw-grid' + (numbers.length < 12 ? ' few' : '') }, boxes.map(function (b, i) { return el('label', { class: 'pw' }, el('span', { text: String(numbers[i]) }), b); }));
+    var wrap = el('div', { class: 'pw-wrap' }, grid, hint);
+    wrap.words = function () { return boxes.map(function (b) { return b.value.trim().toLowerCase(); }); };
+    wrap.getPhrase = function () { return wrap.words().filter(Boolean).join(' '); };
+    wrap.clear = function () { boxes.forEach(function (b, i) { b.value = ''; paint(i); }); };
+    wrap.focusFirst = function () { go(0); };
+    paint(0);
+    return wrap;
+  };
   var NEVER = 'Never type a real wallet\'s seed phrase into a web page: not this one, not any. A real phrase controls real money. This course uses its own words, which work the same way but can\'t open a real wallet.';
   var REAL = 'Stop: that looks like a real wallet\'s seed phrase. Never type one into a website. Nothing was stored or sent, but if those words protect real money, treat them as exposed to this computer. This course uses its own words: the 12 on your backup card.';
 
@@ -303,25 +367,27 @@
 
       /* ---- Returning student: class code (usually remembered) and the 12 words ---- */
       function viewSignIn() {
-        var phraseIn = el('textarea', { class: 'mono', rows: '2', placeholder: 'your 12 words, in order', id: 'kit-phrase', spellcheck: 'false', autocomplete: 'off' });
+        var phraseIn = Kit.phraseInput({ id: 'kit-phrase' });
         panel.replaceChildren(
           el('h2', { text: 'Sign in' }),
           el('form', { onsubmit: function (e) {
             e.preventDefault();
             checkCode().then(function (code) {
               if (code === null) return;
-              if (Kit.wallet.looksReal(phraseIn.value)) { phraseIn.value = ''; return fail(REAL); }
-              if (!Kit.wallet.validPhrase(phraseIn.value)) return fail('That isn\'t a valid 12-word course phrase. One wrong or misspelled word fails the built-in checksum. Check the spelling and the order against your card.');
-              finish(code, Kit.wallet.normPhrase(phraseIn.value), null);
+              var typed = phraseIn.getPhrase();
+              if (Kit.wallet.looksReal(typed)) { phraseIn.clear(); return fail(REAL); }
+              if (typed.split(' ').length < 12) return fail('Fill in all 12 words from your card.');
+              if (!Kit.wallet.validPhrase(typed)) return fail('Those 12 words don\'t make a valid phrase. Every word is on the list, so one is in the wrong box or is a different word: check the order against your card.');
+              finish(code, Kit.wallet.normPhrase(typed), null);
             });
           } },
             codeField(),
-            el('label', { class: 'field' }, el('span', { text: 'Your seed phrase (the 12 words on your backup card)' }), phraseIn),
+            el('div', { class: 'field' }, el('span', { class: 'pw-label', text: 'Your seed phrase: the 12 words on your backup card' }), phraseIn),
             el('p', { class: 'small muted', text: 'Course words only. Never type a real wallet\'s seed phrase into a web page.' }),
             el('div', { class: 'btn-row', style: 'margin-top:0' }, el('button', { class: 'btn primary', type: 'submit', id: 'kit-go', text: 'Sign in' }))),
           msg,
           links([['kit-to-first', 'First time here?', function () { viewHandle('new'); }], ['kit-to-lost', 'Lost your seed phrase?', function () { viewHandle('lost'); }]]));
-        (inbox && !savedCode ? panel.querySelector('#kit-code') : phraseIn).focus();
+        if (inbox && !savedCode) panel.querySelector('#kit-code').focus(); else phraseIn.focusFirst();
       }
 
       /* ---- Step 1 of 3: who you are. The same step starts a replacement for a lost phrase. ---- */
@@ -369,22 +435,23 @@
         /* ---- Step 3 of 3: check the backup, as real wallets do. The words are hidden and two are asked for. ---- */
         function check() {
           var picks = Kit.shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], Math.random).slice(0, 2).sort(function (x, y) { return x - y; });
-          var inputs = picks.map(function (i) { return el('input', { type: 'text', class: 'mono kit-confirm', 'data-n': String(i + 1), autocomplete: 'off', spellcheck: 'false', 'aria-label': 'Word ' + (i + 1) }); });
+          var two = Kit.phraseInput({ numbers: picks.map(function (i) { return i + 1; }), boxClass: 'kit-confirm' });
           panel.replaceChildren(
             stepper(3),
             el('h2', { text: 'Read two words back from your card' }),
             el('p', { class: 'muted', text: 'A backup you have never checked is a backup you can\'t trust.' }),
             el('form', { onsubmit: function (e) {
               e.preventDefault();
-              if (picks.every(function (i, k) { return inputs[k].value.trim().toLowerCase() === words[i]; })) finish(code, phrase, handle, reason);
+              var got = two.words();
+              if (picks.every(function (i, k) { return got[k] === words[i]; })) finish(code, phrase, handle, reason);
               else fail('Those don\'t match. Check your card, or go back and look at the words again.');
             } },
-              el('div', { class: 'kit-two' }, picks.map(function (i, k) { return el('label', { class: 'field' }, el('span', { text: 'Word ' + (i + 1) }), inputs[k]); })),
+              two,
               el('div', { class: 'btn-row', style: 'margin-top:0' },
                 el('button', { class: 'btn primary', type: 'submit', text: 'Finish' }),
                 el('button', { class: 'btn', type: 'button', text: 'Show the words again', onclick: show }))),
             msg);
-          inputs[0].focus();
+          two.focusFirst();
         }
         show();
       }
@@ -472,6 +539,19 @@
     }).then(function (j) { return { ref: '#' + (gl ? j.iid : j.number) }; });
   };
 
+  /* Replace the text of an existing record (ref is '#12'). Used for the two records that are kept up to date in place:
+     the class state and the published results. The platform keeps the edit history. */
+  Kit.updateInbox = function (inbox, token, ref, body) {
+    var gl = inbox.platform === 'gitlab', host = inbox.host || (gl ? 'gitlab.com' : 'github.com'), n = String(ref).replace('#', '');
+    var url = gl ? 'https://' + host + '/api/v4/projects/' + encodeURIComponent(inbox.repo) + '/issues/' + n
+      : (host === 'github.com' ? 'https://api.github.com' : 'https://' + host + '/api/v3') + '/repos/' + inbox.repo + '/issues/' + n;
+    var headers = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token };
+    if (!gl) headers.Accept = 'application/vnd.github+json';
+    return root.fetch(url, { method: gl ? 'PUT' : 'PATCH', headers: headers, body: JSON.stringify(gl ? { description: body } : { body: body }) }).then(function (r) {
+      if (!r.ok) throw new Error(host + ' answered ' + r.status);
+      return { ref: '#' + n };
+    });
+  };
   /* Read records from the class inbox, newest first: [{ ref, title, body, time }]. opts: { labels, page, perPage }. */
   Kit.listInbox = function (inbox, token, opts) {
     opts = opts || {};
@@ -498,7 +578,7 @@
   };
 
   /* ---------- Instructors ----------
-     An instructor signs in to the results page with the class's instructor seed phrase. `staff` below is that
+     An instructor signs in to the instructor dashboard with the class's instructor seed phrase. `staff` below is that
      account: { address, pub, sign, open }. */
   Kit.staffFrom = function (phrase) {
     var c = Kit.cls(), acct = Kit.wallet.fromPhrase(phrase, Kit.wallet.CLASS_PATH);
@@ -533,6 +613,49 @@
       return Promise.resolve(Kit.wallet.signedBy(body, m[2], Kit.cls().classAddress) ? JSON.parse(body) : null);
     } catch (e) { return Promise.resolve(null); }   // mangled: ignore it
   };
+  /* ---------- Class state: which days are unlocked, which quizzes are closed ----------
+     One public record, signed by the class account: students' pages can read it and check it, and nobody else can
+     write it. { open: { "<day>": "<time unlocked>" }, closed: { "<quiz id>": "<time closed>" }, at }.
+     A static site cannot truly lock a page: a locked day is hidden on the map and its pages say so. What cannot be
+     got round is grading: a quiz handed in after it was closed does not count. */
+  var STATE_RE = /BCC1\.([A-Za-z0-9_-]+)\.(0x[0-9a-f]{130})/;
+  Kit.signState = function (obj, staff) { var text = JSON.stringify(obj); return 'BCC1.' + Kit.b64u.from(enc.encode(text)) + '.' + staff.sign(text); };
+  Kit.readState = function (text) {
+    var m = STATE_RE.exec(String(text));
+    if (!m) return null;
+    try { var body = dec.decode(Kit.b64u.toBytes(m[1])); return Kit.wallet.signedBy(body, m[2], Kit.cls().classAddress) ? JSON.parse(body) : null; } catch (e) { return null; }
+  };
+  /* The class's current state as a student's page sees it. Resolves { open, closed, known }.
+     A class with no inbox has no locks: everything is open. If the class cannot be asked, `known` is false. */
+  Kit.classState = function () {
+    var inbox = Kit.inbox(), c = Kit.cls();
+    if (!inbox) return Promise.resolve({ open: null, closed: {}, known: true });
+    return Kit.studentToken().then(function (token) {
+      return Kit.listInbox(inbox, token, { labels: 'state', perPage: 5 }).then(function (list) {
+        if (list.length) return list;
+        return Kit.listInbox(inbox, token, { perPage: 100 }).then(function (all) { return all.filter(function (it) { return /^\[state\]/.test(it.title); }); });
+      });
+    }).then(function (list) {
+      for (var i = 0; i < list.length; i++) { var st = Kit.readState(list[i].body); if (st && st.classId === (c.classId || null)) return { open: st.open || {}, closed: st.closed || {}, known: true }; }
+      return { open: {}, closed: {}, known: true };
+    }).catch(function () { return { open: {}, closed: {}, known: false }; });
+  };
+  Kit.dayOf = function (itemId) { var it = (root.BC_ITEMS || []).filter(function (x) { return x.id === itemId; })[0]; return it ? it.day : null; };
+  /* For an item's own page: resolves 'open', 'locked' or 'closed', and shows a notice in `main` unless it is open. */
+  Kit.gateItem = function (itemId) {
+    return Kit.classState().then(function (st) {
+      var day = Kit.dayOf(itemId), main = document.querySelector('main');
+      var locked = st.open && day != null && !st.open[String(day)], closed = !!st.closed[itemId];
+      if (!locked && !closed) return 'open';
+      main.insertBefore(el('div', { class: 'callout ' + (locked ? 'warn' : 'info'), id: 'kit-gate', style: 'margin:0 0 1rem' },
+        el('b', { text: locked ? 'Day ' + day + ' is locked. ' : 'This quiz is closed. ' }),
+        locked ? (st.known ? 'Your instructor unlocks each day in class. ' : 'The class couldn\'t be reached to check whether it is unlocked. ') : 'Answers handed in now don\'t count. Your score is on your course home. ',
+        el('a', { href: Kit.base + '../start.html', text: 'Back to your course home' })), main.firstChild);
+      if (locked) main.classList.add('kit-locked');
+      return locked ? 'locked' : 'closed';
+    });
+  };
+
   /* The label on the signed-in student's own records: 's-' and the first 8 hex digits of their account. */
   Kit.myLabel = function () { return 's-' + Kit.who().slice(2, 10); };
   /* What the signed-in student has handed in, read from the class itself, so it is right on any computer.

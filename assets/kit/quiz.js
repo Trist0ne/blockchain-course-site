@@ -14,7 +14,8 @@
       Q.instructions ? el('p', { class: 'lede', text: Q.instructions }) : null
     ));
 
-    Kit.signIn().then(function () {
+    Kit.signIn().then(function () { return Kit.gateItem(Q.id); }).then(function (gate) {
+      if (gate === 'locked') return;
       var storeKey = 'quiz:' + Q.id + ':' + Kit.who();
       var answers = Kit.mine.get(storeKey, {});
       function save() { Kit.mine.set(storeKey, answers); }

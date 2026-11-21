@@ -5,68 +5,100 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Home</title>
 <link rel="icon" href="kit/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="kit/house.css?v=42196de95e4e">
+<link rel="stylesheet" href="kit/house.css?v=f1524a7a15d6">
 <script src="kit/class.js"></script>
-<script src="items.js?v=42196de95e4e"></script>
-<script src="kit/kit.js?v=42196de95e4e"></script>
-<script src="kit/lib/wallet-lib.js?v=42196de95e4e"></script>
-<script src="kit/lib/course-words.js?v=42196de95e4e"></script>
-<script src="kit/wallet.js?v=42196de95e4e"></script>
+<script src="items.js?v=f1524a7a15d6"></script>
+<script src="kit/kit.js?v=f1524a7a15d6"></script>
+<script src="kit/lib/wallet-lib.js?v=f1524a7a15d6"></script>
+<script src="kit/lib/course-words.js?v=f1524a7a15d6"></script>
+<script src="kit/wallet.js?v=f1524a7a15d6"></script>
 </head>
 <body>
-<main class="page">
+<main class="page wide">
   <div class="page-head">
-    <h1 id="hello">Your course home</h1>
-    <p class="lede">Your quizzes and challenges, what you have handed in, and your results.</p>
+    <h1 id="hello">Your course map</h1>
+    <p class="lede">Every day of the course, its quizzes and its flags. Your instructor unlocks each day in class.</p>
   </div>
-  <section class="panel" id="work"><h2>Your work</h2><p class="muted small">Sign in to see it.</p></section>
+  <div class="scorebar" id="score"></div>
+  <div class="map" id="map"></div>
+  <section class="panel" id="board"><h2>Scoreboard</h2><p class="muted small">Sign in to see it.</p></section>
   <section class="panel" id="results"><h2>Your results</h2><p class="muted small">Sign in to see them.</p></section>
   <section class="panel">
     <h2>Reference</h2>
     <p><a href="ref/bitcoin.html">Bitcoin transactions reference sheet</a><br><span class="muted small">Hex, byte order, hashing, transaction layout.</span></p>
   </section>
-  <p class="small muted" style="text-align:right"><a href="staff.html">Instructors</a></p>
 </main>
 <script>
 (function () {
   'use strict';
   var el = Kit.el, $ = function (id) { return document.getElementById(id); };
   Kit.chrome({ title: 'Home', crumbs: 'Home', home: 'start.html' });
-  var items = window.BC_ITEMS || [], KIND = { quiz: 'Quiz', lab: 'Challenge' };
-  function titleOf(id) { for (var i = 0; i < items.length; i++) if (items[i].id === id) return items[i].title; return id; }
+  var items = window.BC_ITEMS || [], days = window.BC_DAYS || [];
 
   /* What has been handed in comes from the class itself (so it is right on any computer), plus anything this browser
-     knows it sent, plus what has been graded. */
-  var handIns = null, graded = null, asked = false;
+     knows it sent, plus what has been graded. Which days are open comes from the class too. */
+  var handIns = null, graded = null, shared = null, asked = false, cs = null;
   function hhmm(t) { var d = new Date(t); return isNaN(d) ? String(t) : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + d.toLocaleDateString([], { day: 'numeric', month: 'short' }); }
-  function paintWork() {
-    var who = Kit.who(), inbox = !!Kit.inbox();
-    $('work').replaceChildren(el('h2', { text: 'Your work' }), el('div', { class: 'table-wrap' }, el('table', { class: 'data', id: 'work-table' }, el('tbody', null, items.map(function (it) {
-      var parts = it.kind === 'lab' ? Object.keys(it.flags || {}) : [''];
-      var when = parts.map(function (p) {
-        var here = Kit.mine.get('sent:' + it.id + ':' + p + ':' + who, null);
-        return (handIns && handIns[it.id + ':' + p]) || (here ? here.at : null);
-      });
-      var done = when.filter(Boolean).length;
-      var isGraded = graded && (it.kind === 'quiz' ? !!graded.quizzes[it.id] : parts.some(function (p) { return graded.flags[it.id + ':' + p]; }));
-      var text = isGraded ? 'Graded: see your results below'
-        : done ? (it.kind === 'lab' ? done + ' of ' + parts.length + ' flags handed in' : 'Handed in ' + (handIns && handIns[it.id + ':'] ? hhmm(handIns[it.id + ':']) : when[0]))
-        : !inbox ? 'Hand in with Copy or Download'
-        : !asked ? 'Checking…'
-        : handIns ? 'Not handed in yet' : 'Couldn\'t check right now';
-      return el('tr', { 'data-item': it.id }, el('td', null, el('span', { class: 'tag', text: KIND[it.kind] || it.kind })),
-        el('td', null, el('a', { href: it.href, text: it.title }), el('br'), el('span', { class: 'muted small', text: it.section || '' })),
-        el('td', null, el('span', { class: done || isGraded ? 'solved-badge' : 'muted small', text: (done || isGraded ? '✓ ' : '') + text })));
-    })))));
+  function svg(d) { var NS = 'http://www.w3.org/2000/svg', s = document.createElementNS(NS, 'svg'), p = document.createElementNS(NS, 'path'); s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('aria-hidden', 'true'); p.setAttribute('d', d); s.appendChild(p); return s; }
+  var FLAG = 'M5 22V3m0 1h13l-3 5 3 5H5', LOCK = 'M6 11h12v10H6zM8 11V7a4 4 0 0 1 8 0v4';
+  function sentAt(it, part) {
+    var here = Kit.mine.get('sent:' + it.id + ':' + part + ':' + Kit.who(), null);
+    return (handIns && handIns[it.id + ':' + part]) || (here ? here.at : null);
+  }
+  function itemCard(it) {
+    var inbox = !!Kit.inbox(), waiting = !inbox ? 'Hand in with Copy or Download' : !asked ? 'Checking…' : handIns ? 'Not handed in yet' : 'Couldn\'t check right now';
+    if (it.kind === 'quiz') {
+      var q = graded && graded.quizzes[it.id], when = sentAt(it, ''), closed = cs && cs.closed[it.id];
+      var text = q ? 'Graded: ' + q.score + ' / ' + q.max : when ? '✓ Handed in ' + hhmm(when) + (closed ? '' : '. Your score appears when the quiz closes.') : closed ? 'Closed. Not handed in.' : waiting;
+      return el('a', { class: 'mapitem' + (q || when ? ' done' : ''), href: it.href, 'data-item': it.id }, el('span', { class: 'tag', text: 'Quiz' }), el('span', { class: 't', text: it.title }), el('span', { class: 's', text: text }));
+    }
+    var parts = Object.keys(it.flags || {}), sent = 0, got = 0;
+    var chips = parts.map(function (f, i) {
+      var won = graded && graded.flags[it.id + ':' + f], s = sentAt(it, f);
+      if (won) got++; else if (s) sent++;
+      return el('span', { class: 'flag' + (won ? ' got' : s ? ' sent' : ''), 'data-flag': it.id + ':' + f, 'data-state': won ? 'got' : s ? 'sent' : 'open',
+        title: won ? 'Captured' : s ? 'Handed in, being checked' : 'Not captured yet' }, svg(FLAG), it.flags[f] + ' pts');
+    });
+    var line = got + sent ? (got + sent) + ' of ' + parts.length + ' flags handed in' + (sent ? ' · ' + sent + ' being checked' : '') : waiting;
+    return el('a', { class: 'mapitem' + (got === parts.length ? ' done' : ''), href: it.href, 'data-item': it.id }, el('span', { class: 'tag', text: 'Challenge' }), el('span', { class: 't', text: it.title }),
+      el('span', { class: 'flags' }, chips), el('span', { class: 's', text: line }));
+  }
+  function paintMap() {
+    $('map').replaceChildren.apply($('map'), days.map(function (d) {
+      var mine = items.filter(function (it) { return it.day === d.n; });
+      var open = !cs ? null : !cs.open ? true : !!cs.open[String(d.n)];   // a class with no inbox has no locks
+      var nq = mine.filter(function (i) { return i.kind === 'quiz'; }).length, nf = mine.reduce(function (t, i) { return t + Object.keys(i.flags || {}).length; }, 0);
+      var inside = (nq ? nq + (nq === 1 ? ' quiz' : ' quizzes') : '') + (nq && nf ? ' · ' : '') + (nf ? nf + (nf === 1 ? ' flag' : ' flags') : '');
+      var body = open ? (mine.length ? mine.map(itemCard) : [el('p', { class: 'muted small', style: 'margin:0', text: 'Nothing to hand in today.' })])
+        : [inside ? el('p', { class: 'small', style: 'margin:0', text: inside }) : null,
+           el('div', { class: 'lock' }, open === null ? 'Checking…' : [svg(LOCK), cs.known ? 'Locked until your instructor unlocks it' : 'Couldn\'t reach the class to check'])].filter(Boolean);
+      var card = el('div', { class: 'day', 'data-day': String(d.n), 'data-open': open ? 'yes' : 'no' },
+        el('div', { class: 'day-head' }, el('span', { class: 'daynum', text: 'Day ' + d.n }), open ? el('span', { class: 'tag ok', text: 'Open' }) : null), el('h3', { text: d.title }));
+      body.forEach(function (x) { card.appendChild(x); });
+      return card;
+    }));
+    var total = 0, mineF = 0, allF = 0;
+    items.forEach(function (it) { Object.keys(it.flags || {}).forEach(function (f) { allF++; total += it.flags[f]; if (graded && graded.flags[it.id + ':' + f]) mineF++; }); });
+    function stat(v, label, id) { return el('div', { class: 'stat', id: id }, el('b', { text: v }), el('span', { text: label })); }
+    $('score').replaceChildren(stat(graded ? String(graded.ctf) : '0', 'your points, of ' + total, 'stat-points'), stat(mineF + ' / ' + allF, 'flags captured', 'stat-flags'),
+      stat(shared ? String(shared.ctfAvg) : '·', 'class average', 'stat-avg'));
+  }
+  function paintBoard() {
+    var b = shared && shared.board, me = graded && graded.handle;
+    $('board').replaceChildren(el('h2', { text: 'Scoreboard' }), b && b.length
+      ? el('div', { class: 'table-wrap' }, el('table', { class: 'data', id: 'board-table' },
+          el('thead', null, el('tr', null, el('th', { text: '#' }), el('th', { text: 'Handle' }), el('th', { class: 'num', text: 'Points' }))),
+          el('tbody', null, b.map(function (r, i) { return el('tr', { class: r.handle === me ? 'me' : null }, el('td', { text: String(i + 1) }), el('td', { text: r.handle }), el('td', { class: 'num', text: String(r.pts) })); }))))
+      : el('p', { class: 'muted small', text: 'No flags captured yet. The top ten by challenge points appear here.' }));
   }
 
   function paintResults(state) {
     var box = $('results'), head = el('div', { class: 'panel-head' }, el('h2', { text: 'Your results' }),
-      el('button', { class: 'icon-btn', type: 'button', id: 'refresh', text: 'Check again', onclick: loadResults }));
+      el('button', { class: 'icon-btn', type: 'button', id: 'refresh', text: 'Check again', onclick: function () { refresh(false); } }));
     if (state === 'loading') return box.replaceChildren(head, el('p', { class: 'muted small', text: 'Looking for published results…' }));
     if (state === 'noinbox') return box.replaceChildren(el('h2', { text: 'Your results' }), el('p', { class: 'muted small', text: 'This class runs without an inbox, so results aren\'t published here. Your instructor will tell you.' }));
     if (state === 'error') return box.replaceChildren(head, el('div', { class: 'callout warn', text: 'Couldn\'t reach the class to look for results. Check your connection and try again.' }));
-    if (!state) return box.replaceChildren(head, el('p', { id: 'no-results', class: 'muted', text: 'Nothing published for you yet. Your instructor publishes results after grading: check again later.' }));
+    if (!state) return box.replaceChildren(head, el('p', { id: 'no-results', class: 'muted', text: 'Nothing for you yet. Flags are checked as you hand them in; a quiz score appears once your instructor closes the quiz.' }));
     var m = state.mine, c = state.cls, rows = [];
     items.forEach(function (it) {
       if (it.kind === 'quiz') {
@@ -92,14 +124,20 @@
   function loadResults() {
     if (!Kit.inbox()) return paintResults('noinbox');
     paintResults('loading');
-    Kit.myResults().then(function (r) { graded = r ? r.mine : null; paintResults(r); paintWork(); }, function () { paintResults('error'); });
+    Kit.myResults().then(function (r) { graded = r ? r.mine : null; shared = r ? r.cls : null; paintResults(r); paintMap(); paintBoard(); }, function () { paintResults('error'); });
+  }
+  /* Whatever goes wrong while asking, the map must not sit on "Checking…". */
+  function refresh(quiet) {
+    if (!quiet) loadResults(); else if (Kit.inbox()) Kit.myResults().then(function (r) { graded = r ? r.mine : null; shared = r ? r.cls : null; paintResults(r); paintMap(); paintBoard(); }, function () {});
+    Kit.classState().then(function (st) { cs = st; paintMap(); });
+    Promise.resolve().then(function () { return Kit.myHandIns(); }).then(function (h) { handIns = h; }, function () { handIns = null; }).then(function () { asked = true; paintMap(); });
   }
 
   Kit.signIn().then(function (me) {
     if (me.handle) $('hello').textContent = 'Welcome, ' + me.handle;
-    paintWork(); loadResults();
-    /* Whatever goes wrong while asking, the list must not sit on "Checking…". */
-    Promise.resolve().then(function () { return Kit.myHandIns(); }).then(function (h) { handIns = h; }, function () { handIns = null; }).then(function () { asked = true; paintWork(); });
+    paintMap(); paintBoard(); refresh(false);
+    /* Keep the map current while it is open: a day unlocked or a score sent shows up within two minutes. */
+    setInterval(function () { if (!document.hidden) refresh(true); }, 120000);
   });
 })();
 </script>

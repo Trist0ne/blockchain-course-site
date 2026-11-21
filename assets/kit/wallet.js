@@ -1,0 +1,96 @@
+/* Course identity: a real Ethereum account from a real seed phrase.
+   - BIP-39: 12 words encode 128 bits of randomness (plus a checksum).
+   - BIP-32/44: the words derive a private key on the standard Ethereum path m/44'/60'/0'/0/0, so any wallet given the
+     same words derives the same account.
+   - EIP-191 personal_sign and EIP-4361 "Sign-In with Ethereum" messages: what every submission is signed with.
+   Needs kit.js and lib/wallet-lib.js (vendored noble/scure; see lib/SOURCE.md). Exposes Kit.wallet. */
+(function (root) {
+  'use strict';
+  var Kit = root.Kit, L = root.KitLib;
+  if (!Kit || !L) throw new Error('wallet.js needs kit.js and lib/wallet-lib.js loaded first');
+  var enc = new TextEncoder();
+  var PATH = "m/44'/60'/0'/0/0";
+
+  function keccak(bytes) { return L.keccak_256(bytes); }
+
+  /* EIP-55: the capital letters in an address are a checksum. */
+  function toChecksum(addr) {
+    var a = String(addr).toLowerCase().replace(/^0x/, '');
+    if (!/^[0-9a-f]{40}$/.test(a)) throw new Error('Not an Ethereum address');
+    var h = Kit.hex.from(keccak(enc.encode(a))), out = '0x';
+    for (var i = 0; i < 40; i++) out += parseInt(h[i], 16) >= 8 ? a[i].toUpperCase() : a[i];
+    return out;
+  }
+  function addressOf(pubUncompressed) { return toChecksum(Kit.hex.from(keccak(pubUncompressed.slice(1)).slice(12))); }
+
+  /* EIP-191 personal_sign: the prefix makes it impossible for a signed message to also be a valid transaction. */
+  function personalHash(message) {
+    var m = enc.encode(message), p = enc.encode('\x19Ethereum Signed Message:\n' + m.length);
+    var all = new Uint8Array(p.length + m.length); all.set(p); all.set(m, p.length);
+    return keccak(all);
+  }
+
+  function normPhrase(p) { return String(p || '').toLowerCase().trim().split(/\s+/).join(' '); }
+  function validPhrase(p) { p = normPhrase(p); return p.split(' ').length === 12 && L.validateMnemonic(p, L.wordlist); }
+  function newPhrase() { return L.generateMnemonic(L.wordlist, 128); }
+
+  function fromPhrase(phrase) {
+    phrase = normPhrase(phrase);
+    if (!validPhrase(phrase)) throw new Error('That is not a valid 12-word seed phrase. Check the spelling and the order.');
+    var key = L.HDKey.fromMasterSeed(L.mnemonicToSeedSync(phrase)).derive(PATH);
+    var priv = key.privateKey;
+    var address = addressOf(L.secp256k1.getPublicKey(priv, false));
+    return {
+      address: address,
+      path: PATH,
+      /* Returns the usual Ethereum signature: 0x + r (32 bytes) + s (32) + v (1 byte, 27 or 28). */
+      sign: function (message) {
+        var sig = L.secp256k1.sign(personalHash(message), priv, { prehash: false, format: 'recovered' }); // recovery id, r, s
+        var out = new Uint8Array(65); out.set(sig.slice(1), 0); out[64] = 27 + sig[0];
+        return '0x' + Kit.hex.from(out);
+      }
+    };
+  }
+
+  /* Recover the address that signed `message`. Verifying a signature needs no key at all. */
+  function recover(message, signature) {
+    var s = Kit.hex.toBytes(String(signature).replace(/^0x/, ''));
+    if (s.length !== 65) throw new Error('A signature is 65 bytes');
+    var v = s[64] >= 27 ? s[64] - 27 : s[64];
+    if (v !== 0 && v !== 1) throw new Error('Bad recovery value');
+    var rec = new Uint8Array(65); rec[0] = v; rec.set(s.slice(0, 64), 1);
+    var pub = L.secp256k1.recoverPublicKey(rec, personalHash(message), { prehash: false });
+    return addressOf(L.secp256k1.Point.fromBytes(pub).toBytes(false));
+  }
+
+  /* EIP-4361 message. Field order and wording are fixed by the standard. */
+  var siwe = {
+    build: function (f) {
+      // Grammar: address LF LF [statement LF] LF "URI: ". With no statement there are two blank lines.
+      var lines = [f.domain + ' wants you to sign in with your Ethereum account:', f.address, ''];
+      if (f.statement) lines.push(f.statement);
+      lines.push('', 'URI: ' + f.uri, 'Version: 1', 'Chain ID: ' + (f.chainId || 1), 'Nonce: ' + f.nonce, 'Issued At: ' + f.issuedAt);
+      if (f.resources && f.resources.length) { lines.push('Resources:'); f.resources.forEach(function (r) { lines.push('- ' + r); }); }
+      return lines.join('\n');
+    },
+    parse: function (text) {
+      var m = /^([^\s]+) wants you to sign in with your Ethereum account:\n(0x[0-9a-fA-F]{40})\n\n(?:([^\n]+)\n)?\nURI:([^\n]+)\nVersion: 1\nChain ID: (\d+)\nNonce: ([A-Za-z0-9]{8,})\nIssued At: ([^\n]+)(?:\nResources:((?:\n- [^\n]+)*))?$/.exec(String(text));
+      if (!m) throw new Error('Not an EIP-4361 message');
+      return { domain: m[1], address: m[2], statement: m[3] || '', uri: m[4], chainId: +m[5], nonce: m[6], issuedAt: m[7],
+        resources: m[8] ? m[8].split('\n- ').slice(1) : [] };
+    },
+    nonce: function () {
+      var abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', r = root.crypto.getRandomValues(new Uint8Array(16)), s = '';
+      for (var i = 0; i < r.length; i++) s += abc[r[i] % abc.length];
+      return s;
+    },
+    /* RFC 6920 "named information" URI for a SHA-256 digest: how the signed message points at the submission it covers. */
+    niUri: function (digestBytes) { return 'ni:///sha-256;' + Kit.b64u.from(digestBytes); }
+  };
+
+  /* A strong, sayable class code: four seed-phrase words (44 bits). */
+  function newClassCode() { return L.generateMnemonic(L.wordlist, 128).split(' ').slice(0, 4).join('-'); }
+
+  Kit.wallet = { PATH: PATH, newPhrase: newPhrase, validPhrase: validPhrase, normPhrase: normPhrase, fromPhrase: fromPhrase,
+    recover: recover, toChecksum: toChecksum, personalHash: personalHash, siwe: siwe, newClassCode: newClassCode };
+})(typeof window !== 'undefined' ? window : globalThis);

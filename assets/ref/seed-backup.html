@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seed phrase backup cards</title>
+<link rel="icon" href="../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../kit/house.css">
+<script src="../kit/class.js"></script>
+<script src="../kit/kit.js"></script>
+<style>
+/* Layout only: four cards per sheet (Letter or A4), cut along the dashed lines. Designed to print well in
+   black and white with "background graphics" off, so everything is drawn with lines, not fills. */
+@page { margin: 0.4in; }
+.sheet { display: grid; grid-template-columns: 3.7in 3.7in; justify-content: center; }
+.card {
+  width: 3.7in; height: 4.95in; padding: 0.22in 0.24in 0.18in; background: #fff; color: #111;
+  border: 1px dashed #9a9a9a; display: flex; flex-direction: column; font-size: 8.5pt; line-height: 1.3; overflow: hidden;
+  break-inside: avoid;
+}
+.card-head { display: flex; align-items: center; gap: 0.1in; border-bottom: 2px solid #111; padding-bottom: 0.07in; }
+.card-head svg { width: 0.3in; height: 0.3in; flex: none; }
+.card-head .t { font-size: 12pt; font-weight: 700; letter-spacing: -0.01em; line-height: 1.1; }
+.card-head .s { font-size: 7pt; letter-spacing: 0.09em; text-transform: uppercase; color: #444; }
+.who { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 0.1in; margin: 0.1in 0 0.08in; }
+.blank { border-bottom: 1px solid #111; height: 0.24in; position: relative; }
+.blank span { position: absolute; left: 0; bottom: -0.13in; font-size: 6pt; letter-spacing: 0.07em; text-transform: uppercase; color: #444; }
+.wordgrid { display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: repeat(6, 1fr); gap: 0.05in 0.12in; margin-top: 0.17in; flex: 1; min-height: 0; }
+.w { border: 1px solid #111; border-radius: 3px; display: flex; align-items: center; min-height: 0.26in; }
+.w i { font-style: normal; font-family: var(--mono); font-size: 7pt; width: 0.26in; text-align: center; align-self: stretch; display: flex; align-items: center; justify-content: center; border-right: 1px solid #111; color: #111; }
+.acct { margin-top: 0.1in; display: flex; align-items: flex-end; gap: 0.05in; font-family: var(--mono); font-size: 9pt; }
+.acct span.l { font-family: var(--sans); font-size: 6pt; letter-spacing: 0.07em; text-transform: uppercase; color: #444; margin-right: 0.06in; padding-bottom: 0.02in; }
+.acct b { font-weight: 400; display: inline-block; border-bottom: 1px solid #111; width: 0.62in; height: 0.2in; }
+.rules { margin: 0.1in 0 0; padding: 0.06in 0 0 0.16in; border-top: 1px solid #111; font-size: 7.3pt; }
+.rules li { margin: 0.01in 0; }
+.fine { font-size: 6.4pt; color: #444; margin-top: 0.05in; }
+.sheet + .sheet { break-before: page; margin-top: 0.3in; }
+@media screen {
+  .sheets { background: var(--surface-2); padding: 1rem; border-radius: var(--radius); overflow-x: auto; }
+  .card { box-shadow: var(--shadow); }
+}
+@media print {
+  main.page { max-width: none; padding: 0; }
+  .page-head, .controls { display: none !important; }
+  .sheets { padding: 0; }
+  .sheet + .sheet { margin-top: 0; }
+}
+</style>
+</head>
+<body>
+<main class="page wide">
+  <div class="page-head">
+    <div class="eyebrow"><span class="tag accent">Printable</span><span class="tag">For instructors</span></div>
+    <h1>Seed phrase backup cards</h1>
+    <p class="lede">Four cards per sheet. Print, cut along the dashed lines, and hand one to each student before they create their seed phrase. Students write their 12 words on the card by hand and sign in from it every day.</p>
+  </div>
+  <section class="panel controls">
+    <div class="inline-form">
+      <label class="small" for="n">Sheets (4 cards each)</label>
+      <input type="text" id="n" value="5" inputmode="numeric" style="flex:0 0 5rem;width:5rem">
+      <button class="btn primary" type="button" id="print">Print</button>
+      <span class="muted small" id="count"></span>
+    </div>
+    <p class="small muted" style="margin:.75rem 0 0">Prints on Letter or A4, portrait, at 100% scale. Card stock works best. A class of 20 needs 5 sheets; print a spare sheet for mistakes.</p>
+  </section>
+  <div class="sheets" id="sheets"></div>
+</main>
+<script>
+(function () {
+  'use strict';
+  var el = Kit.el, c = Kit.cls();
+  Kit.chrome({ title: 'Seed phrase backup cards', crumbs: 'Printables', home: '../start.html', noHandle: true });
+  var MARK = '<svg viewBox="0 0 32 32"><rect x="1" y="1" width="30" height="30" rx="7" fill="none" stroke="#111" stroke-width="2"/>' +
+    '<g fill="none" stroke="#111" stroke-width="2.4"><rect x="6" y="11.5" width="9" height="9" rx="2.2"/><rect x="17" y="11.5" width="9" height="9" rx="2.2"/></g><path d="M13.5 16h5" stroke="#111" stroke-width="2.4"/></svg>';
+
+  function card() {
+    var words = [];
+    for (var i = 1; i <= 12; i++) words.push(el('div', { class: 'w' }, el('i', { text: String(i) })));
+    return el('div', { class: 'card' },
+      el('div', { class: 'card-head' }, el('span', { html: MARK }),
+        el('div', null, el('div', { class: 't', text: 'Seed phrase backup' }), el('div', { class: 's', text: (c.course || 'Blockchain Technology') + ' · course identity' }))),
+      el('div', { class: 'who' },
+        el('div', { class: 'blank' }, el('span', { text: 'Handle' })),
+        el('div', { class: 'blank' }, el('span', { text: 'Class' })),
+        el('div', { class: 'blank' }, el('span', { text: 'Date' }))),
+      el('div', { class: 'wordgrid' }, words),
+      el('div', { class: 'acct' }, el('span', { class: 'l', text: 'Account check' }), '0x', el('b'), '…', el('b')),
+      el('ol', { class: 'rules' },
+        el('li', { text: 'Write by hand, one word per box, in order.' }),
+        el('li', { text: 'No photos, no screenshots, no typing it into notes or chat.' }),
+        el('li', { text: 'Read two words back to check it before you rely on it.' }),
+        el('li', { text: 'Keep it on you, apart from your computer. Show no one.' })),
+      el('div', { class: 'fine', text: 'Course use only. A real seed phrase controls real money: back it up this way, and never enter it on a website.' }));
+  }
+  function build() {
+    var n = Math.max(1, Math.min(20, parseInt(document.getElementById('n').value, 10) || 1));
+    var sheets = [];
+    for (var s = 0; s < n; s++) sheets.push(el('div', { class: 'sheet' }, card(), card(), card(), card()));
+    var box = document.getElementById('sheets'); box.replaceChildren.apply(box, sheets);
+    document.getElementById('count').textContent = (n * 4) + ' cards';
+  }
+  document.getElementById('n').addEventListener('input', build);
+  document.getElementById('print').addEventListener('click', function () { window.print(); });
+  build();
+})();
+</script>
+</body>
+</html>

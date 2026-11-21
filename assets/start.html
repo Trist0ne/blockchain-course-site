@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Course start</title>
+<link rel="icon" href="kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="kit/house.css">
+<script src="kit/class.js"></script>
+<script src="kit/kit.js"></script>
+<script src="kit/lib/wallet-lib.js"></script>
+<script src="kit/wallet.js"></script>
+</head>
+<body>
+<main class="page">
+  <div class="page-head">
+    <div class="eyebrow"><span class="tag accent">Proof of concept</span></div>
+    <h1>Course kit: proof of concept</h1>
+    <p class="lede">One quiz and one challenge, built on the shared course kit. Everything runs in your browser from static files. You sign in with a seed phrase, and your submissions are signed with your key and encrypted for your instructor.</p>
+  </div>
+  <section class="panel">
+    <div class="panel-head"><h2>Quiz</h2><span class="tag">Bitcoin Framework</span></div>
+    <p><a href="quiz/poc-02-bf/index.html">Daily quiz: Bitcoin transactions</a><br><span class="muted small">6 questions, about 12 minutes. No notes.</span></p>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2>Challenge</h2><span class="tag">Bitcoin Framework</span></div>
+    <p><a href="labs/ctf-txid/index.html">Name that transaction</a> <span class="pts">100 + 200 pts</span><br><span class="muted small">Compute a real transaction's ID from its raw bytes. About 10 minutes, plus a segwit flag if you want to go deeper.</span></p>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2>Reference and printables</h2></div>
+    <p><a href="ref/bitcoin.html">Bitcoin transactions reference sheet</a><br><span class="muted small">Hex, byte order, hashing, transaction layout.</span></p>
+    <p><a href="ref/seed-backup.html">Seed phrase backup cards</a><br><span class="muted small">For instructors to print: four cards per sheet. Students write their 12 words on one.</span></p>
+  </section>
+</main>
+<script>Kit.chrome({ title: 'Start', crumbs: 'Start', home: 'start.html', noHandle: false });</script>
+</body>
+</html>

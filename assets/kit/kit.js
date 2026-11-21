@@ -15,7 +15,7 @@
   Kit.version = '0.7.0';
   /* Which course commit this site was cut from. tools/cut_delivery.py rewrites this line; 'dev' means an uncut working copy.
      Every record carries it, so a class can always be graded with the course repo as it was when the class was cut. */
-  Kit.build = { commit: '0cdc9f9ed947', date: '2026-11-21' };
+  Kit.build = { commit: '8add9cafa853', date: '2026-11-21' };
   /* Where this file was loaded from, so pages at any depth can link to shared pages such as setup.html. */
   var here = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
   Kit.base = here.replace(/kit\.js(\?.*)?$/, '');
@@ -177,7 +177,8 @@
       if (!id) { chip.replaceChildren(el('span', { text: 'not signed in' })); return; }
       if (!Kit.wallet) { chip.replaceChildren(el('span', { text: 'signed in' })); return; }
       var me = Kit.me();
-      chip.replaceChildren(me.handle ? el('b', { text: me.handle }) : null, el('span', { class: 'mono', text: Kit.short(me.address) }));
+      chip.replaceChildren(el('span', { class: 'mono', text: Kit.short(me.address) }));
+      if (me.handle) chip.prepend(el('b', { text: me.handle })); // replaceChildren would print a missing handle as the word "null"
     }
     paintChip();
     chip.addEventListener('click', function () { if (Kit.identity() && Kit.wallet) Kit.identityPanel(); else if (Kit.wallet) Kit.signIn(); });

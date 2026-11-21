@@ -158,7 +158,7 @@
     var copied = el('span', { class: 'muted small' }), codeCopied = el('span', { class: 'muted small' }), live = el('div', { id: 'live' });
     var replacing = !!cur.publicKey;
 
-    $('out').replaceChildren(
+    var parts = [
       g.proof && g.proof.indexOf('ok:') === 0 ? el('div', { class: 'callout ok', id: 'token-ok', style: 'margin-bottom:1rem' }, el('b', { text: 'The token works. ' }), 'It saved a test record in ' + t.repo + ' (' + g.proof.slice(3) + ').')
         : g.proof === 'unreachable' ? el('div', { class: 'callout warn', style: 'margin-bottom:1rem' }, el('b', { text: 'The token could not be checked. ' }), 'This browser couldn\'t reach ' + t.host + '. The class is set up, but test a submission before the first day.') : null,
 
@@ -195,8 +195,10 @@
       el('section', { class: 'panel', id: 'step-next' }, el('h2', { text: (n++) + '. Before the first day' }),
         el('ul', null,
           el('li', null, el('a', { href: 'ref/seed-backup.html', target: '_blank', text: 'Print the seed phrase backup cards' }), ', one per student (four to a sheet).'),
-          el('li', null, 'Give each student a handle, and write the class code on the board.'),
-          el('li', null, 'To see results, open ', el('code', { text: 'instructor/dashboard/index.html' }), ' from your copy of the course repo and load the class key.'))));
+          el('li', null, g.code ? 'Give each student a handle, and write the class code on the board.' : 'Give each student a handle. With no inbox, they hand in their work as codes (Copy or Download).'),
+          el('li', null, 'To see results, open ', el('code', { text: 'instructor/dashboard/index.html' }), ' from your copy of the course repo and load the class key.')))];
+    // replaceChildren prints a skipped step as the word "null", so drop the gaps first
+    $('out').replaceChildren.apply($('out'), parts.filter(Boolean));
     $('out').scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
 

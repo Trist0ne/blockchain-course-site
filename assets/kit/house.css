@@ -374,3 +374,9 @@ tr.me td { background: var(--accent-tint); font-weight: 650; }
 .tag.bad { background: var(--bad-tint); color: var(--bad); border-color: transparent; }
 .q-mark { margin-left: auto; flex: none; }
 .opt input:disabled + span, .order-list button:disabled { cursor: default; }
+.bench-row { align-items: center; margin-top: 0.5rem; }
+.bench-row input[type=number] { font-family: var(--mono); }
+.brief p:first-child { margin-top: 0; }
+.shelf { list-style: none; padding: 0; margin: 0.5rem 0 0; display: grid; gap: 0.3rem; }
+.shelf li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
+.artifact { overflow-wrap: anywhere; white-space: pre-wrap; }

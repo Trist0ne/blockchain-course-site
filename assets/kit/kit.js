@@ -12,10 +12,10 @@
   var Kit = {};
   var enc = new TextEncoder();
   var dec = new TextDecoder();
-  Kit.version = '0.18.0';
+  Kit.version = '0.18.1';
   /* Which course commit this site was cut from. tools/cut_delivery.py rewrites this line; 'dev' means an uncut working copy.
      Every record carries it, so a class can always be graded with the course repo as it was when the class was cut. */
-  Kit.build = { commit: 'f1524a7a15d6', date: '2026-11-21' };
+  Kit.build = { commit: 'fe56e346ff2c', date: '2026-11-21' };
   /* A file of this site, named by build, so a page never pairs with another build's copy of it. */
   Kit.asset = function (path) { return path + (Kit.build.commit === 'dev' ? '' : '?v=' + Kit.build.commit); };
   /* Where this file was loaded from, so pages at any depth can link to shared pages such as setup.html. */
@@ -378,6 +378,12 @@
               if (Kit.wallet.looksReal(typed)) { phraseIn.clear(); return fail(REAL); }
               if (typed.split(' ').length < 12) return fail('Fill in all 12 words from your card.');
               if (!Kit.wallet.validPhrase(typed)) return fail('Those 12 words don\'t make a valid phrase. Every word is on the list, so one is in the wrong box or is a different word: check the order against your card.');
+              /* The instructor words are a valid phrase, so they would quietly open a student account of their own. */
+              var c = Kit.cls();
+              if (c.classAddress && Kit.wallet.fromPhrase(typed, Kit.wallet.CLASS_PATH).address.toLowerCase() === String(c.classAddress).toLowerCase()) {
+                phraseIn.clear();
+                return fail('Those are this class\'s instructor words, not a student\'s. Instructors sign in from the "Instructors" link at the foot of the page.');
+              }
               finish(code, Kit.wallet.normPhrase(typed), null);
             });
           } },

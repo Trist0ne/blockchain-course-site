@@ -371,3 +371,6 @@ a.mapitem:hover { border-color: var(--accent); }
 .flag.got svg { fill: currentColor; }
 tr.me td { background: var(--accent-tint); font-weight: 650; }
 .day .lock svg { flex: none; width: 0.95rem; height: 0.95rem; fill: none; stroke: currentColor; stroke-width: 2; }
+.tag.bad { background: var(--bad-tint); color: var(--bad); border-color: transparent; }
+.q-mark { margin-left: auto; flex: none; }
+.opt input:disabled + span, .order-list button:disabled { cursor: default; }

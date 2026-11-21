@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Home</title>
 <link rel="icon" href="kit/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="kit/house.css?v=fe56e346ff2c">
+<link rel="stylesheet" href="kit/house.css?v=62fe3f6d4788">
 <script src="kit/class.js"></script>
-<script src="items.js?v=fe56e346ff2c"></script>
-<script src="kit/kit.js?v=fe56e346ff2c"></script>
-<script src="kit/lib/wallet-lib.js?v=fe56e346ff2c"></script>
-<script src="kit/lib/course-words.js?v=fe56e346ff2c"></script>
-<script src="kit/wallet.js?v=fe56e346ff2c"></script>
+<script src="items.js?v=62fe3f6d4788"></script>
+<script src="kit/kit.js?v=62fe3f6d4788"></script>
+<script src="kit/lib/wallet-lib.js?v=62fe3f6d4788"></script>
+<script src="kit/lib/course-words.js?v=62fe3f6d4788"></script>
+<script src="kit/wallet.js?v=62fe3f6d4788"></script>
 </head>
 <body>
 <main class="page wide">
@@ -43,13 +43,13 @@
   var FLAG = 'M5 22V3m0 1h13l-3 5 3 5H5', LOCK = 'M6 11h12v10H6zM8 11V7a4 4 0 0 1 8 0v4';
   function sentAt(it, part) {
     var here = Kit.mine.get('sent:' + it.id + ':' + part + ':' + Kit.who(), null);
-    return (handIns && handIns[it.id + ':' + part]) || (here ? here.at : null);
+    return (handIns && handIns[it.id + ':' + part]) || (here && !here.byHand ? here.at : null);
   }
   function itemCard(it) {
     var inbox = !!Kit.inbox(), waiting = !inbox ? 'Hand in with Copy or Download' : !asked ? 'Checking…' : handIns ? 'Not handed in yet' : 'Couldn\'t check right now';
     if (it.kind === 'quiz') {
-      var q = graded && graded.quizzes[it.id], when = sentAt(it, ''), closed = cs && cs.closed[it.id];
-      var text = q ? 'Graded: ' + q.score + ' / ' + q.max : when ? '✓ Handed in ' + hhmm(when) + (closed ? '' : '. Your score appears when the quiz closes.') : closed ? 'Closed. Not handed in.' : waiting;
+      var q = graded && graded.quizzes[it.id], when = sentAt(it, ''), closed = cs && cs.closed[it.id], byHand = (Kit.mine.get('sent:' + it.id + '::' + Kit.who(), null) || {}).byHand;
+      var text = q ? 'Graded: ' + q.score + ' / ' + q.max : when ? '✓ Handed in ' + hhmm(when) + (closed ? '' : '. Your score appears when the quiz closes.') : byHand ? 'Not received by the class yet. Open it to send again.' : closed ? 'Closed. Not handed in.' : waiting;
       return el('a', { class: 'mapitem' + (q || when ? ' done' : ''), href: it.href, 'data-item': it.id }, el('span', { class: 'tag', text: 'Quiz' }), el('span', { class: 't', text: it.title }), el('span', { class: 's', text: text }));
     }
     var parts = Object.keys(it.flags || {}), sent = 0, got = 0;
@@ -130,7 +130,16 @@
   function refresh(quiet) {
     if (!quiet) loadResults(); else if (Kit.inbox()) Kit.myResults().then(function (r) { graded = r ? r.mine : null; shared = r ? r.cls : null; paintResults(r); paintMap(); paintBoard(); }, function () {});
     Kit.classState().then(function (st) { cs = st; paintMap(); });
-    Promise.resolve().then(function () { return Kit.myHandIns(); }).then(function (h) { handIns = h; }, function () { handIns = null; }).then(function () { asked = true; paintMap(); });
+    Promise.resolve().then(function () { return Kit.myRecords(true); }).then(function (m) {
+      handIns = null;
+      if (m.ok) { handIns = {}; Object.keys(m.items).forEach(function (k) { handIns[k] = m.items[k].time; }); }
+      if (Kit.handle()) $('hello').textContent = 'Welcome, ' + Kit.handle();
+      /* Valid words that this class has never seen: almost always the wrong card, or a new student who took the wrong door. */
+      var old = $('not-registered'); if (old) old.remove();
+      if (m.ok && !m.n && !Kit.handle()) $('score').before(el('div', { class: 'callout warn', id: 'not-registered', style: 'margin:0 0 1rem' },
+        el('b', { text: 'This account isn\'t registered in this class. ' }), 'The 12 words you signed in with are valid, but the class has no record of account ' + Kit.short(Kit.me().address) + '. If they aren\'t the words on your card, or you are new here, sign out and start again. ',
+        el('button', { class: 'icon-btn', type: 'button', text: 'Sign out', onclick: function () { Kit.signOut(); location.reload(); } })));
+    }, function () { handIns = null; }).then(function () { asked = true; paintMap(); });
   }
 
   Kit.signIn().then(function (me) {

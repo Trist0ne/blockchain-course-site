@@ -12,10 +12,10 @@
   var Kit = {};
   var enc = new TextEncoder();
   var dec = new TextDecoder();
-  Kit.version = '0.18.1';
+  Kit.version = '0.19.0';
   /* Which course commit this site was cut from. tools/cut_delivery.py rewrites this line; 'dev' means an uncut working copy.
      Every record carries it, so a class can always be graded with the course repo as it was when the class was cut. */
-  Kit.build = { commit: 'fe56e346ff2c', date: '2026-11-21' };
+  Kit.build = { commit: '62fe3f6d4788', date: '2026-11-21' };
   /* A file of this site, named by build, so a page never pairs with another build's copy of it. */
   Kit.asset = function (path) { return path + (Kit.build.commit === 'dev' ? '' : '?v=' + Kit.build.commit); };
   /* Where this file was loaded from, so pages at any depth can link to shared pages such as setup.html. */
@@ -133,7 +133,7 @@
   Kit.me = function () {
     var id = Kit.identity();
     if (!id) return null;
-    if (!meCache) { var w = Kit.wallet.fromPhrase(id.phrase); meCache = { address: w.address, handle: Kit.mine.get('name:' + w.address, ''), sign: w.sign, open: w.open }; }
+    if (!meCache) { var w = Kit.wallet.fromPhrase(id.phrase); meCache = { address: w.address, pub: w.pub, handle: Kit.mine.get('name:' + w.address, ''), sign: w.sign, open: w.open }; }
     return meCache;
   };
   Kit.who = function () { var me = Kit.me(); return me ? me.address.toLowerCase() : ''; };
@@ -188,7 +188,7 @@
     opts = opts || {};
     var c = Kit.cls();
     var main = document.querySelector('main') || document.body.appendChild(el('main', { class: 'page' }));
-    var chip = el('button', { class: 'chip', type: 'button', title: 'Your course identity' });
+    var chip = el('button', { class: 'chip', type: 'button', title: 'Your course identity' }), askedHandle = false;
     function paintChip() {
       var id = Kit.identity();
       if (!id) { chip.replaceChildren(el('span', { text: 'not signed in' })); return; }
@@ -196,6 +196,7 @@
       var me = Kit.me();
       chip.replaceChildren(el('span', { class: 'mono', text: Kit.short(me.address) }));
       if (me.handle) chip.prepend(el('b', { text: me.handle })); // replaceChildren would print a missing handle as the word "null"
+      else if (Kit.inbox() && !askedHandle) { askedHandle = true; Kit.myRecords(); }   // a computer that has never seen this student: the class knows their handle
     }
     paintChip();
     chip.addEventListener('click', function () { if (Kit.identity() && Kit.wallet) Kit.identityPanel(); else if (Kit.wallet) Kit.signIn(); });
@@ -489,11 +490,15 @@
 
   Kit.identityPanel = function () {
     var id = Kit.identity(), me = Kit.me(), reveal = el('div');
+    var handleCell = el('td', { class: 'mono', text: me.handle || 'looking it up in the class…' });
+    if (!me.handle) Kit.myRecords().then(function (m) {
+      handleCell.textContent = m.handle || (!m.ok ? 'couldn\'t reach the class to look it up' : m.n ? 'registered with your instructor' : 'this account is not registered in this class');
+    });
     var p = panelAtTop('kit-identity', [
       el('div', { class: 'panel-head' }, el('h2', { text: 'Your course identity' }), el('button', { class: 'icon-btn', type: 'button', text: 'Close', onclick: function () { p.remove(); } })),
       el('table', { class: 'data' }, el('tbody', null,
         el('tr', null, el('th', { text: 'Account' }), el('td', { class: 'mono', text: me.address })),
-        el('tr', null, el('th', { text: 'Handle' }), el('td', { class: 'mono', text: me.handle || 'registered with your instructor (not stored on this computer)' })),
+        el('tr', null, el('th', { text: 'Handle' }), handleCell),
         el('tr', null, el('th', { text: 'Derivation path' }), el('td', { class: 'mono', text: Kit.wallet.PATH })))),
       el('div', { class: 'btn-row' },
         el('button', { class: 'btn', type: 'button', text: 'Show my seed phrase', onclick: function () { reveal.replaceChildren(wordGrid(id.phrase), el('div', { class: 'callout bad', text: NEVER })); } }),
@@ -664,34 +669,52 @@
 
   /* The label on the signed-in student's own records: 's-' and the first 8 hex digits of their account. */
   Kit.myLabel = function () { return 's-' + Kit.who().slice(2, 10); };
-  /* What the signed-in student has handed in, read from the class itself, so it is right on any computer.
-     Resolves { '<item>:<part>': '<time>' } (part is '' for a quiz), or null if the class could not be asked. */
-  Kit.myHandIns = function () {
+  /* Everything the signed-in student has handed in, read from the class itself, so it is right on any computer.
+     Resolves { ok, n, handle, items: { '<item>:<part>': { time, ref, data } } }: `ok` is false if the class could not
+     be asked, `n` counts this account's records (registration included), `data` is what was handed in (null for a
+     record made before students' own copies were kept). The first hand-in of each item is the one that counts.
+     Asked once per page; Kit.myRecords(true) asks again. */
+  var recsMemo = null, OWN_RE = /BCS1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/;
+  Kit.myRecords = function (fresh) {
     var inbox = Kit.inbox(), me = Kit.me();
-    if (!inbox || !me) return Promise.resolve(null);
-    var tag = Kit.short(me.address), got = {}, seen = 0;
+    if (!inbox || !me) return Promise.resolve({ ok: false, n: 0, handle: '', items: {} });
+    if (recsMemo && !fresh && recsMemo.who === me.address) return recsMemo.p;
+    var tag = Kit.short(me.address), out = { ok: true, n: 0, handle: '', items: {} }, jobs = [];
     function take(list) {
       list.forEach(function (it) {
         var m = /^\[submit\] (\S+)(?: (\S+))? · (\S+)$/.exec(it.title);
         if (!m || m[3] !== tag) return;
-        seen++;
-        if (m[1] === 'register') return;
-        var k = m[1] + ':' + (m[2] || '');
-        if (!got[k] || it.time < got[k]) got[k] = it.time;
+        out.n++;
+        var own = OWN_RE.exec(it.body), k = m[1] + ':' + (m[2] || '');
+        jobs.push((own ? me.open(own[0]).catch(function () { return null; }) : Promise.resolve(null)).then(function (o) {
+          if (m[1] === 'register') { if (o && o.data && o.data.handle && !out.handle) out.handle = Kit.normHandle(o.data.handle); return; }
+          if (!out.items[k] || it.time < out.items[k].time) out.items[k] = { time: it.time, ref: it.ref, data: o ? o.data : null };
+        }));
       });
     }
-    return Kit.studentToken().then(function (token) {
+    var p = Kit.studentToken().then(function (token) {
       return (function page(n) {
         return Kit.listInbox(inbox, token, { labels: Kit.myLabel(), page: n }).then(function (list) {
           take(list);
           return list.length === 100 && n < 10 ? page(n + 1) : null;
         });
       })(1).then(function () {
-        if (seen) return got;
+        if (out.n) return null;
         /* Nothing under our label: the platform may have dropped it. Look through the newest records by title instead. */
-        return Kit.listInbox(inbox, token, { perPage: 100 }).then(function (all) { take(all); return got; });
+        return Kit.listInbox(inbox, token, { perPage: 100 }).then(take);
       });
-    }).catch(function () { return null; });
+    }).then(function () { return Promise.all(jobs); }).then(function () {
+      /* A computer that has never seen this student learns their handle here. */
+      if (out.handle && !me.handle) { Kit.mine.set('name:' + me.address, out.handle); meCache = null; if (Kit._paintChip) Kit._paintChip(); }
+      return out;
+    }).catch(function () { recsMemo = null; return { ok: false, n: 0, handle: '', items: {} }; });
+    recsMemo = { who: me.address, p: p };
+    return p;
+  };
+  /* Just the times: { '<item>:<part>': '<time>' } (part is '' for a quiz), or null if the class could not be asked. */
+  Kit.myHandIns = function (fresh) {
+    if (!Kit.inbox() || !Kit.me()) return Promise.resolve(null);
+    return Kit.myRecords(fresh).then(function (m) { if (!m.ok) return null; var t = {}; Object.keys(m.items).forEach(function (k) { t[k] = m.items[k].time; }); return t; });
   };
 
   /* The signed-in student's latest published results, or null. Resolves { at, mine, cls }. */
@@ -802,14 +825,19 @@
     return Kit.buildSubmission(payload).then(function (s) {
       sub = s;
       if (!inbox) return manual('This copy of the course isn\'t connected to a class inbox.');
-      return Kit.unlockToken(inbox.locked, id.code).then(function (token) {
+      /* A second copy, sealed to the student's own account: it is how their pages show them what they handed in, and
+         their handle, on any computer. The instructor's copy is the one that is graded. */
+      var keep = { kind: payload.kind, item: payload.item, part: payload.part || '', data: payload.data, at: new Date().toISOString() };
+      return Promise.all([Kit.unlockToken(inbox.locked, id.code), Kit.wallet.sealTo(me.pub, keep)]).then(function (two) {
+        var token = two[0], own = two[1];
         /* The title names the item and part, and a label marks whose it is, so the student's home page can list their own
            hand-ins from any computer. Neither is trusted for grading: that uses only what is sealed inside. */
         return Kit.postToInbox(inbox, token, '[submit] ' + payload.item + (payload.part ? ' ' + payload.part : '') + ' · ' + tag,
-          'Course submission: ' + label + '\nAccount: ' + me.address + '\n\n```\n' + sub.code + '\n```\n', [Kit.myLabel()]);
+          'Course submission: ' + label + '\nAccount: ' + me.address + '\n\n```\n' + sub.code + '\n```\n\nThe student\'s own copy (only their seed phrase opens it):\n\n```\n' + own + '\n```\n', [Kit.myLabel()]);
       }).then(function (res) {
         var when = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         Kit.mine.set('sent:' + payload.item + ':' + (payload.part || '') + ':' + Kit.who(), { ref: res.ref, at: when });
+        recsMemo = null;
         target.replaceChildren(el('div', { class: 'callout ok' }, el('b', { text: 'Submitted ✓ ' }), 'Received as ' + res.ref + ' at ' + when + '.'), homeRow(), signedBox());
         return { sent: true, ref: res.ref, code: sub.code };
       }, function (e) {
@@ -823,17 +851,26 @@
   };
 
   /* A Submit button that remembers it was used. payload() is called at click time. */
+  /* A hand-in happens once. After it, the button is replaced by a note saying when it was received; the same note
+     appears on any other computer, read from the class. If sending failed, the button stays so it can be tried again. */
   Kit.submitButton = function (target, label, payload, part) {
-    var out = el('div');
-    var probe = payload(), prior = Kit.mine.get('sent:' + probe.item + ':' + (part || '') + ':' + Kit.who(), null);
-    var btn = el('button', { class: 'btn primary', type: 'button', text: prior ? 'Submit again' : 'Submit', onclick: function () {
-      btn.disabled = true;
-      var p = payload(); p.part = part;
-      Kit.submit(out, p, label).then(function (r) { btn.disabled = false; if (r && r.sent) btn.textContent = 'Submit again'; });
-    } });
-    target.replaceChildren(el('div', { class: 'btn-row', style: 'margin-top:0' }, btn,
-      prior ? el('span', { class: 'solved-badge', text: 'Submitted ✓ earlier (' + prior.ref + ', ' + prior.at + ')' }) : null), out);
+    var out = el('div'), row = el('div', { class: 'btn-row', style: 'margin-top:0' });
+    var probe = payload(), key = probe.item + ':' + (part || '');
+    function done(ref, at) { row.replaceChildren(el('span', { class: 'solved-badge', text: 'Submitted ✓ earlier (' + ref + ', ' + at + ')' })); }
+    var prior = Kit.mine.get('sent:' + key + ':' + Kit.who(), null);
+    if (prior) done(prior.ref, prior.at);
+    else {
+      var btn = el('button', { class: 'btn primary', type: 'button', text: 'Submit', onclick: function () {
+        btn.disabled = true;
+        var p = payload(); p.part = part;
+        Kit.submit(out, p, label).then(function (r) { if (r && r.sent) row.replaceChildren(); else { btn.disabled = false; btn.textContent = 'Try sending again'; } });
+      } });
+      row.append(btn);
+      Kit.myRecords().then(function (m) { var it = m.items[key]; if (it && row.contains(btn)) done(it.ref, hhmm(it.time)); });
+    }
+    target.replaceChildren(row, out);
   };
+  function hhmm(t) { var d = new Date(t); return isNaN(d) ? String(t) : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
 
   /* ---------- Reference sheets: shared, printable fact sheets (registered by kit/ref-*.js) ---------- */
   Kit.REF = Kit.REF || {};

@@ -54,6 +54,8 @@
     return {
       address: address,
       path: PATH,
+      /* Open something sealed to this account with sealTo(). Only the holder of these words can. */
+      open: function (token) { return openSealed(token, priv); },
       /* Returns the usual Ethereum signature: 0x + r (32 bytes) + s (32) + v (1 byte, 27 or 28). */
       sign: function (message) {
         var sig = L.secp256k1.sign(personalHash(message), priv, { prehash: false, format: 'recovered' }); // recovery id, r, s
@@ -63,15 +65,40 @@
     };
   }
 
-  /* Recover the address that signed `message`. Verifying a signature needs no key at all. */
-  function recover(message, signature) {
+  /* Recover the public key (33 bytes) that signed `message`. Verifying a signature needs no key at all. */
+  function recoverPub(message, signature) {
     var s = Kit.hex.toBytes(String(signature).replace(/^0x/, ''));
     if (s.length !== 65) throw new Error('A signature is 65 bytes');
     var v = s[64] >= 27 ? s[64] - 27 : s[64];
     if (v !== 0 && v !== 1) throw new Error('Bad recovery value');
     var rec = new Uint8Array(65); rec[0] = v; rec.set(s.slice(0, 64), 1);
-    var pub = L.secp256k1.recoverPublicKey(rec, personalHash(message), { prehash: false });
-    return addressOf(L.secp256k1.Point.fromBytes(pub).toBytes(false));
+    return L.secp256k1.recoverPublicKey(rec, personalHash(message), { prehash: false });
+  }
+  function recover(message, signature) { return addressOf(L.secp256k1.Point.fromBytes(recoverPub(message, signature)).toBytes(false)); }
+
+  /* Sealing to an account: ECIES on secp256k1 (one-time key, ECDH, HKDF-SHA256, AES-256-GCM).
+     Anyone who has seen a signature from an account knows its public key, and so can seal something only it can open.
+     That is how published results reach each student privately. */
+  var SEAL_INFO = enc.encode('bc-course-result-v1');
+  function sealKey(shared, salt) {
+    var c = root.crypto.subtle;
+    return c.importKey('raw', shared.slice(1), 'HKDF', false, ['deriveKey']).then(function (hk) {
+      return c.deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: salt, info: SEAL_INFO }, hk, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    });
+  }
+  function sealTo(pubBytes, obj) {
+    var eph = L.secp256k1.keygen(), iv = root.crypto.getRandomValues(new Uint8Array(12));
+    return sealKey(L.secp256k1.getSharedSecret(eph.secretKey, pubBytes), eph.publicKey).then(function (k) {
+      return root.crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, k, enc.encode(JSON.stringify(obj)));
+    }).then(function (ct) { return ['BCS1', Kit.b64u.from(eph.publicKey), Kit.b64u.from(iv), Kit.b64u.from(ct)].join('.'); });
+  }
+  function openSealed(token, priv) {
+    var p = String(token).split('.');
+    if (p.length !== 4 || p[0] !== 'BCS1') return Promise.reject(new Error('Not sealed to an account'));
+    var epk = Kit.b64u.toBytes(p[1]);
+    return sealKey(L.secp256k1.getSharedSecret(priv, epk), epk).then(function (k) {
+      return root.crypto.subtle.decrypt({ name: 'AES-GCM', iv: Kit.b64u.toBytes(p[2]) }, k, Kit.b64u.toBytes(p[3]));
+    }).then(function (pt) { return JSON.parse(new TextDecoder().decode(pt)); });
   }
 
   /* EIP-4361 message. Field order and wording are fixed by the standard. */
@@ -103,5 +130,5 @@
   function newClassCode() { return L.generateMnemonic(WORDS, 128).split(' ').slice(0, 4).join('-'); }
 
   Kit.wallet = { PATH: PATH, newPhrase: newPhrase, validPhrase: validPhrase, looksReal: looksReal, normPhrase: normPhrase, fromPhrase: fromPhrase,
-    recover: recover, toChecksum: toChecksum, personalHash: personalHash, siwe: siwe, newClassCode: newClassCode };
+    recover: recover, recoverPub: recoverPub, sealTo: sealTo, toChecksum: toChecksum, personalHash: personalHash, siwe: siwe, newClassCode: newClassCode };
 })(typeof window !== 'undefined' ? window : globalThis);

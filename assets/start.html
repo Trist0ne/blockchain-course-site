@@ -3,10 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Course start</title>
+<title>Home</title>
 <link rel="icon" href="kit/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="kit/house.css">
 <script src="kit/class.js"></script>
+<script src="items.js"></script>
 <script src="kit/kit.js"></script>
 <script src="kit/lib/wallet-lib.js"></script>
 <script src="kit/lib/course-words.js"></script>
@@ -15,25 +16,78 @@
 <body>
 <main class="page">
   <div class="page-head">
-    <div class="eyebrow"><span class="tag accent">Proof of concept</span></div>
-    <h1>Course kit: proof of concept</h1>
-    <p class="lede">One quiz and one challenge, built on the shared course kit. Everything runs in your browser from static files. You sign in with a seed phrase, and your submissions are signed with your key and encrypted for your instructor.</p>
+    <h1 id="hello">Your course home</h1>
+    <p class="lede">Your quizzes and challenges, what you have handed in, and your results.</p>
   </div>
+  <section class="panel" id="work"><h2>Your work</h2><p class="muted small">Sign in to see it.</p></section>
+  <section class="panel" id="results"><h2>Your results</h2><p class="muted small">Sign in to see them.</p></section>
   <section class="panel">
-    <div class="panel-head"><h2>Quiz</h2><span class="tag">Bitcoin Framework</span></div>
-    <p><a href="quiz/poc-02-bf/index.html">Daily quiz: Bitcoin transactions</a><br><span class="muted small">6 questions, about 12 minutes. No notes.</span></p>
-  </section>
-  <section class="panel">
-    <div class="panel-head"><h2>Challenge</h2><span class="tag">Bitcoin Framework</span></div>
-    <p><a href="labs/ctf-txid/index.html">Name that transaction</a> <span class="pts">100 + 200 pts</span><br><span class="muted small">Compute a real transaction's ID from its raw bytes. About 10 minutes, plus a segwit flag if you want to go deeper.</span></p>
-  </section>
-  <section class="panel">
-    <div class="panel-head"><h2>Reference and printables</h2></div>
+    <h2>Reference</h2>
     <p><a href="ref/bitcoin.html">Bitcoin transactions reference sheet</a><br><span class="muted small">Hex, byte order, hashing, transaction layout.</span></p>
-    <p><a href="ref/seed-backup.html">Seed phrase backup cards</a><br><span class="muted small">For instructors to print: four cards per sheet. Students write their 12 words on one.</span></p>
-    <p><a href="dashboard.html">Class results</a><br><span class="muted small">For instructors. Needs the class key.</span></p>
   </section>
+  <p class="small muted" style="text-align:right"><a href="staff.html">Instructors</a></p>
 </main>
-<script>Kit.chrome({ title: 'Start', crumbs: 'Start', home: 'start.html', noHandle: false });</script>
+<script>
+(function () {
+  'use strict';
+  var el = Kit.el, $ = function (id) { return document.getElementById(id); };
+  Kit.chrome({ title: 'Home', crumbs: 'Home', home: 'start.html' });
+  var items = window.BC_ITEMS || [], KIND = { quiz: 'Quiz', lab: 'Challenge' };
+  function titleOf(id) { for (var i = 0; i < items.length; i++) if (items[i].id === id) return items[i].title; return id; }
+
+  function paintWork() {
+    var who = Kit.who();
+    $('work').replaceChildren(el('h2', { text: 'Your work' }), el('div', { class: 'table-wrap' }, el('table', { class: 'data', id: 'work-table' }, el('tbody', null, items.map(function (it) {
+      var parts = it.kind === 'lab' ? Object.keys(it.flags || {}) : [''];
+      var sent = parts.map(function (p) { return Kit.store.get('sent:' + it.id + ':' + p + ':' + who, null); });
+      var done = sent.filter(Boolean).length;
+      var statusText = !done ? 'Not handed in on this computer' : it.kind === 'lab' ? done + ' of ' + parts.length + ' flags handed in' : 'Handed in ' + sent[0].at + ' (' + sent[0].ref + ')';
+      return el('tr', { 'data-item': it.id }, el('td', null, el('span', { class: 'tag', text: KIND[it.kind] || it.kind })),
+        el('td', null, el('a', { href: it.href, text: it.title }), el('br'), el('span', { class: 'muted small', text: it.section || '' })),
+        el('td', null, el('span', { class: done ? 'solved-badge' : 'muted small', text: (done ? '✓ ' : '') + statusText })));
+    })))), el('p', { class: 'small muted', style: 'margin:.5rem 0 0', text: 'This list shows what was handed in from this computer. Your results below are the full picture.' }));
+  }
+
+  function paintResults(state) {
+    var box = $('results'), head = el('div', { class: 'panel-head' }, el('h2', { text: 'Your results' }),
+      el('button', { class: 'icon-btn', type: 'button', id: 'refresh', text: 'Check again', onclick: loadResults }));
+    if (state === 'loading') return box.replaceChildren(head, el('p', { class: 'muted small', text: 'Looking for published results…' }));
+    if (state === 'noinbox') return box.replaceChildren(el('h2', { text: 'Your results' }), el('p', { class: 'muted small', text: 'This class runs without an inbox, so results aren\'t published here. Your instructor will tell you.' }));
+    if (state === 'error') return box.replaceChildren(head, el('div', { class: 'callout warn', text: 'Couldn\'t reach the class to look for results. Check your connection and try again.' }));
+    if (!state) return box.replaceChildren(head, el('p', { id: 'no-results', class: 'muted', text: 'Nothing published for you yet. Your instructor publishes results after grading: check again later.' }));
+    var m = state.mine, c = state.cls, rows = [];
+    items.forEach(function (it) {
+      if (it.kind === 'quiz') {
+        var q = m.quizzes[it.id], cq = c.quizzes[it.id];
+        if (!q && !cq) return;
+        var marks = q ? Object.keys(q.per).map(function (k) { return q.per[k] ? '✓' : '✗'; }).join(' ') : '';
+        rows.push(el('tr', { 'data-item': it.id }, el('td', null, it.title, marks ? el('div', { class: 'muted small mono', title: 'Question by question', text: marks }) : null),
+          el('td', { class: 'num' }, q ? el('b', { text: q.score + ' / ' + q.max }) : el('span', { class: 'muted', text: 'not handed in' })),
+          el('td', { class: 'num', text: cq ? cq.avg + ' / ' + cq.max + ' (' + cq.n + ' handed in)' : '·' })));
+      } else Object.keys(it.flags || {}).forEach(function (f, i) {
+        var fk = it.id + ':' + f, got = m.flags[fk];
+        rows.push(el('tr', { 'data-item': fk }, el('td', { text: it.title + ', flag ' + (i + 1) }),
+          el('td', { class: 'num' }, got ? el('b', { text: got + ' pts' }) : el('span', { class: 'muted', text: 'not yet' })),
+          el('td', { class: 'num', text: (c.flags[fk] || 0) + ' of ' + c.students + ' solved it' })));
+      });
+    });
+    rows.push(el('tr', { 'data-item': 'ctf-total' }, el('td', null, el('b', { text: 'Challenge points' })), el('td', { class: 'num' }, el('b', { text: m.ctf + ' pts' })), el('td', { class: 'num', text: 'average ' + c.ctfAvg + ' pts' })));
+    box.replaceChildren(head, el('div', { class: 'table-wrap' }, el('table', { class: 'data', id: 'results-table' },
+        el('thead', null, el('tr', null, el('th', { text: 'Item' }), el('th', { class: 'num', text: 'You' }), el('th', { class: 'num', text: 'Class' }))),
+        el('tbody', null, rows))),
+      el('p', { class: 'small muted', style: 'margin:.5rem 0 0', text: 'Published ' + String(state.at).replace('T', ' ').slice(0, 16) + ' UTC, for ' + (m.handle || 'you') + '. Only you can read your own scores: they were encrypted to your account and signed by your class.' }));
+  }
+  function loadResults() {
+    if (!Kit.inbox()) return paintResults('noinbox');
+    paintResults('loading');
+    Kit.myResults().then(paintResults, function () { paintResults('error'); });
+  }
+
+  Kit.signIn().then(function (me) {
+    if (me.handle) $('hello').textContent = 'Welcome, ' + me.handle;
+    paintWork(); loadResults();
+  });
+})();
+</script>
 </body>
 </html>

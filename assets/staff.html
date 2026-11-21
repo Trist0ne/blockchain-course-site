@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instructors</title>
+<link rel="icon" href="kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="kit/house.css">
+<script src="kit/class.js"></script>
+<script src="kit/kit.js"></script>
+</head>
+<body>
+<main class="page">
+  <div class="page-head">
+    <div class="eyebrow"><span class="tag accent">Instructor</span></div>
+    <h1>Instructors</h1>
+    <p class="lede">Everything for running this class. After setup, the class key file is the only thing you need.</p>
+  </div>
+  <section class="panel">
+    <h2>During the class</h2>
+    <p><a href="dashboard.html">Class results</a><br><span class="muted small">Load the class key to see who has registered, grade, approve replaced seed phrases, and publish results to students.</span></p>
+    <p><a href="ref/seed-backup.html">Print seed phrase backup cards</a><br><span class="muted small">Four to a sheet. Each student writes their 12 words on one.</span></p>
+  </section>
+  <section class="panel">
+    <h2>A student lost their seed phrase</h2>
+    <ol class="small">
+      <li>If they are still signed in anywhere, their handle in the top bar opens "Your course identity", where they can show the words and copy them again.</li>
+      <li>Otherwise they choose "Lost your seed phrase?" at sign-in, enter their handle and make a new seed phrase.</li>
+      <li>Confirm in person that it is them, then press Accept on their handle in Class results. Their earlier work is kept, and the old words stop counting.</li>
+    </ol>
+  </section>
+  <section class="panel">
+    <h2>Setting up</h2>
+    <p><a href="setup.html">Set up this class, or replace its inbox token</a><br><span class="muted small">Once per class, by whoever has the course repo. Use it again if the token expires or leaks.</span></p>
+  </section>
+</main>
+<script>Kit.chrome({ title: 'Instructors', crumbs: 'Instructors', home: 'start.html', noHandle: true });</script>
+</body>
+</html>

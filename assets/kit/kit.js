@@ -12,10 +12,10 @@
   var Kit = {};
   var enc = new TextEncoder();
   var dec = new TextDecoder();
-  Kit.version = '0.10.0';
+  Kit.version = '0.11.0';
   /* Which course commit this site was cut from. tools/cut_delivery.py rewrites this line; 'dev' means an uncut working copy.
      Every record carries it, so a class can always be graded with the course repo as it was when the class was cut. */
-  Kit.build = { commit: '6cf4d460b055', date: '2026-11-21' };
+  Kit.build = { commit: 'fa25f1aa836a', date: '2026-11-21' };
   /* Where this file was loaded from, so pages at any depth can link to shared pages such as setup.html. */
   var here = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
   Kit.base = here.replace(/kit\.js(\?.*)?$/, '');
@@ -122,7 +122,7 @@
   Kit.me = function () {
     var id = Kit.identity();
     if (!id) return null;
-    if (!meCache) { var w = Kit.wallet.fromPhrase(id.phrase); meCache = { address: w.address, handle: Kit.store.get('name:' + w.address, ''), sign: w.sign }; }
+    if (!meCache) { var w = Kit.wallet.fromPhrase(id.phrase); meCache = { address: w.address, handle: Kit.store.get('name:' + w.address, ''), sign: w.sign, open: w.open }; }
     return meCache;
   };
   Kit.who = function () { var me = Kit.me(); return me ? me.address.toLowerCase() : ''; };
@@ -440,17 +440,102 @@
     }).then(function (pt) { return dec.decode(pt); });
   };
   /* File one issue in the class inbox. GitHub or GitLab, hosted or self-hosted. */
-  Kit.postToInbox = function (inbox, token, title, body) {
+  Kit.postToInbox = function (inbox, token, title, body, labels) {
     var gl = inbox.platform === 'gitlab', host = inbox.host || (gl ? 'gitlab.com' : 'github.com');
     var url = gl ? 'https://' + host + '/api/v4/projects/' + encodeURIComponent(inbox.repo) + '/issues'
       : (host === 'github.com' ? 'https://api.github.com' : 'https://' + host + '/api/v3') + '/repos/' + inbox.repo + '/issues';
     var payload = gl ? { title: title, description: body, confidential: true } : { title: title, body: body };
+    if (labels && labels.length) payload.labels = gl ? labels.join(',') : labels;
     var headers = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token };
     if (!gl) headers.Accept = 'application/vnd.github+json';
     return root.fetch(url, { method: 'POST', headers: headers, body: JSON.stringify(payload) }).then(function (r) {
       if (!r.ok) throw new Error(host + ' answered ' + r.status);
       return r.json();
     }).then(function (j) { return { ref: '#' + (gl ? j.iid : j.number) }; });
+  };
+
+  /* Read records from the class inbox, newest first: [{ ref, title, body, time }]. opts: { labels, page, perPage }. */
+  Kit.listInbox = function (inbox, token, opts) {
+    opts = opts || {};
+    var gl = inbox.platform === 'gitlab', host = inbox.host || (gl ? 'gitlab.com' : 'github.com');
+    var q = 'per_page=' + (opts.perPage || 100) + '&page=' + (opts.page || 1) + (opts.labels ? '&labels=' + encodeURIComponent(opts.labels) : '');
+    var url = gl ? 'https://' + host + '/api/v4/projects/' + encodeURIComponent(inbox.repo) + '/issues?scope=all&order_by=created_at&sort=desc&' + q
+      : (host === 'github.com' ? 'https://api.github.com' : 'https://' + host + '/api/v3') + '/repos/' + inbox.repo + '/issues?state=all&sort=created&direction=desc&' + q;
+    var headers = {}; if (token) headers.Authorization = 'Bearer ' + token; if (!gl) headers.Accept = 'application/vnd.github+json';
+    return root.fetch(url, { headers: headers }).then(function (r) {
+      if (!r.ok) throw new Error(host + ' answered ' + r.status);
+      return r.json();
+    }).then(function (list) {
+      return list.filter(function (it) { return !it.pull_request; }).map(function (it) {
+        return gl ? { ref: '#' + it.iid, title: it.title || '', body: it.description || '', time: it.created_at }
+          : { ref: '#' + it.number, title: it.title || '', body: it.body || '', time: it.created_at };
+      });
+    });
+  };
+  /* The inbox token, unlocked with the signed-in student's class code. */
+  Kit.studentToken = function () {
+    var inbox = Kit.inbox(), id = Kit.identity();
+    if (!inbox || !id) return Promise.reject(new Error('no inbox'));
+    return Kit.unlockToken(inbox.locked, id.code);
+  };
+
+  /* ---------- Instructor records: decisions, answer keys ----------
+     Authenticated with a key only the class private key can derive (ECDH with the class's own public key, then
+     HKDF), so a student holding the shared inbox token cannot forge one. Sealed like any other record. */
+  Kit.adminKey = function (privateKey, publicJwk) {
+    var c = subtle();
+    return c.importKey('jwk', { kty: publicJwk.kty, crv: publicJwk.crv, x: publicJwk.x, y: publicJwk.y }, CURVE, false, [])
+      .then(function (pub) { return c.deriveBits({ name: 'ECDH', public: pub }, privateKey, 256); })
+      .then(function (bits) { return c.importKey('raw', bits, 'HKDF', false, ['deriveKey']); })
+      .then(function (hk) { return c.deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(0), info: enc.encode('bc-course-admin-v1') }, hk, { name: 'HMAC', hash: 'SHA-256', length: 256 }, false, ['sign', 'verify']); });
+  };
+  Kit.sealAdmin = function (record, adminKey, publicJwk) {
+    var text = JSON.stringify(record);
+    return subtle().sign('HMAC', adminKey, enc.encode(text)).then(function (mac) { return Kit.seal({ v: 2, admin: text, mac: Kit.b64u.from(mac) }, publicJwk); });
+  };
+  Kit.openAdmin = function (env, adminKey) {
+    return subtle().verify('HMAC', adminKey, Kit.b64u.toBytes(env.mac || ''), enc.encode(env.admin)).then(function (ok) {
+      if (!ok) throw new Error('forged instructor record (not made with the class key)');
+      return JSON.parse(env.admin);
+    });
+  };
+
+  /* ---------- Published results ----------
+     The instructor publishes one record: every student's results, each sealed to that student's own account, the
+     whole thing signed with the class key (ECDSA P-256). A student's page checks the signature against the class
+     public key in the settings, then opens its own entry. Nobody else can read it, and nobody can fake it. */
+  var RESULTS_RE = /BCR1\.([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)/;
+  var ECDSA = { name: 'ECDSA', namedCurve: 'P-256' }, ECDSA_SIG = { name: 'ECDSA', hash: 'SHA-256' };
+  Kit.signResults = function (obj, privateJwk) {
+    var text = JSON.stringify(obj), bare = { kty: privateJwk.kty, crv: privateJwk.crv, x: privateJwk.x, y: privateJwk.y, d: privateJwk.d };
+    return subtle().importKey('jwk', bare, ECDSA, false, ['sign']).then(function (k) { return subtle().sign(ECDSA_SIG, k, enc.encode(text)); })
+      .then(function (sig) { return 'BCR1.' + Kit.b64u.from(enc.encode(text)) + '.' + Kit.b64u.from(sig); });
+  };
+  Kit.readResults = function (text, publicJwk) {
+    var m = RESULTS_RE.exec(String(text));
+    if (!m) return Promise.resolve(null);
+    var body, sig;
+    try { body = Kit.b64u.toBytes(m[1]); sig = Kit.b64u.toBytes(m[2]); } catch (e) { return Promise.resolve(null); } // mangled: ignore it
+    return subtle().importKey('jwk', { kty: publicJwk.kty, crv: publicJwk.crv, x: publicJwk.x, y: publicJwk.y }, ECDSA, false, ['verify'])
+      .then(function (k) { return subtle().verify(ECDSA_SIG, k, sig, body); })
+      .then(function (ok) { return ok ? JSON.parse(dec.decode(body)) : null; }, function () { return null; });
+  };
+  /* The signed-in student's latest published results, or null. Resolves { at, mine, cls }. */
+  Kit.myResults = function () {
+    var inbox = Kit.inbox(), c = Kit.cls(), me = Kit.me();
+    if (!inbox || !me) return Promise.resolve(null);
+    return Kit.studentToken().then(function (token) { return Kit.listInbox(inbox, token, { labels: 'results', perPage: 10 }); }).then(function (list) {
+      return list.reduce(function (found, it) {   // newest first; the first one that is genuine and has an entry for us
+        return found.then(function (hit) {
+          if (hit) return hit;
+          return Kit.readResults(it.body, c.publicKey).then(function (r) {
+            var mine = r && r.classId === (c.classId || null) && r.entries && r.entries[me.address.toLowerCase()];
+            if (!mine) return null;
+            return me.open(mine).then(function (o) { return { at: r.at, mine: o.mine, cls: o.cls }; }, function () { return null; });
+          });
+        });
+      }, Promise.resolve(null));
+    });
   };
 
   Kit.download = function (name, text) {

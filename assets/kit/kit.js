@@ -12,10 +12,10 @@
   var Kit = {};
   var enc = new TextEncoder();
   var dec = new TextDecoder();
-  Kit.version = '0.6.0';
+  Kit.version = '0.7.0';
   /* Which course commit this site was cut from. tools/cut_delivery.py rewrites this line; 'dev' means an uncut working copy.
      Every record carries it, so a class can always be graded with the course repo as it was when the class was cut. */
-  Kit.build = { commit: '4533db745faa', date: '2026-11-21' };
+  Kit.build = { commit: '0cdc9f9ed947', date: '2026-11-21' };
   /* Where this file was loaded from, so pages at any depth can link to shared pages such as setup.html. */
   var here = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
   Kit.base = here.replace(/kit\.js(\?.*)?$/, '');
@@ -429,10 +429,12 @@
     document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 0);
   };
   Kit.copy = function (text) {
-    if (navigator.clipboard && root.isSecureContext) return navigator.clipboard.writeText(text);
-    var t = el('textarea'); t.value = text; document.body.appendChild(t); t.select();
-    try { document.execCommand('copy'); } finally { t.remove(); }
-    return Promise.resolve();
+    function old() {
+      var t = el('textarea'); t.value = text; document.body.appendChild(t); t.select();
+      try { document.execCommand('copy'); } finally { t.remove(); }
+    }
+    if (navigator.clipboard && root.isSecureContext) return navigator.clipboard.writeText(text).catch(old); // some managed browsers refuse the modern API
+    old(); return Promise.resolve();
   };
 
   /* ---------- Submitting ---------- */

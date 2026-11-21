@@ -14,35 +14,36 @@
 <body>
 <main class="page">
   <div class="page-head">
-    <div class="eyebrow"><span class="tag accent">Instructor</span><span class="tag">Once per class</span></div>
+    <div class="eyebrow"><span class="tag accent">Instructor</span><span class="tag">Once per class · about 5 minutes</span></div>
     <h1>Set up this class</h1>
-    <p class="lede">This creates the class's settings file. Everything is generated in this browser. Nothing is sent anywhere until you commit the settings file to the class repo yourself.</p>
+    <p class="lede">Three steps: make a token, paste it here, commit one file. Everything is generated in this browser.</p>
   </div>
 
   <div id="existing"></div>
 
   <section class="panel">
-    <h2>1. The class</h2>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:.75rem">
-      <label class="field"><span>Class id</span><input type="text" id="s-class" placeholder="2027-02"></label>
-      <label class="field"><span>Platform</span><select id="s-platform"><option value="github">GitHub</option><option value="gitlab">GitLab</option></select></label>
-      <label class="field"><span>Host</span><input type="text" id="s-host" placeholder="github.com"></label>
-      <label class="field"><span>This class's repo (owner/name)</span><input type="text" id="s-repo" placeholder="you/bc-2027-02"></label>
-    </div>
-    <p class="small muted" id="detected"></p>
+    <h2>1. This class</h2>
+    <div id="where"></div>
+    <label class="field" style="max-width:22rem"><span>Class id (shown to students; used to name the key file)</span><input type="text" id="s-class" placeholder="2027-02"></label>
+    <details class="hint" id="where-edit">
+      <summary>Change the repo, or use GitLab or a self-hosted server</summary>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:.75rem;margin-top:.5rem">
+        <label class="field"><span>Platform</span><select id="s-platform"><option value="github">GitHub</option><option value="gitlab">GitLab</option></select></label>
+        <label class="field"><span>Host</span><input type="text" id="s-host" placeholder="github.com"></label>
+        <label class="field"><span>This class's repo (owner/name)</span><input type="text" id="s-repo" placeholder="you/bc-2027-02"></label>
+      </div>
+    </details>
   </section>
 
   <section class="panel">
     <h2>2. The inbox token</h2>
-    <p class="small muted">Student pages file their submissions as issues in this class's repo, using a token that can do nothing else. Create one that is limited to this repo, with Issues read and write, and set it to expire when the class ends.</p>
-    <ul class="small muted" style="margin-top:0">
-      <li><b>GitHub:</b> Settings → Developer settings → Personal access tokens → Fine-grained tokens. Repository access: only this repo. Permissions: Issues, read and write.</li>
-      <li><b>GitLab:</b> the project's Settings → Access tokens. Role Reporter, scope <code>api</code>.</li>
-    </ul>
-    <label class="field"><span>Token (it is locked before it goes into the settings file)</span><input type="password" id="s-token" autocomplete="off"></label>
-    <p class="small muted">Leave the token empty to run without an inbox. Students then hand in codes by Copy or Download.</p>
-    <div class="btn-row" style="margin-top:0"><button class="btn primary" type="button" id="generate">Generate class settings</button></div>
+    <p>Students' pages save their work as issues in this class's repo. They do it with a token that can do that and nothing else.</p>
+    <div id="token-help"></div>
+    <label class="field" style="margin-top:.75rem"><span>Paste the token</span><input type="password" id="s-token" autocomplete="off" placeholder="github_pat_…"></label>
+    <div class="btn-row" style="margin-top:0"><button class="btn primary" type="button" id="generate">Check the token and set up the class</button></div>
     <div id="msg"></div>
+    <details class="hint" style="margin-top:.75rem"><summary>Run this class without an inbox</summary>
+      <p class="small muted">Leave the token empty and press the button. Students then hand in their work as codes (Copy or Download), and you paste those into the dashboard. Use this when the classroom can't reach the platform at all.</p></details>
   </section>
 
   <div id="out"></div>
@@ -52,14 +53,49 @@
   'use strict';
   var el = Kit.el, $ = function (id) { return document.getElementById(id); };
   Kit.chrome({ title: 'Set up this class', crumbs: 'Instructor · Set up', home: 'start.html', noHandle: true, noSetupNotice: true });
-
-  /* Work out the repo from the address when the site is served by GitHub Pages: owner.github.io/repo/ */
-  var m = /^([a-z0-9-]+)\.github\.io$/i.exec(location.hostname), seg = location.pathname.split('/').filter(Boolean)[0];
-  if (m && seg) {
-    $('s-repo').value = m[1] + '/' + seg; $('s-host').value = 'github.com';
-    $('detected').textContent = 'Filled in from this site\'s address. Check it before you continue.';
-  }
   var cur = Kit.cls();
+
+  /* ---- Step 1: work out the repo from the address when the site is served by GitHub Pages (owner.github.io/repo/) ---- */
+  var m = /^([a-z0-9-]+)\.github\.io$/i.exec(location.hostname), seg = location.pathname.split('/').filter(Boolean)[0];
+  if (cur.inbox) { $('s-platform').value = cur.inbox.platform || 'github'; $('s-host').value = cur.inbox.host || ''; $('s-repo').value = cur.inbox.repo || ''; }
+  else if (m && seg) { $('s-repo').value = m[1] + '/' + seg; $('s-host').value = 'github.com'; }
+  $('s-class').value = cur.classId || (m && seg ? seg.replace(/^bc-(class-)?/, '') : '');
+  function target() {
+    var platform = $('s-platform').value;
+    return { platform: platform, host: $('s-host').value.trim() || (platform === 'gitlab' ? 'gitlab.com' : 'github.com'), repo: $('s-repo').value.trim().replace(/^\/|\/$/g, '') };
+  }
+  function paintWhere() {
+    var t = target();
+    $('where').replaceChildren(t.repo
+      ? el('p', null, 'Class repo: ', el('code', { text: t.repo }), ' on ' + t.host + '.')
+      : el('div', { class: 'callout warn', style: 'margin-bottom:.75rem', text: 'Couldn\'t tell which repo this class lives in. Open "Change the repo" below and enter it.' }));
+    if (!t.repo) $('where-edit').open = true;
+    paintTokenHelp();
+  }
+
+  /* ---- Step 2: a link that opens the platform's token page with everything it can fill in ---- */
+  function paintTokenHelp() {
+    var t = target(), owner = t.repo.split('/')[0] || '', name = t.repo.split('/').slice(1).join('/');
+    if (t.platform === 'gitlab') {
+      $('token-help').replaceChildren(el('ol', { class: 'small' },
+        el('li', null, t.repo ? el('a', { href: 'https://' + t.host + '/' + t.repo + '/-/settings/access_tokens', target: '_blank', rel: 'noopener', text: 'Open the project\'s access tokens ↗' }) : 'Open the project\'s Settings → Access tokens.'),
+        el('li', null, 'Role ', el('b', { text: 'Reporter' }), ', scope ', el('b', { text: 'api' }), '. Set it to expire when the class ends.'),
+        el('li', { text: 'Create it, copy it, and paste it below.' })));
+      return;
+    }
+    var q = 'name=' + encodeURIComponent(('class inbox ' + (name || '')).trim().slice(0, 40)) +
+      '&description=' + encodeURIComponent('Lets student pages save their work as issues in ' + (t.repo || 'the class repo') + '. Nothing else.') +
+      (owner ? '&target_name=' + encodeURIComponent(owner) : '') + '&expires_in=30&issues=write';
+    $('token-help').replaceChildren(el('ol', { class: 'small' },
+      el('li', null, el('a', { class: 'btn', id: 'token-link', href: 'https://' + t.host + '/settings/personal-access-tokens/new?' + q, target: '_blank', rel: 'noopener', text: 'Open GitHub\'s new-token page ↗' }),
+        ' The name, expiry (30 days) and the Issues permission are filled in for you.'),
+      el('li', null, 'Under ', el('b', { text: 'Repository access' }), ' choose ', el('b', { text: 'Only select repositories' }), ' and pick ', el('code', { text: name || 'this class\'s repo' }), '.'),
+      el('li', null, 'Check ', el('b', { text: 'Permissions → Repositories → Issues' }), ' says ', el('b', { text: 'Read and write' }), '. Change the expiry if the class runs longer than 30 days.'),
+      el('li', null, 'Press ', el('b', { text: 'Generate token' }), ', copy it, and paste it below.')));
+  }
+  ['s-platform', 's-host', 's-repo'].forEach(function (id) { $(id).addEventListener('input', paintWhere); $(id).addEventListener('change', paintWhere); });
+
+  /* ---- Setting up again: keep the key unless told otherwise ---- */
   var keep = el('input', { type: 'checkbox', id: 's-keep', checked: true });
   if (cur.publicKey) {
     $('existing').replaceChildren(el('section', { class: 'panel' },
@@ -67,74 +103,122 @@
         'Use this page again to replace the inbox token, for example if it expired or leaked. Students will need the new class code.'),
       el('label', { class: 'check' }, keep, ' Keep this class\'s key, so the records already submitted stay readable (recommended)'),
       el('p', { class: 'small muted', style: 'margin:.5rem 0 0' }, 'Untick it only to start the class over: a new key is made, and earlier records can then only be read with the old key file.')));
-    $('s-class').value = cur.classId || '';
-    if (cur.inbox) { $('s-platform').value = cur.inbox.platform || 'github'; $('s-host').value = cur.inbox.host || ''; $('s-repo').value = cur.inbox.repo || ''; }
   }
-  function keeping() { return !!cur.publicKey && keep.checked; }
+  paintWhere();
 
-  function fail(t) { $('msg').replaceChildren(el('div', { class: 'callout bad', text: t })); }
+  function say(cls, nodes) { $('msg').replaceChildren(el('div', { class: 'callout ' + cls }, nodes)); }
+  function fail(t) { say('bad', t); }
 
-  /* Ask the platform whether the token can see this repo's issues. Only advisory: it may be blocked offline. */
-  function testToken(cfg, token) {
-    var gl = cfg.platform === 'gitlab';
-    var url = gl ? 'https://' + cfg.host + '/api/v4/projects/' + encodeURIComponent(cfg.repo) + '/issues?per_page=1'
-      : (cfg.host === 'github.com' ? 'https://api.github.com' : 'https://' + cfg.host + '/api/v3') + '/repos/' + cfg.repo + '/issues?per_page=1';
-    var headers = { Authorization: 'Bearer ' + token }; if (!gl) headers.Accept = 'application/vnd.github+json';
-    return fetch(url, { headers: headers }).then(function (r) { return r.ok ? 'ok' : String(r.status); }, function () { return 'unreachable'; });
+  /* Prove the token works by doing what students' pages will do: file an issue. Better to find out now than in class.
+     Resolves 'ok:#n', 'unreachable', or rejects with a message the instructor can act on. */
+  function proveToken(t, token, classId) {
+    return Kit.postToInbox(t, token, '[setup] class ' + classId + ' configured',
+      'Made by the class setup page to check that the inbox token can save records here. You can close it.\n').then(
+      function (r) { return 'ok:' + r.ref; },
+      function (e) {
+        var s = (/ (\d{3})$/.exec(e.message) || [])[1];
+        if (!s) return 'unreachable';
+        var gl = t.platform === 'gitlab';
+        throw new Error(s === '401' ? t.host + ' didn\'t accept that token. Copy it again from the token page, all of it' + (gl ? '.' : ' (it starts with github_pat_).')
+          : s === '403' ? 'The token is valid but isn\'t allowed to create issues in ' + t.repo + '. On the token, set ' + (gl ? 'the role to Reporter with scope api.' : 'Permissions → Issues to "Read and write".')
+          : s === '404' ? 'The token can\'t see ' + t.repo + '. Check the repo name above, and that the token\'s repository access includes it.'
+          : s === '410' ? 'Issues are turned off for ' + t.repo + '. Turn them on in the repo\'s settings, then try again.'
+          : t.host + ' answered ' + s + ' when the token tried to create an issue in ' + t.repo + '.');
+      });
   }
 
+  var generated = null;
   $('generate').addEventListener('click', function () {
-    $('msg').replaceChildren();
-    var id = Kit.normHandle($('s-class').value), platform = $('s-platform').value;
-    var host = $('s-host').value.trim() || (platform === 'gitlab' ? 'gitlab.com' : 'github.com');
-    var repo = $('s-repo').value.trim().replace(/^\/|\/$/g, ''), token = $('s-token').value.trim();
+    var id = Kit.normHandle($('s-class').value), t = target(), token = $('s-token').value.trim();
     if (!id) return fail('Give the class an id, for example 2027-02.');
-    if (token && !/^[\w.-]+(\/[\w.-]+)+$/.test(repo)) return fail('Enter this class\'s repo as owner/name.');
-    var inboxCfg = { platform: platform, host: host, repo: repo };
-    var code = Kit.wallet.newClassCode();
-    var keepKey = keeping();
-    Promise.all([keepKey ? { publicJwk: cur.publicKey } : Kit.newClassKeys(), token ? Kit.lockToken(token, code) : null, token ? testToken(inboxCfg, token) : null]).then(function (r) {
-      var cfg = { classId: id, course: 'Blockchain Technology', room: keepKey && cur.room ? cur.room : id.toUpperCase(), publicKey: r[0].publicJwk };
-      if (token) cfg.inbox = { platform: platform, host: host, repo: repo, locked: r[1] };
-      $('s-token').value = '';
-      var file = '/* Class settings, made by the class setup page. Public information only: the inbox token is locked. */\n' +
-        'window.BC_CLASS = ' + JSON.stringify(cfg, null, 2) + ';\n';
-      var keyName = id + '.private.jwk.json';
-      if (!keepKey) Kit.download(keyName, JSON.stringify(r[0].privateJwk, null, 2));
-
-      var path = 'assets/kit/class.js', saveLink = null, editLink = null;
-      if (repo && platform === 'github') {
-        saveLink = 'https://' + host + '/' + repo + '/new/main?filename=' + encodeURIComponent(path) + '&value=' + encodeURIComponent(file);
-        editLink = 'https://' + host + '/' + repo + '/edit/main/' + path;
-      } else if (repo) editLink = 'https://' + host + '/' + repo + '/-/new/main/assets/kit?file_name=class.js';
-      var copied = el('span', { class: 'muted small' });
-      var tokenNote = r[2] === 'ok' ? el('div', { class: 'callout ok', text: 'The token can reach this repo\'s issues.' })
-        : r[2] === null ? null
-        : el('div', { class: 'callout warn', text: r[2] === 'unreachable' ? 'Couldn\'t reach ' + host + ' to check the token from here. If the repo name and token are right, it will still work.' : host + ' answered ' + r[2] + ' when checking the token. Check the repo name and the token\'s permissions before class.' });
-
-      $('out').replaceChildren(
-        el('section', { class: 'panel', id: 'step-key' }, el('h2', { text: '3. Keep the class key' }),
-          keepKey ? el('p', null, 'Unchanged. Keep using the key file you already have: it still reads every record in this class.')
-            : el('p', null, 'Downloaded as ', el('code', { text: keyName }), '. It is the only thing that can read this class\'s records. Store two copies with the instructors (for example, each instructor keeps one), and never put it in a repo. If it is lost, the class\'s records cannot be read by anyone.')),
-        token ? el('section', { class: 'panel', id: 'step-code' }, el('h2', { text: '4. Write down the class code' }),
-          el('p', null, 'Students type this at every sign-in. It goes on the board.'),
-          el('div', { class: 'hexblock', style: 'font-size:1.3rem;font-weight:650;text-align:center', id: 'class-code', text: code }),
-          el('p', { class: 'small muted', style: 'margin-top:.5rem' }, 'It is not stored anywhere. Without it the token in the settings file is unreadable, so write it down now.'), tokenNote) : null,
-        el('section', { class: 'panel', id: 'step-save' }, el('h2', { text: (token ? '5' : '4') + '. Save the settings to the class repo' }),
-          el('p', null, 'The settings go in one file, ', el('code', { text: path }), '. Committing it is what sets the class up. The site updates a minute or so later.'),
-          el('div', { class: 'btn-row', style: 'margin-top:0' },
-            saveLink ? el('a', { class: 'btn primary', id: 'save-link', href: saveLink, target: '_blank', rel: 'noopener', text: 'Open the file on GitHub, ready to commit ↗' }) : null,
-            el('button', { class: 'btn', type: 'button', text: 'Copy the file', onclick: function () { Kit.copy(file).then(function () { copied.textContent = 'Copied.'; }); } }),
-            el('button', { class: 'btn', type: 'button', text: 'Download class.js', onclick: function () { Kit.download('class.js', file); } }), copied),
-          el('p', { class: 'small muted', style: 'margin-top:.75rem' },
-            saveLink ? 'If the file already exists (you are setting the class up again), ' : 'Create or replace the file with this content. ',
-            editLink ? el('a', { href: editLink, target: '_blank', rel: 'noopener', text: saveLink ? 'edit it here' : 'open the repo\'s new-file page' }) : null,
-            saveLink ? ' and paste the copied file over it. ' : ' ',
-            'Running the class from a folder instead of a site? Put the downloaded class.js in assets/kit/ before you hand the folder out.'),
-          el('details', { class: 'hint' }, el('summary', { text: 'Show the settings file' }), el('div', { class: 'hexblock', id: 'class-file', text: file }))));
-      $('out').scrollIntoView({ block: 'start', behavior: 'smooth' });
-    }).catch(function (e) { fail('Could not generate the settings: ' + e.message); });
+    if (token && !/^[\w.-]+(\/[\w.-]+)+$/.test(t.repo)) return fail('Enter this class\'s repo as owner/name (open "Change the repo" in step 1).');
+    var btn = $('generate'); btn.disabled = true; say('info', token ? 'Checking the token by saving a test record…' : 'Generating…');
+    var keepKey = !!cur.publicKey && keep.checked, code = Kit.wallet.newClassCode();
+    (token ? proveToken(t, token, id) : Promise.resolve(null)).then(function (proof) {
+      return Promise.all([keepKey ? { publicJwk: cur.publicKey } : Kit.newClassKeys(), token ? Kit.lockToken(token, code) : null]).then(function (r) {
+        var cfg = { classId: id, course: 'Blockchain Technology', room: keepKey && cur.room ? cur.room : id.toUpperCase(), publicKey: r[0].publicJwk };
+        if (token) cfg.inbox = { platform: t.platform, host: t.host, repo: t.repo, locked: r[1] };
+        $('s-token').value = ''; $('msg').replaceChildren();
+        show({ cfg: cfg, code: token ? code : null, proof: proof, keepKey: keepKey, t: t,
+          keyName: id + '.private.jwk.json', keyText: keepKey ? null : JSON.stringify(r[0].privateJwk, null, 2),
+          file: '/* Class settings, made by the class setup page. Public information only: the inbox token is locked. */\n' +
+            'window.BC_CLASS = ' + JSON.stringify(cfg, null, 2) + ';\n' });
+      });
+    }).catch(function (e) { fail(e.message); }).then(function () { btn.disabled = false; });
   });
+
+  function show(g) {
+    generated = g;
+    var path = 'assets/kit/class.js', t = g.t, saveLink = null, editLink = null, n = 3;
+    if (t.repo && t.platform === 'github') {
+      saveLink = 'https://' + t.host + '/' + t.repo + '/new/main?filename=' + encodeURIComponent(path) + '&value=' + encodeURIComponent(g.file);
+      editLink = 'https://' + t.host + '/' + t.repo + '/edit/main/' + path;
+    } else if (t.repo) editLink = 'https://' + t.host + '/' + t.repo + '/-/new/main/assets/kit?file_name=class.js';
+    if (g.keyText) Kit.download(g.keyName, g.keyText);
+    var copied = el('span', { class: 'muted small' }), codeCopied = el('span', { class: 'muted small' }), live = el('div', { id: 'live' });
+    var replacing = !!cur.publicKey;
+
+    $('out').replaceChildren(
+      g.proof && g.proof.indexOf('ok:') === 0 ? el('div', { class: 'callout ok', id: 'token-ok', style: 'margin-bottom:1rem' }, el('b', { text: 'The token works. ' }), 'It saved a test record in ' + t.repo + ' (' + g.proof.slice(3) + ').')
+        : g.proof === 'unreachable' ? el('div', { class: 'callout warn', style: 'margin-bottom:1rem' }, el('b', { text: 'The token could not be checked. ' }), 'This browser couldn\'t reach ' + t.host + '. The class is set up, but test a submission before the first day.') : null,
+
+      el('section', { class: 'panel', id: 'step-key' }, el('h2', { text: (n++) + '. Keep the class key safe' }),
+        g.keepKey ? el('p', null, 'Unchanged. Keep using the key file you already have: it still reads every record in this class.')
+          : [el('p', null, 'It was just downloaded as ', el('code', { text: g.keyName }), '. It is the only thing that can read this class\'s records. If it is lost, nobody can read them.'),
+             el('ul', { class: 'small' }, el('li', { text: 'Store two copies with the instructors, for example one each.' }), el('li', { text: 'Never put it in a repo or send it to students.' })),
+             el('div', { class: 'btn-row', style: 'margin-top:0' }, el('button', { class: 'btn', type: 'button', id: 'key-again', text: 'Download the key again', onclick: function () { Kit.download(g.keyName, g.keyText); } }))]),
+
+      g.code ? el('section', { class: 'panel', id: 'step-code' }, el('h2', { text: (n++) + '. Write down the class code' }),
+        el('p', null, 'Students type it at every sign-in. It goes on the board.'),
+        el('div', { class: 'hexblock', style: 'font-size:1.3rem;font-weight:650;text-align:center', id: 'class-code', text: g.code }),
+        el('div', { class: 'btn-row' }, el('button', { class: 'btn', type: 'button', text: 'Copy the code', onclick: function () { Kit.copy(g.code).then(function () { codeCopied.textContent = 'Copied.'; }); } }), codeCopied),
+        el('p', { class: 'small muted', style: 'margin-top:.5rem' }, 'It is shown only now and stored nowhere. If you lose it, come back to this page and make a new one.')) : null,
+
+      el('section', { class: 'panel', id: 'step-save' }, el('h2', { text: (n++) + '. Commit the settings file' }),
+        el('p', null, 'This is the step that sets the class up. The settings are one file in the class repo, ', el('code', { text: path }), '.'),
+        saveLink && !replacing
+          ? [el('div', { class: 'btn-row', style: 'margin-top:0' }, el('a', { class: 'btn primary', id: 'save-link', href: saveLink, target: '_blank', rel: 'noopener', text: 'Open it on GitHub ↗', onclick: watch })),
+             el('p', { class: 'small', style: 'margin-top:.5rem' }, 'The file is already filled in. Press the green ', el('b', { text: 'Commit changes' }), ' button there, twice.')]
+          : [el('ol', { class: 'small' },
+               el('li', null, el('button', { class: 'btn', type: 'button', id: 'copy-file', text: 'Copy the settings file', onclick: function () { Kit.copy(g.file).then(function () { copied.textContent = 'Copied.'; }); watch(); } }), ' ', copied),
+               el('li', null, editLink ? el('a', { href: editLink, target: '_blank', rel: 'noopener', text: replacing && saveLink ? 'Open the existing file to edit ↗' : 'Open the repo\'s new-file page ↗' }) : 'Open ' + path + ' in the class repo.',
+                 replacing ? ' Select everything in it and paste over it.' : ' Name the file class.js and paste.'),
+               el('li', null, 'Commit.'))],
+        el('details', { class: 'hint', style: 'margin-top:.75rem' }, el('summary', { text: 'Other ways, and the file itself' }),
+          el('div', { class: 'btn-row', style: 'margin-top:.25rem' },
+            el('button', { class: 'btn', type: 'button', text: 'Copy the file', onclick: function () { Kit.copy(g.file); watch(); } }),
+            el('button', { class: 'btn', type: 'button', text: 'Download class.js', onclick: function () { Kit.download('class.js', g.file); } })),
+          el('p', { class: 'small muted', style: 'margin-top:.5rem' }, 'Running the class from a folder instead of a site? Put the downloaded class.js in assets/kit/ before you hand the folder out.'),
+          el('div', { class: 'hexblock', id: 'class-file', text: g.file })),
+        live),
+
+      el('section', { class: 'panel', id: 'step-next' }, el('h2', { text: (n++) + '. Before the first day' }),
+        el('ul', null,
+          el('li', null, el('a', { href: 'ref/seed-backup.html', target: '_blank', text: 'Print the seed phrase backup cards' }), ', one per student (four to a sheet).'),
+          el('li', null, 'Give each student a handle, and write the class code on the board.'),
+          el('li', null, 'To see results, open ', el('code', { text: 'instructor/dashboard/index.html' }), ' from your copy of the course repo and load the class key.'))));
+    $('out').scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+
+  /* After the commit, the platform takes a minute or so to publish. Watch for it and say when the class is live. */
+  var watching = null;
+  function watch() {
+    if (watching || !/^https?:$/.test(location.protocol)) return;
+    var live = $('live'), tries = 0, want = generated.cfg.inbox ? generated.cfg.inbox.locked.ct : generated.cfg.publicKey.x;
+    live.replaceChildren(el('div', { class: 'callout info', id: 'live-wait', text: 'After you commit, the site takes about a minute to update. This page is watching for it…' }));
+    watching = setInterval(function () {
+      tries++;
+      fetch('kit/class.js?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (text) {
+        if (text.indexOf(want) >= 0) {
+          clearInterval(watching); watching = null;
+          live.replaceChildren(el('div', { class: 'callout ok', id: 'live-ok' }, el('b', { text: 'The class is live. ' }), el('a', { href: 'start.html', text: 'Open the class site' }), ' and sign in as a student to try it.'));
+        } else if (tries > 90) {
+          clearInterval(watching); watching = null;
+          live.replaceChildren(el('div', { class: 'callout warn', text: 'The site hasn\'t picked up the settings yet. Check that the commit went to the main branch and that Pages is turned on, then reload the class site.' }));
+        }
+      }).catch(function () {});
+    }, 4000);
+  }
 })();
 </script>
 </body>

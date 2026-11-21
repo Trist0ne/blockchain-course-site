@@ -12,10 +12,10 @@
   var Kit = {};
   var enc = new TextEncoder();
   var dec = new TextDecoder();
-  Kit.version = '0.13.0';
+  Kit.version = '0.14.0';
   /* Which course commit this site was cut from. tools/cut_delivery.py rewrites this line; 'dev' means an uncut working copy.
      Every record carries it, so a class can always be graded with the course repo as it was when the class was cut. */
-  Kit.build = { commit: '7cd78722f8ff', date: '2026-11-21' };
+  Kit.build = { commit: 'a6b4d439150f', date: '2026-11-21' };
   /* Where this file was loaded from, so pages at any depth can link to shared pages such as setup.html. */
   var here = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
   Kit.base = here.replace(/kit\.js(\?.*)?$/, '');
@@ -573,11 +573,49 @@
       .then(function (k) { return subtle().verify(ECDSA_SIG, k, sig, body); })
       .then(function (ok) { return ok ? JSON.parse(dec.decode(body)) : null; }, function () { return null; });
   };
+  /* The label on the signed-in student's own records: 's-' and the first 8 hex digits of their account. */
+  Kit.myLabel = function () { return 's-' + Kit.who().slice(2, 10); };
+  /* What the signed-in student has handed in, read from the class itself, so it is right on any computer.
+     Resolves { '<item>:<part>': '<time>' } (part is '' for a quiz), or null if the class could not be asked. */
+  Kit.myHandIns = function () {
+    var inbox = Kit.inbox(), me = Kit.me();
+    if (!inbox || !me) return Promise.resolve(null);
+    var tag = Kit.short(me.address), got = {}, seen = 0;
+    function take(list) {
+      list.forEach(function (it) {
+        var m = /^\[submit\] (\S+)(?: (\S+))? · (\S+)$/.exec(it.title);
+        if (!m || m[3] !== tag) return;
+        seen++;
+        if (m[1] === 'register') return;
+        var k = m[1] + ':' + (m[2] || '');
+        if (!got[k] || it.time < got[k]) got[k] = it.time;
+      });
+    }
+    return Kit.studentToken().then(function (token) {
+      return (function page(n) {
+        return Kit.listInbox(inbox, token, { labels: Kit.myLabel(), page: n }).then(function (list) {
+          take(list);
+          return list.length === 100 && n < 10 ? page(n + 1) : null;
+        });
+      })(1).then(function () {
+        if (seen) return got;
+        /* Nothing under our label: the platform may have dropped it. Look through the newest records by title instead. */
+        return Kit.listInbox(inbox, token, { perPage: 100 }).then(function (all) { take(all); return got; });
+      });
+    }).catch(function () { return null; });
+  };
+
   /* The signed-in student's latest published results, or null. Resolves { at, mine, cls }. */
   Kit.myResults = function () {
     var inbox = Kit.inbox(), c = Kit.cls(), me = Kit.me();
     if (!inbox || !me) return Promise.resolve(null);
-    return Kit.studentToken().then(function (token) { return Kit.listInbox(inbox, token, { labels: 'results', perPage: 10 }); }).then(function (list) {
+    return Kit.studentToken().then(function (token) {
+      return Kit.listInbox(inbox, token, { labels: 'results', perPage: 10 }).then(function (list) {
+        if (list.length) return list;
+        /* No labelled record: the platform may have dropped the label. Look through the newest records by title instead. */
+        return Kit.listInbox(inbox, token, { perPage: 100 }).then(function (all) { return all.filter(function (it) { return /^\[results\]/.test(it.title); }); });
+      });
+    }).then(function (list) {
       return list.reduce(function (found, it) {   // newest first; the first one that is genuine and has an entry for us
         return found.then(function (hit) {
           if (hit) return hit;
@@ -668,7 +706,10 @@
       sub = s;
       if (!inbox) return manual('This copy of the course isn\'t connected to a class inbox.');
       return Kit.unlockToken(inbox.locked, id.code).then(function (token) {
-        return Kit.postToInbox(inbox, token, '[submit] ' + payload.item + ' · ' + tag, 'Course submission: ' + label + '\nAccount: ' + me.address + '\n\n```\n' + sub.code + '\n```\n');
+        /* The title names the item and part, and a label marks whose it is, so the student's home page can list their own
+           hand-ins from any computer. Neither is trusted for grading: that uses only what is sealed inside. */
+        return Kit.postToInbox(inbox, token, '[submit] ' + payload.item + (payload.part ? ' ' + payload.part : '') + ' · ' + tag,
+          'Course submission: ' + label + '\nAccount: ' + me.address + '\n\n```\n' + sub.code + '\n```\n', [Kit.myLabel()]);
       }).then(function (res) {
         var when = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         Kit.mine.set('sent:' + payload.item + ':' + (payload.part || '') + ':' + Kit.who(), { ref: res.ref, at: when });

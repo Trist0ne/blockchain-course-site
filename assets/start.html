@@ -35,17 +35,29 @@
   var items = window.BC_ITEMS || [], KIND = { quiz: 'Quiz', lab: 'Challenge' };
   function titleOf(id) { for (var i = 0; i < items.length; i++) if (items[i].id === id) return items[i].title; return id; }
 
+  /* What has been handed in comes from the class itself (so it is right on any computer), plus anything this browser
+     knows it sent, plus what has been graded. */
+  var handIns = null, graded = null, asked = false;
+  function hhmm(t) { var d = new Date(t); return isNaN(d) ? String(t) : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + d.toLocaleDateString([], { day: 'numeric', month: 'short' }); }
   function paintWork() {
-    var who = Kit.who();
+    var who = Kit.who(), inbox = !!Kit.inbox();
     $('work').replaceChildren(el('h2', { text: 'Your work' }), el('div', { class: 'table-wrap' }, el('table', { class: 'data', id: 'work-table' }, el('tbody', null, items.map(function (it) {
       var parts = it.kind === 'lab' ? Object.keys(it.flags || {}) : [''];
-      var sent = parts.map(function (p) { return Kit.mine.get('sent:' + it.id + ':' + p + ':' + who, null); });
-      var done = sent.filter(Boolean).length;
-      var statusText = !done ? 'Not handed in on this computer' : it.kind === 'lab' ? done + ' of ' + parts.length + ' flags handed in' : 'Handed in ' + sent[0].at + ' (' + sent[0].ref + ')';
+      var when = parts.map(function (p) {
+        var here = Kit.mine.get('sent:' + it.id + ':' + p + ':' + who, null);
+        return (handIns && handIns[it.id + ':' + p]) || (here ? here.at : null);
+      });
+      var done = when.filter(Boolean).length;
+      var isGraded = graded && (it.kind === 'quiz' ? !!graded.quizzes[it.id] : parts.some(function (p) { return graded.flags[it.id + ':' + p]; }));
+      var text = isGraded ? 'Graded: see your results below'
+        : done ? (it.kind === 'lab' ? done + ' of ' + parts.length + ' flags handed in' : 'Handed in ' + (handIns && handIns[it.id + ':'] ? hhmm(handIns[it.id + ':']) : when[0]))
+        : !inbox ? 'Hand in with Copy or Download'
+        : !asked ? 'Checking…'
+        : handIns ? 'Not handed in yet' : 'Couldn\'t check right now';
       return el('tr', { 'data-item': it.id }, el('td', null, el('span', { class: 'tag', text: KIND[it.kind] || it.kind })),
         el('td', null, el('a', { href: it.href, text: it.title }), el('br'), el('span', { class: 'muted small', text: it.section || '' })),
-        el('td', null, el('span', { class: done ? 'solved-badge' : 'muted small', text: (done ? '✓ ' : '') + statusText })));
-    })))), el('p', { class: 'small muted', style: 'margin:.5rem 0 0', text: 'This list shows what was handed in from this computer. Your results below are the full picture.' }));
+        el('td', null, el('span', { class: done || isGraded ? 'solved-badge' : 'muted small', text: (done || isGraded ? '✓ ' : '') + text })));
+    })))));
   }
 
   function paintResults(state) {
@@ -80,12 +92,13 @@
   function loadResults() {
     if (!Kit.inbox()) return paintResults('noinbox');
     paintResults('loading');
-    Kit.myResults().then(paintResults, function () { paintResults('error'); });
+    Kit.myResults().then(function (r) { graded = r ? r.mine : null; paintResults(r); paintWork(); }, function () { paintResults('error'); });
   }
 
   Kit.signIn().then(function (me) {
     if (me.handle) $('hello').textContent = 'Welcome, ' + me.handle;
     paintWork(); loadResults();
+    Kit.myHandIns().then(function (h) { handIns = h; asked = true; paintWork(); });
   });
 })();
 </script>

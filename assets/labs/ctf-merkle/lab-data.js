@@ -35,7 +35,7 @@
     id: 'ctf-merkle', rev: 1,
     title: 'One hash for the whole block', tags: ['Cryptography', 'Merkle trees'], minutes: 12, crumbs: 'Cryptography · Challenge',
     lede: 'A Bitcoin block header has room for exactly one 32-byte hash of its transactions, and a block can hold thousands. That one hash, the <b>Merkle root</b>, still pins down every one of them.',
-    real: 'The transaction IDs are real, from Bitcoin\'s main network, and the tree is built exactly the way Bitcoin builds it. The shortcut: these transactions were never in one block together, so no real block has the root you are about to compute.',
+    real: 'The transaction IDs are real, from Bitcoin\'s main network, and the tree is built exactly the way Bitcoin builds it. The shortcut: these four transactions were never the whole of one block, so no real block has the root you are about to compute.',
     ref: 'bitcoin-block', refPage: '../../ref/bitcoin.html',
     bench: { ops: ['sha256', 'reverse'], append: true, shelf: true },
     leaves: LEAVES, merkle: merkle,
@@ -62,8 +62,8 @@
       },
       wrong: 'Not the root of these four. Check the log: join A and B (64 bytes), SHA-256 twice, keep a copy; the same for C and D; then join the two copies and hash twice again.',
       hints: ['Load A, add B to the end: 64 bytes. SHA-256, SHA-256. Press "Keep a copy". Do the same for C and D.', 'Load your first copy, add the second to the end, SHA-256 twice. That is the root as Bitcoin stores it. One more step turns it into what an explorer shows.'],
-      debrief: '<h2>Debrief</h2><h3>Why a tree and not one big hash?</h3><p>To prove that transaction A is in this block, you don\'t need the other transactions. You need B, and the hash of C with D: two hashes. Anyone can then rebuild the root and compare it with the header. For a block of 4,000 transactions the proof is 12 hashes. That is how a phone wallet checks a payment without downloading blocks.</p>'
-        + '<h3>Why it matters</h3><p>Change one byte of any transaction and its ID changes, so every hash above it changes, so the root changes, so the header changes, so the block\'s proof of work is gone. One 32-byte field makes every transaction in the block tamper-evident.</p>',
+      debrief: '<h2>Debrief</h2><h3>Why a tree and not one big hash?</h3><p>To prove that transaction A is in this block, you don\'t need the other transactions. You need B, and the hash of C with D: two hashes. Anyone can then rebuild the root and compare it with the header. For a block of 4,000 transactions the proof is 12 hashes. That is how a lightweight wallet can check that a payment is in a block without downloading the block.</p>'
+        + '<h3>Why it matters</h3><p>Change what any transaction does and its ID changes, so every hash above it changes, so the root changes, so the header changes, so the block\'s proof of work is gone. One 32-byte field makes every transaction in the block tamper-evident.</p>',
       general: 'The block header holds one fingerprint that covers every transaction in the block, so you can prove a payment is in a block with a dozen hashes instead of the whole block.',
       after: function () { return 'Each ID above, with its bytes reversed, is a real transaction you can find in a block explorer.'; }
     }, {

@@ -380,3 +380,13 @@ tr.me td { background: var(--accent-tint); font-weight: 650; }
 .shelf { list-style: none; padding: 0; margin: 0.5rem 0 0; display: grid; gap: 0.3rem; }
 .shelf li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
 .artifact { overflow-wrap: anywhere; white-space: pre-wrap; }
+
+/* Narrow screens: the top bar keeps the mark, where you are and who you are; nothing may push the page wider. */
+@media (max-width: 40rem) {
+  .topbar { gap: 0.5rem; }
+  .brand > :not(.brand-mark) { display: none; }
+  .crumbs::before { content: none; }
+  .chip b + .mono { display: none; }
+  .chip { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .topbar .icon-btn { white-space: nowrap; flex: none; }
+}

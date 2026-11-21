@@ -19,7 +19,7 @@
 
       '<h3>Token amounts</h3>',
       '<ul><li>A token contract stores whole numbers of its smallest unit. <b>decimals</b> says where the point goes when the amount is shown.</li>',
-      '<li>6 decimals: 1 token = 1,000,000 units (USDT, USDC). 18 decimals: 1 token = 1,000,000,000,000,000,000 units (most tokens; ETH itself is counted in wei the same way).</li></ul>',
+      '<li>6 decimals: 1 token = 1,000,000 units (USDT and USDC on Ethereum). 18 decimals: 1 token = 1,000,000,000,000,000,000 units (most tokens; ETH itself is counted in wei the same way).</li></ul>',
 
       '<h3>ERC-20 functions you will meet</h3>',
       '<ul><li><code>transfer(address,uint256)</code>: the caller sends tokens to the address.</li>',
@@ -42,7 +42,7 @@
       '<li>A transaction has no "from" field. The sender is recovered from the transaction\'s signature.</li></ul>',
 
       '<h3>Signing a message (personal_sign, EIP-191)</h3>',
-      '<ul><li>The wallet does not sign your text directly. It signs Keccak-256 of <code>"\\x19Ethereum Signed Message:\\n" + length + text</code>.</li>',
+      '<ul><li>The wallet does not sign your text directly. It signs Keccak-256 of <code>"\\x19Ethereum Signed Message:\\n" + length + text</code>, where length is the number of bytes in the text, written as ordinary decimal digits.</li>',
       '<li>That prefix makes it impossible for a signed message to also be a valid transaction.</li></ul>'
     ].join('')
   };

@@ -58,20 +58,20 @@
       near: function (entry, v) { return near(DATA.legacy[v.legacy])(entry); },
       wrong: 'Not this transaction\u2019s txid. Reload your bytes and check each step in the log.',
       hints: ['Bitcoin rarely hashes anything just once.', 'Explorers print a hash as a number, and Bitcoin stores numbers least-significant byte first.'],
-      debrief: '<h2>Debrief</h2><h3>Why it matters</h3><p>The txid is a fingerprint of the transaction\'s exact bytes. Change a single byte (a different amount, a different recipient) and you have a different transaction with a different ID. That\'s why a txid in a report pins down exactly one transaction, and why nobody can quietly edit one afterwards.</p>'
+      debrief: '<h2>Debrief</h2><h3>Why it matters</h3><p>For this transaction, the txid is a fingerprint of its exact bytes. Change a single byte (a different amount, a different recipient) and you have a different transaction with a different ID. That\'s why a txid in a report pins down exactly one transaction, and why nobody can quietly edit one afterwards.</p>'
         + '<h3>Why backwards?</h3><p>Bitcoin\'s code treats a 32-byte hash as one large number and stores it least-significant byte first. Explorers print that number most-significant byte first. It\'s the same 32 bytes in the opposite order. If an ID you were given "doesn\'t exist", check its byte order before anything else.</p>',
       general: 'Nobody assigns a transaction ID. It\'s computed from the transaction itself, so every computer on the network agrees on it, and any change to the transaction changes the ID.',
       after: explorer
     }, {
       id: 'f2', points: 200, title: 'the segwit txid', deeper: true,
-      brief: '<p>Since 2017 most transactions use <b>segregated witness</b> (segwit): the signatures move into a separate <i>witness</i> section. Here is a segwit transaction. If you hash all of it, you get its <b>wtxid</b>. The txid that explorers, wallets and other transactions use leaves some bytes out. Work out which ones, remove them in the workbench, and compute the txid.</p>',
+      brief: '<p><b>Segregated witness</b> (segwit) was switched on in 2017, and most transactions now use it: the signatures move into a separate <i>witness</i> section. Here is a segwit transaction. If you hash all of it, you get its <b>wtxid</b>. The txid that explorers, wallets and other transactions use leaves some bytes out. Work out which ones, remove them in the workbench, and compute the txid.</p>',
       artifacts: function (v) { return [{ label: 'the segwit transaction', hex: DATA.segwit[v.segwit], structure: structure }]; },
       placeholder: '64 hex characters, or flag{…}', format: { kind: 'hex', len: 64, name: 'A txid' },
       answer: function (v) { return Kit.btc.txid(Kit.hex.toBytes(DATA.segwit[v.segwit])); },
       near: function (entry, v) { return near(DATA.segwit[v.segwit])(entry); },
       wrong: 'Not this transaction\u2019s txid. Load it into the workbench again and check each step in the log.',
       hints: ['BIP 141: the txid is computed over the transaction in the original, pre-segwit format.', 'Remove the two bytes straight after the version (marker <code>00</code>, flag <code>01</code>) and the whole witness section that sits just before the last 4 bytes (the locktime).'],
-      debrief: '<h3>Why leave the witness out?</h3><p>Before segwit, anyone relaying a transaction could re-encode its signature without invalidating it. The payment still went to the same place, but its txid changed. Software tracking the payment by txid could lose it, and transactions built on top of an unconfirmed one broke. This was called <i>transaction malleability</i>. Taking the witness out of the txid fixed it, and that fix is what made payment channels such as the Lightning Network practical.</p>',
+      debrief: '<h3>Why leave the witness out?</h3><p>Before segwit, anyone relaying a transaction could re-encode its signature without invalidating it. The payment still went to the same place, but its txid changed. Software tracking the payment by txid could lose it, and transactions built on top of an unconfirmed one broke. This was called <i>transaction malleability</i>. Taking the signatures out of the txid fixed it for transactions that spend only segwit coins, and that fix is what made payment channels such as the Lightning Network practical.</p>',
       after: explorer
     }]
   });

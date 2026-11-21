@@ -13,7 +13,7 @@ window.BC_QUIZ = {
       "prompt": "A colleague's Bitcoin payment has been pending for three hours. You pull its details:",
       "artifact": {
         "label": "Pending transaction",
-        "text": "fee rate:                1 sat/vB\nsignals replace-by-fee:  yes\nchange output:           none\nnext-block fee rate now: about 25 sat/vB\nrecipient:               an exchange deposit address"
+        "text": "fee rate:                1 sat/vB\nsignals replace-by-fee:  yes\nchange output:           none\nother coins in the wallet: yes\nnext-block fee rate now: about 25 sat/vB\nrecipient:               an exchange deposit address"
       },
       "ask": "What is the fastest way for your colleague to get this payment confirmed without the exchange's help?",
       "options": [
@@ -27,7 +27,7 @@ window.BC_QUIZ = {
         },
         {
           "id": "93812bd7",
-          "text": "Sign a replacement version of the same payment that pays a higher fee, and broadcast it"
+          "text": "Sign a replacement that spends the same coin and pays a higher fee, and broadcast it"
         },
         {
           "id": "b7b89d5b",
@@ -116,7 +116,7 @@ window.BC_QUIZ = {
         },
         {
           "id": "79286f3d",
-          "text": "Reuse the signature to send the sender's funds in a different transaction"
+          "text": "Use the signature on a payment to a different recipient or for a different amount"
         },
         {
           "id": "88eac658",
@@ -144,11 +144,11 @@ window.BC_QUIZ = {
         },
         {
           "id": "5f2ca20a",
-          "text": "Address C is the sender's change, so addresses A and C belong to the same person."
+          "text": "Address C received the sender's change, so addresses A and C belong to the same person."
         },
         {
           "id": "cbf81b8a",
-          "text": "The owner of address A paid the owner of address B 2.0 BTC."
+          "text": "The owner of address A paid the owner of address B 2.0 BTC, and kept the rest as change."
         },
         {
           "id": "d955aa29",
@@ -157,5 +157,5 @@ window.BC_QUIZ = {
       ]
     }
   ],
-  "rev": "59e653c6e1b8"
+  "rev": "61053c112079"
 };

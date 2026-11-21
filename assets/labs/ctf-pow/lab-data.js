@@ -60,7 +60,7 @@
   Kit.defineLab({
     id: 'ctf-pow', rev: 1,
     title: 'Check the work', tags: ['Consensus', 'Proof of work'], minutes: 10, crumbs: 'Consensus · Challenge',
-    lede: 'Miners spend enormous effort finding a block. Everyone else needs almost none to check that they did. You are about to check a real block the way every node on the network does.',
+    lede: 'Miners spend enormous effort finding a block. Everyone else needs almost none to check that they did. You are about to check a real block\'s proof of work the way every node on the network does.',
     real: 'This is the header of a real block from Bitcoin\'s main network, byte for byte. The hash you compute is the block\'s real ID and will find it in any block explorer. The only shortcut: we handed you the header instead of pulling it from a node.',
     ref: 'bitcoin-block', refPage: '../../ref/bitcoin.html',
     bench: { ops: ['sha256', 'reverse'], slice: true, number: true },
@@ -69,7 +69,7 @@
     variantLabel: function (v) { return 'variant H' + (v.i + 1); },
     flags: [{
       id: 'f1', points: 100, title: 'the block hash',
-      brief: '<p>These 80 bytes are a block header: everything a miner hashes. A miner changed the last four bytes, the <b>nonce</b>, over and over until the header hashed to a small enough number. <b>Compute this block\'s hash, as a block explorer shows it.</b></p>',
+      brief: '<p>These 80 bytes are a block header: everything a miner hashes. A miner changed the last four bytes, the <b>nonce</b>, over and over until the header hashed to a small enough number. (Four bytes allow only about 4 billion tries, so today\'s miners also vary other fields, such as the time and, through their own payout transaction, the Merkle root.) <b>Compute this block\'s hash, as a block explorer shows it.</b></p>',
       artifacts: function (v) { return [{ label: 'your block header', hex: HEADERS[v.i][1], structure: structure }]; },
       placeholder: '64 hex characters, or flag{…}', format: { kind: 'hex', len: 64, name: 'A block hash' },
       answer: function (v) { return Kit.sha256d(header(v)).then(display); },
@@ -83,9 +83,9 @@
       },
       wrong: 'Not this block\u2019s hash. Reload your bytes: all 80 go in, nothing added or removed.',
       hints: ['The whole header goes in, all 80 bytes, exactly as given.', 'Bitcoin hashes it twice with SHA-256. Explorers then print the result as a number, most significant byte first.'],
-      debrief: '<h2>Debrief</h2><h3>Look at the zeros</h3><p>Your hash starts with a long run of zeros. A hash function gives no way to aim for that: the miner had to try nonce after nonce until one happened to land there. Those zeros are the proof of work. You checked it with two hashes.</p>'
+      debrief: '<h2>Debrief</h2><h3>Look at the zeros</h3><p>Your hash starts with a long run of zeros. A hash function gives no way to aim for that: the miner had to try header after header until one happened to land there. Those zeros are the proof of work. You checked it with two hashes.</p>'
         + '<h3>Why it locks history</h3><p>The header contains the previous block\'s hash and the Merkle root of this block\'s transactions. Change any transaction, here or in any earlier block, and this header changes, its hash changes, and the zeros are gone. Rewriting history means redoing the work for that block and every block after it, faster than the rest of the network is adding new ones.</p>',
-      general: 'Making a block takes the whole network about ten minutes of guessing. Checking one takes anybody two hashes, so nobody has to take a miner\'s word for anything.',
+      general: 'Making a block takes the whole network about ten minutes of guessing. Checking that the work was done takes anybody two hashes, so nobody can fake the effort.',
       after: function (v, hash) { return 'This is block ' + HEADERS[v.i][0].toLocaleString('en-US') + '. With internet access: <a href="https://mempool.space/block/' + hash + '" target="_blank" rel="noopener">look it up on a public explorer ↗</a>.'; }
     }, {
       id: 'f2', points: 200, title: 'the target', deeper: true,
@@ -101,7 +101,7 @@
       },
       wrong: 'Not the target for this header. Keep bytes 72 to 75, reverse them, and unpack: one length byte, then a three-byte coefficient.',
       hints: ['Keep 4 bytes starting at byte 72, then reverse them. The first byte is now a length, E. The other three are the coefficient.', 'The target is the coefficient followed by E − 3 zero bytes. Write it out, then add zeros on the left until it is 32 bytes (64 hex characters).'],
-      debrief: '<h3>Hash against target</h3><p>Put your block hash above the target. The hash is the smaller number: that is the whole validity rule for proof of work. A lower target means fewer acceptable hashes and more guesses needed on average.</p>'
+      debrief: '<h3>Hash against target</h3><p>Proof of work is one of the checks a node makes: it also checks every transaction in the block. For this check, put your block hash above the target. The hash is the smaller number: that is the whole validity rule for proof of work. A lower target means fewer acceptable hashes and more guesses needed on average.</p>'
         + '<h3>Who sets the target?</h3><p>Nobody. Every 2,016 blocks each node recomputes it from the timestamps in the headers, aiming for one block every ten minutes: if the last 2,016 came too fast the target drops, too slow and it rises. "Difficulty" is just the first block\'s target divided by the current one.</p>',
       general: 'The difficulty isn\'t a setting someone controls. Every node works it out from the chain itself and rejects any block that doesn\'t meet it.'
     }]

@@ -44,11 +44,11 @@
       },
       hints: ['Type a candidate into "Text → bytes" in the workbench, then press Keccak-256.', 'Compare the first four bytes of the result (8 hex characters) with the first four bytes of the data.'],
       debrief: '<h2>Debrief</h2><h3>Four bytes decide everything</h3><p>The contract never sees a function name. It sees four bytes and jumps to the code they select. Explorers and wallets show a name only when they recognise those four bytes from a list. When they don\'t, you get raw hex, and reading it is on you.</p>'
-        + '<h3>Payment or permission?</h3><p><code>transfer</code> moves tokens now. <code>approve</code> moves nothing: it lets another address take up to that amount later, whenever it likes. Many wallet-draining scams end with the victim signing an <code>approve</code>. Both look the same in the prompt: 0 ETH and a line of hex.</p>',
+        + '<h3>Payment or permission?</h3><p><code>transfer</code> moves tokens now. <code>approve</code> moves nothing: it lets another address take up to that amount later, whenever it likes. Many wallet-draining scams end with the victim signing an <code>approve</code>. When the wallet doesn\'t decode the data, both look the same in the prompt: 0 ETH and a line of hex.</p>',
       general: 'The prompt said "0 ETH", which was true and useless. The first four bytes of the data tell you whether it is a payment or a standing permission to take the money.'
     }, {
       id: 'f2', points: 100, title: 'the address',
-      brief: '<p>After the selector, each argument takes exactly 32 bytes. The first argument here is an address: 20 bytes, padded with zeros on the left to fill the 32.</p><p><b>Which address receives the tokens, or the permission to take them?</b></p>',
+      brief: '<p>After the selector, each argument in this call takes exactly 32 bytes. The first argument here is an address: 20 bytes, padded with zeros on the left to fill the 32.</p><p><b>Which address receives the tokens, or the permission to take them?</b></p>',
       placeholder: '0x… 40 hex characters', format: { kind: 'address' },
       answer: function (v) { return v.to; },
       near: function (entry, v) { return entry === USDT.toLowerCase() ? 'That is the token contract the call is sent to. The address you want is inside the data.' : 'Not the address in the first argument. Keep 20 bytes starting at byte 16 of the data: the 4 selector bytes and 12 zero bytes come first.'; },
@@ -64,7 +64,7 @@
         return 'Not the amount. Keep the last 32 bytes of the data, read them as one number, then apply the 6 decimals.';
       },
       hints: ['Keep 32 bytes starting at byte 36, then press "Read as a number". Use the first reading: Ethereum puts the most significant byte first.', 'Divide by 1,000,000.'],
-      debrief: '<h3>Decimals are a display convention</h3><p>Nothing on the chain says "6 decimals" in this transaction. The contract stores integers; wallets and explorers look up the token\'s decimals and move the point for you. USDT and USDC use 6. Most tokens use 18. Read a raw amount with the wrong decimals and you are wrong by a factor of a trillion.</p>'
+      debrief: '<h3>Decimals are a display convention</h3><p>Nothing on the chain says "6 decimals" in this transaction. The contract stores integers; wallets and explorers look up the token\'s decimals and move the point for you. On Ethereum, USDT and USDC use 6. Most tokens use 18. The same token can use a different number on another chain, so look it up for the contract in front of you. Read a raw amount with the wrong decimals and you are wrong by a factor of a trillion.</p>'
         + '<p>The same pattern, a selector and 32-byte arguments, is how USDT moves on Tron and on every other EVM-style chain. Learn to read it once.</p>',
       general: 'A token amount on chain is a bare integer. Without the token\'s decimals, the same number could be ten dollars or ten trillion.'
     }]

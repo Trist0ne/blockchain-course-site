@@ -130,14 +130,16 @@
     }).catch(function (e) { st.replaceChildren(el('div', { class: 'callout bad', text: 'Could not read that file: ' + e.message })); });
   });
 
-  /* ---- Setting up again: keep the key unless told otherwise ---- */
-  var keep = el('input', { type: 'checkbox', id: 's-keep', checked: true });
+  /* ---- Setting up again always keeps the class key, so the records already in the class stay readable.
+          Starting a class over means making a new class repo from the template. ---- */
   if (cur.publicKey) {
-    $('existing').replaceChildren(el('section', { class: 'panel' },
+    $('existing').replaceChildren(el('section', { class: 'panel', id: 'again' },
       el('div', { class: 'callout warn' }, el('b', { text: 'This class is already set up' + (cur.classId ? ' (class ' + cur.classId + ')' : '') + '. ' }),
-        'Use this page again to replace the inbox token, for example if it expired or leaked. Students will need the new class code.'),
-      el('label', { class: 'check' }, keep, ' Keep this class\'s key, so the records already submitted stay readable (recommended)'),
-      el('p', { class: 'small muted', style: 'margin:.5rem 0 0' }, 'Untick it only to start the class over: a new key is made, and earlier records can then only be read with the old key file.')));
+        'Use this page again only to replace its inbox token, for example if it expired or leaked.'),
+      el('ul', { class: 'small muted', style: 'margin-bottom:0' },
+        el('li', { text: 'The class key stays the same, so every record already in the class stays readable.' }),
+        el('li', { text: 'You get a new class code. Students type it once on each computer.' }),
+        el('li', { text: 'To start over with an empty class, make a new class repo from the template instead.' }))));
   }
   if (cur.publicKey) { $('answers-panel').hidden = true; }   // setting up again: the stored answer keys stay as they are
   paintWhere();
@@ -169,7 +171,7 @@
     if (!id) return fail('Give the class an id, for example 2027-02.');
     if (token && !/^[\w.-]+(\/[\w.-]+)+$/.test(t.repo)) return fail('Enter this class\'s repo as owner/name (open "Change the repo" in step 1).');
     var btn = $('generate'); btn.disabled = true; say('info', token ? 'Checking the token by saving a test record…' : 'Generating…');
-    var keepKey = !!cur.publicKey && keep.checked, code = Kit.wallet.newClassCode();
+    var keepKey = !!cur.publicKey, code = Kit.wallet.newClassCode();
     (token ? proveToken(t, token, id) : Promise.resolve(null)).then(function (proof) {
       return Promise.all([keepKey ? { publicJwk: cur.publicKey } : Kit.newClassKeys(), token ? Kit.lockToken(token, code) : null]).then(function (r) {
         var cfg = { classId: id, course: 'Blockchain Technology', room: keepKey && cur.room ? cur.room : id.toUpperCase(), publicKey: r[0].publicJwk };
@@ -263,12 +265,12 @@
   var watching = null;
   function watch() {
     if (watching || !/^https?:$/.test(location.protocol)) return;
-    var live = $('live'), tries = 0, want = generated.cfg.inbox ? generated.cfg.inbox.locked.ct : generated.cfg.publicKey.x;
+    var live = $('live'), tries = 0, want = generated.file.trim();
     live.replaceChildren(el('div', { class: 'callout info', id: 'live-wait', text: 'After you commit, the site takes about a minute to update. This page is watching for it…' }));
     watching = setInterval(function () {
       tries++;
       fetch('kit/class.js?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (text) {
-        if (text.indexOf(want) >= 0) {
+        if (text.trim() === want) {
           clearInterval(watching); watching = null;
           live.replaceChildren(el('div', { class: 'callout ok', id: 'live-ok' }, el('b', { text: 'The class is live. ' }), el('a', { href: 'start.html', text: 'Open the class site' }), ' and sign in as a student to try it.'));
         } else if (tries > 90) {

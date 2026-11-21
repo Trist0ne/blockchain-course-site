@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Instructor dashboard</title>
 <link rel="icon" href="kit/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="kit/house.css?v=c7efd2339d88">
+<link rel="stylesheet" href="kit/house.css?v=fd590d65bda1">
 <script src="kit/class.js"></script>
-<script src="items.js?v=c7efd2339d88"></script>
-<script src="kit/kit.js?v=c7efd2339d88"></script>
-<script src="kit/lib/wallet-lib.js?v=c7efd2339d88"></script>
-<script src="kit/lib/course-words.js?v=c7efd2339d88"></script>
-<script src="kit/wallet.js?v=c7efd2339d88"></script>
-<script src="kit/btc.js?v=c7efd2339d88"></script>
-<script src="kit/lab.js?v=c7efd2339d88"></script>
+<script src="items.js?v=fd590d65bda1"></script>
+<script src="kit/kit.js?v=fd590d65bda1"></script>
+<script src="kit/lib/wallet-lib.js?v=fd590d65bda1"></script>
+<script src="kit/lib/course-words.js?v=fd590d65bda1"></script>
+<script src="kit/wallet.js?v=fd590d65bda1"></script>
+<script src="kit/btc.js?v=fd590d65bda1"></script>
+<script src="kit/lab.js?v=fd590d65bda1"></script>
 </head>
 <body>
 <main class="page wide">
@@ -91,7 +91,10 @@
 
   var state = { staff: null, token: '', raw: [], seen: {}, last: null, opened: {}, pubJson: null, publishing: false, again: false };
   /* The class state (which days are unlocked, which quizzes are closed) and where it and the published results are kept. */
-  var CS = { open: {}, closed: {}, at: '' }, csRef = null, resRef = null, stateQ = Promise.resolve(), POLL = 30000;
+  var CS = { open: {}, closed: {}, at: '' }, csRef = null, stateQ = Promise.resolve(), POLL = 30000;
+  /* Published results: one small record per student account and one for the class. Where each one is, what was last
+     sent to it, and the newest change seen in the class (so a check asks only for what is new). */
+  var resRefs = {}, sentJson = {}, newest = '', polls = 0;
   function auto(st, msg) { var a = $('auto-status'); a.setAttribute('data-state', st); if (msg != null) a.textContent = msg; }
   function clock() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
   function status(msg, cls2) { $('load-status').replaceChildren(el('div', { class: 'callout ' + (cls2 || 'info'), text: msg })); }
@@ -139,27 +142,31 @@
     quiet = quiet === true;
     var cfg = inboxCfg();
     if (!cfg) { status('Enter the class repo as owner/name.', 'bad'); return Promise.resolve(); }
-    var added = 0, n = 0, newState = null, pubs = [];
+    /* A background check asks only for records created or changed lately. The platform's list can run a few seconds
+       behind, so a record can show up after a newer one has already been seen: each check therefore reaches back five
+       minutes before the newest record seen (anything already loaded is skipped), and every tenth check reads everything. */
+    polls = quiet ? polls + 1 : 0;
+    var added = 0, n = 0, newState = null, since = quiet && newest && polls % 10 ? new Date(Date.parse(newest) - 300000).toISOString().replace(/\.\d+Z$/, 'Z') : null, full = !since;
     if (!quiet) status('Fetching the class\'s records…');
     return (function page(p) {
-      return Kit.listInbox(cfg, token(), { page: p }).then(function (list) {
+      return Kit.listInbox(cfg, token(), { page: p, since: since }).then(function (list) {
         list.forEach(function (it) {   // newest first
+          if (it.updated > newest) newest = it.updated;
           if (/^\[state\]/.test(it.title)) { var st = newState ? null : Kit.readState(it.body); if (st && st.classId === (cls.classId || null)) newState = { ref: it.ref, st: st }; return; }
-          if (/^\[results\]/.test(it.title)) { pubs.push(it); return; }
+          var m = /^\[results\] (class|· (\S+))$/.exec(it.title);
+          if (m) { var key = m[2] || 'class'; if (!resRefs[key]) resRefs[key] = it.ref; return; }
           if (!/^\[(submit|admin)\]/.test(it.title)) return;
           n++; added += addRaw(it.body, { source: it.ref, time: it.time });
         });
         return list.length === 100 ? page(p + 1) : null;
       });
     })(1).then(function () {
-      /* The published results are one record, kept up to date in place: find this class's newest genuine one. */
-      return resRef ? null : pubs.reduce(function (q, it) {
-        return q.then(function (hit) { return hit || Kit.readResults(it.body).then(function (r) { if (r && r.classId === (cls.classId || null)) resRef = it.ref; return !!resRef; }, function () { return false; }); });
-      }, Promise.resolve(false));
+      state.count = full ? n : (state.count || 0) + added;
     }).then(function () {
       var changed = false;
       if (newState) { csRef = newState.ref; if (newState.st.at > CS.at) { CS = { open: newState.st.open || {}, closed: newState.st.closed || {}, at: newState.st.at }; changed = true; } }
       if (!quiet) status(n + ' records in the class, ' + added + ' new.', 'ok');
+      else if (added) status(state.count + ' records in the class, ' + added + ' new.', 'ok');
       else if (/callout bad/.test($('load-status').innerHTML)) status('Connected again.', 'ok');
       if (!quiet || added || changed || !state.last) return render();
       auto($('auto-status').getAttribute('data-state'), $('auto-status').textContent.replace(/Last checked [^.]+\./, 'Last checked ' + clock() + '.'));
@@ -467,30 +474,41 @@
       Object.keys(s.flags).sort().forEach(function (f) { mine.flags[f] = s.flags[f].points; });
       return { mine: mine, to: Object.keys(s.accounts).filter(function (a) { return R.pubOf[a]; }).sort() };
     });
-    var json = JSON.stringify([cls.classKey, shared, people]);
-    if (json === state.pubJson) return auto('idle', sentLine());
+    /* What each record should say now. Only the ones that changed are sent, one at a time. */
+    var want = [{ key: 'class', json: JSON.stringify(shared), title: '[results] class', labels: ['results-class'],
+      make: function () { return Kit.classSeal(shared, token()).then(function (box) { return { shared: box }; }); } }];
+    people.forEach(function (p) {
+      p.to.forEach(function (addr) {
+        want.push({ key: Kit.short(addr), json: JSON.stringify([addr, p.mine]), title: '[results] · ' + Kit.short(addr), labels: ['s-' + addr.toLowerCase().slice(2, 10), 'results'],
+          make: function () { return Kit.wallet.sealTo(R.pubOf[addr], { mine: p.mine }).then(function (blob) { var e = {}; e[addr.toLowerCase()] = blob; return { entries: e }; }); } });
+      });
+    });
+    var marks = Kit.session.get('sentmarks', {}), scope = Kit.hash32(String(cls.classKey));
+    function mark(w) { return scope + ':' + Kit.hash32(w.json) + ':' + Kit.hash32('x' + w.json) + ':' + w.json.length; }
+    var todo = want.filter(function (w) { return sentJson[w.key] !== w.json && !(resRefs[w.key] && marks[w.key] === mark(w)); });
+    want.forEach(function (w) { if (todo.indexOf(w) < 0) sentJson[w.key] = w.json; });
+    if (!todo.length) return auto('idle', sentLine());
     if (state.publishing) { state.again = true; return; }
     state.publishing = true;
-    var entries = {}, at = new Date().toISOString(), mark;
-    return Kit.sha256(new TextEncoder().encode(json)).then(function (d) {
-      mark = Kit.hex.from(d);
-      if (resRef && Kit.session.get('sent', '') === mark) return 'same';   // this browser already sent exactly this
-      return Promise.all(people.map(function (p) {
-        return Promise.all(p.to.map(function (addr) { return Kit.wallet.sealTo(R.pubOf[addr], { mine: p.mine, cls: shared }).then(function (blob) { entries[addr.toLowerCase()] = blob; }); }));
-      })).then(function () {
-        return Kit.signResults({ v: 1, classId: cls.classId || null, build: Kit.build.commit, at: at, entries: entries }, state.staff);
-      }).then(function (signed) {
-        var body = 'Published results. Each student can read only their own. Kept up to date by the instructor dashboard. Do not edit.\n\n```\n' + signed + '\n```\n';
-        return resRef ? Kit.updateInbox(cfg, token(), resRef, body) : Kit.postToInbox(cfg, token(), '[results] kept up to date', body, ['results']).then(function (r) { resRef = r.ref; });
+    var at = new Date().toISOString(), failed = null, done = 0;
+    return todo.reduce(function (chain, w) {
+      return chain.then(function () {
+        if (failed) return;
+        return w.make().then(function (part) {
+          return Kit.signResults(Object.assign({ v: 2, classId: cls.classId || null, build: Kit.build.commit, at: at }, part), state.staff);
+        }).then(function (signed) {
+          var body = (w.key === 'class' ? 'The class scoreboard and averages. Readable by members of the class.' : 'One student\'s results. Only that student can read them.')
+            + ' Kept up to date by the instructor dashboard. Do not edit.\n\n```\n' + signed + '\n```\n';
+          return resRefs[w.key] ? Kit.updateInbox(cfg, token(), resRefs[w.key], body) : Kit.postToInbox(cfg, token(), w.title, body, w.labels).then(function (r) { resRefs[w.key] = r.ref; });
+        }).then(function () { sentJson[w.key] = w.json; marks[w.key] = mark(w); done++; }, function (e) { failed = e; });
       });
-    }).then(function (same) {
-      state.pubJson = json; Kit.session.set('sent', mark); if (same !== 'same') { state.sentAt = clock(); $('auto-status').setAttribute('data-n', String(+$('auto-status').getAttribute('data-n') + 1)); }
+    }, Promise.resolve()).then(function () {
+      Kit.session.set('sentmarks', marks);
+      if (done) { state.sentAt = clock(); $('auto-status').setAttribute('data-n', String(+$('auto-status').getAttribute('data-n') + done)); }
       state.publishing = false;
+      if (failed) { state.again = false; return auto('idle', 'Graded here, but sending results to students failed (' + failed.message + '). It will try again at the next check.'); }
       if (state.again) { state.again = false; return publish(); }
       auto('idle', sentLine());
-    }, function (e) {
-      state.publishing = false; state.again = false;
-      auto('idle', 'Graded here, but sending results to students failed (' + e.message + '). It will try again at the next check.');
     });
   }
   function sentLine() { return '✓ Live. New work is graded and each student\'s results are sent to them as it arrives' + (state.sentAt ? ' (last sent ' + state.sentAt + ')' : '') + '. Last checked ' + clock() + '.'; }

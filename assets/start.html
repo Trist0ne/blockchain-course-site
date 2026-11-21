@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Home</title>
 <link rel="icon" href="kit/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="kit/house.css?v=c7efd2339d88">
+<link rel="stylesheet" href="kit/house.css?v=fd590d65bda1">
 <script src="kit/class.js"></script>
-<script src="items.js?v=c7efd2339d88"></script>
-<script src="kit/kit.js?v=c7efd2339d88"></script>
-<script src="kit/lib/wallet-lib.js?v=c7efd2339d88"></script>
-<script src="kit/lib/course-words.js?v=c7efd2339d88"></script>
-<script src="kit/wallet.js?v=c7efd2339d88"></script>
+<script src="items.js?v=fd590d65bda1"></script>
+<script src="kit/kit.js?v=fd590d65bda1"></script>
+<script src="kit/lib/wallet-lib.js?v=fd590d65bda1"></script>
+<script src="kit/lib/course-words.js?v=fd590d65bda1"></script>
+<script src="kit/wallet.js?v=fd590d65bda1"></script>
 </head>
 <body>
 <main class="page wide">
@@ -130,6 +130,7 @@
   function refresh(quiet) {
     if (!quiet) loadResults(); else if (Kit.inbox()) Kit.myResults().then(function (r) { graded = r ? r.mine : null; shared = r ? r.cls : null; paintResults(r); paintMap(); paintBoard(); }, function () {});
     Kit.classState().then(function (st) { cs = st; paintMap(); });
+    if (quiet) return;   // what you handed in only changes when you hand something in
     Promise.resolve().then(function () { return Kit.myRecords(true); }).then(function (m) {
       handIns = null;
       if (m.ok) { handIns = {}; Object.keys(m.items).forEach(function (k) { handIns[k] = m.items[k].time; }); }

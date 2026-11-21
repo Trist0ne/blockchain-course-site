@@ -12,10 +12,10 @@
   var Kit = {};
   var enc = new TextEncoder();
   var dec = new TextDecoder();
-  Kit.version = '0.19.0';
+  Kit.version = '0.20.0';
   /* Which course commit this site was cut from. tools/cut_delivery.py rewrites this line; 'dev' means an uncut working copy.
      Every record carries it, so a class can always be graded with the course repo as it was when the class was cut. */
-  Kit.build = { commit: 'c7efd2339d88', date: '2026-11-21' };
+  Kit.build = { commit: 'fd590d65bda1', date: '2026-11-21' };
   /* A file of this site, named by build, so a page never pairs with another build's copy of it. */
   Kit.asset = function (path) { return path + (Kit.build.commit === 'dev' ? '' : '?v=' + Kit.build.commit); };
   /* Where this file was loaded from, so pages at any depth can link to shared pages such as setup.html. */
@@ -567,7 +567,8 @@
   Kit.listInbox = function (inbox, token, opts) {
     opts = opts || {};
     var gl = inbox.platform === 'gitlab', host = inbox.host || (gl ? 'gitlab.com' : 'github.com');
-    var q = 'per_page=' + (opts.perPage || 100) + '&page=' + (opts.page || 1) + (opts.labels ? '&labels=' + encodeURIComponent(opts.labels) : '');
+    var q = 'per_page=' + (opts.perPage || 100) + '&page=' + (opts.page || 1) + (opts.labels ? '&labels=' + encodeURIComponent(opts.labels) : '')
+      + (opts.since ? (gl ? '&updated_after=' : '&since=') + encodeURIComponent(opts.since) : '');   // only records created or changed since then
     var url = gl ? 'https://' + host + '/api/v4/projects/' + encodeURIComponent(inbox.repo) + '/issues?scope=all&order_by=created_at&sort=desc&' + q
       : (host === 'github.com' ? 'https://api.github.com' : 'https://' + host + '/api/v3') + '/repos/' + inbox.repo + '/issues?state=all&sort=created&direction=desc&' + q;
     var headers = {}; if (token) headers.Authorization = 'Bearer ' + token; if (!gl) headers.Accept = 'application/vnd.github+json';
@@ -576,8 +577,8 @@
       return r.json();
     }).then(function (list) {
       return list.filter(function (it) { return !it.pull_request; }).map(function (it) {
-        return gl ? { ref: '#' + it.iid, title: it.title || '', body: it.description || '', time: it.created_at }
-          : { ref: '#' + it.number, title: it.title || '', body: it.body || '', time: it.created_at };
+        return gl ? { ref: '#' + it.iid, title: it.title || '', body: it.description || '', time: it.created_at, updated: it.updated_at || it.created_at }
+          : { ref: '#' + it.number, title: it.title || '', body: it.body || '', time: it.created_at, updated: it.updated_at || it.created_at };
       });
     });
   };
@@ -717,27 +718,62 @@
     return Kit.myRecords(fresh).then(function (m) { if (!m.ok) return null; var t = {}; Object.keys(m.items).forEach(function (k) { t[k] = m.items[k].time; }); return t; });
   };
 
-  /* The signed-in student's latest published results, or null. Resolves { at, mine, cls }. */
+  /* Something every member of the class can read and nobody outside it can: sealed with a key made from the class's
+     inbox token, which students unlock with the class code and instructors with their words. Used for the class
+     scoreboard and averages. */
+  function classKey(token) {
+    return Kit.sha256(enc.encode('bc-class-shared-v1|' + token)).then(function (k) { return subtle().importKey('raw', k, 'AES-GCM', false, ['encrypt', 'decrypt']); });
+  }
+  Kit.classSeal = function (obj, token) {
+    var iv = root.crypto.getRandomValues(new Uint8Array(12));
+    return classKey(token).then(function (k) { return subtle().encrypt({ name: 'AES-GCM', iv: iv }, k, enc.encode(JSON.stringify(obj))); })
+      .then(function (ct) { return 'BCG1.' + Kit.b64u.from(iv) + '.' + Kit.b64u.from(ct); });
+  };
+  Kit.classOpen = function (text, token) {
+    var p = String(text).split('.');
+    if (p.length !== 3 || p[0] !== 'BCG1') return Promise.reject(new Error('Not sealed to a class'));
+    return classKey(token).then(function (k) { return subtle().decrypt({ name: 'AES-GCM', iv: Kit.b64u.toBytes(p[1]) }, k, Kit.b64u.toBytes(p[2])); })
+      .then(function (pt) { return JSON.parse(dec.decode(pt)); });
+  };
+
+  /* The signed-in student's latest results, or null. Resolves { at, mine, cls }.
+     Each account has its own small results record (labelled like the student's hand-ins), and the class has one
+     record for the scoreboard and averages. Both are signed by the class account; fakes are skipped. */
+  var NO_CLASS = { students: 0, quizzes: {}, flags: {}, ctfAvg: 0, board: [] };
   Kit.myResults = function () {
     var inbox = Kit.inbox(), c = Kit.cls(), me = Kit.me();
     if (!inbox || !me) return Promise.resolve(null);
-    return Kit.studentToken().then(function (token) {
-      return Kit.listInbox(inbox, token, { labels: 'results', perPage: 10 }).then(function (list) {
-        if (list.length) return list;
-        /* No labelled record: the platform may have dropped the label. Look through the newest records by title instead. */
-        return Kit.listInbox(inbox, token, { perPage: 100 }).then(function (all) { return all.filter(function (it) { return /^\[results\]/.test(it.title); }); });
-      });
-    }).then(function (list) {
-      return list.reduce(function (found, it) {   // newest first; the first one that is genuine and has an entry for us
+    var mineTitle = '[results] · ' + Kit.short(me.address);
+    function genuine(list, want) {   // newest first: the first record that is genuine and gives `want` something
+      return list.reduce(function (found, it) {
         return found.then(function (hit) {
           if (hit) return hit;
-          return Kit.readResults(it.body).then(function (r) {
-            var mine = r && r.classId === (c.classId || null) && r.entries && r.entries[me.address.toLowerCase()];
-            if (!mine) return null;
-            return me.open(mine).then(function (o) { return { at: r.at, mine: o.mine, cls: o.cls }; }, function () { return null; });
-          });
+          return Kit.readResults(it.body).then(function (r) { return r && r.classId === (c.classId || null) ? want(r) : null; }).catch(function () { return null; });
         });
       }, Promise.resolve(null));
+    }
+    return Kit.studentToken().then(function (token) {
+      var own = Kit.listInbox(inbox, token, { labels: Kit.myLabel(), perPage: 100 }).then(function (list) {
+        list = list.filter(function (it) { return it.title === mineTitle; });
+        if (list.length) return list;
+        /* No record under our label: an older class kept everyone in one record, or the platform dropped the label. */
+        return Kit.listInbox(inbox, token, { labels: 'results', perPage: 20 }).then(function (l2) {
+          if (l2.length) return l2;
+          return Kit.listInbox(inbox, token, { perPage: 100 }).then(function (all) { return all.filter(function (it) { return /^\[results\]/.test(it.title); }); });
+        });
+      }).then(function (list) {
+        return genuine(list, function (r) {
+          var e = r.entries && r.entries[me.address.toLowerCase()];
+          return e ? me.open(e).then(function (o) { return { at: r.at, mine: o.mine, cls: o.cls || null }; }, function () { return null; }) : null;
+        });
+      });
+      var shared = Kit.listInbox(inbox, token, { labels: 'results-class', perPage: 5 }).then(function (list) {
+        return genuine(list, function (r) { return r.shared ? Kit.classOpen(r.shared, token).catch(function () { return null; }) : null; });
+      }).catch(function () { return null; });
+      return Promise.all([own, shared]).then(function (two) {
+        if (!two[0]) return null;
+        return { at: two[0].at, mine: two[0].mine, cls: two[1] || two[0].cls || NO_CLASS };
+      });
     });
   };
 

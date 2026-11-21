@@ -14,4 +14,4 @@ and cut again.
 
 After that, this repo's issues are the class's records. They are encrypted: please don't edit or close them.
 
-Site build: course repo commit `3e2b33c5e49c`, cut 2026-11-21.
+Site build: course repo commit `1576f3737b79`, cut 2026-11-21.

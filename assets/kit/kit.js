@@ -12,10 +12,10 @@
   var Kit = {};
   var enc = new TextEncoder();
   var dec = new TextDecoder();
-  Kit.version = '0.9.0';
+  Kit.version = '0.10.0';
   /* Which course commit this site was cut from. tools/cut_delivery.py rewrites this line; 'dev' means an uncut working copy.
      Every record carries it, so a class can always be graded with the course repo as it was when the class was cut. */
-  Kit.build = { commit: '3e2b33c5e49c', date: '2026-11-21' };
+  Kit.build = { commit: '1576f3737b79', date: '2026-11-21' };
   /* Where this file was loaded from, so pages at any depth can link to shared pages such as setup.html. */
   var here = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
   Kit.base = here.replace(/kit\.js(\?.*)?$/, '');
@@ -235,7 +235,8 @@
     return p;
   }
   function wordGrid(phrase) { return el('ol', { class: 'words' }, phrase.split(' ').map(function (w) { return el('li', { text: w }); })); }
-  var NEVER = 'Course use only. Never type a real wallet\'s seed phrase into a web page: not this one, not any. A real phrase controls real money.';
+  var NEVER = 'Never type a real wallet\'s seed phrase into a web page: not this one, not any. A real phrase controls real money. This course uses its own words, which work the same way but can\'t open a real wallet.';
+  var REAL = 'Stop: that looks like a real wallet\'s seed phrase. Never type one into a website. Nothing was stored or sent, but if those words protect real money, treat them as exposed to this computer. This course uses its own words: the 12 on your backup card.';
 
   Kit.signIn = function () {
     if (Kit.identity()) return Promise.resolve(Kit.me());
@@ -276,7 +277,7 @@
             el('div', { class: 'callout warn', text: 'From now on you sign in with these words and nothing else. Anyone who has them can submit as you. If you lose them, your instructor has to reset you.' }),
             el('div', { class: 'callout bad', text: NEVER }),
             el('p', { class: 'small muted', style: 'margin-top:.75rem' }, 'Your account: ', el('code', { text: addr }),
-              '. The words are a number; the number derives a private key; the key derives this address. Any wallet given the same words derives the same address. Copy the first and last characters onto your card.'),
+              '. The words are a number; the number derives a private key; the key derives this address, exactly as in a real wallet. The words themselves come from the course\'s own list, so they work only here. Copy the first and last characters of the account onto your card.'),
             el('div', { class: 'btn-row' }, el('button', { class: 'btn primary', type: 'button', id: 'kit-written', text: 'I have written them down', onclick: stepConfirm })));
         }
         /* Check the backup, as real wallets do: the words are hidden and two of them are asked for. */
@@ -321,7 +322,8 @@
         el('div', { class: 'btn-row' }, el('button', { class: 'btn primary', type: 'button', id: 'kit-go', text: 'Sign in', onclick: function () {
           checkCode().then(function (code) {
             if (code === null) return;
-            if (!Kit.wallet.validPhrase(phraseIn.value)) return fail('That isn\'t a valid 12-word phrase. One wrong or misspelled word fails the built-in checksum. Check the spelling and the order against your card.');
+            if (Kit.wallet.looksReal(phraseIn.value)) { phraseIn.value = ''; return fail(REAL); }
+            if (!Kit.wallet.validPhrase(phraseIn.value)) return fail('That isn\'t a valid 12-word course phrase. One wrong or misspelled word fails the built-in checksum. Check the spelling and the order against your card.');
             finish(code, Kit.wallet.normPhrase(phraseIn.value), null);
           });
         } })),

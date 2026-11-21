@@ -1,13 +1,15 @@
-/* Course identity: a real Ethereum account from a real seed phrase.
-   - BIP-39: 12 words encode 128 bits of randomness (plus a checksum).
-   - BIP-32/44: the words derive a private key on the standard Ethereum path m/44'/60'/0'/0/0, so any wallet given the
-     same words derives the same account.
+/* Course identity: an Ethereum-style account from a seed phrase that works exactly like a real one.
+   - BIP-39 mechanics: 12 words encode 128 bits of randomness plus a checksum, and derive a seed the standard way.
+     The words come from the course's own list (lib/course-words.js), not the BIP-39 list. So a course phrase
+     cannot open a real wallet, and a real wallet's phrase is not a valid course phrase: looksReal() spots one.
+   - BIP-32/44: the seed derives a private key on the standard Ethereum path m/44'/60'/0'/0/0.
    - EIP-191 personal_sign and EIP-4361 "Sign-In with Ethereum" messages: what every submission is signed with.
-   Needs kit.js and lib/wallet-lib.js (vendored noble/scure; see lib/SOURCE.md). Exposes Kit.wallet. */
+   Needs kit.js, lib/wallet-lib.js (vendored noble/scure) and lib/course-words.js; see lib/SOURCE.md. Exposes Kit.wallet. */
 (function (root) {
   'use strict';
-  var Kit = root.Kit, L = root.KitLib;
-  if (!Kit || !L) throw new Error('wallet.js needs kit.js and lib/wallet-lib.js loaded first');
+  var Kit = root.Kit, L = root.KitLib, WORDS = root.BC_WORDS;
+  if (!Kit || !L || !WORDS) throw new Error('wallet.js needs kit.js, lib/wallet-lib.js and lib/course-words.js loaded first');
+  if (WORDS.length !== 2048) throw new Error('The course word list must have exactly 2048 words');
   var enc = new TextEncoder();
   var PATH = "m/44'/60'/0'/0/0";
 
@@ -31,12 +33,21 @@
   }
 
   function normPhrase(p) { return String(p || '').toLowerCase().trim().split(/\s+/).join(' '); }
-  function validPhrase(p) { p = normPhrase(p); return p.split(' ').length === 12 && L.validateMnemonic(p, L.wordlist); }
-  function newPhrase() { return L.generateMnemonic(L.wordlist, 128); }
+  function validPhrase(p) { p = normPhrase(p); return p.split(' ').length === 12 && L.validateMnemonic(p, WORDS); }
+  function newPhrase() { return L.generateMnemonic(WORDS, 128); }
+  /* True when the text looks like a real wallet's seed phrase: 12 to 24 words, all from the BIP-39 English list.
+     Nobody should ever type one into a website, so pages use this to say so. Nothing is stored or sent. */
+  var realWords = null;
+  function looksReal(p) {
+    var w = normPhrase(p).split(' ');
+    if (w.length < 12 || w.length > 24) return false;
+    if (!realWords) { realWords = {}; L.wordlist.forEach(function (x) { realWords[x] = 1; }); }
+    return w.every(function (x) { return realWords[x] === 1; });
+  }
 
   function fromPhrase(phrase) {
     phrase = normPhrase(phrase);
-    if (!validPhrase(phrase)) throw new Error('That is not a valid 12-word seed phrase. Check the spelling and the order.');
+    if (!validPhrase(phrase)) throw new Error('That is not a valid 12-word course seed phrase. Check the spelling and the order.');
     var key = L.HDKey.fromMasterSeed(L.mnemonicToSeedSync(phrase)).derive(PATH);
     var priv = key.privateKey;
     var address = addressOf(L.secp256k1.getPublicKey(priv, false));
@@ -89,8 +100,8 @@
   };
 
   /* A strong, sayable class code: four seed-phrase words (44 bits). */
-  function newClassCode() { return L.generateMnemonic(L.wordlist, 128).split(' ').slice(0, 4).join('-'); }
+  function newClassCode() { return L.generateMnemonic(WORDS, 128).split(' ').slice(0, 4).join('-'); }
 
-  Kit.wallet = { PATH: PATH, newPhrase: newPhrase, validPhrase: validPhrase, normPhrase: normPhrase, fromPhrase: fromPhrase,
+  Kit.wallet = { PATH: PATH, newPhrase: newPhrase, validPhrase: validPhrase, looksReal: looksReal, normPhrase: normPhrase, fromPhrase: fromPhrase,
     recover: recover, toChecksum: toChecksum, personalHash: personalHash, siwe: siwe, newClassCode: newClassCode };
 })(typeof window !== 'undefined' ? window : globalThis);

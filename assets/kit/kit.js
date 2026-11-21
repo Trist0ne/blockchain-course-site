@@ -15,7 +15,7 @@
   Kit.version = '0.20.0';
   /* Which course commit this site was cut from. tools/cut_delivery.py rewrites this line; 'dev' means an uncut working copy.
      Every record carries it, so a class can always be graded with the course repo as it was when the class was cut. */
-  Kit.build = { commit: 'fd590d65bda1', date: '2026-11-21' };
+  Kit.build = { commit: 'bdf02c1c97e3', date: '2026-11-21' };
   /* A file of this site, named by build, so a page never pairs with another build's copy of it. */
   Kit.asset = function (path) { return path + (Kit.build.commit === 'dev' ? '' : '?v=' + Kit.build.commit); };
   /* Where this file was loaded from, so pages at any depth can link to shared pages such as setup.html. */

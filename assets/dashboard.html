@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Instructor dashboard</title>
 <link rel="icon" href="kit/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="kit/house.css?v=fd590d65bda1">
+<link rel="stylesheet" href="kit/house.css?v=bdf02c1c97e3">
 <script src="kit/class.js"></script>
-<script src="items.js?v=fd590d65bda1"></script>
-<script src="kit/kit.js?v=fd590d65bda1"></script>
-<script src="kit/lib/wallet-lib.js?v=fd590d65bda1"></script>
-<script src="kit/lib/course-words.js?v=fd590d65bda1"></script>
-<script src="kit/wallet.js?v=fd590d65bda1"></script>
-<script src="kit/btc.js?v=fd590d65bda1"></script>
-<script src="kit/lab.js?v=fd590d65bda1"></script>
+<script src="items.js?v=bdf02c1c97e3"></script>
+<script src="kit/kit.js?v=bdf02c1c97e3"></script>
+<script src="kit/lib/wallet-lib.js?v=bdf02c1c97e3"></script>
+<script src="kit/lib/course-words.js?v=bdf02c1c97e3"></script>
+<script src="kit/wallet.js?v=bdf02c1c97e3"></script>
+<script src="kit/btc.js?v=bdf02c1c97e3"></script>
+<script src="kit/lab.js?v=bdf02c1c97e3"></script>
 </head>
 <body>
 <main class="page wide">
@@ -491,10 +491,13 @@
     if (state.publishing) { state.again = true; return; }
     state.publishing = true;
     var at = new Date().toISOString(), failed = null, done = 0;
-    return todo.reduce(function (chain, w) {
+    /* One write a second: the platform asks automated clients not to create or change content faster than that. */
+    var pace = cls.inbox && cls.inbox.pace != null ? +cls.inbox.pace : 1000;
+    return todo.reduce(function (chain, w, i) {
       return chain.then(function () {
         if (failed) return;
-        return w.make().then(function (part) {
+        if (todo.length > 3) auto('busy', 'Sending results to students: ' + (i + 1) + ' of ' + todo.length + '…');
+        return (i && pace ? new Promise(function (ok) { setTimeout(ok, pace); }) : Promise.resolve()).then(function () { return w.make(); }).then(function (part) {
           return Kit.signResults(Object.assign({ v: 2, classId: cls.classId || null, build: Kit.build.commit, at: at }, part), state.staff);
         }).then(function (signed) {
           var body = (w.key === 'class' ? 'The class scoreboard and averages. Readable by members of the class.' : 'One student\'s results. Only that student can read them.')

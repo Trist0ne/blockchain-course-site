@@ -296,5 +296,8 @@ label.check { display: flex; gap: 0.5rem; align-items: center; margin: 0.6rem 0 
 label.check input { accent-color: var(--accent); }
 #kit-identity table.data th { width: 9rem; text-transform: none; letter-spacing: 0; font-size: 0.85rem; }
 #kit-identity td.mono { word-break: break-all; }
-.first-time { border-top: 1px solid var(--line); margin-top: 1.1rem; padding-top: 0.25rem; }
+details.door { margin-top: 0.75rem; }
+details.door > summary { color: var(--ink); }
+details.door[open] { padding-bottom: 0.75rem; }
+#kit-msg .callout { margin-bottom: 0.25rem; }
 #kit-signin .callout.bad { margin-bottom: 0.25rem; }

@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Instructor dashboard</title>
 <link rel="icon" href="kit/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="kit/house.css?v=c52f7f2a0fd9">
+<link rel="stylesheet" href="kit/house.css?v=6b2c0a9ef876">
 <script src="kit/class.js"></script>
-<script src="items.js?v=c52f7f2a0fd9"></script>
-<script src="kit/kit.js?v=c52f7f2a0fd9"></script>
-<script src="kit/lib/wallet-lib.js?v=c52f7f2a0fd9"></script>
-<script src="kit/lib/course-words.js?v=c52f7f2a0fd9"></script>
-<script src="kit/wallet.js?v=c52f7f2a0fd9"></script>
-<script src="kit/btc.js?v=c52f7f2a0fd9"></script>
-<script src="kit/lab.js?v=c52f7f2a0fd9"></script>
+<script src="items.js?v=6b2c0a9ef876"></script>
+<script src="kit/kit.js?v=6b2c0a9ef876"></script>
+<script src="kit/lib/wallet-lib.js?v=6b2c0a9ef876"></script>
+<script src="kit/lib/course-words.js?v=6b2c0a9ef876"></script>
+<script src="kit/wallet.js?v=6b2c0a9ef876"></script>
+<script src="kit/btc.js?v=6b2c0a9ef876"></script>
+<script src="kit/lab.js?v=6b2c0a9ef876"></script>
 </head>
 <body>
 <main class="page wide">
@@ -94,7 +94,7 @@
   var CS = { open: {}, closed: {}, at: '' }, csRef = null, stateQ = Promise.resolve(), POLL = 30000;
   /* Published results: one small record per student account and one for the class. Where each one is, what was last
      sent to it, and the newest change seen in the class (so a check asks only for what is new). */
-  var resRefs = {}, sentJson = {}, newest = '', polls = 0;
+  var resRefs = {}, sentJson = {}, newest = '', polls = 0, urgent = true, lastBatch = 0, lastParts = 0, later = null;
   function auto(st, msg) { var a = $('auto-status'); a.setAttribute('data-state', st); if (msg != null) a.textContent = msg; }
   function clock() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
   function status(msg, cls2) { $('load-status').replaceChildren(el('div', { class: 'callout ' + (cls2 || 'info'), text: msg })); }
@@ -153,7 +153,7 @@
         list.forEach(function (it) {   // newest first
           if (it.updated > newest) newest = it.updated;
           if (/^\[state\]/.test(it.title)) { var st = newState ? null : Kit.readState(it.body); if (st && st.classId === (cls.classId || null)) newState = { ref: it.ref, st: st }; return; }
-          var m = /^\[results\] (class|· (\S+))$/.exec(it.title);
+          var m = /^\[results\] (class|part (\w))$/.exec(it.title);
           if (m) { var key = m[2] || 'class'; if (!resRefs[key]) resRefs[key] = it.ref; return; }
           if (!/^\[(submit|admin)\]/.test(it.title)) return;
           n++; added += addRaw(it.body, { source: it.ref, time: it.time });
@@ -179,14 +179,14 @@
 
   /* ---- Unlocking days and closing quizzes: one signed record, kept up to date in place ---- */
   function saveState(change) {
-    auto('busy'); change(CS); CS.at = new Date().toISOString(); paintDays();
+    auto('busy'); urgent = true; change(CS); CS.at = new Date().toISOString(); paintDays();
     var cfg = inboxCfg();
     if (!cfg || !token()) { status('Changed in this tab only: there is no token to save it to the class with, so students won\'t see it.', 'warn'); return render(); }
     stateQ = stateQ.then(function () {
       var body = 'Which days are unlocked and which quizzes are closed. Kept up to date by the instructor dashboard. Do not edit.\n\n```\n'
         + Kit.signState({ v: 1, classId: cls.classId || null, open: CS.open, closed: CS.closed, at: CS.at }, state.staff) + '\n```\n';
-      return csRef ? Kit.updateInbox(cfg, token(), csRef, body) : Kit.postToInbox(cfg, token(), '[state] days and quizzes', body, ['state']).then(function (r) { csRef = r.ref; });
-    }).then(function () { status('Saved. Students see it the next time their page checks (within two minutes) or when they reload.', 'ok'); },
+      return csRef ? Kit.updateInbox(cfg, token(), csRef, body, ['class', 'state']) : Kit.postToInbox(cfg, token(), '[state] days and quizzes', body, ['class', 'state']).then(function (r) { csRef = r.ref; });
+    }).then(function () { status('Saved. Students see it the next time their page checks (within three minutes) or when they reload.', 'ok'); },
       function (e) { status('That change was NOT saved to the class (' + e.message + '), so students won\'t see it. Try again.', 'bad'); }).then(render);
     return stateQ;
   }
@@ -266,7 +266,7 @@
   /* Record an instructor decision about an account, and save it to the class so it lasts and other instructors see it. */
   function decide(action, address, handle) {
     return Kit.staffRecord({ action: action, address: address, handle: handle, at: new Date().toISOString() }, state.staff).then(function (code) {
-      addRaw(code, { source: 'this session', time: null });
+      addRaw(code, { source: 'this session', time: null }); urgent = true;
       var cfg = inboxCfg();
       if (!cfg || !token()) { status('Decision applied in this tab only. It could not be saved to the class: there is no token to write with.', 'warn'); return; }
       return Kit.postToInbox(cfg, token(), '[admin] ' + action + ' ' + handle, 'Instructor decision. Do not edit.\n\n```\n' + code + '\n```\n')
@@ -474,21 +474,48 @@
       Object.keys(s.flags).sort().forEach(function (f) { mine.flags[f] = s.flags[f].points; });
       return { mine: mine, to: Object.keys(s.accounts).filter(function (a) { return R.pubOf[a]; }).sort() };
     });
-    /* What each record should say now. Only the ones that changed are sent, one at a time. */
-    var want = [{ key: 'class', json: JSON.stringify(shared), title: '[results] class', labels: ['results-class'],
+    /* What each record should say now: one for the class, and up to 16 parts holding the accounts whose address
+       starts with the same hex digit. Only the ones that changed are sent, one at a time. */
+    var want = [{ key: 'class', json: JSON.stringify(shared), title: '[results] class', labels: ['class', 'results-class'],
       make: function () { return Kit.classSeal(shared, token()).then(function (box) { return { shared: box }; }); } }];
-    people.forEach(function (p) {
-      p.to.forEach(function (addr) {
-        want.push({ key: Kit.short(addr), json: JSON.stringify([addr, p.mine]), title: '[results] · ' + Kit.short(addr), labels: ['s-' + addr.toLowerCase().slice(2, 10), 'results'],
-          make: function () { return Kit.wallet.sealTo(R.pubOf[addr], { mine: p.mine }).then(function (blob) { var e = {}; e[addr.toLowerCase()] = blob; return { entries: e }; }); } });
-      });
+    var parts = {};
+    people.forEach(function (p) { p.to.forEach(function (addr) { var k = Kit.resultsPart(addr); (parts[k] = parts[k] || []).push([addr.toLowerCase(), p.mine]); }); });
+    Object.keys(parts).sort().forEach(function (k) {
+      var rows = parts[k].sort(function (a, b) { return a[0] < b[0] ? -1 : 1; });
+      want.push({ key: k, json: JSON.stringify(rows), title: '[results] part ' + k, labels: ['r-' + k, 'results'],
+        make: function () {
+          var e = {};
+          return Promise.all(rows.map(function (r) { return Kit.wallet.sealTo(R.pubOf[Object.keys(R.pubOf).filter(function (a) { return a.toLowerCase() === r[0]; })[0]], { mine: r[1] }).then(function (blob) { e[r[0]] = blob; }); }))
+            .then(function () { return { entries: e }; });
+        } });
     });
     var marks = Kit.session.get('sentmarks', {}), scope = Kit.hash32(String(cls.classKey));
     function mark(w) { return scope + ':' + Kit.hash32(w.json) + ':' + Kit.hash32('x' + w.json) + ':' + w.json.length; }
     var todo = want.filter(function (w) { return sentJson[w.key] !== w.json && !(resRefs[w.key] && marks[w.key] === mark(w)); });
     want.forEach(function (w) { if (todo.indexOf(w) < 0) sentJson[w.key] = w.json; });
-    if (!todo.length) return auto('idle', sentLine());
+    if (!todo.length) { urgent = false; return auto('idle', sentLine()); }   // an instructor's change that alters no results uses up its turn
     if (state.publishing) { state.again = true; return; }
+    /* Every write counts against the same hourly limit as the students' own hand-ins (about 500 an hour on
+       github.com), so the dashboard spends few. Changes an instructor makes (closing a quiz, a decision) go out at once.
+       Changes from work arriving go out on a cadence: the class scoreboard every three minutes, and the students'
+       own records every fifteen, since a student's page already counts a flag from the moment they hand it in.
+       At most that is 20 + 4 x 16 writes an hour. */
+    var cadence = cls.inbox && cls.inbox.cadence != null ? +cls.inbox.cadence : 180000, now = Date.now();
+    var due = { cls: lastBatch + cadence, parts: lastParts + 5 * cadence };
+    if (!urgent) {
+      var all = todo.length;
+      todo = todo.filter(function (w) { return (w.key === 'class' ? due.cls : due.parts) <= now; });
+      if (!todo.length) {
+        var next = Math.min(due.cls > now ? due.cls : Infinity, due.parts > now ? due.parts : Infinity);
+        if (!later) later = setTimeout(function () { later = null; publish(); }, next - now + 50);
+        return auto('idle', '✓ Live. Graded: ' + all + (all === 1 ? ' update' : ' updates') + ' for students will go out at ' + new Date(next).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+          + ' (the scoreboard is sent every ' + Math.round(cadence / 60000) + ' minutes and students\' confirmed flags every ' + Math.round(cadence / 12000) + '; your own changes go at once). Last checked ' + clock() + '.');
+      }
+    }
+    if (todo.some(function (w) { return w.key === 'class'; })) lastBatch = now;
+    if (todo.some(function (w) { return w.key !== 'class'; })) lastParts = now;
+    urgent = false; if (later) { clearTimeout(later); later = null; }
+
     state.publishing = true;
     var at = new Date().toISOString(), failed = null, done = 0;
     /* One write a second: the platform asks automated clients not to create or change content faster than that. */
@@ -500,8 +527,9 @@
         return (i && pace ? new Promise(function (ok) { setTimeout(ok, pace); }) : Promise.resolve()).then(function () { return w.make(); }).then(function (part) {
           return Kit.signResults(Object.assign({ v: 2, classId: cls.classId || null, build: Kit.build.commit, at: at }, part), state.staff);
         }).then(function (signed) {
-          var body = (w.key === 'class' ? 'The class scoreboard and averages. Readable by members of the class.' : 'One student\'s results. Only that student can read them.')
+          var body = (w.key === 'class' ? 'The class scoreboard and averages. Readable by members of the class.' : 'Results for some of the class. Each student can read only their own.')
             + ' Kept up to date by the instructor dashboard. Do not edit.\n\n```\n' + signed + '\n```\n';
+          if (body.length > 60000) throw new Error('the results for part ' + w.key + ' are too large for one record');
           return resRefs[w.key] ? Kit.updateInbox(cfg, token(), resRefs[w.key], body) : Kit.postToInbox(cfg, token(), w.title, body, w.labels).then(function (r) { resRefs[w.key] = r.ref; });
         }).then(function () { sentJson[w.key] = w.json; marks[w.key] = mark(w); done++; }, function (e) { failed = e; });
       });
@@ -511,7 +539,7 @@
       state.publishing = false;
       if (failed) { state.again = false; return auto('idle', 'Graded here, but sending results to students failed (' + failed.message + '). It will try again at the next check.'); }
       if (state.again) { state.again = false; return publish(); }
-      auto('idle', sentLine());
+      return publish();   // anything held back for the cadence gets its timer; with nothing left this just reports
     });
   }
   function sentLine() { return '✓ Live. New work is graded and each student\'s results are sent to them as it arrives' + (state.sentAt ? ' (last sent ' + state.sentAt + ')' : '') + '. Last checked ' + clock() + '.'; }

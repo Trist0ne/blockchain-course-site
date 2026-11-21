@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Home</title>
 <link rel="icon" href="kit/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="kit/house.css?v=c52f7f2a0fd9">
+<link rel="stylesheet" href="kit/house.css?v=6b2c0a9ef876">
 <script src="kit/class.js"></script>
-<script src="items.js?v=c52f7f2a0fd9"></script>
-<script src="kit/kit.js?v=c52f7f2a0fd9"></script>
-<script src="kit/lib/wallet-lib.js?v=c52f7f2a0fd9"></script>
-<script src="kit/lib/course-words.js?v=c52f7f2a0fd9"></script>
-<script src="kit/wallet.js?v=c52f7f2a0fd9"></script>
+<script src="items.js?v=6b2c0a9ef876"></script>
+<script src="kit/kit.js?v=6b2c0a9ef876"></script>
+<script src="kit/lib/wallet-lib.js?v=6b2c0a9ef876"></script>
+<script src="kit/lib/course-words.js?v=6b2c0a9ef876"></script>
+<script src="kit/wallet.js?v=6b2c0a9ef876"></script>
 </head>
 <body>
 <main class="page wide">
@@ -37,7 +37,7 @@
 
   /* What has been handed in comes from the class itself (so it is right on any computer), plus anything this browser
      knows it sent, plus what has been graded. Which days are open comes from the class too. */
-  var handIns = null, graded = null, shared = null, asked = false, cs = null;
+  var handIns = null, graded = null, shared = null, asked = false, cs = null, myPts = 0;
   function hhmm(t) { var d = new Date(t); return isNaN(d) ? String(t) : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + d.toLocaleDateString([], { day: 'numeric', month: 'short' }); }
   function svg(d) { var NS = 'http://www.w3.org/2000/svg', s = document.createElementNS(NS, 'svg'), p = document.createElementNS(NS, 'path'); s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('aria-hidden', 'true'); p.setAttribute('d', d); s.appendChild(p); return s; }
   var FLAG = 'M5 22V3m0 1h13l-3 5 3 5H5', LOCK = 'M6 11h12v10H6zM8 11V7a4 4 0 0 1 8 0v4';
@@ -56,14 +56,16 @@
     var chips = parts.map(function (f, i) {
       var won = graded && graded.flags[it.id + ':' + f], s = sentAt(it, f);
       if (won) got++; else if (s) sent++;
+      if (won || s) myPts += it.flags[f];
       return el('span', { class: 'flag' + (won ? ' got' : s ? ' sent' : ''), 'data-flag': it.id + ':' + f, 'data-state': won ? 'got' : s ? 'sent' : 'open',
-        title: won ? 'Captured' : s ? 'Handed in, being checked' : 'Not captured yet' }, svg(FLAG), it.flags[f] + ' pts');
+        title: won ? 'Captured' : s ? 'Captured: handed in, and your instructor\'s dashboard will confirm it' : 'Not captured yet' }, svg(FLAG), it.flags[f] + ' pts');
     });
-    var line = got + sent ? (got + sent) + ' of ' + parts.length + ' flags handed in' + (sent ? ' · ' + sent + ' being checked' : '') : waiting;
+    var line = got + sent ? (got + sent) + ' of ' + parts.length + ' flags handed in' : waiting;
     return el('a', { class: 'mapitem' + (got === parts.length ? ' done' : ''), href: it.href, 'data-item': it.id }, el('span', { class: 'tag', text: 'Challenge' }), el('span', { class: 't', text: it.title }),
       el('span', { class: 'flags' }, chips), el('span', { class: 's', text: line }));
   }
   function paintMap() {
+    myPts = 0;
     $('map').replaceChildren.apply($('map'), days.map(function (d) {
       var mine = items.filter(function (it) { return it.day === d.n; });
       var open = !cs ? null : !cs.open ? true : !!cs.open[String(d.n)];   // a class with no inbox has no locks
@@ -78,9 +80,11 @@
       return card;
     }));
     var total = 0, mineF = 0, allF = 0;
-    items.forEach(function (it) { Object.keys(it.flags || {}).forEach(function (f) { allF++; total += it.flags[f]; if (graded && graded.flags[it.id + ':' + f]) mineF++; }); });
+    /* A flag counts for you from the moment you hand it in: the page checked it before letting you submit. The class
+       scoreboard uses only what the instructor's dashboard has confirmed, and is sent out every few minutes. */
+    items.forEach(function (it) { Object.keys(it.flags || {}).forEach(function (f) { allF++; total += it.flags[f]; if ((graded && graded.flags[it.id + ':' + f]) || sentAt(it, f)) mineF++; }); });
     function stat(v, label, id) { return el('div', { class: 'stat', id: id }, el('b', { text: v }), el('span', { text: label })); }
-    $('score').replaceChildren(stat(graded ? String(graded.ctf) : '0', 'your points, of ' + total, 'stat-points'), stat(mineF + ' / ' + allF, 'flags captured', 'stat-flags'),
+    $('score').replaceChildren(stat(String(Math.max(myPts, graded ? graded.ctf : 0)), 'your points, of ' + total, 'stat-points'), stat(mineF + ' / ' + allF, 'flags captured', 'stat-flags'),
       stat(shared ? String(shared.ctfAvg) : '·', 'class average', 'stat-avg'));
   }
   function paintBoard() {
@@ -146,8 +150,8 @@
   Kit.signIn().then(function (me) {
     if (me.handle) $('hello').textContent = 'Welcome, ' + me.handle;
     paintMap(); paintBoard(); refresh(false);
-    /* Keep the map current while it is open: a day unlocked or a score sent shows up within two minutes. */
-    setInterval(function () { if (!document.hidden) refresh(true); }, 120000);
+    /* Keep the map current while it is open: a day unlocked or a score sent shows up within three minutes. */
+    setInterval(function () { if (!document.hidden) refresh(true); }, 180000);
     /* The platform's lists can run up to half a minute behind, so look again soon after the page opens: someone who
        reloads the moment a day is unlocked shouldn't have to wait two minutes for it. */
     [15000, 45000].forEach(function (t) { setTimeout(function () { if (!document.hidden) refresh(true); }, t); });

@@ -12,10 +12,10 @@
   var Kit = {};
   var enc = new TextEncoder();
   var dec = new TextDecoder();
-  Kit.version = '0.20.0';
+  Kit.version = '0.21.0';
   /* Which course commit this site was cut from. tools/cut_delivery.py rewrites this line; 'dev' means an uncut working copy.
      Every record carries it, so a class can always be graded with the course repo as it was when the class was cut. */
-  Kit.build = { commit: 'c52f7f2a0fd9', date: '2026-11-21' };
+  Kit.build = { commit: '6b2c0a9ef876', date: '2026-11-21' };
   /* A file of this site, named by build, so a page never pairs with another build's copy of it. */
   Kit.asset = function (path) { return path + (Kit.build.commit === 'dev' ? '' : '?v=' + Kit.build.commit); };
   /* Where this file was loaded from, so pages at any depth can link to shared pages such as setup.html. */
@@ -552,13 +552,13 @@
 
   /* Replace the text of an existing record (ref is '#12'). Used for the two records that are kept up to date in place:
      the class state and the published results. The platform keeps the edit history. */
-  Kit.updateInbox = function (inbox, token, ref, body) {
+  Kit.updateInbox = function (inbox, token, ref, body, labels) {
     var gl = inbox.platform === 'gitlab', host = inbox.host || (gl ? 'gitlab.com' : 'github.com'), n = String(ref).replace('#', '');
     var url = gl ? 'https://' + host + '/api/v4/projects/' + encodeURIComponent(inbox.repo) + '/issues/' + n
       : (host === 'github.com' ? 'https://api.github.com' : 'https://' + host + '/api/v3') + '/repos/' + inbox.repo + '/issues/' + n;
     var headers = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token };
     if (!gl) headers.Accept = 'application/vnd.github+json';
-    return root.fetch(url, { method: gl ? 'PUT' : 'PATCH', headers: headers, body: JSON.stringify(gl ? { description: body } : { body: body }) }).then(function (r) {
+    return root.fetch(url, { method: gl ? 'PUT' : 'PATCH', headers: headers, body: JSON.stringify(Object.assign(gl ? { description: body } : { body: body }, labels && labels.length ? { labels: gl ? labels.join(',') : labels } : {})) }).then(function (r) {
       if (!r.ok) throw new Error(host + ' answered ' + r.status);
       return { ref: '#' + n };
     });
@@ -639,18 +639,40 @@
   };
   /* The class's current state as a student's page sees it. Resolves { open, closed, known }.
      A class with no inbox has no locks: everything is open. If the class cannot be asked, `known` is false. */
-  Kit.classState = function () {
+  /* The two records every student page wants are both small and both labelled `class`: the class state (signed,
+     public) and the class scoreboard (signed, sealed to the class). One request fetches both, and pages that ask
+     within a few seconds of each other share it. Resolves { state, board, known }. */
+  var infoMemo = null;
+  Kit.classInfo = function () {
     var inbox = Kit.inbox(), c = Kit.cls();
-    if (!inbox) return Promise.resolve({ open: null, closed: {}, known: true });
-    return Kit.studentToken().then(function (token) {
-      return Kit.listInbox(inbox, token, { labels: 'state', perPage: 5 }).then(function (list) {
-        if (list.length) return list;
-        return Kit.listInbox(inbox, token, { perPage: 100 }).then(function (all) { return all.filter(function (it) { return /^\[state\]/.test(it.title); }); });
+    if (!inbox) return Promise.resolve({ state: null, board: null, known: true });
+    if (infoMemo && Date.now() - infoMemo.at < 5000) return infoMemo.p;
+    var p = Kit.studentToken().then(function (token) {
+      return Kit.listInbox(inbox, token, { labels: 'class', perPage: 20 }).then(function (list) {
+        var st = null, sealed = null, jobs = [];
+        list.forEach(function (it) {   // newest first: the first genuine one of each kind
+          if (/^\[state\]/.test(it.title)) { var x = st ? null : Kit.readState(it.body); if (x && x.classId === (c.classId || null)) st = x; }
+          else if (/^\[results\] class$/.test(it.title)) jobs.push(Kit.readResults(it.body).then(function (r) { if (!sealed && r && r.classId === (c.classId || null) && r.shared) sealed = r.shared; }));
+        });
+        return Promise.all(jobs).then(function () {
+          /* A class set up before these records shared a label keeps its state under `state`. */
+          return st ? st : Kit.listInbox(inbox, token, { labels: 'state', perPage: 5 }).then(function (old) {
+            for (var i = 0; i < old.length; i++) { var x = Kit.readState(old[i].body); if (x && x.classId === (c.classId || null)) return x; }
+            return null;
+          });
+        }).then(function (state) {
+          return (sealed ? Kit.classOpen(sealed, token).catch(function () { return null; }) : Promise.resolve(null)).then(function (board) { return { state: state, board: board, known: true }; });
+        });
       });
-    }).then(function (list) {
-      for (var i = 0; i < list.length; i++) { var st = Kit.readState(list[i].body); if (st && st.classId === (c.classId || null)) return { open: st.open || {}, closed: st.closed || {}, known: true }; }
-      return { open: {}, closed: {}, known: true };
-    }).catch(function () { return { open: {}, closed: {}, known: false }; });
+    }).catch(function () { infoMemo = null; return { state: null, board: null, known: false }; });
+    infoMemo = { at: Date.now(), p: p };
+    return p;
+  };
+  /* The class's current state as a student's page sees it. Resolves { open, closed, known }.
+     A class with no inbox has no locks: everything is open. If the class cannot be asked, `known` is false. */
+  Kit.classState = function () {
+    if (!Kit.inbox()) return Promise.resolve({ open: null, closed: {}, known: true });
+    return Kit.classInfo().then(function (i) { return { open: (i.state && i.state.open) || {}, closed: (i.state && i.state.closed) || {}, known: i.known }; });
   };
   Kit.dayOf = function (itemId) { var it = (root.BC_ITEMS || []).filter(function (x) { return x.id === itemId; })[0]; return it ? it.day : null; };
   /* For an item's own page: resolves 'open', 'locked' or 'closed', and shows a notice in `main` unless it is open. */
@@ -737,42 +759,38 @@
   };
 
   /* The signed-in student's latest results, or null. Resolves { at, mine, cls }.
-     Each account has its own small results record (labelled like the student's hand-ins), and the class has one
-     record for the scoreboard and averages. Both are signed by the class account; fakes are skipped. */
+     Results are published in up to 16 parts, by the first hex digit of the account address, so a student fetches one
+     small record and a class of 50 costs the dashboard at most 17 writes per update (the platform limits writes per
+     hour, and every hand-in in the class counts against the same limit). Each part is signed by the class account and
+     each entry is sealed to its own account; fakes are skipped. */
   var NO_CLASS = { students: 0, quizzes: {}, flags: {}, ctfAvg: 0, board: [] };
+  Kit.resultsPart = function (address) { return String(address).toLowerCase().charAt(2); };
   Kit.myResults = function () {
     var inbox = Kit.inbox(), c = Kit.cls(), me = Kit.me();
     if (!inbox || !me) return Promise.resolve(null);
-    var mineTitle = '[results] · ' + Kit.short(me.address);
-    function genuine(list, want) {   // newest first: the first record that is genuine and gives `want` something
+    function mine(list) {   // newest first: the first record that is genuine and has an entry for this account
       return list.reduce(function (found, it) {
         return found.then(function (hit) {
           if (hit) return hit;
-          return Kit.readResults(it.body).then(function (r) { return r && r.classId === (c.classId || null) ? want(r) : null; }).catch(function () { return null; });
+          return Kit.readResults(it.body).then(function (r) {
+            var e = r && r.classId === (c.classId || null) && r.entries && r.entries[me.address.toLowerCase()];
+            return e ? me.open(e).then(function (o) { return { at: r.at, mine: o.mine, cls: o.cls || null }; }, function () { return null; }) : null;
+          }).catch(function () { return null; });
         });
       }, Promise.resolve(null));
     }
     return Kit.studentToken().then(function (token) {
-      var own = Kit.listInbox(inbox, token, { labels: Kit.myLabel(), perPage: 100 }).then(function (list) {
-        list = list.filter(function (it) { return it.title === mineTitle; });
-        if (list.length) return list;
-        /* No record under our label: an older class kept everyone in one record, or the platform dropped the label. */
-        return Kit.listInbox(inbox, token, { labels: 'results', perPage: 20 }).then(function (l2) {
-          if (l2.length) return l2;
-          return Kit.listInbox(inbox, token, { perPage: 100 }).then(function (all) { return all.filter(function (it) { return /^\[results\]/.test(it.title); }); });
-        });
-      }).then(function (list) {
-        return genuine(list, function (r) {
-          var e = r.entries && r.entries[me.address.toLowerCase()];
-          return e ? me.open(e).then(function (o) { return { at: r.at, mine: o.mine, cls: o.cls || null }; }, function () { return null; }) : null;
+      var own = Kit.listInbox(inbox, token, { labels: 'r-' + Kit.resultsPart(me.address), perPage: 10 }).then(mine).then(function (hit) {
+        if (hit) return hit;
+        /* Nothing in our part: an older class kept results per account or all in one record, or the platform dropped the label. */
+        return Kit.listInbox(inbox, token, { labels: 'results', perPage: 100 }).then(function (l2) {
+          if (l2.length) return mine(l2);
+          return Kit.listInbox(inbox, token, { perPage: 100 }).then(function (all) { return mine(all.filter(function (it) { return /^\[results\]/.test(it.title); })); });
         });
       });
-      var shared = Kit.listInbox(inbox, token, { labels: 'results-class', perPage: 5 }).then(function (list) {
-        return genuine(list, function (r) { return r.shared ? Kit.classOpen(r.shared, token).catch(function () { return null; }) : null; });
-      }).catch(function () { return null; });
-      return Promise.all([own, shared]).then(function (two) {
+      return Promise.all([own, Kit.classInfo()]).then(function (two) {
         if (!two[0]) return null;
-        return { at: two[0].at, mine: two[0].mine, cls: two[1] || two[0].cls || NO_CLASS };
+        return { at: two[0].at, mine: two[0].mine, cls: two[1].board || two[0].cls || NO_CLASS };
       });
     });
   };

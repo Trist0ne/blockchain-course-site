@@ -390,3 +390,5 @@ tr.me td { background: var(--accent-tint); font-weight: 650; }
   .chip { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .topbar .icon-btn { white-space: nowrap; flex: none; }
 }
+.flag.sent { background: var(--accent-tint); font-weight: 650; }
+.flag.sent svg { fill: currentColor; }

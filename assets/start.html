@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Home</title>
 <link rel="icon" href="kit/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="kit/house.css?v=bdf02c1c97e3">
+<link rel="stylesheet" href="kit/house.css?v=c52f7f2a0fd9">
 <script src="kit/class.js"></script>
-<script src="items.js?v=bdf02c1c97e3"></script>
-<script src="kit/kit.js?v=bdf02c1c97e3"></script>
-<script src="kit/lib/wallet-lib.js?v=bdf02c1c97e3"></script>
-<script src="kit/lib/course-words.js?v=bdf02c1c97e3"></script>
-<script src="kit/wallet.js?v=bdf02c1c97e3"></script>
+<script src="items.js?v=c52f7f2a0fd9"></script>
+<script src="kit/kit.js?v=c52f7f2a0fd9"></script>
+<script src="kit/lib/wallet-lib.js?v=c52f7f2a0fd9"></script>
+<script src="kit/lib/course-words.js?v=c52f7f2a0fd9"></script>
+<script src="kit/wallet.js?v=c52f7f2a0fd9"></script>
 </head>
 <body>
 <main class="page wide">
@@ -148,6 +148,9 @@
     paintMap(); paintBoard(); refresh(false);
     /* Keep the map current while it is open: a day unlocked or a score sent shows up within two minutes. */
     setInterval(function () { if (!document.hidden) refresh(true); }, 120000);
+    /* The platform's lists can run up to half a minute behind, so look again soon after the page opens: someone who
+       reloads the moment a day is unlocked shouldn't have to wait two minutes for it. */
+    [15000, 45000].forEach(function (t) { setTimeout(function () { if (!document.hidden) refresh(true); }, t); });
   });
 })();
 </script>

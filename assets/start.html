@@ -39,7 +39,7 @@
     var who = Kit.who();
     $('work').replaceChildren(el('h2', { text: 'Your work' }), el('div', { class: 'table-wrap' }, el('table', { class: 'data', id: 'work-table' }, el('tbody', null, items.map(function (it) {
       var parts = it.kind === 'lab' ? Object.keys(it.flags || {}) : [''];
-      var sent = parts.map(function (p) { return Kit.store.get('sent:' + it.id + ':' + p + ':' + who, null); });
+      var sent = parts.map(function (p) { return Kit.mine.get('sent:' + it.id + ':' + p + ':' + who, null); });
       var done = sent.filter(Boolean).length;
       var statusText = !done ? 'Not handed in on this computer' : it.kind === 'lab' ? done + ' of ' + parts.length + ' flags handed in' : 'Handed in ' + sent[0].at + ' (' + sent[0].ref + ')';
       return el('tr', { 'data-item': it.id }, el('td', null, el('span', { class: 'tag', text: KIND[it.kind] || it.kind })),

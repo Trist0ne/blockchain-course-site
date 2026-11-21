@@ -16,8 +16,8 @@
 
     Kit.signIn().then(function () {
       var storeKey = 'quiz:' + Q.id + ':' + Kit.who();
-      var answers = Kit.store.get(storeKey, {});
-      function save() { Kit.store.set(storeKey, answers); }
+      var answers = Kit.mine.get(storeKey, {});
+      function save() { Kit.mine.set(storeKey, answers); }
       var rand = Kit.rng(Kit.seedFor(Q.id));
       var panel = el('section', { class: 'panel' });
 

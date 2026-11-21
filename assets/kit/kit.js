@@ -12,10 +12,10 @@
   var Kit = {};
   var enc = new TextEncoder();
   var dec = new TextDecoder();
-  Kit.version = '0.11.0';
+  Kit.version = '0.12.0';
   /* Which course commit this site was cut from. tools/cut_delivery.py rewrites this line; 'dev' means an uncut working copy.
      Every record carries it, so a class can always be graded with the course repo as it was when the class was cut. */
-  Kit.build = { commit: '0f81b92fc98e', date: '2026-11-21' };
+  Kit.build = { commit: '4ac64f2551b9', date: '2026-11-21' };
   /* Where this file was loaded from, so pages at any depth can link to shared pages such as setup.html. */
   var here = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
   Kit.base = here.replace(/kit\.js(\?.*)?$/, '');
@@ -37,6 +37,15 @@
   }
   Kit.store = storage('localStorage');
   Kit.session = storage('sessionStorage');
+  /* What this computer remembers about one class: handles registered here, the class code, what was handed in, answers
+     in progress. Kept apart per class (by the class key), so a new class on the same computer starts clean. */
+  function scope() { var k = (root.BC_CLASS || {}).publicKey; return 'c:' + String((k && k.x) || 'none').slice(0, 16) + ':'; }
+  Kit.mine = {
+    get: function (k, d) { return Kit.store.get(scope() + k, d); },
+    set: function (k, v) { Kit.store.set(scope() + k, v); },
+    del: function (k) { Kit.store.del(scope() + k); },
+    all: function (prefix) { return Kit.store.all(scope() + prefix); }
+  };
 
   /* ---------- Bytes ---------- */
   Kit.hex = {
@@ -122,7 +131,7 @@
   Kit.me = function () {
     var id = Kit.identity();
     if (!id) return null;
-    if (!meCache) { var w = Kit.wallet.fromPhrase(id.phrase); meCache = { address: w.address, handle: Kit.store.get('name:' + w.address, ''), sign: w.sign, open: w.open }; }
+    if (!meCache) { var w = Kit.wallet.fromPhrase(id.phrase); meCache = { address: w.address, handle: Kit.mine.get('name:' + w.address, ''), sign: w.sign, open: w.open }; }
     return meCache;
   };
   Kit.who = function () { var me = Kit.me(); return me ? me.address.toLowerCase() : ''; };
@@ -244,7 +253,7 @@
       var inbox = Kit.inbox();
       /* The class code is a shared classroom secret, not a personal one, so this computer may remember it.
          (The seed phrase is never remembered.) */
-      var codeKey = 'code:' + (Kit.cls().classId || ''), savedCode = inbox ? Kit.store.get(codeKey, '') : '';
+      var codeKey = 'code', savedCode = inbox ? Kit.mine.get(codeKey, '') : '';
       var codeIn = inbox ? el('input', { type: 'text', class: 'mono', placeholder: 'four words, from the board', autocomplete: 'off', id: 'kit-code', value: savedCode || null }) : null;
       var phraseIn = el('textarea', { class: 'mono', rows: '2', placeholder: 'your 12 words, in order', id: 'kit-phrase', spellcheck: 'false', autocomplete: 'off' });
       var handleIn = el('input', { type: 'text', class: 'mono', placeholder: 'firstname.lastname', autocomplete: 'off', maxlength: '40', id: 'kit-handle' });
@@ -256,13 +265,13 @@
         if (!inbox) return Promise.resolve('');
         var code = Kit.normCode(codeIn.value);
         if (!code) { fail('Enter the class code your instructor wrote on the board.'); return Promise.resolve(null); }
-        return Kit.unlockToken(inbox.locked, code).then(function () { Kit.store.set(codeKey, code); return code; },
-          function () { Kit.store.del(codeKey); fail('That class code doesn\'t unlock this class. Check the spelling against the board.'); return null; });
+        return Kit.unlockToken(inbox.locked, code).then(function () { Kit.mine.set(codeKey, code); return code; },
+          function () { Kit.mine.del(codeKey); fail('That class code doesn\'t unlock this class. Check the spelling against the board.'); return null; });
       }
       function finish(code, phrase, newHandle, reason) {
         saveIdentity({ phrase: phrase, code: code });
         var me = Kit.me();
-        if (newHandle) { Kit.store.set('name:' + me.address, newHandle); meCache = null; me = Kit.me(); }
+        if (newHandle) { Kit.mine.set('name:' + me.address, newHandle); meCache = null; me = Kit.me(); }
         panel.remove(); if (Kit._paintChip) Kit._paintChip();
         if (newHandle) Kit.register(reason);
         resolve(me);
@@ -305,7 +314,7 @@
         stepWrite();
       }
       /* Three doors: sign in (the usual one), first time, and lost phrase. Each new-account door says what it does. */
-      var known = Kit.store.all('name:'), newHere = !savedCode && !known.length;
+      var known = Kit.mine.all('name:'), newHere = !savedCode && !known.length;
       var lostIn = el('input', { type: 'text', class: 'mono', placeholder: 'firstname.lastname', autocomplete: 'off', maxlength: '40', id: 'kit-handle-lost' });
       function begin(input, reason) {
         var h = Kit.normHandle(input.value);
@@ -618,7 +627,7 @@
         return Kit.postToInbox(inbox, token, '[submit] ' + payload.item + ' · ' + tag, 'Course submission: ' + label + '\nAccount: ' + me.address + '\n\n```\n' + sub.code + '\n```\n');
       }).then(function (res) {
         var when = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        Kit.store.set('sent:' + payload.item + ':' + (payload.part || '') + ':' + Kit.who(), { ref: res.ref, at: when });
+        Kit.mine.set('sent:' + payload.item + ':' + (payload.part || '') + ':' + Kit.who(), { ref: res.ref, at: when });
         target.replaceChildren(el('div', { class: 'callout ok' }, el('b', { text: 'Submitted ✓ ' }), 'Received as ' + res.ref + ' at ' + when + '.'), signedBox());
         return { sent: true, ref: res.ref, code: sub.code };
       }, function (e) {
@@ -634,7 +643,7 @@
   /* A Submit button that remembers it was used. payload() is called at click time. */
   Kit.submitButton = function (target, label, payload, part) {
     var out = el('div');
-    var probe = payload(), prior = Kit.store.get('sent:' + probe.item + ':' + (part || '') + ':' + Kit.who(), null);
+    var probe = payload(), prior = Kit.mine.get('sent:' + probe.item + ':' + (part || '') + ':' + Kit.who(), null);
     var btn = el('button', { class: 'btn primary', type: 'button', text: prior ? 'Submit again' : 'Submit', onclick: function () {
       btn.disabled = true;
       var p = payload(); p.part = part;

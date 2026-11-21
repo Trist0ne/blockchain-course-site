@@ -196,12 +196,12 @@
         msg.replaceChildren(el('div', { class: 'callout ok' }, el('b', { text: fresh ? 'Correct. ' : 'Solved. ' }), 'Flag ' + n + ' is right. Press Submit below so it counts.'));
         input.value = value; onSolved(value);
       }
-      var prior = Kit.store.get(key, null);
+      var prior = Kit.mine.get(key, null);
       if (prior && prior.value) judge(prior.value, bytes).then(function (r) { if (r.ok) solved(r.value, false); });
       form.addEventListener('submit', function (e) {
         e.preventDefault();
         judge(input.value, bytes).then(function (r) {
-          if (r.ok) { Kit.store.set(key, { value: r.value, at: new Date().toISOString() }); solved(r.value, true); }
+          if (r.ok) { Kit.mine.set(key, { value: r.value, at: new Date().toISOString() }); solved(r.value, true); }
           else msg.replaceChildren(el('div', { class: 'callout bad', text: r.msg }));
         });
       });

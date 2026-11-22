@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Instructor dashboard</title>
 <link rel="icon" href="kit/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="kit/house.css?v=6b2c0a9ef876">
+<link rel="stylesheet" href="kit/house.css?v=19f128b1bf96">
 <script src="kit/class.js"></script>
-<script src="items.js?v=6b2c0a9ef876"></script>
-<script src="kit/kit.js?v=6b2c0a9ef876"></script>
-<script src="kit/lib/wallet-lib.js?v=6b2c0a9ef876"></script>
-<script src="kit/lib/course-words.js?v=6b2c0a9ef876"></script>
-<script src="kit/wallet.js?v=6b2c0a9ef876"></script>
-<script src="kit/btc.js?v=6b2c0a9ef876"></script>
-<script src="kit/lab.js?v=6b2c0a9ef876"></script>
+<script src="items.js?v=19f128b1bf96"></script>
+<script src="kit/kit.js?v=19f128b1bf96"></script>
+<script src="kit/lib/wallet-lib.js?v=19f128b1bf96"></script>
+<script src="kit/lib/course-words.js?v=19f128b1bf96"></script>
+<script src="kit/wallet.js?v=19f128b1bf96"></script>
+<script src="kit/btc.js?v=19f128b1bf96"></script>
+<script src="kit/lab.js?v=19f128b1bf96"></script>
 </head>
 <body>
 <main class="page wide">
@@ -41,6 +41,9 @@
   <section class="panel" id="tools">
     <h2>Running the class</h2>
     <p><a href="ref/seed-backup.html">Print seed phrase backup cards</a><br><span class="muted small">Four to a sheet. Each student writes their 12 words on one.</span></p>
+    <p><button class="btn" type="button" id="backup">Download a backup of the class</button><br><span class="muted small">This browser keeps its own copy of every record it reads, so the class's work survives the class repo being damaged or unreachable. A backup file takes that copy off this computer. To use one, add it under "Other ways to load records".</span></p>
+    <p><button class="btn" type="button" id="show-words">Show the instructor seed phrase</button><br><span class="muted small">For writing a second card or giving the words to a co-instructor, while you are signed in. If every copy of these words is lost, nobody can read the class's records.</span></p>
+    <div id="words-out"></div>
     <p><a href="start.html">The student home</a><br><span class="muted small">The course map your students see.</span></p>
     <details class="hint"><summary>A student lost their seed phrase</summary>
       <ol class="small">
@@ -67,7 +70,7 @@
       </div></details>
     <div class="btn-row" style="margin-top:0">
       <button class="btn" type="button" id="fetch">Fetch records</button>
-      <label class="btn" style="cursor:pointer">Add hand-in files<input type="file" id="files" multiple accept=".txt,text/plain" hidden></label>
+      <label class="btn" style="cursor:pointer">Add hand-in or backup files<input type="file" id="files" multiple accept=".txt,.json,text/plain,application/json" hidden></label>
       <button class="btn" type="button" id="clear">Clear all</button>
     </div>
     <label class="field" style="margin-top:.75rem"><span>Paste hand-in codes (any text containing them)</span><textarea class="mono" id="paste" rows="3"></textarea></label>
@@ -94,7 +97,7 @@
   var CS = { open: {}, closed: {}, at: '' }, csRef = null, stateQ = Promise.resolve(), POLL = 30000;
   /* Published results: one small record per student account and one for the class. Where each one is, what was last
      sent to it, and the newest change seen in the class (so a check asks only for what is new). */
-  var resRefs = {}, sentJson = {}, newest = '', polls = 0, urgent = true, lastBatch = 0, lastParts = 0, later = null;
+  var resRefs = {}, sentJson = {}, sentAt = {}, haveMark = {}, markMemo = {}, repaired = 0, newest = '', polls = 0, urgent = true, lastBatch = 0, lastParts = 0, later = null;
   function auto(st, msg) { var a = $('auto-status'); a.setAttribute('data-state', st); if (msg != null) a.textContent = msg; }
   function clock() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
   function status(msg, cls2) { $('load-status').replaceChildren(el('div', { class: 'callout ' + (cls2 || 'info'), text: msg })); }
@@ -119,9 +122,14 @@
     $('staff-form').hidden = true; staffIn.clear();
     $('key-status').replaceChildren(el('span', { class: 'solved-badge', id: 'key-ok', text: '✓ Signed in as this class\'s instructor (' + Kit.short(acct.address) + ') ' }),
       el('button', { class: 'icon-btn', type: 'button', id: 'staff-out', text: 'Sign out', onclick: function () { Kit.session.del('staff'); location.reload(); } }));
+    /* The class token has an end date. Say so while there is still time to replace it. */
+    var days = cls.inbox && cls.inbox.expires ? Math.floor((Date.parse(cls.inbox.expires) - Date.now()) / 864e5) : null;
+    if (days != null && days <= 10) $('key-status').append(el('div', { class: 'callout ' + (days < 0 ? 'bad' : 'warn'), id: 'token-ending', style: 'margin-top:.5rem' },
+      el('b', { text: days < 0 ? 'The class token was due to expire on ' + cls.inbox.expires + '. ' : 'The class token is due to expire in ' + days + (days === 1 ? ' day' : ' days') + ' (' + cls.inbox.expires + '). ' }),
+      'When it does, students can\'t hand in and this page can\'t read the class. Replace it before then: whoever has the course repo opens instructor/setup.html, enters this class\'s repo and pastes a new token. The instructor words stay the same; students get a new class code.'));
     var sealed = cls.inbox && cls.inbox.sealed;
     return (sealed ? acct.open(sealed).then(function (o) { state.token = o.token || ''; }, function () { state.token = ''; }) : Promise.resolve()).then(function () {
-      if (inboxCfg() && (state.token || !cls.inbox)) return fetchInbox();
+      if (inboxCfg() && (state.token || !cls.inbox)) return kept().then(loadKept).then(function () { return fetchInbox(); });
       if (inboxCfg()) { status('Couldn\'t unlock this class\'s inbox token. Open "Other ways to load records" below and paste a token, or fetch without one if the class repo is public.', 'warn'); $('other').open = true; }
       return render();
     });
@@ -129,9 +137,33 @@
   $('staff-form').addEventListener('submit', function (e) { e.preventDefault(); signIn(staffIn.getPhrase(), false); });
   if (Kit.session.get('staff', '')) signIn(Kit.session.get('staff', ''), true);   // still signed in from earlier in this browser session
 
-  function addRaw(text, meta) {
+  /* ---- A second copy. Every genuine record this dashboard reads is also kept in this browser, so the class's work
+     survives the class repo being damaged, emptied or unreachable: the dashboard grades from its own copy, says what
+     is missing from the class, and can put it back. ---- */
+  var DB = null, present = null, restored = {};
+  function db() {
+    return DB || (DB = new Promise(function (ok) {
+      try {
+        var r = indexedDB.open('bc-class-' + String(cls.classKey).slice(0, 24), 1);
+        r.onupgradeneeded = function () { r.result.createObjectStore('records', { keyPath: 'token' }); };
+        r.onsuccess = function () { r.result.onversionchange = function () { r.result.close(); DB = null; }; ok(r.result); }; r.onerror = r.onblocked = function () { ok(null); };
+        setTimeout(function () { ok(null); }, 3000);   // the local copy is a safety net: never let it hold the page up
+      } catch (e) { ok(null); }
+    }));
+  }
+  function keep(rec) { db().then(function (d) { if (d) try { d.transaction('records', 'readwrite').objectStore('records').put({ token: rec.token, source: rec.source || '', time: rec.time || rec.when || null }); } catch (e) { /* storage full or blocked: the class still has it */ } }); }
+  function kept() {
+    return db().then(function (d) {
+      return !d ? [] : new Promise(function (ok) { try { var q = d.transaction('records').objectStore('records').getAll(); q.onsuccess = function () { ok(q.result || []); }; q.onerror = function () { ok([]); }; } catch (e) { ok([]); } });
+    });
+  }
+  function loadKept(list) { var n = 0; list.forEach(function (r) { if (!r || !r.token || state.seen[r.token]) return; state.seen[r.token] = 1; n++; state.raw.push({ token: r.token, source: r.source || 'this browser\'s copy', time: r.time || null }); }); return n; }
+
+  /* fromClass: this text was just read from the class itself, so the class holds these records right now. */
+  function addRaw(text, meta, fromClass) {
     var found = String(text).match(Kit.TOKEN_RE) || [], added = 0;
     found.forEach(function (tok) {
+      if (present && fromClass) present[tok] = 1;
       if (state.seen[tok]) return; state.seen[tok] = 1; added++;
       state.raw.push(Object.assign({ token: tok }, meta));
     });
@@ -146,23 +178,42 @@
        behind, so a record can show up after a newer one has already been seen: each check therefore reaches back five
        minutes before the newest record seen (anything already loaded is skipped), and every tenth check reads everything. */
     polls = quiet ? polls + 1 : 0;
-    var added = 0, n = 0, newState = null, since = quiet && newest && polls % 10 ? new Date(Date.parse(newest) - 300000).toISOString().replace(/\.\d+Z$/, 'Z') : null, full = !since;
+    var added = 0, n = 0, newState = null, mine = [], stateSeen = null, since = quiet && newest && polls % 10 ? new Date(Date.parse(newest) - 300000).toISOString().replace(/\.\d+Z$/, 'Z') : null, full = !since;
     if (!quiet) status('Fetching the class\'s records…');
+    var seenNow = full ? {} : null, wasPresent = present; present = seenNow || present;
     return (function page(p) {
       return Kit.listInbox(cfg, token(), { page: p, since: since }).then(function (list) {
         list.forEach(function (it) {   // newest first
           if (it.updated > newest) newest = it.updated;
-          if (/^\[state\]/.test(it.title)) { var st = newState ? null : Kit.readState(it.body); if (st && st.classId === (cls.classId || null)) newState = { ref: it.ref, st: st }; return; }
+          if (/^\[state\]/.test(it.title)) {
+            var st = newState ? null : Kit.readState(it.body); if (st && st.classId === (cls.classId || null)) newState = { ref: it.ref, st: st };
+            if (it.ref === csRef) stateSeen = st && st.classId === (cls.classId || null) ? st : 'bad';
+            return;
+          }
           var m = /^\[results\] (class|part (\w))$/.exec(it.title);
-          if (m) { var key = m[2] || 'class'; if (!resRefs[key]) resRefs[key] = it.ref; return; }
-          if (!/^\[(submit|admin)\]/.test(it.title)) return;
-          n++; added += addRaw(it.body, { source: it.ref, time: it.time });
+          if (m) { var key = m[2] || 'class'; if (!resRefs[key]) resRefs[key] = it.ref; if (resRefs[key] === it.ref) mine.push({ key: key, body: it.body }); return; }
+          /* Everything else is read for records whatever its title or labels say: those are conveniences for
+             filtering, and anyone holding the class token could change them. Only what is sealed inside counts. */
+          var got = addRaw(it.body, { source: it.ref, time: it.time }, true);
+          if (got || Kit.TOKEN_RE.test(it.body)) n++;
+          Kit.TOKEN_RE.lastIndex = 0; added += got;
         });
         return list.length === 100 ? page(p + 1) : null;
       });
     })(1).then(function () {
       state.count = full ? n : (state.count || 0) + added;
+      if (!full && !wasPresent) present = null;   // only a complete read says what the class holds
     }).then(function () {
+      /* The records this dashboard keeps up to date must still be what it wrote. If one has been damaged, or put back
+         to an older version, write it again. */
+      return Promise.all(mine.map(function (m) {
+        return Kit.readResults(m.body).then(function (r) {
+          if (!r || r.classId !== (cls.classId || null) || (sentAt[m.key] && r.at < sentAt[m.key])) { delete sentJson[m.key]; delete haveMark[m.key]; urgent = true; repaired++; }
+          else haveMark[m.key] = r.mark || null;
+        });
+      }));
+    }).then(function () {
+      if (stateSeen && csRef && (stateSeen === 'bad' || stateSeen.at < CS.at) && CS.at) { repaired++; saveState(function () {}); }
       var changed = false;
       if (newState) { csRef = newState.ref; if (newState.st.at > CS.at) { CS = { open: newState.st.open || {}, closed: newState.st.closed || {}, at: newState.st.at }; changed = true; } }
       if (!quiet) status(n + ' records in the class, ' + added + ' new.', 'ok');
@@ -170,7 +221,7 @@
       else if (/callout bad/.test($('load-status').innerHTML)) status('Connected again.', 'ok');
       if (!quiet || added || changed || !state.last) return render();
       auto($('auto-status').getAttribute('data-state'), $('auto-status').textContent.replace(/Last checked [^.]+\./, 'Last checked ' + clock() + '.'));
-    }, function (e) { status('Couldn\'t fetch the records: ' + e.message + (/ 404$/.test(e.message) ? ' (wrong repo, or a token is needed to see it)' : / 401$/.test(e.message) ? ' (the token was refused: it may have expired)' : ''), 'bad'); if (!quiet) return render(); });
+    }, function (e) { present = wasPresent; status('Couldn\'t fetch the records: ' + e.message + (/ 404$/.test(e.message) ? ' (wrong repo, or a token is needed to see it)' : / 401$/.test(e.message) ? ' (the token was refused: it may have expired)' : '') + (state.raw.length ? ' Showing this browser\'s own copy of the class.' : ''), 'bad'); if (!quiet) return render(); });
   }
   $('fetch').addEventListener('click', function () { fetchInbox(); });
   /* While the page is open it keeps itself up to date: every half minute, and at once when you come back to it. */
@@ -178,16 +229,39 @@
   setInterval(check, POLL); window.addEventListener('focus', check);
 
   /* ---- Unlocking days and closing quizzes: one signed record, kept up to date in place ---- */
+  /* Times that decide anything (when a quiz closed, which state is newer) are in the platform's time, not this
+     computer's: its clock may be minutes off, and hand-ins are timed by the platform. Every reply to a write tells us
+     the platform's time, so we keep the difference. */
+  var skew = 0, skewKnown = false;
+  function stamp() { return new Date(Date.now() + skew).toISOString(); }
+  function learn(r, sentLocal) { var t = r && r.time ? Date.parse(r.time) : NaN; if (isFinite(t)) { skew = Math.round((t - sentLocal) / 1000) * 1000; skewKnown = true; } }
+  function copyState(c) { return { open: Object.assign({}, c.open), closed: Object.assign({}, c.closed), at: c.at }; }
+  /* change(c, now) edits the state; `now` is the time to record. It must be safe to apply twice. */
   function saveState(change) {
-    auto('busy'); urgent = true; change(CS); CS.at = new Date().toISOString(); paintDays();
+    auto('busy'); urgent = true;
+    var base = copyState(CS), used = skew, knew = skewKnown;   // base: the state this change is made on top of
+    change(CS, stamp()); CS.at = stamp(); paintDays();
     var cfg = inboxCfg();
     if (!cfg || !token()) { status('Changed in this tab only: there is no token to save it to the class with, so students won\'t see it.', 'warn'); return render(); }
-    stateQ = stateQ.then(function () {
+    function write() {
       var body = 'Which days are unlocked and which quizzes are closed. Kept up to date by the instructor dashboard. Do not edit.\n\n```\n'
-        + Kit.signState({ v: 1, classId: cls.classId || null, open: CS.open, closed: CS.closed, at: CS.at }, state.staff) + '\n```\n';
-      return csRef ? Kit.updateInbox(cfg, token(), csRef, body, ['class', 'state']) : Kit.postToInbox(cfg, token(), '[state] days and quizzes', body, ['class', 'state']).then(function (r) { csRef = r.ref; });
+        + Kit.signState({ v: 1, classId: cls.classId || null, open: CS.open, closed: CS.closed, at: CS.at }, state.staff) + '\n```\n', t0 = Date.now();
+      return (csRef ? Kit.updateInbox(cfg, token(), csRef, body, ['class', 'state']) : Kit.postToInbox(cfg, token(), '[state] days and quizzes', body, ['class', 'state']).then(function (r) { csRef = r.ref; return r; }))
+        .then(function (r) { learn(r, t0); });
+    }
+    stateQ = stateQ.then(function () {
+      /* Another instructor may have saved since this page last looked. Read the record as it is now, and make this
+         change on top of theirs rather than over it. */
+      return csRef ? Kit.getInbox(cfg, token(), csRef).then(function (it) {
+        var theirs = Kit.readState(it.body);
+        if (theirs && theirs.classId === (cls.classId || null) && theirs.at > base.at) { base = { open: theirs.open || {}, closed: theirs.closed || {}, at: theirs.at }; CS = copyState(base); change(CS, stamp()); CS.at = stamp(); }
+      }, function () {}) : null;
+    }).then(write).then(function () {
+      /* The first write of a session is how we learn the platform's time. If this computer's clock turned out to be
+         off, the times just recorded were wrong by that much: record them again, correctly. */
+      if (!knew && Math.abs(skew - used) > 2000) { CS = copyState(base); change(CS, stamp()); CS.at = stamp(); return write(); }
     }).then(function () { status('Saved. Students see it the next time their page checks (within three minutes) or when they reload.', 'ok'); },
-      function (e) { status('That change was NOT saved to the class (' + e.message + '), so students won\'t see it. Try again.', 'bad'); }).then(render);
+      function (e) { status('That change was NOT saved to the class (' + e.message + '), so students won\'t see it. Try again.', 'bad'); }).then(function () { paintDays(); return render(); });
     return stateQ;
   }
   function paintDays() {
@@ -205,14 +279,14 @@
             el('span', { class: 'daynum', text: 'Day ' + d.n }), el('b', { text: d.title }),
             el('span', { class: 'tag ' + (open ? 'ok' : ''), text: open ? 'Unlocked ' + hm(open) : 'Locked' }),
             el('button', { class: 'btn' + (open ? '' : ' accent'), type: 'button', 'data-unlock': String(d.n), text: open ? 'Lock again' : 'Unlock day ' + d.n,
-              onclick: function () { saveState(function (c) { if (open) delete c.open[String(d.n)]; else c.open[String(d.n)] = new Date().toISOString(); }); } })),
+              onclick: function () { saveState(function (c, now) { if (open) delete c.open[String(d.n)]; else c.open[String(d.n)] = now; }); } })),
           mine.length ? el('ul', { class: 'dayitems' }, mine.map(function (it) {
             if (it.kind === 'quiz') {
               var closed = CS.closed[it.id], got = list.filter(function (s) { return s.quiz[it.id]; }).length;
               return el('li', { 'data-item': it.id }, el('span', { class: 'tag', text: 'Quiz' }), el('a', { href: it.href, text: it.title }),
                 el('span', { class: 'muted small', text: got + ' handed in' + (closed ? ' · closed ' + hm(closed) + ', scores sent' : ' · open, scores not sent yet') }),
                 el('button', { class: 'icon-btn', type: 'button', 'data-close': it.id, text: closed ? 'Reopen' : 'Close and send scores',
-                  onclick: function () { saveState(function (c) { if (closed) delete c.closed[it.id]; else c.closed[it.id] = new Date().toISOString(); }); } }));
+                  onclick: function () { saveState(function (c, now) { if (closed) delete c.closed[it.id]; else c.closed[it.id] = now; }); } }));
             }
             var fl = Object.keys(it.flags || {});
             return el('li', { 'data-item': it.id }, el('span', { class: 'tag', text: 'Challenge' }), el('a', { href: it.href, text: it.title }),
@@ -230,7 +304,7 @@
       return p.then(function (k) {
         return openRecord(r).then(function (rec) {
           if (!rec.p) return k;
-          return Kit.postToInbox(cfg, token(), '[submit] ' + rec.p.item + ' · handed in by hand', 'Handed in by hand; stored by an instructor.\n\n```\n' + r.token + '\n```\n').then(function () { return k + 1; }, function () { return k; });
+          return Kit.postToInbox(cfg, token(), '[submit] ' + rec.p.item + ' · handed in by hand', 'Handed in by hand; stored by an instructor.\n\n```\n' + r.token + '\n```\n').then(function () { if (present) present[r.token] = 1; return k + 1; }, function () { return k; });
         });
       });
     }, Promise.resolve(0)).then(function (stored) { return { n: n, stored: stored, can: true }; });
@@ -241,11 +315,49 @@
   }
   $('files').addEventListener('change', function () {
     var fs = Array.prototype.slice.call(this.files);
-    Promise.all(fs.map(function (f) { return f.text(); })).then(function (texts) { return takeHandIns(texts.join('\n'), 'handed in (file)'); }).then(function (r) { reportHandIns(r, 'codes from ' + fs.length + (fs.length === 1 ? ' file' : ' files')); });
+    Promise.all(fs.map(function (f) { return f.text(); })).then(function (texts) {
+      /* A backup file made by this page carries each record's original time: load those as they are. */
+      var rest = [], n = 0;
+      texts.forEach(function (t) { var j = null; try { j = JSON.parse(t); } catch (e) { /* not a backup */ } if (j && Array.isArray(j.records)) n += loadKept(j.records); else rest.push(t); });
+      if (n) status(n + ' records loaded from the backup.', 'ok');
+      return takeHandIns(rest.join('\n'), 'handed in (file)').then(function (r) { if (n && !r.n) { r.n = n; r.stored = 0; r.can = true; r.backup = true; } return r; });
+    }).then(function (r) { reportHandIns(r, 'codes from ' + fs.length + (fs.length === 1 ? ' file' : ' files')); });
     this.value = '';
   });
   $('addpaste').addEventListener('click', function () { var t = $('paste').value; $('paste').value = ''; takeHandIns(t, 'handed in (pasted)').then(function (r) { reportHandIns(r, 'codes'); }); });
   $('clear').addEventListener('click', function () { state.raw = []; state.seen = {}; state.opened = {}; state.last = null; render(); status('Cleared.'); });
+
+  function putBack(list) {
+    var cfg = inboxCfg(), pace = cls.inbox && cls.inbox.pace != null ? +cls.inbox.pace : 1000, done = 0, failed = null;
+    $('put-back').disabled = true;
+    return list.reduce(function (chain, r, i) {
+      return chain.then(function () {
+        if (failed) return;
+        status('Putting records back: ' + (i + 1) + ' of ' + list.length + '…');
+        return (i && pace ? new Promise(function (ok) { setTimeout(ok, pace); }) : Promise.resolve()).then(function () {
+          return Kit.staffRecord({ action: 'copy', token: r.token, time: r.time || r.when || null, source: r.source || '', at: stamp() }, state.staff);
+        }).then(function (code) {
+          return Kit.postToInbox(cfg, token(), '[admin] copy of ' + (r.source || 'a record'), 'A record put back by an instructor from their own copy. Do not edit.\n\n```\n' + code + '\n```\n').then(function () { addRaw(code, { source: 'put back', time: null }); if (present) present[code] = 1; restored[r.token] = 1; done++; });
+        }).catch(function (e) { failed = e; });
+      });
+    }, Promise.resolve()).then(function () {
+      status(failed ? 'Put back ' + done + ' of ' + list.length + ', then the class could not be reached (' + failed.message + '). The rest still count here; try again.' : 'Put ' + done + (done === 1 ? ' record' : ' records') + ' back in the class.', failed ? 'warn' : 'ok');
+      return render();
+    });
+  }
+  /* A backup file: every genuine record this browser holds, still encrypted, with the time the class received it. */
+  function backup() {
+    return kept().then(function (list) {
+      Kit.download('class-' + (cls.classId || 'backup') + '-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify({ what: 'Blockchain course class backup. Records are encrypted: only this class\'s instructor seed phrase opens them.', classId: cls.classId || null, classAddress: cls.classAddress || null, exported: new Date().toISOString(), records: list }, null, 1));
+      status(list.length + ' records saved to a backup file. Keep it somewhere other than this computer.', 'ok');
+    });
+  }
+  $('backup').addEventListener('click', backup);
+  $('show-words').addEventListener('click', function () {
+    var p = Kit.session.get('staff', ''), out = $('words-out');
+    if (out.firstChild) return out.replaceChildren();
+    out.replaceChildren(p && state.staff ? el('ol', { class: 'words', id: 'staff-words' }, p.split(' ').map(function (w) { return el('li', { text: w }); })) : el('div', { class: 'callout warn', text: 'Sign in first.' }));
+  });
 
   /* ---- Grading ---- */
   function normShort(s) { return String(s || '').toLowerCase().replace(/[\s,_]/g, '').replace(/(satoshis|satoshi|sats|sat|gwei|wei|eth|btc)$/, ''); }
@@ -270,14 +382,18 @@
       var cfg = inboxCfg();
       if (!cfg || !token()) { status('Decision applied in this tab only. It could not be saved to the class: there is no token to write with.', 'warn'); return; }
       return Kit.postToInbox(cfg, token(), '[admin] ' + action + ' ' + handle, 'Instructor decision. Do not edit.\n\n```\n' + code + '\n```\n')
-        .then(function (r) { status('Decision saved to the class as ' + r.ref + '.', 'ok'); },
+        .then(function (r) { if (present) present[code] = 1; status('Decision saved to the class as ' + r.ref + '.', 'ok'); },
           function (e) { status('Decision applied in this tab but NOT saved to the class (' + e.message + ').', 'warn'); });
     }).then(render);
   }
   function openRecord(r) { return state.opened[r.token] || (state.opened[r.token] = openRecord1(r)); }
   function openRecord1(r) {
     return state.staff.open(r.token).then(function (env) {
-      if (env && env.admin) return Kit.openStaffRecord(env).then(function (rec) { return Object.assign({}, r, { admin: rec }); });
+      if (env && env.admin) return Kit.openStaffRecord(env).then(function (rec) {
+        /* A record an instructor put back after it went missing from the class: the original, with its original time. */
+        if (rec.action === 'copy' && rec.token) return openRecord1({ token: rec.token, time: rec.time || null, source: (rec.source || 'a record') + ', put back as ' + r.source }).then(function (o) { return Object.assign(o, { copyOf: rec.token, outer: r.token }); });
+        return Object.assign({}, r, { admin: rec });
+      });
       return Kit.checkSubmission(env).then(function (c) {
         return Object.assign({}, r, { p: c.p, address: c.address, when: r.time || c.p.at, pub: Kit.wallet.recoverPub(env.siwe.message, env.siwe.signature) });
       });
@@ -293,6 +409,12 @@
     if (!state.raw.length) { out.replaceChildren(); state.last = null; paintDays(); auto('idle', 'Nothing handed in yet. This page checks for new work every 30 seconds. Last checked ' + clock() + '.'); return Promise.resolve(); }
     var closedAt = {}; Object.keys(CS.closed).forEach(function (q) { closedAt[q] = Date.parse(CS.closed[q]); });
     return ready.then(function () { return Promise.all(state.raw.map(openRecord)); }).then(function (recs) {
+      /* One of each: a record and a put-back copy of it are the same record. Keep every genuine one in this browser. */
+      var one = {}; restored = {};
+      recs.forEach(function (r) { if (r.copyOf) restored[r.copyOf] = 1; });
+      recs = recs.filter(function (r) { var t = r.copyOf || r.token; if (one[t]) return false; one[t] = 1; return true; });
+      recs.forEach(function (r) { if (r.p || r.admin) keep({ token: r.copyOf || r.token, source: r.source, time: r.time || r.when }); });
+      state.missing = present ? recs.filter(function (r) { return !r.copyOf && (r.p || r.admin) && !present[r.token] && !restored[r.token]; }) : [];
       var problems = [], students = {}, quizzes = {}, stale = {}, builds = {}, nokey = {}, pubOf = {};
       recs.filter(function (r) { return r.p; }).forEach(function (r) { builds[r.p.build || 'unknown'] = 1; pubOf[r.address] = r.pub; });
       recs.filter(function (r) { return r.err; }).forEach(function (r) { problems.push([r.source, r.err]); });
@@ -351,12 +473,17 @@
         if (p.kind === 'flag') {
           var lab = (window.BC_LABS || {})[p.item];
           if (!lab) { problems.push([r.source, 'no grader for lab ' + p.item]); return null; }
-          return lab.grade(p).then(function (res) {
-            var fk = p.item + ':' + res.flag;
-            if (res.ok) { var cur = s.flags[fk]; if (!cur || when < cur.when) s.flags[fk] = { when: when, points: res.points }; }
-            else if (res.stale) stale[p.item] = 1;
-            else problems.push([r.source, s.handle + ': wrong flag for ' + fk]);
-          });
+          var d0 = p.data || {};
+          /* One record can hand in one flag, or a whole step's flags together. Each is graded on its own. */
+          var each = d0.flags ? Object.keys(d0.flags).map(function (f) { return { rev: d0.rev, flag: f, value: d0.flags[f] }; }) : [d0];
+          return Promise.all(each.map(function (d1) {
+            return lab.grade(Object.assign({}, p, { data: d1 })).then(function (res) {
+              var fk = p.item + ':' + res.flag;
+              if (res.ok) { var cur = s.flags[fk]; if (!cur || when < cur.when) s.flags[fk] = { when: when, points: res.points }; }
+              else if (res.stale) stale[p.item] = 1;
+              else problems.push([r.source, s.handle + ': wrong flag for ' + fk]);
+            });
+          }));
         }
         problems.push([r.source, 'unknown submission kind']);
         return null;
@@ -368,7 +495,7 @@
       });
       return Promise.all(jobs).then(function () {
         return { students: students, quizzes: quizzes, problems: problems, contested: contested, n: recs.length, stale: Object.keys(stale), builds: Object.keys(builds),
-          nokey: Object.keys(nokey), pubOf: pubOf, stored: stored };
+          nokey: Object.keys(nokey), pubOf: pubOf, stored: stored, missing: state.missing || [] };
       });
     }).then(paint).catch(function (e) { auto('idle'); status('Something went wrong reading the records: ' + e.message, 'bad'); });
   }
@@ -396,6 +523,13 @@
       el('div', { class: 'table-wrap' }, table(head, shown, [2])),
       el('div', { class: 'btn-row' },
         el('button', { class: 'btn', type: 'button', text: 'Download CSV', onclick: function () { Kit.download('class-results.csv', csv([head].concat(rows))); } })))];
+
+    /* Records this browser has a genuine copy of that are no longer in the class as they were. They still count. */
+    if (R.missing.length) sections.unshift(el('section', { class: 'panel', id: 'missing' }, el('div', { class: 'callout warn' },
+      el('b', { text: R.missing.length + (R.missing.length === 1 ? ' record is' : ' records are') + ' missing from the class. ' }),
+      'This dashboard read ' + (R.missing.length === 1 ? 'it' : 'them') + ' earlier, and ' + (R.missing.length === 1 ? 'it is' : 'they are') + ' no longer in the class as ' + (R.missing.length === 1 ? 'it was' : 'they were') + ' (deleted, edited, or the class could not be read in full). Nothing is lost: '
+        + (R.missing.length === 1 ? 'it still counts' : 'they still count') + ' here, from this browser\'s copy. Putting them back saves a signed copy of each into the class, with its original time, so every instructor and every later session has them too. '),
+      el('div', { class: 'btn-row' }, el('button', { class: 'btn primary', type: 'button', id: 'put-back', disabled: !(token() && inboxCfg()), text: 'Put ' + (R.missing.length === 1 ? 'it' : 'them') + ' back in the class', onclick: function () { putBack(R.missing); } }))));
 
     /* The class's site is a frozen snapshot. Answer keys for a different version of a quiz must not grade it. */
     if (R.stale.length) sections.unshift(el('section', { class: 'panel', id: 'stale' }, el('div', { class: 'callout bad' },
@@ -489,9 +623,11 @@
             .then(function () { return { entries: e }; });
         } });
     });
-    var marks = Kit.session.get('sentmarks', {}), scope = Kit.hash32(String(cls.classKey));
-    function mark(w) { return scope + ':' + Kit.hash32(w.json) + ':' + Kit.hash32('x' + w.json) + ':' + w.json.length; }
-    var todo = want.filter(function (w) { return sentJson[w.key] !== w.json && !(resRefs[w.key] && marks[w.key] === mark(w)); });
+    /* Has a record already got exactly this content? Each one carries a mark only an instructor can compute (it is
+       made from the class key's signature over the content), so any instructor's dashboard, on any computer, can
+       tell without being able to read the students' sealed entries, and writes nothing when nothing has changed. */
+    function mark(w) { return markMemo[w.json] || (markMemo[w.json] = Kit.hash32(state.staff.sign('bc-results-mark|' + w.key + '|' + w.json)).toString(16) + '.' + w.json.length); }
+    var todo = want.filter(function (w) { return sentJson[w.key] !== w.json && !(resRefs[w.key] && haveMark[w.key] === mark(w)); });
     want.forEach(function (w) { if (todo.indexOf(w) < 0) sentJson[w.key] = w.json; });
     if (!todo.length) { urgent = false; return auto('idle', sentLine()); }   // an instructor's change that alters no results uses up its turn
     if (state.publishing) { state.again = true; return; }
@@ -517,24 +653,25 @@
     urgent = false; if (later) { clearTimeout(later); later = null; }
 
     state.publishing = true;
-    var at = new Date().toISOString(), failed = null, done = 0;
+    var at = stamp(), failed = null, done = 0;
     /* One write a second: the platform asks automated clients not to create or change content faster than that. */
     var pace = cls.inbox && cls.inbox.pace != null ? +cls.inbox.pace : 1000;
     return todo.reduce(function (chain, w, i) {
       return chain.then(function () {
         if (failed) return;
         if (todo.length > 3) auto('busy', 'Sending results to students: ' + (i + 1) + ' of ' + todo.length + '…');
+        var t0;
         return (i && pace ? new Promise(function (ok) { setTimeout(ok, pace); }) : Promise.resolve()).then(function () { return w.make(); }).then(function (part) {
-          return Kit.signResults(Object.assign({ v: 2, classId: cls.classId || null, build: Kit.build.commit, at: at }, part), state.staff);
+          return Kit.signResults(Object.assign({ v: 2, classId: cls.classId || null, build: Kit.build.commit, at: at, mark: mark(w) }, part), state.staff);
         }).then(function (signed) {
           var body = (w.key === 'class' ? 'The class scoreboard and averages. Readable by members of the class.' : 'Results for some of the class. Each student can read only their own.')
             + ' Kept up to date by the instructor dashboard. Do not edit.\n\n```\n' + signed + '\n```\n';
           if (body.length > 60000) throw new Error('the results for part ' + w.key + ' are too large for one record');
-          return resRefs[w.key] ? Kit.updateInbox(cfg, token(), resRefs[w.key], body) : Kit.postToInbox(cfg, token(), w.title, body, w.labels).then(function (r) { resRefs[w.key] = r.ref; });
-        }).then(function () { sentJson[w.key] = w.json; marks[w.key] = mark(w); done++; }, function (e) { failed = e; });
+          t0 = Date.now();
+          return resRefs[w.key] ? Kit.updateInbox(cfg, token(), resRefs[w.key], body, w.labels) : Kit.postToInbox(cfg, token(), w.title, body, w.labels).then(function (r) { resRefs[w.key] = r.ref; return r; });
+        }).then(function (r) { learn(r, t0); sentJson[w.key] = w.json; sentAt[w.key] = at; haveMark[w.key] = mark(w); done++; }, function (e) { failed = e; });
       });
     }, Promise.resolve()).then(function () {
-      Kit.session.set('sentmarks', marks);
       if (done) { state.sentAt = clock(); $('auto-status').setAttribute('data-n', String(+$('auto-status').getAttribute('data-n') + done)); }
       state.publishing = false;
       if (failed) { state.again = false; return auto('idle', 'Graded here, but sending results to students failed (' + failed.message + '). It will try again at the next check.'); }
@@ -542,7 +679,8 @@
       return publish();   // anything held back for the cadence gets its timer; with nothing left this just reports
     });
   }
-  function sentLine() { return '✓ Live. New work is graded and each student\'s results are sent to them as it arrives' + (state.sentAt ? ' (last sent ' + state.sentAt + ')' : '') + '. Last checked ' + clock() + '.'; }
+  function budgetNote() { var b = Kit.budget; return b && Date.now() - b.at < 600000 && b.left < 800 ? ' The class has ' + b.left + ' requests left this hour: if it runs out, everything waits and then catches up by itself.' : ''; }
+  function sentLine() { return budgetNote() + '✓ Live. New work is graded and each student\'s results are sent to them as it arrives' + (state.sentAt ? ' (last sent ' + state.sentAt + ')' : '') + '. Last checked ' + clock() + '.'; }
 
   function table(head, rows, numCols) {
     numCols = numCols || [];

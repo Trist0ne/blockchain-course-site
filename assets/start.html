@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Home</title>
 <link rel="icon" href="kit/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="kit/house.css?v=6b2c0a9ef876">
+<link rel="stylesheet" href="kit/house.css?v=19f128b1bf96">
 <script src="kit/class.js"></script>
-<script src="items.js?v=6b2c0a9ef876"></script>
-<script src="kit/kit.js?v=6b2c0a9ef876"></script>
-<script src="kit/lib/wallet-lib.js?v=6b2c0a9ef876"></script>
-<script src="kit/lib/course-words.js?v=6b2c0a9ef876"></script>
-<script src="kit/wallet.js?v=6b2c0a9ef876"></script>
+<script src="items.js?v=19f128b1bf96"></script>
+<script src="kit/kit.js?v=19f128b1bf96"></script>
+<script src="kit/lib/wallet-lib.js?v=19f128b1bf96"></script>
+<script src="kit/lib/course-words.js?v=19f128b1bf96"></script>
+<script src="kit/wallet.js?v=19f128b1bf96"></script>
 </head>
 <body>
 <main class="page wide">
@@ -43,13 +43,13 @@
   var FLAG = 'M5 22V3m0 1h13l-3 5 3 5H5', LOCK = 'M6 11h12v10H6zM8 11V7a4 4 0 0 1 8 0v4';
   function sentAt(it, part) {
     var here = Kit.mine.get('sent:' + it.id + ':' + part + ':' + Kit.who(), null);
-    return (handIns && handIns[it.id + ':' + part]) || (here && !here.byHand ? here.at : null);
+    return (handIns && handIns[it.id + ':' + part]) || (here ? here.at : null);
   }
   function itemCard(it) {
     var inbox = !!Kit.inbox(), waiting = !inbox ? 'Hand in with Copy or Download' : !asked ? 'Checking…' : handIns ? 'Not handed in yet' : 'Couldn\'t check right now';
     if (it.kind === 'quiz') {
-      var q = graded && graded.quizzes[it.id], when = sentAt(it, ''), closed = cs && cs.closed[it.id], byHand = (Kit.mine.get('sent:' + it.id + '::' + Kit.who(), null) || {}).byHand;
-      var text = q ? 'Graded: ' + q.score + ' / ' + q.max : when ? '✓ Handed in ' + hhmm(when) + (closed ? '' : '. Your score appears when the quiz closes.') : byHand ? 'Not received by the class yet. Open it to send again.' : closed ? 'Closed. Not handed in.' : waiting;
+      var q = graded && graded.quizzes[it.id], when = sentAt(it, ''), closed = cs && cs.closed[it.id], byHand = Kit.outbox().some(function (e) { return e.item === it.id; });
+      var text = q ? 'Graded: ' + q.score + ' / ' + q.max : when ? '✓ Handed in ' + hhmm(when) + (closed ? '' : '. Your score appears when the quiz closes.') : byHand ? 'Not received by the class yet. It sends by itself.' : closed ? 'Closed. Not handed in.' : waiting;
       return el('a', { class: 'mapitem' + (q || when ? ' done' : ''), href: it.href, 'data-item': it.id }, el('span', { class: 'tag', text: 'Quiz' }), el('span', { class: 't', text: it.title }), el('span', { class: 's', text: text }));
     }
     var parts = Object.keys(it.flags || {}), sent = 0, got = 0;
@@ -84,7 +84,7 @@
        scoreboard uses only what the instructor's dashboard has confirmed, and is sent out every few minutes. */
     items.forEach(function (it) { Object.keys(it.flags || {}).forEach(function (f) { allF++; total += it.flags[f]; if ((graded && graded.flags[it.id + ':' + f]) || sentAt(it, f)) mineF++; }); });
     function stat(v, label, id) { return el('div', { class: 'stat', id: id }, el('b', { text: v }), el('span', { text: label })); }
-    $('score').replaceChildren(stat(String(Math.max(myPts, graded ? graded.ctf : 0)), 'your points, of ' + total, 'stat-points'), stat(mineF + ' / ' + allF, 'flags captured', 'stat-flags'),
+    $('score').replaceChildren(stat(String(Math.max(myPts, graded ? graded.ctf : 0)), 'your points, of ' + total + (graded && graded.ctf < myPts ? ' (' + graded.ctf + ' confirmed so far)' : ''), 'stat-points'), stat(mineF + ' / ' + allF, 'flags captured', 'stat-flags'),
       stat(shared ? String(shared.ctfAvg) : '·', 'class average', 'stat-avg'));
   }
   function paintBoard() {
@@ -147,6 +147,7 @@
     }, function () { handIns = null; }).then(function () { asked = true; paintMap(); });
   }
 
+  document.addEventListener('kit-sent', function () { refresh(false); });   // something waiting in the outbox has just gone
   Kit.signIn().then(function (me) {
     if (me.handle) $('hello').textContent = 'Welcome, ' + me.handle;
     paintMap(); paintBoard(); refresh(false);

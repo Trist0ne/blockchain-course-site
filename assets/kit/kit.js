@@ -12,10 +12,10 @@
   var Kit = {};
   var enc = new TextEncoder();
   var dec = new TextDecoder();
-  Kit.version = '0.21.0';
+  Kit.version = '0.22.0';
   /* Which course commit this site was cut from. tools/cut_delivery.py rewrites this line; 'dev' means an uncut working copy.
      Every record carries it, so a class can always be graded with the course repo as it was when the class was cut. */
-  Kit.build = { commit: '6b2c0a9ef876', date: '2026-11-21' };
+  Kit.build = { commit: '19f128b1bf96', date: '2026-11-21' };
   /* A file of this site, named by build, so a page never pairs with another build's copy of it. */
   Kit.asset = function (path) { return path + (Kit.build.commit === 'dev' ? '' : '?v=' + Kit.build.commit); };
   /* Where this file was loaded from, so pages at any depth can link to shared pages such as setup.html. */
@@ -323,7 +323,7 @@
   }
 
   Kit.signIn = function () {
-    if (Kit.identity()) return Promise.resolve(Kit.me());
+    if (Kit.identity()) { startOutbox(); return Promise.resolve(Kit.me()); }
     return new Promise(function (resolve) {
       var inbox = Kit.inbox();
       /* The class code is a shared classroom secret, not a personal one, so this computer may remember it.
@@ -355,6 +355,7 @@
         if (newHandle) { Kit.mine.set('name:' + me.address, newHandle); meCache = null; me = Kit.me(); }
         panel.remove(); gate(false); if (Kit._paintChip) Kit._paintChip();
         if (newHandle) Kit.register(reason);
+        startOutbox();
         resolve(me);
       }
       function links(list) {
@@ -547,7 +548,7 @@
     return root.fetch(url, { method: 'POST', headers: headers, body: JSON.stringify(payload) }).then(function (r) {
       if (!r.ok) throw new Error(host + ' answered ' + r.status);
       return r.json();
-    }).then(function (j) { return { ref: '#' + (gl ? j.iid : j.number) }; });
+    }).then(function (j) { return { ref: '#' + (gl ? j.iid : j.number), time: j.created_at || null }; });   // time: the platform's clock, not this computer's
   };
 
   /* Replace the text of an existing record (ref is '#12'). Used for the two records that are kept up to date in place:
@@ -560,8 +561,19 @@
     if (!gl) headers.Accept = 'application/vnd.github+json';
     return root.fetch(url, { method: gl ? 'PUT' : 'PATCH', headers: headers, body: JSON.stringify(Object.assign(gl ? { description: body } : { body: body }, labels && labels.length ? { labels: gl ? labels.join(',') : labels } : {})) }).then(function (r) {
       if (!r.ok) throw new Error(host + ' answered ' + r.status);
-      return { ref: '#' + n };
+      return r.json().then(function (j) { return { ref: '#' + n, time: j.updated_at || null }; }, function () { return { ref: '#' + n, time: null }; });
     });
+  };
+  /* Read one record by its number. Unlike a list, this is never behind: it shows the record as it is right now. */
+  Kit.getInbox = function (inbox, token, ref) {
+    var gl = inbox.platform === 'gitlab', host = inbox.host || (gl ? 'gitlab.com' : 'github.com'), n = String(ref).replace('#', '');
+    var url = gl ? 'https://' + host + '/api/v4/projects/' + encodeURIComponent(inbox.repo) + '/issues/' + n
+      : (host === 'github.com' ? 'https://api.github.com' : 'https://' + host + '/api/v3') + '/repos/' + inbox.repo + '/issues/' + n;
+    var headers = {}; if (token) headers.Authorization = 'Bearer ' + token; if (!gl) headers.Accept = 'application/vnd.github+json';
+    return root.fetch(url, { headers: headers, cache: 'no-store' }).then(function (r) {
+      if (!r.ok) throw new Error(host + ' answered ' + r.status);
+      return r.json();
+    }).then(function (it) { return { ref: '#' + n, title: it.title || '', body: (gl ? it.description : it.body) || '', time: it.created_at, updated: it.updated_at || it.created_at }; });
   };
   /* Read records from the class inbox, newest first: [{ ref, title, body, time }]. opts: { labels, page, perPage }. */
   Kit.listInbox = function (inbox, token, opts) {
@@ -573,6 +585,9 @@
       : (host === 'github.com' ? 'https://api.github.com' : 'https://' + host + '/api/v3') + '/repos/' + inbox.repo + '/issues?state=all&sort=created&direction=desc&' + q;
     var headers = {}; if (token) headers.Authorization = 'Bearer ' + token; if (!gl) headers.Accept = 'application/vnd.github+json';
     return root.fetch(url, { headers: headers }).then(function (r) {
+      /* How many requests the class's token has left this hour, when the platform says (github.com does). */
+      var left = r.headers && r.headers.get && r.headers.get('x-ratelimit-remaining');
+      if (left != null && left !== '') Kit.budget = { left: +left, at: Date.now() };
       if (!r.ok) throw new Error(host + ' answered ' + r.status);
       return r.json();
     }).then(function (list) {
@@ -702,16 +717,19 @@
     var inbox = Kit.inbox(), me = Kit.me();
     if (!inbox || !me) return Promise.resolve({ ok: false, n: 0, handle: '', items: {} });
     if (recsMemo && !fresh && recsMemo.who === me.address) return recsMemo.p;
-    var tag = Kit.short(me.address), out = { ok: true, n: 0, handle: '', items: {} }, jobs = [];
+    var tag = Kit.short(me.address), out = { ok: true, n: 0, handle: '', items: {} }, jobs = [], have = {}, labelled = false;
     function take(list) {
       list.forEach(function (it) {
+        (String(it.body).match(Kit.TOKEN_RE) || []).forEach(function (t) { have[t] = 1; });
         var m = /^\[submit\] (\S+)(?: (\S+))? · (\S+)$/.exec(it.title);
         if (!m || m[3] !== tag) return;
         out.n++;
         var own = OWN_RE.exec(it.body), k = m[1] + ':' + (m[2] || '');
         jobs.push((own ? me.open(own[0]).catch(function () { return null; }) : Promise.resolve(null)).then(function (o) {
           if (m[1] === 'register') { if (o && o.data && o.data.handle && !out.handle) out.handle = Kit.normHandle(o.data.handle); return; }
-          if (!out.items[k] || it.time < out.items[k].time) out.items[k] = { time: it.time, ref: it.ref, data: o ? o.data : null };
+          var parts = o && o.data && o.data.flags ? Object.keys(o.data.flags) : null;
+          if (parts) parts.forEach(function (f) { var kf = m[1] + ':' + f; if (!out.items[kf] || it.time < out.items[kf].time) out.items[kf] = { time: it.time, ref: it.ref, data: { rev: o.data.rev, flag: f, value: o.data.flags[f] } }; });
+          else if (!out.items[k] || it.time < out.items[k].time) out.items[k] = { time: it.time, ref: it.ref, data: o ? o.data : null };
         }));
       });
     }
@@ -722,11 +740,12 @@
           return list.length === 100 && n < 10 ? page(n + 1) : null;
         });
       })(1).then(function () {
-        if (out.n) return null;
+        if (out.n) { labelled = true; return null; }
         /* Nothing under our label: the platform may have dropped it. Look through the newest records by title instead. */
         return Kit.listInbox(inbox, token, { perPage: 100 }).then(take);
       });
     }).then(function () { return Promise.all(jobs); }).then(function () {
+      if (labelled) guardMine(have);   // only a complete list under our label can say that something is missing
       /* A computer that has never seen this student learns their handle here. */
       if (out.handle && !me.handle) { Kit.mine.set('name:' + me.address, out.handle); meCache = null; if (Kit._paintChip) Kit._paintChip(); }
       return out;
@@ -846,8 +865,83 @@
   };
 
   /* Send one submission and show the result in `target`. One click for the student. */
+  /* ---------- Handing in: nothing is lost between "done" and "received" ----------
+     Every hand-in is signed, sealed and written to this computer's outbox before anything is sent. If the class can't
+     be reached (no network, the platform is down or limiting the class, the token has expired), it stays there and is
+     sent by itself later: when any course page is opened, once a minute, and when the network comes back. The student
+     can also copy the code and give it to an instructor; receiving it twice does no harm. */
+  function outboxKey() { return 'outbox:' + Kit.who(); }
+  /* Everything this browser has handed in for this account: what is still waiting, and what the class has received.
+     Received hand-ins are kept too, so that if one later goes missing from the class this browser can send it again
+     (see guardMine). Kit.outbox() is just the ones still waiting. */
+  function entries() { return Kit.who() ? Kit.mine.get(outboxKey(), []) : []; }
+  function entriesSet(list) {
+    var done = list.filter(function (e) { return e.ref; });
+    if (done.length > 150) { var drop = done.slice(0, done.length - 150); list = list.filter(function (e) { return drop.indexOf(e) < 0; }); }   // oldest received first
+    Kit.mine.set(outboxKey(), list); paintOutbox();
+  }
+  Kit.outbox = function () { return entries().filter(function (e) { return !e.ref; }); };
+  /* `have`: every sealed record found in the class under this student's label. A hand-in the class confirmed more
+     than five minutes ago and no longer holds (deleted, or its text replaced) is sent again, a few times at most. */
+  function guardMine(have) {
+    var now = Date.now(), list = entries(), again = 0;
+    list.forEach(function (e) {
+      if (e.ref && !have[e.code] && now - (e.sentAt || 0) > 300000 && (e.resent || 0) < 3 && now - (e.resentAt || 0) > 3600000) { delete e.ref; e.resent = (e.resent || 0) + 1; e.resentAt = now; again++; }
+    });
+    if (again) { entriesSet(list); Kit.flushOutbox(); }
+  }
+  function delivered(e, res) {
+    var when = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    (e.parts && e.parts.length ? e.parts : [e.part || '']).forEach(function (part) { Kit.mine.set('sent:' + e.item + ':' + part + ':' + Kit.who(), { ref: res.ref, at: when }); });
+    entriesSet(entries().map(function (x) { return x.id === e.id ? Object.assign({}, x, { ref: res.ref, sentAt: Date.now() }) : x; }));
+    recsMemo = null;
+    try { document.dispatchEvent(new CustomEvent('kit-sent', { detail: { id: e.id, item: e.item, part: e.part || '', parts: e.parts || [e.part || ''], ref: res.ref, at: when } })); } catch (err) { /* no listeners */ }
+  }
+  /* Try to send everything waiting, oldest first. Safe to call at any time. Resolves how many are still waiting. */
+  var flushing = null;
+  Kit.flushOutbox = function () {
+    var inbox = Kit.inbox(), id = Kit.identity();
+    if (!inbox || !id || !Kit.outbox().length) return Promise.resolve(0);
+    if (flushing) return flushing;
+    var why = '';
+    flushing = Kit.unlockToken(inbox.locked, id.code).then(function (token) {
+      return Kit.outbox().reduce(function (chain, e) {
+        return chain.then(function (stop) {
+          if (stop) return true;   // the class can't be reached: don't hammer it with the rest
+          return Kit.postToInbox(inbox, token, e.title, e.body, e.labels).then(function (res) { delivered(e, res); return false; }, function (err) { why = err.message; return true; });
+        });
+      }, Promise.resolve(false));
+    }).catch(function (err) { why = err.message; }).then(function () { flushing = null; Kit.outboxWhy = why; paintOutbox(); return Kit.outbox().length; });
+    return flushing;
+  };
+  function why403(msg) { return / (403|429)$/.test(msg) ? 'The class inbox is limiting how fast the class can hand in (' + msg + ').' : / 401$/.test(msg) ? 'The class inbox refused the class token (' + msg + '): tell your instructor.' : 'The class inbox couldn\'t be reached' + (msg ? ' (' + msg + ')' : '') + '.'; }
+  function paintOutbox() {
+    if (typeof document === 'undefined') return;
+    var main = document.querySelector('main'), old = document.getElementById('kit-outbox'), list = Kit.outbox();
+    if (old) old.remove();
+    if (!main || !list.length) return;
+    var codes = el('div', { hidden: true }, list.map(function (e) { return el('div', { style: 'margin-top:.5rem' }, el('div', { class: 'small', text: e.label }), el('div', { class: 'hexblock', text: e.code }),
+      el('button', { class: 'icon-btn', type: 'button', text: 'Copy this code', onclick: function () { Kit.copy(e.code); } })); }));
+    main.insertBefore(el('div', { class: 'callout warn', id: 'kit-outbox', 'data-n': String(list.length), style: 'margin:0 0 1rem' },
+      el('b', { text: list.length + (list.length === 1 ? ' hand-in is' : ' hand-ins are') + ' saved on this computer and waiting to be sent. ' }),
+      (Kit.outboxWhy ? why403(Kit.outboxWhy) + ' ' : '') + 'It will be sent by itself as soon as the class can be reached. Keep using this computer and this browser until it has gone. ',
+      el('button', { class: 'icon-btn', type: 'button', id: 'kit-outbox-go', text: 'Send now', onclick: function () { Kit.flushOutbox(); } }), ' ',
+      el('button', { class: 'icon-btn', type: 'button', id: 'kit-outbox-codes', text: 'Give it to your instructor by hand instead', onclick: function () { codes.hidden = !codes.hidden; } }), codes), main.firstChild);
+  }
+  var outboxStarted = false;
+  function startOutbox() {
+    paintOutbox();
+    if (!Kit.inbox()) return;
+    root.setTimeout(function () { Kit.sweepHeld().then(Kit.flushOutbox); }, 400);
+    if (outboxStarted) return; outboxStarted = true;
+    root.setInterval(function () { Kit.sweepHeld().then(Kit.flushOutbox); }, 60000);
+    if (root.addEventListener) root.addEventListener('online', function () { Kit.flushOutbox(); });
+  }
+
+  /* Hand something in. payload: { kind, item, part, parts, data }. Resolves { sent: true, ref, code }, or
+     { sent: false, queued: true, code } when it is safely in the outbox but not yet received, or null. */
   Kit.submit = function (target, payload, label) {
-    var c = Kit.cls(), inbox = Kit.inbox(), id = Kit.identity(), me = Kit.me(), tag = Kit.short(me.address);
+    var c = Kit.cls(), inbox = Kit.inbox(), me = Kit.me(), tag = Kit.short(me.address);
     if (!c.classKey) {
       target.replaceChildren(el('div', { class: 'callout warn', text: 'This class isn\'t set up yet, so nothing can be handed in. Your instructor sets it up.' }));
       return Promise.resolve(null);
@@ -865,38 +959,43 @@
       else row.hidden = true;
       return row;
     }
-    function manual(why) {
+    function codeBox(why, auto) {
       var status = el('span', { class: 'muted small' }), fname = payload.item + '-' + me.address.slice(2, 10) + '.txt';
-      target.replaceChildren(
-        el('div', { class: 'callout warn' }, el('b', { text: 'Not sent automatically. ' }), why + ' Copy or download the code and give it to your instructor.'),
+      return [el('div', { class: 'callout warn' }, el('b', { text: 'Not sent automatically. ' }), why + (auto ? ' It is saved on this computer and will be sent by itself as soon as the class can be reached: keep using this computer and this browser. You can also' : ' Copy or download the code and') + ' give ' + (auto ? 'the code to your instructor.' : 'it to your instructor.')),
         el('div', { class: 'btn-row' },
           el('button', { class: 'btn primary', type: 'button', text: 'Copy code', onclick: function () { Kit.copy(sub.code).then(function () { status.textContent = 'Copied.'; }); } }),
           el('button', { class: 'btn', type: 'button', text: 'Download .txt', onclick: function () { Kit.download(fname, label + '\n' + sub.code + '\n'); } }), status),
         el('details', { class: 'hint' }, el('summary', { text: 'Show the encrypted code' }), el('div', { class: 'hexblock', id: 'kit-code-out', text: sub.code })),
-        homeRow(), signedBox());
-      return { sent: false, code: sub.code };
+        homeRow(), signedBox()];
     }
+    function ok(ref, when) { target.replaceChildren(el('div', { class: 'callout ok' }, el('b', { text: 'Submitted ✓ ' }), 'Received as ' + ref + ' at ' + when + '.'), homeRow(), signedBox()); }
     return Kit.buildSubmission(payload).then(function (s) {
       sub = s;
-      if (!inbox) return manual('This copy of the course isn\'t connected to a class inbox.');
+      if (!inbox) { target.replaceChildren.apply(target, codeBox('This copy of the course isn\'t connected to a class inbox.', false)); return { sent: false, code: sub.code }; }
       /* A second copy, sealed to the student's own account: it is how their pages show them what they handed in, and
          their handle, on any computer. The instructor's copy is the one that is graded. */
       var keep = { kind: payload.kind, item: payload.item, part: payload.part || '', data: payload.data, at: new Date().toISOString() };
-      return Promise.all([Kit.unlockToken(inbox.locked, id.code), Kit.wallet.sealTo(me.pub, keep)]).then(function (two) {
-        var token = two[0], own = two[1];
+      return Kit.wallet.sealTo(me.pub, keep).then(function (own) {
         /* The title names the item and part, and a label marks whose it is, so the student's home page can list their own
            hand-ins from any computer. Neither is trusted for grading: that uses only what is sealed inside. */
-        return Kit.postToInbox(inbox, token, '[submit] ' + payload.item + (payload.part ? ' ' + payload.part : '') + ' · ' + tag,
-          'Course submission: ' + label + '\nAccount: ' + me.address + '\n\n```\n' + sub.code + '\n```\n\nThe student\'s own copy (only their seed phrase opens it):\n\n```\n' + own + '\n```\n', [Kit.myLabel()]);
-      }).then(function (res) {
-        var when = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        Kit.mine.set('sent:' + payload.item + ':' + (payload.part || '') + ':' + Kit.who(), { ref: res.ref, at: when });
-        recsMemo = null;
-        target.replaceChildren(el('div', { class: 'callout ok' }, el('b', { text: 'Submitted ✓ ' }), 'Received as ' + res.ref + ' at ' + when + '.'), homeRow(), signedBox());
-        return { sent: true, ref: res.ref, code: sub.code };
-      }, function (e) {
-        if (/ (403|429)$/.test(e.message)) return manual('The class inbox is limiting how fast the class can submit (' + e.message + '). Wait a minute and press Submit again.');
-        return manual('The class inbox couldn\'t be reached (' + e.message + ').');
+        var e = { id: Kit.wallet.siwe.nonce(), item: payload.item, part: payload.part || '', parts: payload.parts || null, label: label, code: sub.code, at: new Date().toISOString(),
+          title: '[submit] ' + payload.item + (payload.part ? ' ' + payload.part : '') + ' · ' + tag, labels: [Kit.myLabel()],
+          body: 'Course submission: ' + label + '\nAccount: ' + me.address + '\n\n```\n' + sub.code + '\n```\n\nThe student\'s own copy (only their seed phrase opens it):\n\n```\n' + own + '\n```\n' };
+        entriesSet(entries().concat([e]));              // on this computer first, then to the class
+        return new Promise(function (resolve) {
+          function onSent(ev) {
+            if (ev.detail.id !== e.id) return;
+            document.removeEventListener('kit-sent', onSent);
+            if (document.contains(target)) ok(ev.detail.ref, ev.detail.at);
+            resolve({ sent: true, ref: ev.detail.ref, code: sub.code });
+          }
+          document.addEventListener('kit-sent', onSent);
+          Kit.flushOutbox().then(function () {
+            if (!Kit.outbox().some(function (x) { return x.id === e.id; })) return;   // it went: onSent has dealt with it
+            target.replaceChildren.apply(target, codeBox(why403(Kit.outboxWhy || ''), true));
+            resolve({ sent: false, queued: true, code: sub.code });                   // the listener stays: the page updates when it does go
+          });
+        });
       });
     }).catch(function (e) {
       target.replaceChildren(el('div', { class: 'callout bad', text: 'Could not prepare the submission: ' + e.message }));
@@ -904,26 +1003,51 @@
     });
   };
 
-  /* A Submit button that remembers it was used. payload() is called at click time. */
-  /* A hand-in happens once. After it, the button is replaced by a note saying when it was received; the same note
-     appears on any other computer, read from the class. If sending failed, the button stays so it can be tried again. */
-  Kit.submitButton = function (target, label, payload, part) {
-    var out = el('div'), row = el('div', { class: 'btn-row', style: 'margin-top:0' });
-    var probe = payload(), key = probe.item + ':' + (part || '');
-    function done(ref, at) { row.replaceChildren(el('span', { class: 'solved-badge', text: 'Submitted ✓ earlier (' + ref + ', ' + at + ')' })); }
-    var prior = Kit.mine.get('sent:' + key + ':' + Kit.who(), null);
-    if (prior) done(prior.ref, prior.at);
-    else {
-      var btn = el('button', { class: 'btn primary', type: 'button', text: 'Submit', onclick: function () {
-        btn.disabled = true;
-        var p = payload(); p.part = part;
-        Kit.submit(out, p, label).then(function (r) { if (r && r.sent) row.replaceChildren(); else { btn.disabled = false; btn.textContent = 'Try sending again'; } });
-      } });
-      row.append(btn);
-      Kit.myRecords().then(function (m) { var it = m.items[key]; if (it && row.contains(btn)) done(it.ref, hhmm(it.time)); });
+  /* Hand something in exactly once, with nothing to press: used when a page has just confirmed the work is right.
+     If it is already handed in (on this computer or any other) or waiting in the outbox, says so instead. */
+  Kit.handInOnce = function (target, label, payload, part) {
+    var probe = payload(), key = probe.item + ':' + (part || ''), who = Kit.who();
+    function done(ref, at) { target.replaceChildren(el('div', { class: 'btn-row', style: 'margin-top:0' }, el('span', { class: 'solved-badge', text: 'Submitted ✓ earlier (' + ref + ', ' + at + ')' }))); }
+    function go() { var p = payload(); if (part && !p.part) p.part = part; return Kit.submit(target, p, label); }
+    var prior = Kit.mine.get('sent:' + key + ':' + who, null);
+    if (prior) return Promise.resolve(done(prior.ref, prior.at));
+    var waiting = Kit.outbox().filter(function (e) { return e.item === probe.item && (e.parts || [e.part || '']).indexOf(part || '') >= 0; })[0];
+    if (waiting) {
+      target.replaceChildren(el('div', { class: 'callout warn', text: 'Saved on this computer and waiting to be sent. It goes by itself as soon as the class can be reached.' }));
+      document.addEventListener('kit-sent', function on(ev) { if (ev.detail.id === waiting.id) { document.removeEventListener('kit-sent', on); done(ev.detail.ref, ev.detail.at); } });
+      return Promise.resolve();
     }
-    target.replaceChildren(row, out);
+    target.replaceChildren(el('p', { class: 'muted small', text: 'Handing it in…' }));
+    return Kit.myRecords().then(function (m) { var it = m.items[key]; return it ? done(it.ref, hhmm(it.time)) : go(); });
   };
+
+  /* ---------- Work held back to hand in together ----------
+     A long lab has many small steps, and every hand-in in the class counts against one hourly limit on writes. So a
+     lab can hold a step's flags on this computer and hand the step in as one record. Held work is never left behind:
+     it is handed in when its step is complete, when it has waited ten minutes, or the next time any course page opens. */
+  function heldKey() { return 'held:' + Kit.who(); }
+  Kit.held = function () { return Kit.who() ? Kit.mine.get(heldKey(), {}) : {}; };
+  /* Hold one flag of a step. group: { item, step, flags: [ids in the step], rev, label }. Resolves when the step has
+     been handed in (if this completed it), otherwise at once. */
+  Kit.hold = function (group, flag, value) {
+    var all = Kit.held(), k = group.item + ':' + group.step, h = all[k] || { item: group.item, step: group.step, flags: group.flags, rev: group.rev, label: group.label, got: {}, since: Date.now() };
+    h.got[flag] = value; all[k] = h; Kit.mine.set(heldKey(), all);
+    return Kit.sweepHeld();
+  };
+  Kit.sweepHeld = function () {
+    var all = Kit.held(), who = Kit.who(), jobs = [];
+    if (!who || !Kit.me()) return Promise.resolve();
+    Object.keys(all).forEach(function (k) {
+      var h = all[k], want = h.flags.filter(function (f) { return !Kit.mine.get('sent:' + h.item + ':' + f + ':' + who, null); });
+      var ready = want.every(function (f) { return h.got[f] != null; }) || Date.now() - h.since > 600000;
+      var mine = {}; Object.keys(h.got).forEach(function (f) { if (want.indexOf(f) >= 0) mine[f] = h.got[f]; });
+      if (!ready || !Object.keys(mine).length) { if (!Object.keys(mine).length) { delete all[k]; Kit.mine.set(heldKey(), all); } return; }
+      delete all[k]; Kit.mine.set(heldKey(), all);   // from here it is the outbox's to deliver
+      jobs.push(Kit.submit(el('div'), { kind: 'flag', item: h.item, part: h.step, parts: Object.keys(mine), data: { rev: h.rev, flags: mine } }, h.label));
+    });
+    return Promise.all(jobs);
+  };
+
   function hhmm(t) { var d = new Date(t); return isNaN(d) ? String(t) : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
 
   /* ---------- Reference sheets: shared, printable fact sheets (registered by kit/ref-*.js) ---------- */

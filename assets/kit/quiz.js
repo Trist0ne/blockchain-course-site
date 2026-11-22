@@ -22,7 +22,8 @@
       if (!start) return;
       var storeKey = 'quiz:' + Q.id + ':' + Kit.who(), sentKey = 'sent:' + Q.id + '::' + Kit.who();
       var local = Kit.mine.get(sentKey, null), prior = start.prior;
-      var locked = !!(prior || local);
+      var waiting = Kit.outbox().filter(function (e) { return e.item === Q.id; })[0] || null;   // handed in here, not yet received by the class
+      var locked = !!(prior || local || waiting);
       var answers = prior && prior.data && prior.data.answers ? JSON.parse(JSON.stringify(prior.data.answers)) : Kit.mine.get(storeKey, {});
       var unknown = !!(prior && !(prior.data && prior.data.answers) && !Object.keys(Kit.mine.get(storeKey, {})).length);   // handed in, but no copy we can read
       function save() { if (!locked) Kit.mine.set(storeKey, answers); }
@@ -87,14 +88,20 @@
       var out = el('div'), box = el('section', { class: 'panel', id: 'quiz-submit' });
       main.append(box);
 
-      /* Send (or send again, if the class could not be reached the first time). The answers are fixed from the first try. */
+      /* Hand in. The answers are fixed from this moment, whether or not the class can be reached right now. */
       function send(btn) {
         btn.disabled = true; lock();
         return Kit.submit(out, payload(), Q.title).then(function (r) {
           if (r && r.sent) { btn.remove(); review({ ref: r.ref, time: new Date().toISOString() }, true); }
-          else if (r) { Kit.mine.set(sentKey, { ref: 'by hand', at: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), byHand: true }); btn.disabled = false; btn.textContent = 'Try sending again'; }
+          else if (r && r.queued) { btn.remove(); pending(true); }
           else btn.disabled = false;
         });
+      }
+      /* Handed in on this computer and waiting in the outbox: it sends by itself, and this page says so when it has. */
+      function pending(justNow) {
+        box.replaceChildren(el('h2', { text: 'Your hand-in' }), el('div', { class: 'callout warn', id: 'quiz-waiting' }, el('b', { text: 'Not received by the class yet. ' }), 'Your answers are fixed and saved on this computer. They will be sent by itself as soon as the class can be reached.'),
+          justNow ? out : el('div', { class: 'btn-row' }, el('button', { class: 'btn primary', type: 'button', text: 'Send it now', onclick: function () { Kit.flushOutbox(); } }), el('a', { class: 'btn', href: Kit.base + '../start.html', text: '← Back to your course home' })));
+        document.addEventListener('kit-sent', function on(ev) { if (ev.detail.item === Q.id) { document.removeEventListener('kit-sent', on); review({ ref: ev.detail.ref, time: new Date().toISOString() }, false); } });
       }
       /* Review: what was handed in, and once the quiz is closed and graded, which questions were right. */
       function review(rec, justNow) {
@@ -117,12 +124,8 @@
       }
 
       if (prior) return review(prior, false);
-      if (local && !local.byHand) return review({ ref: local.ref, time: null }, false);
-      if (local && local.byHand) {   // the class could not be reached when it was handed in on this computer
-        var again = el('button', { class: 'btn primary', type: 'button', text: 'Send it now', onclick: function () { send(again); } });
-        box.replaceChildren(el('h2', { text: 'Your hand-in' }), el('div', { class: 'callout warn' }, el('b', { text: 'Not received by the class yet. ' }), 'Your answers are fixed. Send them now, or give your instructor the code you copied.'), el('div', { class: 'btn-row' }, again), out);
-        return;
-      }
+      if (local) return review({ ref: local.ref, time: null }, false);
+      if (waiting) return pending(false);
       var warn = el('div'), confirmRow = el('div', { class: 'btn-row' });
       var btn = el('button', { class: 'btn primary', type: 'button', text: 'Submit quiz', onclick: function () {
         var missing = Q.questions.filter(function (q) {

@@ -10,6 +10,9 @@
      ref:   'bitcoin-tx'          a reference sheet id (Kit.REF), optional;  refPage: its printable page
      bench: { ops: ['sha256', 'reverse', 'keccak256'], text: true, slice: true, number: true, append: true, shelf: true }   or omitted
      tools: [ function (variant, api) -> element ]     extra instruments for this challenge, optional
+     steps: [ { id: 's1', title, flags: ['f1', 'f2'] } ]   optional: flags handed in together as one record when the step is
+                                  complete. A long lab should group its flags: every hand-in in the class counts against
+                                  one hourly limit on writes, so a lab of twelve flags should be three or four steps
      pick:  function (room, who) -> variant            the student's own variant; must depend on nothing else
      variantLabel: function (variant) -> text
      flags: [ {
@@ -97,7 +100,7 @@
 
     Kit.signIn().then(function () { return Kit.gateItem(L.id); }).then(function (gate) {
       if (gate === 'locked') return;
-      var who = Kit.who(), v = L.pick(Kit.room(), who), bench = null, loads = [];
+      var who = Kit.who(), v = L.pick(Kit.room(), who), bench = null, loads = [], solvers = {};
       var H = function (x) { return typeof x === 'function' ? x(v) : x; };
 
       function artifactBlock(a, n, k) {
@@ -192,7 +195,7 @@
         var debrief = el('div', { id: 'debrief' + n, hidden: true },
           f.debrief ? el('div', { html: f.debrief }) : null,
           f.general ? [el('h3', { text: 'Say it to a general' }), el('p', { class: 'note' }, el('b', { text: 'One sentence' }), f.general)] : null,
-          after, el('h3', { text: 'Submit for credit' }), submit);
+          after, el('h3', { text: 'Handed in' }), submit);
         function judge(raw) {
           var bad = formatProblem(f, raw);
           if (bad) return Promise.resolve({ ok: false, msg: bad });
@@ -203,19 +206,37 @@
           });
         }
         function solved(value, fresh) {
-          msg.replaceChildren(el('div', { class: 'callout ok' }, el('b', { text: fresh ? 'Correct. ' : 'Solved. ' }), 'Flag ' + n + ' is right. Submit it below so it counts.'));
+          msg.replaceChildren(el('div', { class: 'callout ok' }, el('b', { text: fresh ? 'Correct. ' : 'Solved. ' }), 'Flag ' + n + ' is right. It is handed in for you: there is nothing to press.'));
           input.value = value; debrief.hidden = false; if (det) det.open = true;
           if (f.after) after.innerHTML = f.after(v, value); else after.hidden = true;
-          Kit.submitButton(submit, L.title + ', flag ' + n, function () { return { kind: 'flag', item: L.id, data: { rev: L.rev, flag: f.id, value: value } }; }, f.id);
+          var step = (L.steps || []).filter(function (st) { return st.flags.indexOf(f.id) >= 0; })[0];
+          if (!step || step.flags.length < 2) Kit.handInOnce(submit, L.title + ', flag ' + n, function () { return { kind: 'flag', item: L.id, data: { rev: L.rev, flag: f.id, value: value } }; }, f.id);
+          else {
+            /* This flag belongs to a step that is handed in as one record, when the step is complete. */
+            var show = function () {
+              var sent = Kit.mine.get('sent:' + L.id + ':' + f.id + ':' + who, null);
+              submit.replaceChildren(el('div', { class: 'btn-row', style: 'margin-top:0' }, sent ? el('span', { class: 'solved-badge', text: 'Submitted ✓ earlier (' + sent.ref + ', ' + sent.at + ')' })
+                : el('span', { class: 'muted small', id: 'held' + n, text: 'Saved. It is handed in together with the rest of this step (' + step.flags.length + ' flags), or in ten minutes, whichever comes first.' })));
+              return !!sent;
+            };
+            if (!show()) Kit.myRecords().then(function (m) {
+              var it = m.items[L.id + ':' + f.id];
+              if (it) { Kit.mine.set('sent:' + L.id + ':' + f.id + ':' + who, { ref: it.ref, at: new Date(it.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }); return show(); }
+              document.addEventListener('kit-sent', function on(ev) { if (ev.detail.item === L.id && ev.detail.parts.indexOf(f.id) >= 0) { document.removeEventListener('kit-sent', on); show(); } });
+              return Kit.hold({ item: L.id, step: step.id, flags: step.flags, rev: L.rev, label: L.title + ', ' + (step.title || 'step ' + step.id) }, f.id, value).then(show);
+            });
+          }
         }
         var form = el('form', { class: 'flag-row', id: 'flag' + n + '-form' }, input, el('button', { class: 'btn primary', type: 'submit', text: 'Check' }));
-        form.addEventListener('submit', function (e) {
-          e.preventDefault();
-          judge(input.value).then(function (r) {
+        function tryValue() {
+          return judge(input.value).then(function (r) {
             if (r.ok) { Kit.mine.set(key, { value: r.value, at: new Date().toISOString() }); solved(r.value, true); }
             else msg.replaceChildren(el('div', { class: 'callout bad', text: r.msg }));
+            return r.ok;
           });
-        });
+        }
+        form.addEventListener('submit', function (e) { e.preventDefault(); tryValue(); });
+        solvers[f.id] = function (value) { input.value = value; return tryValue(); };
         var arts = f.artifacts ? f.artifacts(v) : [], blocks = [];
         arts.forEach(function (a, k) { blocks = blocks.concat(artifactBlock(a, n, k)); });
         /* One flat list: Kit.el takes a list of children, but not lists inside lists. */
@@ -253,7 +274,8 @@
         main.append(ref);
       }
       if (L.bench) { bench = buildBench(); main.append(bench.panel); if (loads[0]) bench.set(loads[0].bytes); }
-      (L.tools || []).forEach(function (t) { main.append(t(v, { el: el, bench: bench, Kit: Kit })); });
+      /* A tool can claim a flag itself (api.solve('f2', value)) when the work is something done, not something typed. */
+      (L.tools || []).forEach(function (t) { main.append(t(v, { el: el, bench: bench, Kit: Kit, solve: function (flag, value) { return solvers[flag] ? solvers[flag](value) : Promise.resolve(false); } })); });
       sections.slice(1).forEach(function (s) { main.append(s); });
     });
   };

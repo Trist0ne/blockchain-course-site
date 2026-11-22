@@ -24,6 +24,7 @@
     lede: 'A wallet shows a prompt: send 0 ETH to a contract, plus a line of hex. People press Confirm on prompts like this every day. Everything that matters is in the hex.',
     real: 'The contract address is the real Tether USD (USDT) token on Ethereum, which uses 6 decimals. The data is encoded exactly as Ethereum encodes a contract call, and the hashing is real Keccak-256. The shortcut: this call was made up for you and was never sent.',
     ref: 'eth-abi', refPage: '../../ref/ethereum.html',
+    steps: [{ id: 'core', title: 'the call', flags: ['f1', 'f2'] }],   // the two core flags are handed in as one record
     bench: { ops: ['keccak256'], text: true, textPlaceholder: 'e.g. burn(uint256)', slice: true, number: true },
     candidates: CANDIDATES, selector: selector, build: build,
     pick: function (room, who) { return build(room, who); },

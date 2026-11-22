@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ethereum &quot;Mining&quot;, PoS, and Security</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/ethereum/02-EF-ethereum_mining_pos_and_security.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="ef-02" data-code="02-EF" data-src="f9b30db6b334de48" data-slides="23">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section VII: Ethereum Framework · Lesson 02-EF</p><h1>Ethereum &quot;Mining&quot;, PoS, and Security</h1></div></section>
+<section class="slide" id="agenda"><h2 class="slide-title">Agenda</h2><div class="slide-body">
+<ul>
+<li>Today we explore how Ethereum organizes data, proposes blocks, and reaches agreement.<br />
+</li>
+<li>We’ll trace the shift from Proof of Work “mining” to Proof of Stake “validation.”<br />
+</li>
+<li>Topics: block structure and headers, validator duties and rewards, and how consensus ensures shared state.<br />
+</li>
+<li>Security and incentives are part of the story — they explain <em>why</em> these mechanisms work under pressure.</li>
+</ul>
+</div></section>
+<section class="slide" id="the-ethereum-operational-framework"><h2 class="slide-title">The Ethereum Operational Framework</h2><div class="slide-body">
+<div style="font-size: 0.70em;">
+<div class="columns">
+<div class="column" style="width:50%;">
+<ul>
+<li><p>Ethereum can be considered a global, append-only state machine shared by peers.</p></li>
+<li><p>Anyone can submit a transaction; validators propose blocks and attesters verify and accept.</p></li>
+<li><p>The chain with the most cumulative <em>attestation weight</em> is the canonical history.</p></li>
+<li><p>Ownership is control of private keys (EOAs and contract accounts).</p></li>
+<li><p>Incentives fund security and honest participation.</p></li>
+</ul>
+</div><div class="column" style="width:50%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 184.38 448.40" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:245px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 444.4)">
+<g id="node1" class="node">
+<path fill="#eef2f7" stroke="#9ba8b7" stroke-width="1.2" d="M138.46,-440.4C138.46,-440.4 39.51,-440.4 39.51,-440.4 33.51,-440.4 27.51,-434.4 27.51,-428.4 27.51,-428.4 27.51,-413.2 27.51,-413.2 27.51,-407.2 33.51,-401.2 39.51,-401.2 39.51,-401.2 138.46,-401.2 138.46,-401.2 144.46,-401.2 150.46,-407.2 150.46,-413.2 150.46,-413.2 150.46,-428.4 150.46,-428.4 150.46,-434.4 144.46,-440.4 138.46,-440.4"/>
+<text text-anchor="middle" x="88.98" y="-424.7" font-family="Helvetica,sans-Serif" font-size="13.00">Canonical Head</text>
+<text text-anchor="middle" x="88.98" y="-409.1" font-family="Helvetica,sans-Serif" font-size="13.00">(heaviest attested)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#eef2f7" stroke="#9ba8b7" stroke-width="1.2" d="M76.57,-368.2C76.57,-368.2 17.39,-368.2 17.39,-368.2 11.39,-368.2 5.39,-362.2 5.39,-356.2 5.39,-356.2 5.39,-344.2 5.39,-344.2 5.39,-338.2 11.39,-332.2 17.39,-332.2 17.39,-332.2 76.57,-332.2 76.57,-332.2 82.57,-332.2 88.57,-338.2 88.57,-344.2 88.57,-344.2 88.57,-356.2 88.57,-356.2 88.57,-362.2 82.57,-368.2 76.57,-368.2"/>
+<text text-anchor="middle" x="46.98" y="-346.3" font-family="Helvetica,sans-Serif" font-size="13.00">User Wallet</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M77.51,-401.05C72.7,-393.2 67.04,-383.96 61.92,-375.59"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="64.12,-374.49 58.37,-369.8 59.94,-377.05 64.12,-374.49"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#eef2f7" stroke="#9ba8b7" stroke-width="1.2" d="M58.72,-287C58.72,-287 13.25,-287 13.25,-287 7.25,-287 1.25,-281 1.25,-275 1.25,-275 1.25,-263 1.25,-263 1.25,-257 7.25,-251 13.25,-251 13.25,-251 58.72,-251 58.72,-251 64.72,-251 70.72,-257 70.72,-263 70.72,-263 70.72,-275 70.72,-275 70.72,-281 64.72,-287 58.72,-287"/>
+<text text-anchor="middle" x="35.98" y="-265.1" font-family="Helvetica,sans-Serif" font-size="13.00">Mempool</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M44.6,-332.01C43.12,-321.4 41.2,-307.58 39.55,-295.68"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="42,-295.52 38.61,-288.92 37.15,-296.19 42,-295.52"/>
+<text text-anchor="middle" x="64.16" y="-306.3" font-family="Helvetica,sans-Serif" font-size="11.00">signed tx</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#eef2f7" stroke="#9ba8b7" stroke-width="1.2" d="M63.97,-192.6C63.97,-192.6 12,-192.6 12,-192.6 6,-192.6 0,-186.6 0,-180.6 0,-180.6 0,-165.4 0,-165.4 0,-159.4 6,-153.4 12,-153.4 12,-153.4 63.97,-153.4 63.97,-153.4 69.97,-153.4 75.97,-159.4 75.97,-165.4 75.97,-165.4 75.97,-180.6 75.97,-180.6 75.97,-186.6 69.97,-192.6 63.97,-192.6"/>
+<text text-anchor="middle" x="37.98" y="-176.9" font-family="Helvetica,sans-Serif" font-size="13.00">Proposer</text>
+<text text-anchor="middle" x="37.98" y="-161.3" font-family="Helvetica,sans-Serif" font-size="13.00">(Validator)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M33.83,-250.56C33.3,-245.54 32.81,-240.06 32.55,-235 31.94,-223.28 31.63,-220.3 32.55,-208.6 32.73,-206.21 32.99,-203.74 33.29,-201.27"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="35.7,-201.74 34.25,-194.47 30.85,-201.06 35.7,-201.74"/>
+<text text-anchor="middle" x="65.27" y="-218.5" font-family="Helvetica,sans-Serif" font-size="11.00">candidate set</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#eef2f7" stroke="#9ba8b7" stroke-width="1.2" d="M76.69,-108.2C76.69,-108.2 23.28,-108.2 23.28,-108.2 17.28,-108.2 11.28,-102.2 11.28,-96.2 11.28,-96.2 11.28,-84.2 11.28,-84.2 11.28,-78.2 17.28,-72.2 23.28,-72.2 23.28,-72.2 76.69,-72.2 76.69,-72.2 82.69,-72.2 88.69,-78.2 88.69,-84.2 88.69,-84.2 88.69,-96.2 88.69,-96.2 88.69,-102.2 82.69,-108.2 76.69,-108.2"/>
+<text text-anchor="middle" x="49.98" y="-86.3" font-family="Helvetica,sans-Serif" font-size="13.00">New Block</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M40.77,-153.26C42.38,-142.38 44.44,-128.53 46.2,-116.67"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="48.59,-117.24 47.2,-109.96 43.75,-116.52 48.59,-117.24"/>
+<text text-anchor="middle" x="73.8" y="-127.5" font-family="Helvetica,sans-Serif" font-size="11.00">builds block</text>
+</g>
+
+<g id="node6" class="node">
+<path fill="#eef2f7" stroke="#9ba8b7" stroke-width="1.2" d="M116.77,-39.2C116.77,-39.2 61.19,-39.2 61.19,-39.2 55.19,-39.2 49.19,-33.2 49.19,-27.2 49.19,-27.2 49.19,-12 49.19,-12 49.19,-6 55.19,0 61.19,0 61.19,0 116.77,0 116.77,0 122.77,0 128.77,-6 128.77,-12 128.77,-12 128.77,-27.2 128.77,-27.2 128.77,-33.2 122.77,-39.2 116.77,-39.2"/>
+<text text-anchor="middle" x="88.98" y="-23.5" font-family="Helvetica,sans-Serif" font-size="13.00">Full Nodes</text>
+<text text-anchor="middle" x="88.98" y="-7.9" font-family="Helvetica,sans-Serif" font-size="13.00">&amp; Attesters</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M59.82,-71.89C64.15,-64.28 69.33,-55.17 74.11,-46.76"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="76.11,-48.21 77.44,-40.91 71.85,-45.79 76.11,-48.21"/>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M107.34,-39.62C117.86,-52.53 128.98,-70.59 128.98,-89.2 128.98,-351.2 128.98,-351.2 128.98,-351.2 128.98,-366.76 121.21,-381.93 112.52,-394.03"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="110.58,-392.54 108.26,-399.58 114.47,-395.52 110.58,-392.54"/>
+<text text-anchor="middle" x="152.68" y="-225.1" font-family="Helvetica,sans-Serif" font-size="11.00">validate +</text>
+<text text-anchor="middle" x="152.68" y="-211.9" font-family="Helvetica,sans-Serif" font-size="11.00">attest</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div>
+<div class="callout-note" data-appearance="simple" style="font-size: 0.72em;">
+<p><strong>Attestation weight</strong>: the total voting power behind a block or branch, measured by how much validator stake is represented in the latest attestations supporting it.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="execution-payload-header-structure"><h2 class="slide-title">Execution Payload: Header Structure</h2><div class="slide-body">
+<div style="font-size: .8em;">
+<div class="columns">
+<div class="column" style="width:69%;">
+<ul>
+<li><strong>Execution Payload = Header + Body</strong>
+<ul>
+<li><strong>Header:</strong> commitments and metadata.<br />
+</li>
+<li><strong>Body:</strong> ordered transactions and execution data.<br />
+</li>
+</ul></li>
+<li><strong>Core header roots (Merkle–Patricia tries):</strong>
+<ul>
+<li>These are ordered, hash-linked data structures built with <code>Keccak-256</code>, so a single root commits to the exact contents and order beneath it.</li>
+<li><code>state_root</code> → commits to global state after execution.<br />
+</li>
+<li><code>transactions_root</code> → commits to ordered list of transactions.<br />
+</li>
+<li><code>receipts_root</code> → commits to execution results (status, gas, logs).<br />
+</li>
+</ul></li>
+<li><strong>Operational Fields</strong>: gas accounting, parent hash, indexing, etc.</li>
+</ul>
+<div class="callout-note" data-appearance="simple" style="font-size: 1.2em;">
+<p><strong>Keccak-256</strong> is Ethereum’s main cryptographic hash function. It is based on the <strong>Keccak sponge construction</strong>, not quite the Merkle-Damgard design used by <code>SHA-256</code>; it is closely related to but not identical with the NIST-standardized <code>SHA-3</code>.</p>
+</div>
+</div><div class="column" style="width:30%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 213.00 412.40" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:284px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 408.4)">
+<g id="clust1" class="cluster">
+<path fill="#f5f7fa" stroke="#9ba8b7" d="M20,-8C20,-8 185,-8 185,-8 191,-8 197,-14 197,-20 197,-20 197,-384.4 197,-384.4 197,-390.4 191,-396.4 185,-396.4 185,-396.4 20,-396.4 20,-396.4 14,-396.4 8,-390.4 8,-384.4 8,-384.4 8,-20 8,-20 8,-14 14,-8 20,-8"/>
+<text text-anchor="middle" x="102.5" y="-381.6" font-family="Helvetica,sans-Serif" font-size="12.00">Execution Payload</text>
+</g>
+<g id="clust2" class="cluster">
+<path fill="#eef2f7" stroke="#b0bec5" d="M28,-108C28,-108 177,-108 177,-108 183,-108 189,-114 189,-120 189,-120 189,-354 189,-354 189,-360 183,-366 177,-366 177,-366 28,-366 28,-366 22,-366 16,-360 16,-354 16,-354 16,-120 16,-120 16,-114 22,-108 28,-108"/>
+<text text-anchor="middle" x="102.5" y="-353" font-family="Helvetica,sans-Serif" font-size="10.00">Header (Commitments + Metadata)</text>
+<text text-anchor="middle" x="102.5" y="-341" font-family="Helvetica,sans-Serif" font-size="10.00">~500&#45;700 bytes</text>
+</g>
+<g id="clust3" class="cluster">
+<path fill="#eef2f7" stroke="#b0bec5" d="M57,-16C57,-16 149,-16 149,-16 155,-16 161,-22 161,-28 161,-28 161,-88 161,-88 161,-94 155,-100 149,-100 149,-100 57,-100 57,-100 51,-100 45,-94 45,-88 45,-88 45,-28 45,-28 45,-22 51,-16 57,-16"/>
+<text text-anchor="middle" x="103" y="-87" font-family="Helvetica,sans-Serif" font-size="10.00">Body (Execution Data)</text>
+<text text-anchor="middle" x="103" y="-75" font-family="Helvetica,sans-Serif" font-size="10.00">variable size</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#dce6f0" stroke="#9ba8b7" d="M122.46,-326C122.46,-326 81.54,-326 81.54,-326 75.54,-326 69.54,-320 69.54,-314 69.54,-314 69.54,-302 69.54,-302 69.54,-296 75.54,-290 81.54,-290 81.54,-290 122.46,-290 122.46,-290 128.46,-290 134.46,-296 134.46,-302 134.46,-302 134.46,-314 134.46,-314 134.46,-320 128.46,-326 122.46,-326"/>
+<text text-anchor="middle" x="102" y="-304.7" font-family="Helvetica,sans-Serif" font-size="11.00">state_root</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#dce6f0" stroke="#9ba8b7" d="M140.19,-268C140.19,-268 63.81,-268 63.81,-268 57.81,-268 51.81,-262 51.81,-256 51.81,-256 51.81,-244 51.81,-244 51.81,-238 57.81,-232 63.81,-232 63.81,-232 140.19,-232 140.19,-232 146.19,-232 152.19,-238 152.19,-244 152.19,-244 152.19,-256 152.19,-256 152.19,-262 146.19,-268 140.19,-268"/>
+<text text-anchor="middle" x="102" y="-246.7" font-family="Helvetica,sans-Serif" font-size="11.00">transactions_root</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M102,-289.59C102,-285.12 102,-280.23 102,-275.48"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="104.1,-275.72 102,-269.72 99.9,-275.72 104.1,-275.72"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#dce6f0" stroke="#9ba8b7" d="M129.79,-210C129.79,-210 74.21,-210 74.21,-210 68.21,-210 62.21,-204 62.21,-198 62.21,-198 62.21,-186 62.21,-186 62.21,-180 68.21,-174 74.21,-174 74.21,-174 129.79,-174 129.79,-174 135.79,-174 141.79,-180 141.79,-186 141.79,-186 141.79,-198 141.79,-198 141.79,-204 135.79,-210 129.79,-210"/>
+<text text-anchor="middle" x="102" y="-188.7" font-family="Helvetica,sans-Serif" font-size="11.00">receipts_root</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M102,-231.59C102,-227.12 102,-222.23 102,-217.48"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="104.1,-217.72 102,-211.72 99.9,-217.72 104.1,-217.72"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#dce6f0" stroke="#9ba8b7" d="M142.63,-152C142.63,-152 61.37,-152 61.37,-152 55.37,-152 49.37,-146 49.37,-140 49.37,-140 49.37,-128 49.37,-128 49.37,-122 55.37,-116 61.37,-116 61.37,-116 142.63,-116 142.63,-116 148.63,-116 154.63,-122 154.63,-128 154.63,-128 154.63,-140 154.63,-140 154.63,-146 148.63,-152 142.63,-152"/>
+<text text-anchor="middle" x="102" y="-130.7" font-family="Helvetica,sans-Serif" font-size="11.00">Operational Fields</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M102,-173.59C102,-169.12 102,-164.23 102,-159.48"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="104.1,-159.72 102,-153.72 99.9,-159.72 104.1,-159.72"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#dce6f0" stroke="#9ba8b7" d="M135.3,-60C135.3,-60 68.7,-60 68.7,-60 62.7,-60 56.7,-54 56.7,-48 56.7,-48 56.7,-36 56.7,-36 56.7,-30 62.7,-24 68.7,-24 68.7,-24 135.3,-24 135.3,-24 141.3,-24 147.3,-30 147.3,-36 147.3,-36 147.3,-48 147.3,-48 147.3,-54 141.3,-60 135.3,-60"/>
+<text text-anchor="middle" x="102" y="-45.3" font-family="Helvetica,sans-Serif" font-size="11.00">Transactions</text>
+<text text-anchor="middle" x="102" y="-32.1" font-family="Helvetica,sans-Serif" font-size="11.00">Execution Data</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M102,-108C102,-107.73 102,-107.45 102,-107.18"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="104.1,-107.51 102,-101.51 99.9,-107.51 104.1,-107.51"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="beacon-blocks-and-execution-payloads"><h2 class="slide-title">Beacon Blocks and Execution Payloads</h2><div class="slide-body">
+<div style="font-size: .74em;">
+<div class="columns">
+<div class="column" style="width:52%;">
+<ul>
+<li>In post-Merge Ethereum, the <strong>beacon block</strong> is the outer consensus-layer container validators propose and attest to.</li>
+<li>The <strong>execution payload</strong> resides inside that beacon block.</li>
+<li><strong>Outer fields:</strong>
+<ul>
+<li><code>slot</code> — <strong>8 bytes</strong></li>
+<li><code>proposer_index</code> — <strong>8 bytes</strong></li>
+<li><code>parent_root</code> — <strong>32 bytes</strong></li>
+<li><code>state_root</code> — <strong>32 bytes</strong></li>
+</ul></li>
+<li><strong>Body fields with fixed-size types:</strong>
+<ul>
+<li><code>randao_reveal</code> (<code>BLSSignature</code>) — <strong>96 bytes</strong></li>
+<li><code>eth1_data</code> — deposit-contract view / deposit metadata</li>
+<li><code>graffiti</code> — optional metadata, <strong>32 bytes</strong></li>
+</ul></li>
+<li><strong>Variable-size fields:</strong>
+<ul>
+<li><code>attestations</code>, <code>proposer/attester slashings</code>, <code>deposits</code>, exits, sync data</li>
+<li><code>execution_payload</code></li>
+</ul></li>
+</ul>
+</div><div class="column" style="width:54%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 218.00 668.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:291px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 664.8)">
+<g id="clust1" class="cluster">
+<path fill="#f5f7fa" stroke="#9ba8b7" d="M20,-8C20,-8 190,-8 190,-8 196,-8 202,-14 202,-20 202,-20 202,-640.8 202,-640.8 202,-646.8 196,-652.8 190,-652.8 190,-652.8 20,-652.8 20,-652.8 14,-652.8 8,-646.8 8,-640.8 8,-640.8 8,-20 8,-20 8,-14 14,-8 20,-8"/>
+<text text-anchor="middle" x="105" y="-638" font-family="Helvetica,sans-Serif" font-size="12.00">Beacon Block (Consensus Layer)</text>
+</g>
+<g id="clust2" class="cluster">
+<path fill="#eef2f7" stroke="#b0bec5" d="M63,-376.4C63,-376.4 147,-376.4 147,-376.4 153,-376.4 159,-382.4 159,-388.4 159,-388.4 159,-610.4 159,-610.4 159,-616.4 153,-622.4 147,-622.4 147,-622.4 63,-622.4 63,-622.4 57,-622.4 51,-616.4 51,-610.4 51,-610.4 51,-388.4 51,-388.4 51,-382.4 57,-376.4 63,-376.4"/>
+<text text-anchor="middle" x="105" y="-609.4" font-family="Helvetica,sans-Serif" font-size="10.00">Outer Fields</text>
+</g>
+<g id="clust3" class="cluster">
+<path fill="#eef2f7" stroke="#b0bec5" d="M55,-16C55,-16 155,-16 155,-16 161,-16 167,-22 167,-28 167,-28 167,-356.4 167,-356.4 167,-362.4 161,-368.4 155,-368.4 155,-368.4 55,-368.4 55,-368.4 49,-368.4 43,-362.4 43,-356.4 43,-356.4 43,-28 43,-28 43,-22 49,-16 55,-16"/>
+<text text-anchor="middle" x="105" y="-355.4" font-family="Helvetica,sans-Serif" font-size="10.00">Body</text>
+<text text-anchor="middle" x="105" y="-343.4" font-family="Helvetica,sans-Serif" font-size="10.00">(variable size)</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#dce6f0" stroke="#9ba8b7" d="M120,-594.4C120,-594.4 90,-594.4 90,-594.4 84,-594.4 78,-588.4 78,-582.4 78,-582.4 78,-570.4 78,-570.4 78,-564.4 84,-558.4 90,-558.4 90,-558.4 120,-558.4 120,-558.4 126,-558.4 132,-564.4 132,-570.4 132,-570.4 132,-582.4 132,-582.4 132,-588.4 126,-594.4 120,-594.4"/>
+<text text-anchor="middle" x="105" y="-579.7" font-family="Helvetica,sans-Serif" font-size="11.00">slot</text>
+<text text-anchor="middle" x="105" y="-566.5" font-family="Helvetica,sans-Serif" font-size="11.00">8 B</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#dce6f0" stroke="#9ba8b7" d="M138.91,-536.4C138.91,-536.4 71.09,-536.4 71.09,-536.4 65.09,-536.4 59.09,-530.4 59.09,-524.4 59.09,-524.4 59.09,-512.4 59.09,-512.4 59.09,-506.4 65.09,-500.4 71.09,-500.4 71.09,-500.4 138.91,-500.4 138.91,-500.4 144.91,-500.4 150.91,-506.4 150.91,-512.4 150.91,-512.4 150.91,-524.4 150.91,-524.4 150.91,-530.4 144.91,-536.4 138.91,-536.4"/>
+<text text-anchor="middle" x="105" y="-521.7" font-family="Helvetica,sans-Serif" font-size="11.00">proposer_index</text>
+<text text-anchor="middle" x="105" y="-508.5" font-family="Helvetica,sans-Serif" font-size="11.00">8 B</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M105,-557.99C105,-553.52 105,-548.63 105,-543.88"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="107.1,-544.12 105,-538.12 102.9,-544.12 107.1,-544.12"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#dce6f0" stroke="#9ba8b7" d="M129.13,-478.4C129.13,-478.4 80.87,-478.4 80.87,-478.4 74.87,-478.4 68.87,-472.4 68.87,-466.4 68.87,-466.4 68.87,-454.4 68.87,-454.4 68.87,-448.4 74.87,-442.4 80.87,-442.4 80.87,-442.4 129.13,-442.4 129.13,-442.4 135.13,-442.4 141.13,-448.4 141.13,-454.4 141.13,-454.4 141.13,-466.4 141.13,-466.4 141.13,-472.4 135.13,-478.4 129.13,-478.4"/>
+<text text-anchor="middle" x="105" y="-463.7" font-family="Helvetica,sans-Serif" font-size="11.00">parent_root</text>
+<text text-anchor="middle" x="105" y="-450.5" font-family="Helvetica,sans-Serif" font-size="11.00">32 B</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M105,-499.99C105,-495.52 105,-490.63 105,-485.88"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="107.1,-486.12 105,-480.12 102.9,-486.12 107.1,-486.12"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#dce6f0" stroke="#9ba8b7" d="M125.46,-420.4C125.46,-420.4 84.54,-420.4 84.54,-420.4 78.54,-420.4 72.54,-414.4 72.54,-408.4 72.54,-408.4 72.54,-396.4 72.54,-396.4 72.54,-390.4 78.54,-384.4 84.54,-384.4 84.54,-384.4 125.46,-384.4 125.46,-384.4 131.46,-384.4 137.46,-390.4 137.46,-396.4 137.46,-396.4 137.46,-408.4 137.46,-408.4 137.46,-414.4 131.46,-420.4 125.46,-420.4"/>
+<text text-anchor="middle" x="105" y="-405.7" font-family="Helvetica,sans-Serif" font-size="11.00">state_root</text>
+<text text-anchor="middle" x="105" y="-392.5" font-family="Helvetica,sans-Serif" font-size="11.00">32 B</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M105,-441.99C105,-437.52 105,-432.63 105,-427.88"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="107.1,-428.12 105,-422.12 102.9,-428.12 107.1,-428.12"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#dce6f0" stroke="#9ba8b7" d="M136.16,-328.4C136.16,-328.4 73.84,-328.4 73.84,-328.4 67.84,-328.4 61.84,-322.4 61.84,-316.4 61.84,-316.4 61.84,-304.4 61.84,-304.4 61.84,-298.4 67.84,-292.4 73.84,-292.4 73.84,-292.4 136.16,-292.4 136.16,-292.4 142.16,-292.4 148.16,-298.4 148.16,-304.4 148.16,-304.4 148.16,-316.4 148.16,-316.4 148.16,-322.4 142.16,-328.4 136.16,-328.4"/>
+<text text-anchor="middle" x="105" y="-313.7" font-family="Helvetica,sans-Serif" font-size="11.00">randao_reveal</text>
+<text text-anchor="middle" x="105" y="-300.5" font-family="Helvetica,sans-Serif" font-size="11.00">96 B</text>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M105,-376.4C105,-376.13 105,-375.85 105,-375.58"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="107.1,-375.91 105,-369.91 102.9,-375.91 107.1,-375.91"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#dce6f0" stroke="#9ba8b7" d="M125.47,-270.4C125.47,-270.4 84.53,-270.4 84.53,-270.4 78.53,-270.4 72.53,-264.4 72.53,-258.4 72.53,-258.4 72.53,-246.4 72.53,-246.4 72.53,-240.4 78.53,-234.4 84.53,-234.4 84.53,-234.4 125.47,-234.4 125.47,-234.4 131.47,-234.4 137.47,-240.4 137.47,-246.4 137.47,-246.4 137.47,-258.4 137.47,-258.4 137.47,-264.4 131.47,-270.4 125.47,-270.4"/>
+<text text-anchor="middle" x="105" y="-255.7" font-family="Helvetica,sans-Serif" font-size="11.00">eth1_data</text>
+<text text-anchor="middle" x="105" y="-242.5" font-family="Helvetica,sans-Serif" font-size="11.00">metadata</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M105,-291.99C105,-287.52 105,-282.63 105,-277.88"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="107.1,-278.12 105,-272.12 102.9,-278.12 107.1,-278.12"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="#dce6f0" stroke="#9ba8b7" d="M120,-212.4C120,-212.4 90,-212.4 90,-212.4 84,-212.4 78,-206.4 78,-200.4 78,-200.4 78,-188.4 78,-188.4 78,-182.4 84,-176.4 90,-176.4 90,-176.4 120,-176.4 120,-176.4 126,-176.4 132,-182.4 132,-188.4 132,-188.4 132,-200.4 132,-200.4 132,-206.4 126,-212.4 120,-212.4"/>
+<text text-anchor="middle" x="105" y="-197.7" font-family="Helvetica,sans-Serif" font-size="11.00">graffiti</text>
+<text text-anchor="middle" x="105" y="-184.5" font-family="Helvetica,sans-Serif" font-size="11.00">32 B</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M105,-233.99C105,-229.52 105,-224.63 105,-219.88"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="107.1,-220.12 105,-214.12 102.9,-220.12 107.1,-220.12"/>
+</g>
+
+<g id="node8" class="node">
+<path fill="#dce6f0" stroke="#9ba8b7" d="M132.79,-154.4C132.79,-154.4 77.21,-154.4 77.21,-154.4 71.21,-154.4 65.21,-148.4 65.21,-142.4 65.21,-142.4 65.21,-105.6 65.21,-105.6 65.21,-99.6 71.21,-93.6 77.21,-93.6 77.21,-93.6 132.79,-93.6 132.79,-93.6 138.79,-93.6 144.79,-99.6 144.79,-105.6 144.79,-105.6 144.79,-142.4 144.79,-142.4 144.79,-148.4 138.79,-154.4 132.79,-154.4"/>
+<text text-anchor="middle" x="105" y="-140.5" font-family="Helvetica,sans-Serif" font-size="11.00">Attestations /</text>
+<text text-anchor="middle" x="105" y="-127.3" font-family="Helvetica,sans-Serif" font-size="11.00">Slashings /</text>
+<text text-anchor="middle" x="105" y="-114.1" font-family="Helvetica,sans-Serif" font-size="11.00">Sync data</text>
+<text text-anchor="middle" x="105" y="-100.9" font-family="Helvetica,sans-Serif" font-size="11.00">variable</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M105,-176.14C105,-171.78 105,-166.93 105,-162"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="107.1,-162.28 105,-156.28 102.9,-162.28 107.1,-162.28"/>
+</g>
+
+<g id="node9" class="node">
+<path fill="#cfe8ff" stroke="#9ba8b7" d="M146.87,-71.6C146.87,-71.6 63.13,-71.6 63.13,-71.6 57.13,-71.6 51.13,-65.6 51.13,-59.6 51.13,-59.6 51.13,-36 51.13,-36 51.13,-30 57.13,-24 63.13,-24 63.13,-24 146.87,-24 146.87,-24 152.87,-24 158.87,-30 158.87,-36 158.87,-36 158.87,-59.6 158.87,-59.6 158.87,-65.6 152.87,-71.6 146.87,-71.6"/>
+<text text-anchor="middle" x="105" y="-57.7" font-family="Helvetica,sans-Serif" font-size="11.00">execution_payload</text>
+<text text-anchor="middle" x="105" y="-44.5" font-family="Helvetica,sans-Serif" font-size="11.00">execution block</text>
+<text text-anchor="middle" x="105" y="-31.3" font-family="Helvetica,sans-Serif" font-size="11.00">variable</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M105,-93.25C105,-88.7 105,-84 105,-79.44"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="107.1,-79.45 105,-73.45 102.9,-79.45 107.1,-79.45"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide" id="the-merge-beacon-chain-to-pos"><h2 class="slide-title">The Merge: Beacon Chain to PoS</h2><div class="slide-body">
+<div style="font-size: .8em;">
+<div style="text-align: center;">
+<p><img src="../img/eth_merge.png" style="width:78.0%" data-fig-alt="Diagram showing Ethereum&#39;s execution layer merging with the Beacon Chain&#39;s proof-of-stake consensus layer." /></p>
+</div>
+<ul>
+<li>Execution layer: transactions, accounts, smart contracts, and state.</li>
+<li>Consensus layer: handles validators, attestations, fork choice, and finality.</li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="pos-overview-validators-committees-and-clients"><h2 class="slide-title">PoS Overview: Validators, Committees, and Clients</h2><div class="slide-body">
+<div style="font-size: .8em;">
+<ul>
+<li>Join by staking <strong>32 ETH</strong> in the deposit contract on the execution layer.<br />
+</li>
+<li>Each validator runs:
+<ul>
+<li><strong>Execution client</strong> → handles transactions and state (EVM).<br />
+</li>
+<li><strong>Consensus client</strong> → runs the Consensus Layer: assigns duties, verifies blocks, manages committees and finality.<br />
+</li>
+<li><strong>Validator process</strong> → signs duties assigned by the consensus client.<br />
+</li>
+</ul></li>
+<li>Duties (execution):
+<ul>
+<li>Rarely: propose a block for a slot.<br />
+</li>
+<li>Frequently: attest within a randomly selected committee that votes on block validity and checkpoints.<br />
+</li>
+</ul></li>
+<li>Rewards for timely, correct attestations; penalties for missed or conflicting votes.<br />
+</li>
+<li><strong>Slashing</strong> burns stake for provable equivocation or surround voting.<br />
+</li>
+<li>Operational focus: client diversity, monitoring, secure key handling.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>Committee attesters earn small rewards for each timely, correct vote. Proposers receive a larger reward that includes attestation aggregation bonuses and transaction fees. Rewards are funded by new ETH issuance and priority fees paid by users.</p>
+</div>
+</div>
+</div></section>
+<section class="slide" id="slots-and-epochs"><h2 class="slide-title">Slots and Epochs</h2><div class="slide-body">
+<div style="font-size: .80em;">
+<ul>
+<li><strong>Slot</strong> = 12 seconds; at most one block proposal per slot.</li>
+<li><strong>Epoch</strong> = 32 slots (~6.4 minutes); committees reshuffle each epoch.</li>
+<li>Each slot, <strong>one committee</strong> (a subset of all validators) attests — over a full epoch, every active validator attests exactly once.</li>
+<li>Missed slots happen — liveness continues through the next proposal.</li>
+<li>Finality escalates through epoch checkpoints (Casper-FFG).</li>
+<li><strong>Per-slot lifecycle:</strong> proposer broadcasts a block (~0–4s), committee attests to it (~4s mark), attestations are <em>BLS-aggregated</em> and included in a subsequent slot’s block.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Boneh-Lynn-Shacham (BLS)</strong> signature scheme compresses the signatures of the attestors into a single compact signature, which can be verified easily.</p>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="validator-selection-randomness"><h2 class="slide-title">Validator Selection &amp; Randomness</h2><div class="slide-body">
+<div style="font-size: .95em;">
+<ul>
+<li><strong>Purpose:</strong> prevent predictability or bias in proposer and committee selection.<br />
+</li>
+<li><strong>Source:</strong> RANDAO — Ethereum’s rolling randomness mechanism for validator selection.
+<ul>
+<li>In each slot, the proposer includes a <code>randao_reveal</code> in the beacon block.</li>
+<li>Over time, those proposer reveals update the shared randomness seed used by the consensus layer.</li>
+</ul></li>
+<li><strong>Assignments:</strong>
+<ul>
+<li>The Consensus Layer uses the seed to shuffle validators and assign proposers/committees per slot.<br />
+</li>
+<li>Selection is weighted by effective balance and fixed only shortly before duties are performed.</li>
+</ul></li>
+<li><strong>Incentives:</strong>
+<ul>
+<li>Missing or withholding a reveal forfeits rewards and only marginally affects the overall result.</li>
+<li>Rolling contributions from many slots make the randomness hard to steer in practice.</li>
+</ul></li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>RANDAO is stake-weighted: each validator’s influence on the random seed is proportional to their effective balance (up to 32 ETH per key), so selection probability scales with the amount of ETH staked.</p>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="randao-how-the-randomness-is-built"><h2 class="slide-title">RANDAO: How the Randomness Is Built</h2><div class="slide-body">
+<div style="font-size: .76em;">
+<div class="columns">
+<div class="column" style="width:45%;">
+<ul>
+<li>Each slot’s proposer includes a <strong><code>randao_reveal</code></strong> in the beacon block.</li>
+<li>That reveal is a <strong>BLS signature on the current epoch number</strong>.</li>
+<li>The consensus layer <strong>mixes</strong> that reveal into the running RANDAO state.</li>
+<li>The updated seed is then reused with slot and epoch context to:
+<ul>
+<li>select future proposers</li>
+<li>shuffle validators into committees</li>
+</ul></li>
+</ul>
+<div class="callout-note" data-appearance="simple" style="font-size: 0.8em;">
+<p><strong>Contrast:</strong> some PoS systems use <strong>VRFs</strong> for private per-validator randomness; Ethereum currently uses collective <strong>RANDAO</strong> instead.</p>
+</div>
+</div><div class="column" style="width:55%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 672.29 105.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:896px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 101)">
+<g id="node1" class="node">
+<path fill="#dbeafe" stroke="#9ba8b7" stroke-width="1.1" d="M62.69,-66C62.69,-66 12,-66 12,-66 6,-66 0,-60 0,-54 0,-54 0,-42 0,-42 0,-36 6,-30 12,-30 12,-30 62.69,-30 62.69,-30 68.69,-30 74.69,-36 74.69,-42 74.69,-42 74.69,-54 74.69,-54 74.69,-60 68.69,-66 62.69,-66"/>
+<text text-anchor="middle" x="37.34" y="-51.3" font-family="Helvetica,sans-Serif" font-size="11.00">Current Slot</text>
+<text text-anchor="middle" x="37.34" y="-38.1" font-family="Helvetica,sans-Serif" font-size="11.00">Proposer</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e0f2fe" stroke="#9ba8b7" stroke-width="1.1" d="M246.47,-66C246.47,-66 126.69,-66 126.69,-66 120.69,-66 114.69,-60 114.69,-54 114.69,-54 114.69,-42 114.69,-42 114.69,-36 120.69,-30 126.69,-30 126.69,-30 246.47,-30 246.47,-30 252.47,-30 258.47,-36 258.47,-42 258.47,-42 258.47,-54 258.47,-54 258.47,-60 252.47,-66 246.47,-66"/>
+<text text-anchor="middle" x="186.58" y="-51.3" font-family="Helvetica,sans-Serif" font-size="11.00">`randao_reveal`</text>
+<text text-anchor="middle" x="186.58" y="-38.1" font-family="Helvetica,sans-Serif" font-size="11.00">(BLS&#45;signs current epoch)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M75.12,-48C84.62,-48 95.23,-48 106,-48"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="105.75,-50.45 112.75,-48 105.75,-45.55 105.75,-50.45"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fef3c7" stroke="#9ba8b7" stroke-width="1.1" d="M378.27,-66C378.27,-66 310.47,-66 310.47,-66 304.47,-66 298.47,-60 298.47,-54 298.47,-54 298.47,-42 298.47,-42 298.47,-36 304.47,-30 310.47,-30 310.47,-30 378.27,-30 378.27,-30 384.27,-30 390.27,-36 390.27,-42 390.27,-42 390.27,-54 390.27,-54 390.27,-60 384.27,-66 378.27,-66"/>
+<text text-anchor="middle" x="344.37" y="-51.3" font-family="Helvetica,sans-Serif" font-size="11.00">Mix Into</text>
+<text text-anchor="middle" x="344.37" y="-38.1" font-family="Helvetica,sans-Serif" font-size="11.00">RANDAO State</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M258.64,-48C269.17,-48 279.87,-48 289.96,-48"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="289.76,-50.45 296.76,-48 289.76,-45.55 289.76,-50.45"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#dcfce7" stroke="#9ba8b7" stroke-width="1.1" d="M510.08,-66C510.08,-66 442.27,-66 442.27,-66 436.27,-66 430.27,-60 430.27,-54 430.27,-54 430.27,-42 430.27,-42 430.27,-36 436.27,-30 442.27,-30 442.27,-30 510.08,-30 510.08,-30 516.08,-30 522.08,-36 522.08,-42 522.08,-42 522.08,-54 522.08,-54 522.08,-60 516.08,-66 510.08,-66"/>
+<text text-anchor="middle" x="476.17" y="-51.3" font-family="Helvetica,sans-Serif" font-size="11.00">Updated</text>
+<text text-anchor="middle" x="476.17" y="-38.1" font-family="Helvetica,sans-Serif" font-size="11.00">RANDAO Seed</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M390.77,-48C400.71,-48 411.32,-48 421.54,-48"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="421.51,-50.45 428.51,-48 421.51,-45.55 421.51,-50.45"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#e9d5ff" stroke="#9ba8b7" stroke-width="1.1" d="M637.31,-97C637.31,-97 589.06,-97 589.06,-97 583.06,-97 577.06,-91 577.06,-85 577.06,-85 577.06,-73 577.06,-73 577.06,-67 583.06,-61 589.06,-61 589.06,-61 637.31,-61 637.31,-61 643.31,-61 649.31,-67 649.31,-73 649.31,-73 649.31,-85 649.31,-85 649.31,-91 643.31,-97 637.31,-97"/>
+<text text-anchor="middle" x="613.19" y="-82.3" font-family="Helvetica,sans-Serif" font-size="11.00">Select Next</text>
+<text text-anchor="middle" x="613.19" y="-69.1" font-family="Helvetica,sans-Serif" font-size="11.00">Proposers</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M522.51,-58.41C537.37,-61.82 553.85,-65.61 568.59,-68.99"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="567.73,-71.31 575.1,-70.48 568.82,-66.53 567.73,-71.31"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#fde68a" stroke="#9ba8b7" stroke-width="1.1" d="M652.29,-36C652.29,-36 574.08,-36 574.08,-36 568.08,-36 562.08,-30 562.08,-24 562.08,-24 562.08,-12 562.08,-12 562.08,-6 568.08,0 574.08,0 574.08,0 652.29,0 652.29,0 658.29,0 664.29,-6 664.29,-12 664.29,-12 664.29,-24 664.29,-24 664.29,-30 658.29,-36 652.29,-36"/>
+<text text-anchor="middle" x="613.19" y="-21.3" font-family="Helvetica,sans-Serif" font-size="11.00">Shuffle Validators</text>
+<text text-anchor="middle" x="613.19" y="-8.1" font-family="Helvetica,sans-Serif" font-size="11.00">Into Committees</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#9ba8b7" d="M522.51,-37.93C532.42,-35.72 543.05,-33.36 553.4,-31.06"/>
+<polygon fill="#9ba8b7" stroke="#9ba8b7" points="553.85,-33.47 560.15,-29.56 552.79,-28.69 553.85,-33.47"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="global-randomness-randao-vdf-beacons"><h2 class="slide-title">Global Randomness: RANDAO + VDF Beacons</h2><div class="slide-body">
+<div style="font-size: .75em;">
+<ul>
+<li><strong>Why shared randomness?</strong>
+<ul>
+<li>Ethereum needs one deterministic seed that the whole consensus layer can use for proposer selection and committee rotation.</li>
+</ul></li>
+<li><strong>RANDAO’s limitation:</strong>
+<ul>
+<li>the <em>last revealer</em> can withhold its contribution and marginally bias the final seed.</li>
+</ul></li>
+<li><strong>Why this is tolerated in practice:</strong>
+<ul>
+<li>withholding forfeits rewards</li>
+<li>the effect is diluted by many prior contributions</li>
+</ul></li>
+<li><strong>VDF idea:</strong>
+<ul>
+<li>a <strong>Verifiable Delay Function</strong> would add a time-locked step that is easy to verify but impossible to compute early.</li>
+<li>that would reduce or eliminate the last-revealer advantage.</li>
+</ul></li>
+<li><strong>Mainnet status:</strong> VDFs are still a proposed improvement, not part of Ethereum mainnet today.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>RANDAO is Ethereum’s production randomness mechanism today. VDFs are mentioned because they address bias at the margin, not because they are already deployed.</p>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="forks-in-proof-of-stake-causes-and-resolution"><h2 class="slide-title">Forks in Proof of Stake — Causes and Resolution</h2><div class="slide-body">
+<div style="font-size: .85em;">
+<ul>
+<li>Each slot has one designated proposer, but messages spread asynchronously.<br />
+</li>
+<li><strong>Short-term forks</strong> occur when:
+<ul>
+<li>The proposer’s block arrives late or not at all.<br />
+</li>
+<li>Attestations propagate in different orders across validators.<br />
+</li>
+<li>A proposer equivocates or two blocks exist for the same slot.<br />
+</li>
+</ul></li>
+<li><strong>Result:</strong>
+<ul>
+<li>Validators may temporarily disagree on the chain head.<br />
+</li>
+</ul></li>
+<li><strong>Resolution:</strong>
+<ul>
+<li>Attestations serve as stake-weighted votes for blocks.<br />
+</li>
+<li>The fork-choice rule — <strong>LMD-GHOST (Latest-Message-Driven Greedy Heaviest-Observed SubTree)</strong> — follows the branch with the most recent total attestation weight.<br />
+</li>
+<li>As new votes arrive, honest nodes converge on the same head.</li>
+</ul></li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>LMD-GHOST starts at the last justified checkpoint and walks down the block tree, choosing whichever child has the greatest stake weight from validators’ <em>latest</em> attestations. Each validator counts once (their most recent vote only). The result is a head that reflects the current majority view, not historical block count.</p>
+</div>
+</div>
+</div></section>
+<section class="slide" id="gasper-fork-choice-finality"><h2 class="slide-title">Gasper: Fork Choice + Finality</h2><div class="slide-body">
+<div style="font-size: .67em;">
+<ul>
+<li><strong>Gasper</strong> = the combined consensus protocol that pairs two mechanisms:
+<ul>
+<li><strong>LMD-GHOST</strong> (fork choice): picks the head by following the branch with the greatest <em>latest</em> attested stake weight.<br />
+</li>
+<li><strong>Casper-FFG</strong> (finality gadget): finalizes checkpoints once ≥ 2/3 of total stake votes consistently across epochs.<br />
+</li>
+</ul></li>
+<li><strong>Finality sequence</strong> (across two epochs):
+<ol type="1">
+<li>Validators cast source→target votes; when ≥ 2/3 of stake supports a checkpoint link, the target becomes <strong>justified</strong>.</li>
+<li>When the <em>next</em> epoch’s checkpoint is also justified, the earlier checkpoint becomes <strong>finalized</strong> — economically irreversible.</li>
+</ol></li>
+<li><strong>Safety:</strong> reverting a finalized checkpoint implies ≥ 1/3 of total stake must be slashed.<br />
+</li>
+<li><strong>Liveness:</strong> inactivity leak gradually restores a supermajority after major outages.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>Gasper is the name for Ethereum’s full consensus protocol. Casper-FFG is one component within it — the finality gadget. LMD-GHOST is the other — the fork-choice rule. “Casper” alone is sometimes used loosely to refer to either the gadget or the broader system, but precisely it means the FFG finality layer only.</p>
+</div>
+</div>
+</div></section>
+<section class="slide" id="double-spending-threat-model"><h2 class="slide-title">Double Spending (Threat Model)</h2><div class="slide-body">
+<div style="font-size: .75em;">
+<ul>
+<li><strong>Goal:</strong> accept payment, then publish a conflicting history that erases it.</li>
+<li><strong>PoW:</strong> requires sustained majority hash power to outpace the honest chain.</li>
+<li><strong>PoS:</strong> requires majority stake <em>and</em> willingness to be slashed — post-finality rewrites destroy at least 1/3 of bonded stake.</li>
+<li>Mainnet double-spends are economically impractical under PoS finality.</li>
+<li><strong>Settlement policy:</strong> wait for finalized checkpoints (PoS) rather than counting confirmations (PoW).</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Real-world example:</strong> Ethereum Classic suffered a series of 51% double-spend attacks in 2020, where attackers rented enough hash power to reorganize thousands of blocks and reverse exchange deposits worth millions of dollars. This was feasible because ETC’s total hash rate was low enough to rent temporarily. Ethereum mainnet’s shift to PoS changes the calculus entirely — an attacker cannot rent stake and walk away; they must own it and accept that it will be slashed.</p>
+</div>
+</div>
+</div></section>
+<section class="slide" id="balance-attack"><h2 class="slide-title">Balance Attack</h2><div class="slide-body">
+<div style="font-size: .75em;">
+<ul>
+<li><strong>Goal:</strong> split the network into sub-partitions with roughly equal validator weight.</li>
+<li>Delay cross-partition communication so each side builds its own fork and accumulates attestations independently.</li>
+<li>Selectively release withheld blocks or attestations to one side, making its branch heavier under LMD-GHOST; the other side reorgs.</li>
+<li>Exploits <strong>propagation asymmetry</strong> rather than absolute majority of stake.</li>
+<li>Defenses: diverse peering, fast relay networks, client diversity, monitoring for unusual reorg depth or participation dips.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Real-world relevance:</strong> In 2023, researchers demonstrated balancing-style attacks against LMD-GHOST in testnet conditions, exploiting proposer boost timing and attestation delays. Ethereum responded with <strong>proposer boost</strong> — a fork-choice weight bonus given to the current slot’s block when seen on time — which raises the cost of these attacks significantly. The episode illustrates that consensus security depends on network plumbing, not just cryptography.</p>
+</div>
+</div>
+</div></section>
+<section class="slide" id="security-risk-smart-contract-code-reuse"><h2 class="slide-title">Security Risk: Smart Contract Code Reuse</h2><div class="slide-body">
+<ul>
+<li>Less than 10% of contracts are unique bytecode; templates dominate deployments.</li>
+<li>One vulnerability can impact thousands of dependent contracts (e.g., Parity multisig 2017).</li>
+<li>Attackers fingerprint bytecode families to find mass-exploitation targets.</li>
+<li>Mitigations: audited libraries, invariants, upgrade discipline, runtime guards.</li>
+<li>Encourage diversity in implementations and proactive upgrade playbooks.</li>
+</ul>
+</div></section>
+<section class="slide" id="real-world-ethereum-security-examples"><h2 class="slide-title">Real-World Ethereum Security Examples</h2><div class="slide-body">
+<div style="font-size: .60em;">
+<ul>
+<li><p><strong>The DAO Hack (June 2016):</strong> A reentrancy vulnerability in The DAO’s smart contract allowed an attacker to drain ~$60M in ETH by repeatedly calling the withdraw function before balances updated. The Ethereum community responded with a controversial hard fork, splitting the chain into Ethereum (ETH) and Ethereum Classic (ETC).</p></li>
+<li><p><strong>Parity Multisig Wallet (July 2017):</strong> Hackers exploited a visibility bug in the Parity multisig library contract, stealing ~$31M in ETH from multiple wallets. A second Parity incident in November 2017 accidentally froze over 500,000 ETH when a user triggered a self-destruct on the shared library — a textbook case of code-reuse risk.</p></li>
+<li><p><strong>Consensus Layer Finality Delays (May 2023):</strong> On May 11–12, Ethereum mainnet experienced two finality delays — the first lasting ~25 minutes, the second over an hour. Consensus client bugs (Prysm, Teku) caused validators to go offline, dropping participation below the 2/3 threshold needed for finalization. Blocks continued to be produced (liveness held), and the network self-recovered without intervention. Client diversity was credited as the key reason the outage stayed brief.</p></li>
+<li><p><strong>Ethereum Classic 51% Attacks (2020):</strong> ETC suffered multiple double-spend attacks where attackers rented enough hash power to reorganize thousands of blocks and reverse exchange deposits. This contrast illustrates why Ethereum’s move to PoS — where stake cannot be rented and walked away from — fundamentally changes the attacker’s calculus.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="nothing-at-stake"><h2 class="slide-title">Nothing-at-Stake</h2><div class="slide-body">
+<div style="font-size: .60em;">
+<ul>
+<li><strong>Risk:</strong> in naive PoS, validators could sign multiple competing forks at no cost, undermining convergence.</li>
+<li><strong>Defense:</strong> Ethereum enforces <strong>objective slashing</strong> for three offenses:
+<ol type="1">
+<li><strong>Double proposal</strong> — two blocks for the same slot.</li>
+<li><strong>Double attestation</strong> — two votes for the same target epoch with different chain heads.</li>
+<li><strong>Surround vote</strong> — an attestation whose source→target range encloses or is enclosed by a prior vote.</li>
+</ol></li>
+<li>Evidence is purely cryptographic — two conflicting signatures from the same key. Intent is irrelevant once proofs exist.</li>
+<li><strong>Correlation penalty:</strong> slashing severity scales with how many validators are slashed in the same ~18-day window. An isolated mistake costs ~1 ETH; a coordinated attack involving ≥1/3 of stake can burn the full 32 ETH per validator.</li>
+<li>Slashing events propagate to all clients; anyone can submit evidence, making enforcement decentralized.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>All known mainnet slashings have been accidental — misconfigured backups causing double attestations (Staked, 2021; Bitcoin Suisse, 2023). No intentional equivocation has occurred, suggesting the penalty structure deters it effectively.</p>
+</div>
+</div>
+</div></section>
+<section class="slide" id="finality-delay"><h2 class="slide-title">Finality Delay</h2><div class="slide-body">
+<div style="font-size: .65em;">
+<ul>
+<li><strong>May 11–12, 2023:</strong> Ethereum mainnet experienced its first finality delays — consensus client bugs (Prysm, Teku) overloaded validators, dropping participation below the 2/3 threshold needed to finalize checkpoints.
+<ul>
+<li>First incident: ~25 minutes (4 epochs without finality).</li>
+<li>Second incident: over an hour (9 epochs), triggering the <strong>inactivity leak</strong> penalty.</li>
+</ul></li>
+<li><strong>What kept working:</strong> blocks continued to be proposed and transactions processed — liveness was never lost, only finality paused.</li>
+<li><strong>What recovered it:</strong> client diversity meant unaffected clients (e.g., Lighthouse) kept attesting. The inactivity leak gradually penalized offline validators, restoring the 2/3 supermajority. No manual intervention was required.</li>
+<li><strong>Operational lesson:</strong> exchanges, bridges, and high-value services should pause large settlements when finality stalls and resume only after consecutive finalized epochs.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>The May 2023 incidents validated Ethereum’s design under stress: the protocol distinguished between liveness (blocks keep coming) and safety (finality locks history), degraded gracefully, and self-healed. The community credited <strong>client diversity</strong> as the primary reason both outages stayed brief.</p>
+</div>
+</div>
+</div></section>
+<section class="slide" id="censorship"><h2 class="slide-title">Censorship</h2><div class="slide-body">
+<div style="font-size: .65em;">
+<ul>
+<li><strong>Real-world case — OFAC / Tornado Cash (2022–2023):</strong> After the U.S. Treasury sanctioned Tornado Cash in August 2022, the dominant relay (Flashbots) began filtering out sanctioned transactions. By November 2022, ~77% of relayed blocks excluded those transactions.</li>
+<li><strong>Community response:</strong> Flashbots open-sourced its relay code; non-censoring relays (Ultra Sound, Agnostic, bloXroute) launched. By mid-2023, censored blocks dropped to ~30%. Vitalik Buterin publicly supported treating sustained base-layer censorship as a slashable attack.</li>
+<li><strong>Takeaway:</strong> Ethereum’s protocol never enforced censorship — sanctioned transactions still reached the chain, just with longer delays. But the episode exposed how <strong>infrastructure centralization</strong> (few relays, few builders) can create soft censorship even in a permissionless system.</li>
+<li><strong>Proposed mitigations:</strong> inclusion lists (forcing proposers to include pending transactions), encrypted mempools, and greater relay/builder diversity.</li>
+</ul>
+<div class="callout-note" data-appearance="simple" style="font-size: 0.78em;">
+<p><strong>Builders</strong> assemble a candidate block from pending transactions, and a <strong>Relay</strong> passes that block to validators running middleware (MEV-Boost), so they can choose and propose it without seeing all transaction details first.</p>
+</div>
+</div>
+</div></section>
+<section class="slide" id="conclusion-summary-of-concepts"><h2 class="slide-title">Conclusion: Summary of Concepts</h2><div class="slide-body">
+<div style="font-size: .7em;">
+<ul>
+<li><strong>Block structure:</strong> Headers cryptographically commit to inputs (<code>transactions_root</code>), outcomes (<code>receipts_root</code>), and world state (<code>state_root</code>) — enabling verification without full re-execution.</li>
+<li><strong>PoS consensus:</strong> RANDAO randomness selects validators → committees attest in 12-second slots → LMD-GHOST picks the head → Casper-FFG finalizes checkpoints across epochs.</li>
+<li><strong>Security is layered:</strong> The DAO and Parity exploited the application layer; finality delays hit the consensus layer; balance attacks and censorship target the network layer. No single defense covers all three.</li>
+<li><strong>Defenses are economic + operational:</strong> Slashing deters equivocation, inactivity leaks restore finality, client diversity limits blast radius, and checkpoint sync blocks long-range attacks.</li>
+<li><strong>Operational takeaway:</strong> Monitor participation and finality status, settle on finalized checkpoints (not block count), and treat infrastructure concentration as a security risk.</li>
+</ul>
+</div>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-wood_ethereumsecuredecentralised_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">G. Wood, <span>“Ethereum: <span>A Secure Decentralised Generalised Transaction Ledger</span>, <span>EIP-150 Revision</span>.”</span> 2016. Available: <a href="https://ethereum.github.io/yellowpaper/paper.pdf">https://ethereum.github.io/yellowpaper/paper.pdf</a></div>
+</div>
+<div id="ref-ethereumdevelopers_proofofstakepos_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">Ethereum Developers, <span>“Proof-of-stake (<span>PoS</span>).”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://ethereum.org/developers/docs/consensus-mechanisms/pos/">https://ethereum.org/developers/docs/consensus-mechanisms/pos/</a></div>
+</div>
+<div id="ref-ethereumdevelopers_blockproposal_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">Ethereum Developers, <span>“Block proposal.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://ethereum.org/developers/docs/consensus-mechanisms/pos/block-proposal/">https://ethereum.org/developers/docs/consensus-mechanisms/pos/block-proposal/</a></div>
+</div>
+<div id="ref-ethereum.org_blocksdeveloperdocs_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">Ethereum.org, <span>“Blocks — <span>Developer Docs</span>.”</span> 2025. Available: <a href="https://ethereum.org/en/developers/docs/blocks/">https://ethereum.org/en/developers/docs/blocks/</a></div>
+</div>
+<div id="ref-l34_ethereumorg_merge_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline"><span class="nocase">ethereum.org</span>, <span>“The merge.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://ethereum.org/roadmap/merge/">https://ethereum.org/roadmap/merge/</a></div>
+</div>
+<div id="ref-ethereumorg_history_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline"><span class="nocase">ethereum.org</span>, <span>“Ethereum history.”</span> Accessed: Mar. 27, 2026. [Online]. Available: <a href="https://ethereum.org/en/history/">https://ethereum.org/en/history/</a></div>
+</div>
+<div id="ref-ethereum.org_nodesclientsdeveloper_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">Ethereum.org, <span>“Nodes and <span>Clients</span> — <span>Developer Docs</span>.”</span> 2025. Available: <a href="https://ethereum.org/en/developers/docs/nodes-and-clients/">https://ethereum.org/en/developers/docs/nodes-and-clients/</a></div>
+</div>
+<div id="ref-ethereumdevelopers_ethereumproofofstakeattack_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">Ethereum Developers, <span>“Ethereum proof-of-stake <span>Attack</span> and <span>Defense</span>.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://ethereum.org/developers/docs/consensus-mechanisms/pos/attack-and-defense/">https://ethereum.org/developers/docs/consensus-mechanisms/pos/attack-and-defense/</a></div>
+</div>
+<div id="ref-ethereum.org_smartcontractsdeveloper_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">Ethereum.org, <span>“Smart <span>Contracts</span> — <span>Developer Docs</span>.”</span> 2025. Available: <a href="https://ethereum.org/en/developers/docs/smart-contracts/">https://ethereum.org/en/developers/docs/smart-contracts/</a></div>
+</div>
+<div id="ref-siegel_understandingdaoattack_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">D. A. Siegel, <span>“Understanding the <span>DAO Attack</span>.”</span> 2016. Available: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3014782">https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3014782</a></div>
+</div>
+<div id="ref-l34_ethereum_dao_vulnerability_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">Ethereum Foundation, <span>“Critical update re: DAO vulnerability.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://blog.ethereum.org/2016/06/17/critical-update-re-dao-vulnerability">https://blog.ethereum.org/2016/06/17/critical-update-re-dao-vulnerability</a></div>
+</div>
+<div id="ref-offchain_ethereumbeaconchain_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">Beaconcha.in, <span>“Ethereum <span>Beacon Chain</span> epochs 200750–200756: <span>Finality</span> issues.”</span> Accessed: Mar. 27, 2026. [Online]. Available: <a href="https://beaconcha.in/epoch/200752">https://beaconcha.in/epoch/200752</a></div>
+</div>
+<div id="ref-hristov_ethereumvalidatorslost_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">M. Hristov, <span>“Ethereum <span>Validators Lost Over</span> $1 <span>Million</span> to <span>Prysm Bug</span>.”</span> Accessed: Mar. 27, 2026. [Online]. Available: <a href="https://beincrypto.com/ethereum-validators-lost-over-1-million-to-prysm-bug/">https://beincrypto.com/ethereum-validators-lost-over-1-million-to-prysm-bug/</a></div>
+</div>
+<div id="ref-etheralpha_clientdiversityethereum_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">Ether Alpha, <span>“Client <span>Diversity</span> | <span>Ethereum</span>.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://clientdiversity.org">https://clientdiversity.org</a></div>
+</div>
+<div id="ref-flashbotsltd_flashbots_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline">Flashbots, Ltd, <span>“Flashbots.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://www.flashbots.net">https://www.flashbots.net</a></div>
+</div>
+<div id="ref-u.s.dept.oftreasury_ustreasurysanctions_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[16] </div><div class="csl-right-inline">U.S. Dept. of Treasury, <span>“U.<span>S</span>. <span>Treasury Sanctions Notorious Virtual Currency Mixer Tornado Cash</span>,”</span> United States Government, Washington, D.C., Press Release, Aug. 2022. Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://home.treasury.gov/news/press-releases/jy0916">https://home.treasury.gov/news/press-releases/jy0916</a></div>
+</div>
+<div id="ref-l35_mevwatch_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[17] </div><div class="csl-right-inline">MEV Watch, <span>“MEV watch.”</span> Accessed: Mar. 28, 2026. [Online]. Available: <a href="https://www.mevwatch.info/">https://www.mevwatch.info/</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

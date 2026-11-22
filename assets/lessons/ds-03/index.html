@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trust and P2P</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/distributed_primitives/03-DS-trust_and_p2p.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="ds-03" data-code="03-DS" data-src="45f99a825e5f6715" data-slides="22">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section III: Distributed Systems Fundamentals · Lesson 03-DS</p><h1>Trust and P2P</h1></div></section>
+<section class="slide smaller" id="intro-the-bad-download"><h2 class="slide-title">Intro: “The Bad Download”</h2><div class="slide-body">
+<div class="columns">
+<div class="column">
+<p><img src="../img/trust_intro.png" /></p>
+</div><div class="column">
+<ul>
+<li>You need a copy of a specific training manual PDF. Your file got corrupted the night before a graded assignment</li>
+<li>You find two sources on a peer-to-peer file sharing network:
+<ul>
+<li><strong>Peer A</strong> has no download history, no ratings, and just appeared, but the file is available <em>right now</em></li>
+<li><strong>Peer B</strong> has months of activity, dozens of verified successful transfers, and multiple positive ratings, but they’re in demand and you’ll wait an estimated 30 minutes</li>
+</ul></li>
+<li>Your assignment is due in 45 minutes. Do you gamble on the unknown peer to save time, or wait for the one with a track record?</li>
+</ul>
+</div>
+</div>
+</div></section>
+<section class="slide" id="what-is-trust-in-p2p"><h2 class="slide-title">What Is “Trust” in P2P?</h2><div class="slide-body">
+<ul>
+<li><strong>Trust:</strong> expectation a peer will behave as promised</li>
+<li><strong>Reputation:</strong> summary of past behavior used to predict trust</li>
+<li><strong>Why it matters:</strong> no central authority; strangers must cooperate</li>
+</ul>
+</div></section>
+<section class="slide" id="cryptographic-vs.-social-trust"><h2 class="slide-title">Cryptographic vs. Social Trust</h2><div class="slide-body">
+<div class="column" style="width:50%;">
+<p><strong>Cryptographic trust</strong></p>
+<ul>
+<li>Verifies identity and message integrity</li>
+<li>Prevents tampering/impersonation</li>
+<li>Needs keys, signatures, certificates</li>
+</ul>
+</div>
+<div class="column" style="width:50%;">
+<p><strong>Social (behavioral) trust</strong></p>
+<ul>
+<li>Rates honesty/reliability over time</li>
+<li>Uses feedback and reputation</li>
+<li>Predicts who will deliver correctly</li>
+</ul>
+</div>
+<div class="callout-note" data-appearance="simple">
+<p>A valid signature proves who sent a message, but it says nothing about whether they will behave honestly. These layers solve separate problems.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="direct-vs.-indirect-trust"><h2 class="slide-title">Direct vs. Indirect Trust</h2><div class="slide-body">
+<ul>
+<li><strong>Direct trust:</strong> first-hand experiences with a peer
+<ul>
+<li><em>Example:</em> You’ve downloaded files from Peer A five times, and every file verified correct. Your confidence in Peer A is high.</li>
+<li><em>Strength:</em> High confidence, but limited reach. You can only rate peers you’ve personally interacted with.</li>
+</ul></li>
+<li><strong>Indirect trust:</strong> recommendations from others you trust
+<ul>
+<li><em>Example:</em> Peer B, whom you trust, vouches for Peer C, someone you’ve never met. You tentatively extend trust to C.</li>
+<li><em>Strength:</em> Extends your reach across the network, but must be discounted by the recommender’s own credibility.</li>
+</ul></li>
+<li><strong>Combining both:</strong> Use direct trust where you have it; fall back on indirect trust (weighted by recommender quality) for strangers. Direct experience should quickly override hearsay as relationships form.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="properties-of-reputation-systems"><h2 class="slide-title">Properties of Reputation Systems</h2><div class="slide-body">
+<ul>
+<li><strong>Accuracy:</strong> Scores correlate with actual future behavior; honest peers trend high, dishonest peers trend low. Scores should reflect verified outcomes, not just volume of ratings.</li>
+<li><strong>Scalability:</strong> Computation, storage, and communication costs remain manageable as the network grows. Updates should be incremental, not require global recomputation.</li>
+<li><strong>Robustness:</strong> The system resists manipulation. Sybil floods, collusion rings, and slander campaigns cannot easily distort scores. No single actor or small group can dominate the signal.</li>
+<li><strong>Bootstrap:</strong> New participants start with low or neutral trust and must earn reputation through verified interactions. This prevents free-ride entry while still allowing honest newcomers to climb.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="peertrust-how-trust-is-calculated"><h2 class="slide-title">PeerTrust: How Trust Is Calculated</h2><div class="slide-body">
+<ul>
+<li><strong>Feedback score:</strong> how satisfied peers were with past interactions.</li>
+<li><strong>Feedback scope:</strong> number of transactions behind the rating.</li>
+<li><strong>Rater credibility:</strong> weight ratings by how trustworthy the reviewer is.</li>
+<li><strong>Context factors:</strong> consider the type of transaction and the surrounding community norms.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Simplified formula:</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mi>e</mi><mi>e</mi><mi>r</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><mo>∑</mo><mi>i</mi></munder><munder><munder><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">satisfaction</mtext></munder><mo>×</mo><munder><munder><mrow><mi>C</mi><mi>r</mi><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">rater credibility</mtext></munder><mo>×</mo><munder><munder><mrow><mi>T</mi><mi>F</mi><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">context weight</mtext></munder></mrow><annotation encoding="application/x-tex">T(peer) = \sum_{i} \underbrace{S(i)}_{\text{satisfaction}} \times \underbrace{Cr(i)}_{\text{rater credibility}} \times \underbrace{TF(i)}_{\text{context weight}}</annotation></semantics></math></p>
+<p>Each rater <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>’s feedback is scaled by how credible <em>they</em> are and how relevant the transaction type is. Low-credibility raters and low-stakes transactions contribute less to the final score.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="peertrust-handling-manipulation"><h2 class="slide-title">PeerTrust: Handling Manipulation</h2><div class="slide-body">
+<p>How do PeerTrust’s factors defend against manipulation?</p>
+<ul>
+<li><strong>Credibility weighting vs. ballot stuffing:</strong> Five fake accounts all rate each other 5 stars. But none of them have established credibility, so their ratings carry near-zero weight. The inflation attempt fizzles.</li>
+<li><strong>Context sensitivity vs. reputation milking:</strong> A peer completes 50 small file transfers successfully, then delivers a corrupted critical file. The high-stakes failure is weighted far more heavily, so the score drops sharply despite the long “good” streak.</li>
+<li><strong>Feedback scope vs. thin history:</strong> A newcomer with 3 perfect ratings looks good, but 3 data points aren’t enough for confidence. PeerTrust’s scope parameter keeps scores tentative until evidence accumulates.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="eigentrust-from-local-opinions-to-global-scores"><h2 class="slide-title">EigenTrust: From Local Opinions to Global Scores</h2><div class="slide-body">
+<ul>
+<li>Begin with each peer’s <strong>local satisfaction ratios</strong> from direct interactions.</li>
+<li><strong>Normalize per rater</strong> to form a consistent trust matrix.</li>
+<li><strong>Iteratively propagate</strong> trust values through the network until scores converge and stabilize.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Simplified formula:</strong></p>
+<p>Where: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">s_{ij}</annotation></semantics></math> = net satisfaction (successful minus failed interactions between peers <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>); <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">c_{ij}</annotation></semantics></math> = normalized local trust that <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> places in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math> = the matrix of all <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">c_{ij}</annotation></semantics></math> values; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>t</mi><mo accent="true">→</mo></mover><annotation encoding="application/x-tex">\vec{t}</annotation></semantics></math> = the global trust vector; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> = iteration round.</p>
+<ol type="1">
+<li><strong>Local trust:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mfrac><mrow><mrow><mi mathvariant="normal">max</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>s</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>,</mo><mspace width="0.278em"></mspace><mn>0</mn><mo stretchy="false" form="postfix">)</mo></mrow><mrow><msub><mo>∑</mo><mi>k</mi></msub><mrow><mi mathvariant="normal">max</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>s</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo>,</mo><mspace width="0.278em"></mspace><mn>0</mn><mo stretchy="false" form="postfix">)</mo></mrow></mfrac></mrow><annotation encoding="application/x-tex">c_{ij} = \frac{\max(s_{ij},\; 0)}{\sum_k \max(s_{ik},\; 0)}</annotation></semantics></math> . Normalize each peer’s positive experiences into a probability distribution</li>
+<li><strong>Global trust:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mover><mi>t</mi><mo accent="true">→</mo></mover><mrow><mspace width="0.167em"></mspace><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo>+</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo>=</mo><msup><mi>C</mi><mi>T</mi></msup><mo>⋅</mo><msup><mover><mi>t</mi><mo accent="true">→</mo></mover><mrow><mspace width="0.167em"></mspace><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup></mrow><annotation encoding="application/x-tex">\vec{t}^{\,(k+1)} = C^T \cdot \vec{t}^{\,(k)}</annotation></semantics></math> . Iteratively propagate trust through the network until scores stabilize</li>
+<li><strong>Anchor mixing:</strong> blend in a small weight toward pre-trusted peers at each step to prevent drift</li>
+</ol>
+<p>The result is a single trust vector <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>t</mi><mo accent="true">→</mo></mover><annotation encoding="application/x-tex">\vec{t}</annotation></semantics></math> where each entry is peer <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>’s global reputation.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="eigentrust-anchors-and-collusion-resistance"><h2 class="slide-title">EigenTrust: Anchors and Collusion Resistance</h2><div class="slide-body">
+<p>How do EigenTrust’s anchors defend against manipulation?</p>
+<ul>
+<li><strong>Anchors vs. collusion:</strong> Ten nodes form a clique and rate each other highly. But trust only propagates globally if it traces back to anchor nodes, and anchors never endorsed the clique. Their mutual praise stays contained within their cluster; the rest of the network never sees high scores for them.</li>
+<li><strong>Normalization vs. flooding:</strong> Each node’s trust values are normalized to probabilities, so total influence stays bounded. A node that rates 100 peers highly doesn’t give each one more trust than a node that rates 5. Influence is spread, not amplified.</li>
+<li><strong>Low initial trust vs. rebranding:</strong> A misbehaving node discards its identity and rejoins fresh. But newcomers start with near-zero trust weight. There’s no shortcut back to influence without sustained, verified good behavior.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="peertrust-vs.-eigentrust-summary"><h2 class="slide-title">PeerTrust vs. EigenTrust: Summary</h2><div class="slide-body">
+<p>Now that we’ve examined each model individually:</p>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><strong>PeerTrust: Local / Personalized</strong></p>
+<ul>
+<li>Multi-factor: feedback score, scope, rater credibility, context</li>
+<li>Scores are <strong>per-peer and context-aware</strong>, tailored to your perspective</li>
+<li>Fast reaction to your own evidence</li>
+<li>Narrow coverage; vulnerable to echo chambers</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<p><strong>EigenTrust: Global / Network-Wide</strong></p>
+<ul>
+<li>Normalizes local trust; iterates to converge on global scores</li>
+<li><strong>Pre-trusted anchors</strong> ground the computation and resist collusion</li>
+<li>Broad coverage of the network; isolates universally bad actors</li>
+<li>Needs careful anchoring and damping</li>
+</ul>
+</div>
+</div>
+<div class="callout-note" data-appearance="simple">
+<p>Many real systems blend both: start with a global baseline (EigenTrust-style) to stay safe among strangers, then personalize with local context (PeerTrust-style) as your own interactions accumulate.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="trust-but-verify-the-complete-trust-loop"><h2 class="slide-title">Trust but Verify: The Complete Trust Loop</h2><div class="slide-body">
+<p>A complete trust decision has three steps:</p>
+<ol type="1">
+<li><strong>Cryptographic verification.</strong> Use hashes and digital signatures to confirm data integrity and sender identity. This is the crypto trust layer from earlier: it answers <em>”was this tampered with?”</em> but not <em>”is this person honest?”</em></li>
+<li><strong>Reputation-based selection.</strong> Choose peers with established track records for the task type. Use PeerTrust-style context weighting for tasks you understand, EigenTrust-style global scores for strangers.</li>
+<li><strong>Close the loop.</strong> Feed verified outcomes (good <em>and</em> bad) back into the reputation system. Verified results should carry more weight than unverified opinions, because they’re grounded in facts rather than assertions.</li>
+</ol>
+<div class="callout-note" data-appearance="simple">
+<p>This is the “trust but verify” pattern: let reputation aim you toward good peers, let verification confirm the result, then update your aim for next time.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="threats-sybil-attacks"><h2 class="slide-title">Threats: Sybil Attacks</h2><div class="slide-body">
+<p><strong>The attack:</strong> A single adversary creates many fake identities to gain outsized influence: flooding feedback, capturing neighbor slots, or surrounding a target.</p>
+<p><strong>Scale matters: 1 new identity vs. 1,000:</strong></p>
+<ul>
+<li><strong>One newcomer</strong> is straightforward, but <strong>1,000 newcomers from one attacker</strong> can overwhelm by volume: mutual endorsements, vote flooding, or neighbor capture.</li>
+</ul>
+<p><strong>How each system defends:</strong></p>
+<ul>
+<li><strong>PeerTrust:</strong> Newcomers have zero credibility, so their ratings carry near-zero weight. Even 1,000 low-credibility raters endorsing each other produce negligible score inflation. Credibility must be <em>earned</em> through verified interactions.</li>
+<li><strong>EigenTrust:</strong> Trust only propagates globally through anchor nodes. A cluster of 1k Sybils recycling praise among themselves gains no endorsement from anchors, so their trust stays contained. Normalization bounds total influence per node.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>The shared principle: <strong>influence must be earned, not manufactured.</strong> Cheap identities can flood a network, but both systems ensure those identities start with near-zero weight and can only gain influence through sustained, verified good behavior.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="threats-rebranding-attacks"><h2 class="slide-title">Threats: Rebranding Attacks</h2><div class="slide-body">
+<p><strong>The attack:</strong> A node with a bad reputation discards its identity and rejoins as a “new” participant with a clean slate.</p>
+<ul>
+<li>Unlike Sybil attacks (many identities at once), rebranding is a <em>serial</em> strategy: one identity at a time, discarded when tainted.</li>
+<li>The attacker hopes that “new” means “neutral” rather than “suspicious.”</li>
+</ul>
+<p><strong>How each system defends:</strong></p>
+<ul>
+<li><strong>PeerTrust:</strong> Newcomers start with low feedback scope (few transactions) and zero rater credibility. Even after rebranding, the attacker must complete many verified interactions before gaining meaningful influence, the same cost as the first time.</li>
+<li><strong>EigenTrust:</strong> New identities carry near-zero weight in the global trust vector. Without endorsement from anchor nodes, the rebranded identity has no shortcut to high scores. The cost of rebuilding reputation is the defense.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>The shared principle: <strong>there is no free ride for new identities.</strong> Trust must be earned through sustained, verified good behavior, making rebranding a slow and costly strategy.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="threats-collusion"><h2 class="slide-title">Threats: Collusion</h2><div class="slide-body">
+<p><strong>The attack:</strong> A group of 10 peers forms a ring. They rate each other 5 stars on every interaction and rate a competing honest peer 1 star, trying to boost themselves and bury the competition.</p>
+<p><strong>How each system defends:</strong></p>
+<ul>
+<li><strong>PeerTrust:</strong> The ring members must each have independently earned credibility before their ratings carry weight. Ten low-credibility peers rating each other produces negligible score changes. Think: 10 strangers writing each other glowing LinkedIn recommendations on day one.</li>
+<li><strong>EigenTrust:</strong> Trust only propagates globally through anchor nodes. The ring’s internal praise circulates within the cluster but never reaches anchors, so their scores stay contained. Normalization ensures that even high-volume raters can’t amplify each other beyond their bounded share.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>The shared principle: <strong>praise without external endorsement stays local.</strong> Colluders can inflate each other’s ratings, but without credibility (PeerTrust) or anchor-traced trust (EigenTrust), that inflation never reaches the broader network.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="threats-slander"><h2 class="slide-title">Threats: Slander</h2><div class="slide-body">
+<p><strong>The attack:</strong> Five malicious peers target an honest node by flooding it with false 1-star ratings after every interaction, trying to destroy its reputation.</p>
+<p><strong>How each system defends:</strong></p>
+<ul>
+<li><strong>PeerTrust:</strong> Your own direct experience with the target overrides distant negatives. If you’ve had 20 successful interactions with the target, five bad ratings from strangers barely move the needle. Credibility weighting further discounts the attackers if they lack established track records.</li>
+<li><strong>EigenTrust:</strong> The slanderers’ influence on the global trust vector is proportional to their own trust scores. If they’re low-trust nodes, their negative feedback propagates weakly. The target’s score remains anchored by endorsements that trace back to pre-trusted nodes.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>The shared principle: <strong>your own experience outweighs distant accusations.</strong> Slander fails because low-credibility attackers have limited influence, and direct positive interactions with the target carry more weight than secondhand negatives.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="threats-onoff-reputation-milking"><h2 class="slide-title">Threats: On–Off (Reputation Milking)</h2><div class="slide-body">
+<ul>
+<li><strong>Pattern:</strong> an actor builds trust through good behavior, then exploits that reputation to cheat before disappearing.</li>
+<li><strong>Mitigation:</strong> apply <strong>recency weighting</strong> so recent behavior matters most, and use <strong>anomaly detection</strong> to flag sudden shifts.</li>
+<li><strong>Accountability:</strong> penalize severe or high-impact failures more heavily to discourage short-term exploitation.</li>
+</ul>
+<p><strong>Real-world examples:</strong></p>
+<ul>
+<li><strong>Reddit karma farming:</strong> Users post harmless, crowd-pleasing content for months to accumulate karma. Once the account looks credible, they sell it or pivot to pushing spam, scams, or propaganda, exploiting the trust signals they built.</li>
+<li><strong>Gaming / social account sales:</strong> Players grind a high-level or high-reputation account in a game or social network, then sell it. The buyer leverages the reputation for malicious activity that the original owner’s history didn’t predict.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>The shared principle: <strong>trust must be renewed, not banked.</strong> Recency weighting ensures that past good behavior cannot indefinitely shield present exploitation. Recent actions always speak louder than old ones.</p>
+</div>
+</div></section>
+<section class="slide" id="key-considerations-in-system-design"><h2 class="slide-title">Key Considerations in System Design</h2><div class="slide-body">
+<ul>
+<li><strong>Self-policing:</strong> rely on decentralized mechanisms for moderation, storage, and computation.<br />
+</li>
+<li><strong>Privacy-aware:</strong> preserve user anonymity and data protection while maintaining accountability.<br />
+</li>
+<li><strong>Efficient:</strong> minimize messaging, bandwidth, and state overhead for scalability.<br />
+</li>
+<li><strong>Robust:</strong> resist Sybil, collusion, slander, and on–off attacks through cost and credibility mechanisms.<br />
+</li>
+<li><strong>Welcoming bootstrap:</strong> provide safe, fair onboarding so newcomers can build reputation gradually.</li>
+</ul>
+</div></section>
+<section class="slide" id="micro-lab-trust-simulation"><h2 class="slide-title">Micro Lab: Trust Simulation</h2><div class="slide-body">
+<p><a href="/assets/labs/trust-simulation/trust_simulation_lab.html">Open Trust Simulation Lab</a></p>
+</div></section>
+<section class="slide smaller" id="key-takeaways"><h2 class="slide-title">Key Takeaways</h2><div class="slide-body">
+<ul>
+<li><strong>Cryptography ≠ behavior:</strong> Cryptographic tools (signatures, hashes, certificates) prove identity and integrity, but they cannot predict whether a peer will act honestly. Reputation fills that gap by modeling observed outcomes over time.</li>
+<li><strong>Direct + indirect trust:</strong> Direct trust comes from your own verified experiences and is the strongest signal. Indirect trust extends your reach through recommendations, but must be weighted by the recommender’s credibility.</li>
+<li><strong>PeerTrust</strong> provides multi-factor, context-aware scoring. Feedback is weighted by rater credibility, transaction scope, and context. Scores are personalized to your perspective and update quickly.</li>
+<li><strong>EigenTrust</strong> provides anchored global reputation. Local trust values are normalized and iteratively propagated to produce network-wide scores. Pre-trusted anchors ground the computation and resist collusion.</li>
+<li><strong>Design for adversaries:</strong> Sybil attacks, collusion, slander, rebranding, and on-off exploitation are expected threats. Defend with: no free ride for newcomers, anchor-based propagation, credibility weighting, recency decay, and verification loops.</li>
+</ul>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-lixiong_peertrustsupportingreputationbased_2004" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">Li Xiong and Ling Liu, <span>“<span>PeerTrust</span>: <span>Supporting Reputation-Based Trust</span> for <span class="nocase">Peer-to-Peer Electronic Communities</span>,”</span> <em>IEEE Trans. Knowl. Data Eng.</em>, vol. 16, no. 7, pp. 843–857, July 2004, doi: <a href="https://doi.org/10.1109/TKDE.2004.1318566">10.1109/TKDE.2004.1318566</a>.</div>
+</div>
+<div id="ref-kamvar_eigentrustalgorithmreputation_2003" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">S. D. Kamvar, M. T. Schlosser, and H. Garcia-Molina, <span>“The <span>Eigentrust</span> algorithm for reputation management in <span>P2P</span> networks,”</span> in <em>Proceedings of the twelfth international conference on <span>World Wide Web</span> - <span>WWW</span> ’03</em>, Budapest, Hungary: ACM Press, 2003, p. 640. doi: <a href="https://doi.org/10.1145/775152.775242">10.1145/775152.775242</a>.</div>
+</div>
+<div id="ref-marti_trustreputationpeertopeer_2005" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">S. Marti, <span>“Trust and reputation in peer-to-peer networks,”</span> Stanford University, Palo Alto, California, USA, 2005. Available: <a href="https://crypto.stanford.edu/portia/papers/marti.pdf">https://crypto.stanford.edu/portia/papers/marti.pdf</a></div>
+</div>
+<div id="ref-douceur_sybilattack_2002" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">J. R. Douceur, <span>“The <span>Sybil Attack</span>,”</span> in <em><span>IPTPS</span> 2002</em>, 2002. doi: <a href="https://doi.org/10.1007/3-540-45748-8_24">10.1007/3-540-45748-8_24</a>.</div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

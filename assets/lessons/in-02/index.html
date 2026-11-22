@@ -1,0 +1,1201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blockchain at a Glance</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/introduction/02-IN-blockchain_at_a_glance.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="in-02" data-code="02-IN" data-src="e3be52dfcf1eb7e5" data-slides="22">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section I: Introduction · Lesson 02-IN</p><h1>Blockchain at a Glance</h1></div></section>
+<section class="slide smaller" id="the-big-picture"><h2 class="slide-title">The Big Picture</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:40%;">
+<p><img src="../img/gemini-engine-block.png" /></p>
+</div><div class="column" style="width:60%;">
+<ul>
+<li><strong>Our Goal Today:</strong> Before we dive into the deep technical concepts of this course, we need to establish a high-level frame of reference.</li>
+<li><strong>The Analogy:</strong> Think of this lesson like looking at a <strong>fully assembled car</strong>.
+<ul>
+<li>Before we take the engine apart to learn how the pistons work, it helps to see the whole vehicle drive down the road.</li>
+</ul></li>
+<li><strong>Setting Expectations:</strong> We aren’t going to build the engine today. We just want to identify the major components, learn what they are called, and see how they fit together.</li>
+</ul>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="what-is-a-blockchain"><h2 class="slide-title">What is a Blockchain?</h2><div class="slide-body">
+<ul>
+<li><strong>A Shared Reality:</strong> At its core, a blockchain is a system that allows multiple distributed participants to agree on a single, shared history of events without needing a central referee.</li>
+<li><strong>An Append-Only Ledger:</strong> It is a database that can only be added to. You cannot edit or delete past entries.</li>
+<li><strong>A State Machine:</strong> It moves from one agreed-upon “state” (e.g., Alice has 5 tokens) to the next (e.g., Alice has 2, Bob has 3) based on strict, universally enforced rules.</li>
+</ul>
+<div class="callout-note" data-appearance="minimal">
+<p><strong>Permissionless vs. Permissioned Ledgers</strong> Public blockchains (like Bitcoin) assume participants are anonymous and untrusted. However, private/permissioned blockchains are used by known entities (like a consortium of banks) who share a ledger and want mathematical guarantees of accuracy.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="the-block-in-blockchain"><h2 class="slide-title">The “Block” in Blockchain</h2><div class="slide-body">
+<ul>
+<li><strong>The Analogy:</strong> Think of a single block as a <strong>page in a ledger book</strong> or a <strong>shipping container</strong>.</li>
+<li><strong>The Purpose:</strong> Instead of processing transactions one by one, the network bundles them together into a single, organized package.</li>
+<li><strong>The Heartbeat:</strong> New blocks are sealed and added to the network at regular intervals.</li>
+<li><strong>The Contents:</strong> At a high level, a block contains a batch of approved script operations (commonly referred to as “transactions”) and a mathematical link to the past.</li>
+</ul>
+<div style="position: relative; z-index: -1; top: -150px;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 1053.35 111.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1404px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 107)">
+<g id="clust1" class="cluster">
+<path fill="lightblue" stroke="#7f7f7f" d="M20,-8C20,-8 120.94,-8 120.94,-8 126.94,-8 132.94,-14 132.94,-20 132.94,-20 132.94,-83 132.94,-83 132.94,-89 126.94,-95 120.94,-95 120.94,-95 20,-95 20,-95 14,-95 8,-89 8,-83 8,-83 8,-20 8,-20 8,-14 14,-8 20,-8"/>
+<text text-anchor="middle" x="70.47" y="-78.4" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">Block 101</text>
+</g>
+<g id="clust2" class="cluster">
+<path fill="lightblue" stroke="#7f7f7f" d="M246.1,-8C246.1,-8 347.05,-8 347.05,-8 353.05,-8 359.05,-14 359.05,-20 359.05,-20 359.05,-83 359.05,-83 359.05,-89 353.05,-95 347.05,-95 347.05,-95 246.1,-95 246.1,-95 240.1,-95 234.1,-89 234.1,-83 234.1,-83 234.1,-20 234.1,-20 234.1,-14 240.1,-8 246.1,-8"/>
+<text text-anchor="middle" x="296.57" y="-78.4" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">Block 102</text>
+</g>
+<g id="clust3" class="cluster">
+<path fill="lightblue" stroke="#7f7f7f" d="M472.2,-8C472.2,-8 573.15,-8 573.15,-8 579.15,-8 585.15,-14 585.15,-20 585.15,-20 585.15,-83 585.15,-83 585.15,-89 579.15,-95 573.15,-95 573.15,-95 472.2,-95 472.2,-95 466.2,-95 460.2,-89 460.2,-83 460.2,-83 460.2,-20 460.2,-20 460.2,-14 466.2,-8 472.2,-8"/>
+<text text-anchor="middle" x="522.68" y="-78.4" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">Block 103</text>
+</g>
+<g id="clust4" class="cluster">
+<path fill="lightblue" stroke="#7f7f7f" d="M698.31,-8C698.31,-8 799.25,-8 799.25,-8 805.25,-8 811.25,-14 811.25,-20 811.25,-20 811.25,-83 811.25,-83 811.25,-89 805.25,-95 799.25,-95 799.25,-95 698.31,-95 698.31,-95 692.31,-95 686.31,-89 686.31,-83 686.31,-83 686.31,-20 686.31,-20 686.31,-14 692.31,-8 698.31,-8"/>
+<text text-anchor="middle" x="748.78" y="-78.4" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">Block 104</text>
+</g>
+<g id="clust5" class="cluster">
+<path fill="lightblue" stroke="#7f7f7f" d="M924.41,-8C924.41,-8 1025.35,-8 1025.35,-8 1031.35,-8 1037.35,-14 1037.35,-20 1037.35,-20 1037.35,-83 1037.35,-83 1037.35,-89 1031.35,-95 1025.35,-95 1025.35,-95 924.41,-95 924.41,-95 918.41,-95 912.41,-89 912.41,-83 912.41,-83 912.41,-20 912.41,-20 912.41,-14 918.41,-8 924.41,-8"/>
+<text text-anchor="middle" x="974.88" y="-78.4" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">Block 105</text>
+</g>
+
+<g id="node1" class="node">
+<polygon fill="white" stroke="black" points="124.94,-61.8 16,-61.8 16,-16.2 124.94,-16.2 124.94,-61.8"/>
+<text text-anchor="middle" x="70.47" y="-34.8" font-family="Helvetica,sans-Serif" font-size="14.00">Transactions</text>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="white" stroke="black" points="351.05,-61.8 242.1,-61.8 242.1,-16.2 351.05,-16.2 351.05,-61.8"/>
+<text text-anchor="middle" x="296.57" y="-34.8" font-family="Helvetica,sans-Serif" font-size="14.00">Transactions</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M125.44,-39C156.95,-39 196.93,-39 230.22,-39"/>
+<polygon fill="#7f7f7f" stroke="#7f7f7f" points="230.18,-42.5 240.18,-39 230.18,-35.5 230.18,-42.5"/>
+<text text-anchor="middle" x="183.52" y="-42" font-family="Helvetica,sans-Serif" font-size="10.00"> Fingerprint of 101</text>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="white" stroke="black" points="577.15,-61.8 468.2,-61.8 468.2,-16.2 577.15,-16.2 577.15,-61.8"/>
+<text text-anchor="middle" x="522.68" y="-34.8" font-family="Helvetica,sans-Serif" font-size="14.00">Transactions</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M351.54,-39C383.05,-39 423.03,-39 456.32,-39"/>
+<polygon fill="#7f7f7f" stroke="#7f7f7f" points="456.28,-42.5 466.28,-39 456.28,-35.5 456.28,-42.5"/>
+<text text-anchor="middle" x="409.62" y="-42" font-family="Helvetica,sans-Serif" font-size="10.00"> Fingerprint of 102</text>
+</g>
+
+<g id="node4" class="node">
+<polygon fill="white" stroke="black" points="803.25,-61.8 694.31,-61.8 694.31,-16.2 803.25,-16.2 803.25,-61.8"/>
+<text text-anchor="middle" x="748.78" y="-34.8" font-family="Helvetica,sans-Serif" font-size="14.00">Transactions</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M577.64,-39C609.15,-39 649.14,-39 682.42,-39"/>
+<polygon fill="#7f7f7f" stroke="#7f7f7f" points="682.38,-42.5 692.38,-39 682.38,-35.5 682.38,-42.5"/>
+<text text-anchor="middle" x="635.73" y="-42" font-family="Helvetica,sans-Serif" font-size="10.00"> Fingerprint of 103</text>
+</g>
+
+<g id="node5" class="node">
+<polygon fill="white" stroke="black" points="1029.35,-61.8 920.41,-61.8 920.41,-16.2 1029.35,-16.2 1029.35,-61.8"/>
+<text text-anchor="middle" x="974.88" y="-34.8" font-family="Helvetica,sans-Serif" font-size="14.00">Transactions</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M803.74,-39C835.25,-39 875.24,-39 908.53,-39"/>
+<polygon fill="#7f7f7f" stroke="#7f7f7f" points="908.48,-42.5 918.48,-39 908.48,-35.5 908.48,-42.5"/>
+<text text-anchor="middle" x="861.83" y="-42" font-family="Helvetica,sans-Serif" font-size="10.00"> Fingerprint of 104</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide smaller" id="the-three-pillars"><h2 class="slide-title">The Three Pillars</h2><div class="slide-body">
+<p>A blockchain is not one single invention. It is the clever synthesis of three distinct technologies.</p>
+<ol type="1">
+<li><strong>Cryptography:</strong> Secures the data and proves identity. (Encryption, Hashes, and Digital Signatures).</li>
+<li><strong>Peer-to-Peer (P2P) Networks:</strong> Distributes the data so everyone has a copy and there is no central server to attack.</li>
+<li><strong>Consensus Mechanisms:</strong> The rules by which the network agrees on what data is valid and what should be rejected.</li>
+</ol>
+</div></section>
+<section class="slide smaller" id="pillar-1-cryptography"><h2 class="slide-title">Pillar 1: Cryptography</h2><div class="slide-body">
+<ul>
+<li><strong>Encryption (Symmetric &amp; Asymmetric):</strong> The math used to scramble data for confidentiality. While blockchains generally do not encrypt the ledger itself, these concepts are the fundamental building blocks for digital signatures and advanced privacy features.</li>
+<li><strong>Digital Signatures (Public/Private Keys):</strong> A way to mathematically prove that <em>you</em> authorized an action without revealing your secret password.</li>
+<li><strong>Cryptographic Hashes:</strong> Think of this as a digital fingerprint. Any piece of data can be crushed down into a unique string of letters and numbers. If the data changes even slightly, the fingerprint changes completely.</li>
+<li><strong>The Role:</strong> Cryptography doesn’t hide the data (most blockchains are entirely public). Instead, it makes the data <strong>tamper-evident</strong> and <strong>unforgeable</strong>.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="pillar-2-peer-to-peer-networks"><h2 class="slide-title">Pillar 2: Peer-to-Peer Networks</h2><div class="slide-body">
+<ul>
+<li><strong>No Central Server:</strong> There is no “blockchain.com” server running the network.</li>
+<li><strong>Nodes:</strong> Thousands of individual computers (nodes) run the blockchain software.</li>
+<li><strong>Gossip Protocol:</strong> When one node hears about a new transaction, it shouts it to its neighbors, who shout it to their neighbors, until the whole world knows.</li>
+</ul>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 1037.92 352.90" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1384px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(-90) translate(-348.9 1033.92)">
+<g id="node1" class="node">
+<ellipse fill="lightblue" stroke="black" cx="62" cy="-178.12" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="node2" class="node">
+<ellipse fill="lightblue" stroke="black" cx="134.76" cy="-143.87" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M75.35,-171.84C88.47,-165.66 108.4,-156.28 121.5,-150.11"/>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="lightblue" stroke="black" cx="100.97" cy="-226.1" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M71.04,-189.25C77.25,-196.89 85.46,-207 91.71,-214.7"/>
+</g>
+
+<g id="node4" class="node">
+<ellipse fill="lightblue" stroke="black" cx="159.17" cy="-215.05" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M75.92,-183.41C94.4,-190.43 126.81,-202.76 145.27,-209.77"/>
+</g>
+
+
+<g id="edge82" class="edge">
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="1,5" d="M50.4,-168.83C35.36,-156.8 10.28,-136.73 3.52,-131.32"/>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M129.18,-157.45C122.92,-172.69 112.82,-197.26 106.56,-212.5"/>
+</g>
+
+<g id="node8" class="node">
+<ellipse fill="lightblue" stroke="black" cx="206.06" cy="-227.55" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M144.37,-155.16C158.06,-171.22 183,-200.48 196.6,-216.45"/>
+</g>
+
+
+<g id="edge84" class="edge">
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="1,5" d="M126.34,-132C108.42,-106.73 67.51,-49.06 60,-38.47"/>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M115.36,-223.37C124.24,-221.68 135.61,-219.52 144.54,-217.83"/>
+</g>
+
+<g id="edge10" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M115.27,-228.7C127.01,-230.62 144.11,-232.89 159.17,-232.91 170.15,-232.93 182.48,-231.46 191.75,-230.05"/>
+</g>
+
+<g id="node9" class="node">
+<ellipse fill="lightblue" stroke="black" cx="73.42" cy="-308.69" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge15" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M96.3,-240.11C91.23,-255.3 83.19,-279.4 78.11,-294.61"/>
+</g>
+
+<g id="node6" class="node">
+<ellipse fill="lightblue" stroke="black" cx="274.05" cy="-195.42" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge11" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M173.72,-212.57C195.81,-208.79 237.59,-201.65 259.62,-197.89"/>
+</g>
+
+<g id="node7" class="node">
+<ellipse fill="lightblue" stroke="black" cx="211.32" cy="-151.5" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge12" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M168.49,-203.69C177.98,-192.12 192.61,-174.3 202.08,-162.76"/>
+</g>
+
+<g id="node10" class="node">
+<ellipse fill="lightblue" stroke="black" cx="156.12" cy="-293.64" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge16" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M158.59,-229.84C158.05,-243.89 157.24,-264.9 156.69,-278.93"/>
+</g>
+
+<g id="node5" class="node">
+<ellipse fill="lightblue" stroke="black" cx="190.27" cy="-88.44" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M179.83,-98.87C169.9,-108.78 155.06,-123.6 145.15,-133.49"/>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M199.23,-99.89C215.27,-120.37 248.72,-163.07 264.89,-183.73"/>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M194.94,-102.44C198.43,-112.89 203.18,-127.1 206.66,-137.54"/>
+</g>
+
+
+<g id="edge83" class="edge">
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="1,5" d="M192.95,-74.14C196.98,-52.6 204.33,-13.37 206.1,-3.9"/>
+</g>
+
+<g id="edge13" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M260.62,-201.77C248.7,-207.4 231.38,-215.59 219.47,-221.22"/>
+</g>
+
+
+<g id="edge85" class="edge">
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="1,5" d="M286.06,-186.71C302.96,-174.45 332.52,-153.01 339.65,-147.84"/>
+</g>
+
+<g id="edge14" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M210.31,-166.16C209.38,-179.63 208.01,-199.48 207.08,-212.93"/>
+</g>
+
+
+<g id="edge86" class="edge">
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="1,5" d="M221.93,-141.07C245.12,-118.29 299,-65.34 308.9,-55.61"/>
+</g>
+
+<g id="node11" class="node">
+<ellipse fill="lightblue" stroke="black" cx="241.95" cy="-279.21" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge17" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M214.39,-239.53C220.19,-247.88 227.89,-258.97 233.67,-267.3"/>
+</g>
+
+<g id="edge18" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M87.82,-306.07C102.91,-303.32 126.47,-299.04 141.6,-296.28"/>
+</g>
+
+<g id="node12" class="node">
+<ellipse fill="lightblue" stroke="black" cx="134.7" cy="-348.46" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge19" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M85.82,-316.74C96.45,-323.64 111.69,-333.53 122.32,-340.43"/>
+</g>
+
+
+<g id="edge87" class="edge">
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="1,5" d="M58.85,-311.39C41.52,-314.59 14,-319.69 6.6,-321.06"/>
+</g>
+
+<g id="node13" class="node">
+<ellipse fill="lightblue" stroke="black" cx="273.59" cy="-341.59" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge20" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M169.6,-299.14C192.14,-308.34 237.24,-326.75 259.91,-336"/>
+</g>
+
+<g id="node14" class="node">
+<ellipse fill="lightblue" stroke="black" cx="105.87" cy="-400.84" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge21" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M145.94,-304.45C138.63,-312.62 128.9,-324.34 122.08,-335.83 112.75,-351.53 108.77,-372.43 107.09,-386.24"/>
+</g>
+
+<g id="node15" class="node">
+<ellipse fill="lightblue" stroke="black" cx="198.08" cy="-354.43" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge22" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M164.41,-305.65C171.77,-316.31 182.46,-331.79 189.81,-342.44"/>
+</g>
+
+<g id="edge26" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M229.65,-287.16C209.07,-300.44 167.9,-327.03 147.19,-340.4"/>
+</g>
+
+<g id="node16" class="node">
+<ellipse fill="lightblue" stroke="black" cx="249.6" cy="-397.84" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge27" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M242.89,-293.76C244.36,-316.53 247.18,-360.34 248.65,-383.18"/>
+</g>
+
+
+<g id="edge88" class="edge">
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="1,5" d="M256.51,-279.77C279.85,-280.65 323.98,-282.32 333.35,-282.67"/>
+</g>
+
+<g id="edge28" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M127.58,-361.41C123.11,-369.53 117.37,-379.95 112.92,-388.04"/>
+</g>
+
+<g id="edge29" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M149.4,-349.85C159.64,-350.81 173.24,-352.09 183.46,-353.05"/>
+</g>
+
+<g id="node17" class="node">
+<ellipse fill="lightblue" stroke="black" cx="205.4" cy="-432.29" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge33" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M144.24,-359.77C157.81,-375.86 182.53,-405.17 196.02,-421.16"/>
+</g>
+
+<g id="edge23" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M266.88,-328.36C261.51,-317.77 254.02,-303 248.65,-292.42"/>
+</g>
+
+<g id="edge24" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M259.03,-344.06C245.66,-346.34 225.95,-349.69 212.59,-351.96"/>
+</g>
+
+<g id="edge25" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M267.78,-355.2C264.01,-364.05 259.11,-375.53 255.35,-384.35"/>
+</g>
+
+<g id="edge30" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M119.08,-394.19C136.61,-385.37 167.38,-369.88 184.89,-361.06"/>
+</g>
+
+<g id="edge31" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M120.71,-400.53C148.4,-399.95 207.59,-398.72 235.05,-398.14"/>
+</g>
+
+<g id="node18" class="node">
+<ellipse fill="lightblue" stroke="black" cx="116.66" cy="-459.16" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge34" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M108.54,-415.26C110.21,-424.3 112.36,-435.9 114.02,-444.91"/>
+</g>
+
+<g id="edge32" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M209.26,-363.85C217.9,-371.13 229.8,-381.16 238.44,-388.44"/>
+</g>
+
+<g id="node19" class="node">
+<ellipse fill="lightblue" stroke="black" cx="265.55" cy="-487.18" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge35" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M252.16,-412.19C255.12,-428.77 259.96,-455.88 262.94,-472.56"/>
+</g>
+
+<g id="edge36" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M191.14,-436.61C174.58,-441.62 147.42,-449.85 130.88,-454.86"/>
+</g>
+
+<g id="node20" class="node">
+<ellipse fill="lightblue" stroke="black" cx="196.95" cy="-492.81" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge37" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M203.35,-446.94C202.02,-456.46 200.3,-468.81 198.98,-478.29"/>
+</g>
+
+
+<g id="edge89" class="edge">
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="1,5" d="M219.91,-429.64C249.01,-424.32 312.81,-412.65 325.47,-410.34"/>
+</g>
+
+<g id="edge38" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M130.28,-464.87C145.04,-471.06 168.47,-480.88 183.26,-487.07"/>
+</g>
+
+<g id="node21" class="node">
+<ellipse fill="lightblue" stroke="black" cx="150.29" cy="-564.32" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge39" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M121.19,-473.34C127.65,-493.53 139.41,-530.3 145.83,-550.36"/>
+</g>
+
+<g id="node23" class="node">
+<ellipse fill="lightblue" stroke="black" cx="253.32" cy="-564.83" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge44" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M263.25,-501.78C261.06,-515.66 257.8,-536.43 255.61,-550.29"/>
+</g>
+
+<g id="node24" class="node">
+<ellipse fill="lightblue" stroke="black" cx="184.45" cy="-540.08" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge43" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M253.23,-495.21C237.99,-505.15 212.18,-521.99 196.88,-531.97"/>
+</g>
+
+
+<g id="edge90" class="edge">
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="1,5" d="M279.42,-492.11C298.51,-498.91 331.46,-510.63 339.39,-513.46"/>
+</g>
+
+<g id="edge40" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M211.5,-491.61C223.14,-490.66 239.39,-489.33 251.02,-488.37"/>
+</g>
+
+<g id="node22" class="node">
+<ellipse fill="lightblue" stroke="black" cx="40.37" cy="-516.25" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge41" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M182.22,-495.01C152.22,-499.5 84.4,-509.66 54.72,-514.1"/>
+</g>
+
+<g id="edge42" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M206.01,-504.38C216.59,-517.9 233.98,-540.12 244.48,-553.52"/>
+</g>
+
+<g id="edge47" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M136.82,-558.42C115.72,-549.2 75.13,-531.45 53.96,-522.19"/>
+</g>
+
+<g id="edge48" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M165.06,-564.39C184.64,-564.49 219.02,-564.66 238.59,-564.75"/>
+</g>
+
+<g id="node26" class="node">
+<ellipse fill="lightblue" stroke="black" cx="181.78" cy="-631.98" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge50" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M156.51,-577.69C162.03,-589.55 170.06,-606.79 175.57,-618.64"/>
+</g>
+
+<g id="node27" class="node">
+<ellipse fill="lightblue" stroke="black" cx="230.84" cy="-646.24" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge51" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M249.41,-579.01C245.31,-593.86 238.9,-617.05 234.79,-631.95"/>
+</g>
+
+<g id="edge45" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M172.5,-548.55C169.12,-550.96 165.43,-553.57 162.06,-555.97"/>
+</g>
+
+<g id="edge46" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M169.84,-537.66C142.23,-533.09 82.66,-523.24 55.02,-518.67"/>
+</g>
+
+<g id="node25" class="node">
+<ellipse fill="lightblue" stroke="black" cx="72.5" cy="-614.52" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge49" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M169.95,-541.17C160.17,-542.48 147.33,-545.36 137.66,-551.69 115.05,-566.5 93.41,-589.77 81.64,-603.45"/>
+</g>
+
+<g id="edge52" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M86.79,-616.8C107.61,-620.13 146.12,-626.28 167.14,-629.64"/>
+</g>
+
+<g id="node28" class="node">
+<ellipse fill="lightblue" stroke="black" cx="128.61" cy="-672.62" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge53" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M82.79,-625.17C92.92,-635.66 108.28,-651.57 118.38,-662.03"/>
+</g>
+
+<g id="edge54" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M169.98,-641C161.17,-647.73 149.18,-656.9 140.38,-663.62"/>
+</g>
+
+<g id="node29" class="node">
+<ellipse fill="lightblue" stroke="black" cx="147.32" cy="-741.87" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge55" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M177.42,-645.9C170.83,-666.92 158.4,-706.56 151.76,-727.72"/>
+</g>
+
+
+<g id="edge91" class="edge">
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="1,5" d="M196.38,-629.76C206.14,-628.57 219.26,-627.5 230.84,-628.38 267.68,-631.19 311.05,-645.55 320.1,-648.66"/>
+</g>
+
+<g id="node31" class="node">
+<ellipse fill="lightblue" stroke="black" cx="258.82" cy="-721.97" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge60" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M235.97,-660.13C241.02,-673.79 248.69,-694.53 253.72,-708.17"/>
+</g>
+
+<g id="node32" class="node">
+<ellipse fill="lightblue" stroke="black" cx="193.02" cy="-724.36" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge59" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M224.42,-659.49C217.47,-673.86 206.43,-696.65 199.47,-711.04"/>
+</g>
+
+<g id="edge56" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M142.82,-668.95C162.25,-663.94 196.89,-655 216.42,-649.96"/>
+</g>
+
+<g id="node30" class="node">
+<ellipse fill="lightblue" stroke="black" cx="80.22" cy="-734.57" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge57" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M119.51,-684.27C110.86,-695.35 97.92,-711.91 89.28,-722.97"/>
+</g>
+
+<g id="edge58" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M142.05,-677.71C167.01,-687.17 220.21,-707.33 245.26,-716.83"/>
+</g>
+
+<g id="edge63" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M132.76,-740.29C121.51,-739.06 106,-737.37 94.75,-736.15"/>
+</g>
+
+<g id="edge64" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M161.81,-743.11C170.83,-743.6 182.66,-743.74 193.02,-742.22 211.59,-739.5 232.13,-732.5 245.24,-727.49"/>
+</g>
+
+<g id="node34" class="node">
+<ellipse fill="lightblue" stroke="black" cx="221.03" cy="-815.52" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge66" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M157.57,-752.11C171.65,-766.18 196.83,-791.34 210.87,-805.37"/>
+</g>
+
+
+<g id="edge92" class="edge">
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="1,5" d="M65.55,-736.38C47.73,-738.58 19.09,-742.13 11.39,-743.08"/>
+</g>
+
+<g id="node35" class="node">
+<ellipse fill="lightblue" stroke="black" cx="161.33" cy="-803.03" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge67" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M247.64,-731.27C228.93,-746.82 191.5,-777.94 172.69,-793.59"/>
+</g>
+
+<g id="edge61" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M179.56,-729.52C173.76,-731.74 167,-734.33 161.17,-736.57"/>
+</g>
+
+<g id="edge62" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M178.18,-723.63C169.23,-723.35 157.61,-723.25 147.32,-724.01 129.09,-725.37 108.34,-728.95 94.8,-731.57"/>
+</g>
+
+<g id="node33" class="node">
+<ellipse fill="lightblue" stroke="black" cx="265.94" cy="-784.5" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge65" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M204.41,-733.75C218.19,-745.12 241.23,-764.12 254.87,-775.37"/>
+</g>
+
+<g id="edge68" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M254.14,-792.65C247.69,-797.1 239.72,-802.61 233.22,-807.1"/>
+</g>
+
+<g id="node36" class="node">
+<ellipse fill="lightblue" stroke="black" cx="178.82" cy="-859.7" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge69" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M258.63,-797.07C252.74,-806.44 243.79,-819.12 233.66,-828.15 221.19,-839.26 204.2,-848.3 192.45,-853.81"/>
+</g>
+
+<g id="node37" class="node">
+<ellipse fill="lightblue" stroke="black" cx="274.39" cy="-871.5" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge70" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M267.37,-799.26C268.94,-815.35 271.42,-840.95 272.98,-856.96"/>
+</g>
+
+<g id="edge71" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M210.81,-826.21C204.18,-833.16 195.56,-842.18 188.94,-849.1"/>
+</g>
+
+<g id="node38" class="node">
+<ellipse fill="lightblue" stroke="black" cx="218.77" cy="-906.48" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge72" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M220.67,-830.14C220.25,-847.01 219.56,-874.62 219.14,-891.6"/>
+</g>
+
+
+<g id="edge93" class="edge">
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="1,5" d="M235.67,-813.43C263.62,-809.43 322.85,-800.96 334.59,-799.28"/>
+</g>
+
+<g id="edge76" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M173.86,-810.62C195.6,-823.78 240.03,-850.69 261.8,-863.88"/>
+</g>
+
+<g id="node40" class="node">
+<ellipse fill="lightblue" stroke="black" cx="111.78" cy="-865.49" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge77" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M152.24,-814.48C143.3,-825.75 129.73,-842.86 120.81,-854.1"/>
+</g>
+
+<g id="edge73" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M174.5,-845.69C171.79,-836.91 168.31,-825.63 165.61,-816.88"/>
+</g>
+
+<g id="node39" class="node">
+<ellipse fill="lightblue" stroke="black" cx="157.89" cy="-947.04" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge74" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M175.36,-874.12C171.49,-890.3 165.23,-916.4 161.35,-932.59"/>
+</g>
+
+<g id="edge75" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M164.27,-860.96C153.03,-861.93 137.54,-863.26 126.3,-864.23"/>
+</g>
+
+<g id="edge78" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M262.05,-879.27C252.83,-885.06 240.29,-892.95 231.08,-898.74"/>
+</g>
+
+
+<g id="edge94" class="edge">
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="1,5" d="M285.43,-881.1C302.43,-895.88 333.83,-923.18 341.42,-929.77"/>
+</g>
+
+<g id="edge79" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M206.45,-914.69C195.89,-921.73 180.75,-931.81 170.19,-938.84"/>
+</g>
+
+<g id="edge80" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M205.22,-901.29C184.75,-893.45 146.16,-878.66 125.56,-870.77"/>
+</g>
+
+
+<g id="edge95" class="edge">
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="1,5" d="M226.11,-919.19C240.13,-943.44 269.83,-994.83 275.72,-1005.02"/>
+</g>
+
+<g id="edge81" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M150.69,-934.29C142.07,-919.06 127.74,-893.72 119.09,-878.41"/>
+</g>
+
+
+<g id="edge96" class="edge">
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="1,5" d="M150.23,-959.71C137.95,-980.02 114.74,-1018.42 109.81,-1026.57"/>
+</g>
+
+
+<g id="edge97" class="edge">
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="1,5" d="M100.45,-874.51C80.03,-890.78 38.35,-923.99 29.48,-931.06"/>
+</g>
+</g>
+</svg></figure>
+</div></section>
+<section class="slide smaller" id="pillar-3-consensus"><h2 class="slide-title">Pillar 3: Consensus</h2><div class="slide-body">
+<ul>
+<li><strong>The Problem of Errors and Conflicts:</strong> In a P2P network, some participants will broadcast invalid or conflicting information (e.g., spending money they don’t have).</li>
+<li><strong>The Mechanism:</strong> Consensus is the algorithmic process the nodes use to agree on what is valid and reject incorrect state changes.</li>
+<li><strong>Examples:</strong> Proof of Work (Miners) or Proof of Stake (Validators).</li>
+<li><strong>The Result:</strong> The network achieves the same synchronized state, defeating the problem of untrusted participants.</li>
+</ul>
+</div></section>
+<section class="slide" id="putting-it-together-the-lifecycle-of-a-transaction"><h2 class="slide-title">Putting it Together: The Lifecycle of a Transaction</h2><div class="slide-body">
+<ul>
+<li>To see how these three pillars interact, we will trace a single transaction from start to finish.</li>
+<li><strong>The Scenario:</strong> Alice wants to send Bob a digital asset over a blockchain network.</li>
+</ul>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; font-family: sans-serif;">
+<div style="text-align: center; color: #4CAF50;">
+<div style="width: 40px; height: 40px; border-radius: 50%; background: #4CAF50; color: white; line-height: 40px; margin: 0 auto; font-weight: bold;">
+1
+</div>
+<p><small>Sign</small></p>
+</div>
+<div style="flex-grow: 1; height: 4px; background: #ddd; margin: 0 10px; border-radius: 2px;">
+
+</div>
+<div style="text-align: center; color: #888;">
+<div style="width: 40px; height: 40px; border-radius: 50%; background: #ddd; color: white; line-height: 40px; margin: 0 auto; font-weight: bold;">
+2
+</div>
+<p><small>Broadcast</small></p>
+</div>
+<div style="flex-grow: 1; height: 4px; background: #ddd; margin: 0 10px; border-radius: 2px;">
+
+</div>
+<div style="text-align: center; color: #888;">
+<div style="width: 40px; height: 40px; border-radius: 50%; background: #ddd; color: white; line-height: 40px; margin: 0 auto; font-weight: bold;">
+…
+</div>
+<p><small>Mempool</small></p>
+</div>
+<div style="flex-grow: 1; height: 4px; background: #ddd; margin: 0 10px; border-radius: 2px;">
+
+</div>
+<div style="text-align: center; color: #888;">
+<div style="width: 40px; height: 40px; border-radius: 50%; background: #ddd; color: white; line-height: 40px; margin: 0 auto; font-weight: bold;">
+6
+</div>
+<p><small>Chain</small></p>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="step-1-creation-and-signing"><h2 class="slide-title">Step 1: Creation and Signing</h2><div class="slide-body">
+<ul>
+<li><strong>Intent:</strong> Alice opens her wallet software and creates a message: <em>“Send 5 coins from Alice to Bob.”</em></li>
+<li><strong>Signing (Cryptography):</strong> Alice uses her Private Key to mathematically sign this message.</li>
+<li><strong>Security:</strong> This signature proves Alice authorized it, and ensures no one can change the “5” to a “50” while the message is in transit.</li>
+</ul>
+<style>
+@keyframes signMessage {
+0% { content: '"Send 5 coins to Bob"'; background-color: #f8f9fa; border-color: #dee2e6; }
+50% { background-color: #fff3cd; border-color: #ffe69c; }
+100% { content: 'Signature: 0x7F8B...9A2C'; background-color: #d1e7dd; border-color: #a3cfbb; color: #0f5132; }
+}
+.crypto-card {
+padding: 20px;
+border: 2px solid #dee2e6;
+border-radius: 8px;
+font-family: monospace;
+font-size: 1.2em;
+text-align: center;
+width: 300px;
+margin: 20px auto;
+animation: signMessage 4s infinite alternate;
+}
+.crypto-card::after {
+content: '"Send 5 coins to Bob"';
+}
+</style>
+<div style="text-align: center;">
+<div>
+🔏 <strong>Alice’s Private Key Applied</strong>
+</div>
+<div class="crypto-card">
+
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="step-2-the-broadcast"><h2 class="slide-title">Step 2: The Broadcast</h2><div class="slide-body">
+<ul>
+<li><strong>Transmission:</strong> Alice’s wallet sends this signed message to a single node on the network.</li>
+<li><strong>The Gossip (P2P Network):</strong> That node checks the math. If it’s valid, it passes it to its peers. Within moments, the transaction has spread across the network into other nodes’ “waiting rooms.”</li>
+</ul>
+<style>
+.node { width: 20px; height: 20px; background-color: #0d6efd; border-radius: 50%; position: absolute; }
+.pulse {
+width: 20px; height: 20px; background-color: rgba(13, 110, 253, 0.5); border-radius: 50%;
+position: absolute; top: 0; left: 0;
+animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes ping {
+75%, 100% { transform: scale(4); opacity: 0; }
+}
+</style>
+<div style="position: relative; height: 200px; width: 100%; max-width: 400px; margin: 0 auto;">
+<div style="position: absolute; top: 90px; left: 190px;">
+<div class="pulse">
+
+</div>
+<div class="node">
+
+</div>
+</div>
+<div class="node" style="top: 20px; left: 100px; background: gray;">
+
+</div>
+<div class="node" style="top: 40px; left: 280px; background: gray;">
+
+</div>
+<div class="node" style="top: 150px; left: 120px; background: gray;">
+
+</div>
+<div class="node" style="top: 140px; left: 260px; background: gray;">
+
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="step-3-the-mempool"><h2 class="slide-title">Step 3: The Mempool</h2><div class="slide-body">
+<ul>
+<li><strong>Pending State:</strong> Transactions don’t happen instantly. They sit in a holding area called the Memory Pool (Mempool).</li>
+<li><strong>Unconfirmed:</strong> At this stage, the network knows about Alice’s intent, but it is not yet officially part of the blockchain’s history. It is “unconfirmed.”</li>
+</ul>
+<style>
+.mempool-box { border: 3px dashed #6c757d; border-radius: 15px; height: 150px; position: relative; overflow: hidden; background: #f8f9fa; }
+.tx { position: absolute; padding: 5px 10px; background: #ffc107; color: #000; border-radius: 4px; font-size: 0.8em; font-family: monospace; }
+@keyframes float {
+0% { transform: translateY(0px) translateX(0px); }
+50% { transform: translateY(-10px) translateX(15px); }
+100% { transform: translateY(0px) translateX(0px); }
+}
+</style>
+<div class="mempool-box">
+<div class="tx" style="top: 20px; left: 10%; animation: float 3s infinite ease-in-out;">
+Tx: Alice-&gt;Bob
+</div>
+<div class="tx" style="top: 70px; left: 40%; animation: float 4s infinite ease-in-out reverse;">
+Tx: Charlie-&gt;Dave
+</div>
+<div class="tx" style="top: 30px; left: 70%; animation: float 3.5s infinite ease-in-out;">
+Tx: Eve-&gt;Alice
+</div>
+<div class="tx" style="top: 100px; left: 20%; animation: float 5s infinite ease-in-out;">
+Tx: Bob-&gt;Frank
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="step-4-block-assembly"><h2 class="slide-title">Step 4: Block Assembly</h2><div class="slide-body">
+<ul>
+<li><strong>The Miner/Validator:</strong> Special nodes on the network pull pending transactions out of the mempool.</li>
+<li><strong>Packing the Box:</strong> They verify that Alice actually has the 5 coins to spend, and then pack her transaction into a “Block” alongside hundreds of others.</li>
+<li><strong>The Competition:</strong> Multiple nodes are trying to pack blocks at the same time. Who gets to add theirs to the official chain?</li>
+</ul>
+<style>
+.block-grid {
+display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px;
+width: 100%; max-width: 300px; margin: 20px auto; padding: 10px;
+background: #e9ecef; border: 2px solid #ced4da; border-radius: 8px; position: relative;
+}
+.block-grid::before {
+content: 'Block #102'; position: absolute; top: -30px; left: 50%;
+transform: translateX(-50%); font-weight: bold; color: #495057;
+}
+.tx-cell { height: 30px; background: #fff; border: 1px solid #dee2e6; border-radius: 4px; }
+.tx-alice {
+background: #4CAF50; border-color: #388E3C; opacity: 0;
+animation: packIn 0.5s ease-out forwards; animation-delay: 1.2s;
+display: flex; align-items: center; justify-content: center; color: white; font-size: 0.7em; font-weight: bold;
+}
+.tx-other {
+background: #ffc107; border-color: #ffb300; opacity: 0;
+animation: packIn 0.5s ease-out forwards;
+}
+@keyframes packIn {
+0% { transform: translateY(-30px) scale(1.1); opacity: 0; }
+100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+</style>
+<div class="block-grid">
+<div class="tx-cell tx-other" style="animation-delay: 0.2s;">
+
+</div>
+<div class="tx-cell tx-other" style="animation-delay: 0.5s;">
+
+</div>
+<div class="tx-cell tx-alice">
+Alice
+</div>
+<div class="tx-cell tx-other" style="animation-delay: 1.5s;">
+
+</div>
+<div class="tx-cell tx-other" style="animation-delay: 0.8s;">
+
+</div>
+<div class="tx-cell tx-other" style="animation-delay: 2.0s;">
+
+</div>
+<div class="tx-cell tx-other" style="animation-delay: 2.2s;">
+
+</div>
+<div class="tx-cell tx-other" style="animation-delay: 1.8s;">
+
+</div>
+<div class="tx-cell">
+
+</div>
+<div class="tx-cell">
+
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="step-5-achieving-consensus"><h2 class="slide-title">Step 5: Achieving Consensus</h2><div class="slide-body">
+<ul>
+<li><strong>The Rules:</strong> The network uses its Consensus Mechanism (e.g., Proof of Work) to select one node’s block to be the official next block.</li>
+<li><strong>Winning the Right:</strong> A node proves it followed the rules (expended energy, staked assets) and broadcasts its newly minted block to the network.</li>
+</ul>
+<style>
+.race-container { max-width: 400px; margin: 20px auto; font-family: sans-serif; }
+.node-track { margin-bottom: 15px; }
+.node-label { font-size: 0.8em; font-weight: bold; margin-bottom: 5px; color: #555; }
+.progress-bar { height: 20px; background: #e9ecef; border-radius: 10px; overflow: hidden; position: relative; }
+.progress-fill { height: 100%; background: #0d6efd; width: 0%; }
+
+.node-a .progress-fill { animation: raceA 4s ease-out infinite; }
+.node-b .progress-fill { animation: raceB 4s ease-out infinite; background: #4CAF50; }
+.node-c .progress-fill { animation: raceC 4s ease-out infinite; }
+
+@keyframes raceA { 0% { width: 0%; } 50%, 100% { width: 70%; } }
+@keyframes raceB { 0% { width: 0%; } 40% { width: 100%; } 100% { width: 100%; } }
+@keyframes raceC { 0% { width: 0%; } 60%, 100% { width: 40%; } }
+
+.winner-badge {
+position: absolute; right: 10px; top: 2px; color: white;
+font-size: 0.7em; font-weight: bold; opacity: 0;
+animation: showWinner 4s infinite;
+}
+@keyframes showWinner { 0%, 39% { opacity: 0; } 40%, 100% { opacity: 1; } }
+</style>
+<div class="race-container">
+<div class="node-track node-a">
+<div class="node-label">
+Node A (Hashing…)
+</div>
+<div class="progress-bar">
+<div class="progress-fill">
+
+</div>
+</div>
+</div>
+<div class="node-track node-b">
+<div class="node-label">
+Node B (Hashing…)
+</div>
+<div class="progress-bar">
+<div class="progress-fill">
+
+</div>
+<div class="winner-badge">
+WINNER! Block Mined
+</div>
+</div>
+</div>
+<div class="node-track node-c">
+<div class="node-label">
+Node C (Hashing…)
+</div>
+<div class="progress-bar">
+<div class="progress-fill">
+
+</div>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="step-6-chaining-the-block"><h2 class="slide-title">Step 6: Chaining the Block</h2><div class="slide-body">
+<ul>
+<li><p><strong>The Hash Link:</strong> This is where the “chain” in blockchain comes in. The new block contains the “fingerprint” (cryptographic hash) of the <em>previous</em> block.</p></li>
+<li><p><strong>Immutability:</strong> Because Block 102 contains the fingerprint of Block 101, you cannot change a transaction in Block 101 without breaking Block 102, Block 103, and so on.</p></li>
+<li><p><strong>Alice’s Transaction is Finalized:</strong> Alice’s transaction is now a part of that shared chain, recorded for all to see.</p></li>
+</ul>
+<div style="position: relative; z-index: -1; top: -150px;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 528.49 70.40" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:704px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 66.4)">
+<g id="node1" class="node">
+<path fill="lightblue" stroke="black" d="M94.62,-62.4C94.62,-62.4 12,-62.4 12,-62.4 6,-62.4 0,-56.4 0,-50.4 0,-50.4 0,-12 0,-12 0,-6 6,0 12,0 12,0 94.62,0 94.62,0 100.62,0 106.62,-6 106.62,-12 106.62,-12 106.62,-50.4 106.62,-50.4 106.62,-56.4 100.62,-62.4 94.62,-62.4"/>
+<text text-anchor="middle" x="53.31" y="-35.4" font-family="Helvetica,sans-Serif" font-size="14.00">Block 101</text>
+<text text-anchor="middle" x="53.31" y="-18.6" font-family="Helvetica,sans-Serif" font-size="14.00">Hash: 0xabc</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="lightblue" stroke="black" d="M303.06,-62.4C303.06,-62.4 223.55,-62.4 223.55,-62.4 217.55,-62.4 211.55,-56.4 211.55,-50.4 211.55,-50.4 211.55,-12 211.55,-12 211.55,-6 217.55,0 223.55,0 223.55,0 303.06,0 303.06,0 309.06,0 315.06,-6 315.06,-12 315.06,-12 315.06,-50.4 315.06,-50.4 315.06,-56.4 309.06,-62.4 303.06,-62.4"/>
+<text text-anchor="middle" x="263.3" y="-35.4" font-family="Helvetica,sans-Serif" font-size="14.00">Block 102</text>
+<text text-anchor="middle" x="263.3" y="-18.6" font-family="Helvetica,sans-Serif" font-size="14.00">Hash: 0xdef</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M107.06,-31.2C135.33,-31.2 170.32,-31.2 199.92,-31.2"/>
+<polygon fill="#7f7f7f" stroke="#7f7f7f" points="199.89,-34.7 209.89,-31.2 199.89,-27.7 199.89,-34.7"/>
+<text text-anchor="middle" x="159.08" y="-34.2" font-family="Helvetica,sans-Serif" font-size="10.00"> Embeds 0xabc</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="lightblue" stroke="black" d="M508.49,-62.4C508.49,-62.4 429.76,-62.4 429.76,-62.4 423.76,-62.4 417.76,-56.4 417.76,-50.4 417.76,-50.4 417.76,-12 417.76,-12 417.76,-6 423.76,0 429.76,0 429.76,0 508.49,0 508.49,0 514.49,0 520.49,-6 520.49,-12 520.49,-12 520.49,-50.4 520.49,-50.4 520.49,-56.4 514.49,-62.4 508.49,-62.4"/>
+<text text-anchor="middle" x="469.13" y="-35.4" font-family="Helvetica,sans-Serif" font-size="14.00">Block 103</text>
+<text text-anchor="middle" x="469.13" y="-18.6" font-family="Helvetica,sans-Serif" font-size="14.00">Hash: 0xghi</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#7f7f7f" d="M315.47,-31.2C342.95,-31.2 377.05,-31.2 406.04,-31.2"/>
+<polygon fill="#7f7f7f" stroke="#7f7f7f" points="405.77,-34.7 415.77,-31.2 405.77,-27.7 405.77,-34.7"/>
+<text text-anchor="middle" x="366.41" y="-34.2" font-family="Helvetica,sans-Serif" font-size="10.00"> Embeds 0xdef</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide smaller" id="the-result-a-shared-truth"><h2 class="slide-title">The Result: A Shared Truth</h2><div class="slide-body">
+<ul>
+<li>Every honest node on the network updates their local copy of the ledger.</li>
+<li>Alice’s balance decreases by 5; Bob’s balance increases by 5.</li>
+<li><strong>No central bank</strong> processed it. <strong>No administrator</strong> approved it.</li>
+<li>Cryptography, P2P networking, and consensus rules orchestrated a secure state change in a mutually suspicious environment.</li>
+</ul>
+<div style="display: flex; gap: 20px; justify-content: center; font-size: 0.6em;">
+<div style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+<strong>Node A Ledger</strong>
+<table style="width: 100%; margin-top: 10px;">
+<tr>
+<td>
+Alice
+</td>
+<td style="color: red;">
+-5
+</td>
+</tr>
+<tr>
+<td>
+Bob
+</td>
+<td style="color: green;">
++5
+</td>
+</tr>
+</table>
+</div>
+<div style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+<strong>Node B Ledger</strong>
+<table style="width: 100%; margin-top: 10px;">
+<tr>
+<td>
+Alice
+</td>
+<td style="color: red;">
+-5
+</td>
+</tr>
+<tr>
+<td>
+Bob
+</td>
+<td style="color: green;">
++5
+</td>
+</tr>
+</table>
+</div>
+<div style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+<strong>Node C Ledger</strong>
+<table style="width: 100%; margin-top: 10px;">
+<tr>
+<td>
+Alice
+</td>
+<td style="color: red;">
+-5
+</td>
+</tr>
+<tr>
+<td>
+Bob
+</td>
+<td style="color: green;">
++5
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="the-spectrum-of-decentralization"><h2 class="slide-title">The Spectrum of Decentralization</h2><div class="slide-body">
+<ul>
+<li>Not all blockchains are designed like Bitcoin. They exist on a spectrum based on <strong>who can participate</strong>.</li>
+<li><strong>Permissionless (Public):</strong>
+<ul>
+<li>Anyone can read, write, or participate in consensus.</li>
+<li>High censorship resistance, lower performance.</li>
+<li><em>Examples:</em> Bitcoin, Ethereum.</li>
+</ul></li>
+<li><strong>Permissioned (Private/Consortium):</strong>
+<ul>
+<li>Only authorized entities can read, write, or validate.</li>
+<li>Higher performance, better privacy, but requires trusting the gatekeepers.</li>
+<li><em>Examples:</em> Hyperledger Fabric, Corda.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="common-misconceptions-what-a-blockchain-is-not"><h2 class="slide-title">Common Misconceptions: What a Blockchain is NOT</h2><div class="slide-body">
+<ul>
+<li><strong>It is NOT a cloud storage drive:</strong>
+<ul>
+<li>You do not store PDFs or large files on a blockchain. Space is incredibly expensive. It stores <em>state</em> and <em>receipts</em>, not massive data.</li>
+</ul></li>
+<li><strong>It is NOT inherently anonymous:</strong>
+<ul>
+<li>Most public blockchains are pseudonymous. Your name isn’t on it, but your entire financial history is permanently public. If your address is ever linked to your identity, you have zero privacy.</li>
+</ul></li>
+<li><strong>It is NOT an impenetrable fortress:</strong>
+<ul>
+<li>While the cryptography is extremely strong, the <em>endpoints</em> (wallets, exchanges, smart contracts) are highly vulnerable to hacking and human error.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="looking-ahead-next-steps"><h2 class="slide-title">Looking Ahead: Next Steps</h2><div class="slide-body">
+<ul>
+<li>You have now seen the assembled vehicle and watched it drive from Point A to Point B.</li>
+<li><strong>Historical Context:</strong> Before we dismantle the engine, the rest of this Introduction module will explore the history of how and why this technology was built.</li>
+<li><strong>The Primitives:</strong> After the introduction, we will take the car into the garage to dismantle the engine. We will dive deep into:
+<ul>
+<li><strong>Cryptographic Primitives:</strong> The math that makes hashes and signatures unforgeable.</li>
+<li><strong>Distributed Systems in Practice:</strong> How P2P networks actually route data.</li>
+<li><strong>Consensus Deep-Dive:</strong> How algorithms like Proof of Work and Proof of Stake enforce the rules against adversaries.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="bitcoin-video-optional"><h2 class="slide-title">Bitcoin Video (Optional)</h2><div class="slide-body">
+<div style="text-align:center;">
+<a class="video-link" href="https://www.youtube.com/watch?v=bBC-nXj3Ng4" target="_blank" rel="noopener">Watch the video on YouTube <span aria-hidden="true">↗</span></a>
+</div>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-narayanan_bitcoincryptocurrencytechnologies_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">A. Narayanan, J. Bonneau, E. Felten, A. Miller, and S. Goldfeder, <em>Bitcoin and <span>Cryptocurrency Technologies</span></em>. Princeton University Press, 2016.</div>
+</div>
+<div id="ref-bano_consensusageblockchains_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">S. Bano <em>et al.</em>, <span>“Consensus in the <span>Age</span> of <span>Blockchains</span>.”</span> 2017. Available: <a href="https://arxiv.org/abs/1711.03936">https://arxiv.org/abs/1711.03936</a></div>
+</div>
+<div id="ref-nakamoto_bitcoinpeertopeerelectronic_2008" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">S. Nakamoto, <span>“Bitcoin: <span class="nocase">A Peer-to-Peer Electronic Cash System</span>.”</span> Satoshi Nakamoto Institute, Oct. 31, 2008. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf">https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf</a></div>
+</div>
+<div id="ref-antonopoulos_masteringbitcoinprogramming_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">A. M. Antonopoulos, <em>Mastering <span>Bitcoin</span>: Programming the open blockchain</em>, Second edition. Sebastopol, CA: O’Reilly, 2017.</div>
+</div>
+<div id="ref-l31_r3_corda_enterprise_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">R3, <span>“Corda enterprise 4.12.”</span> Accessed: Mar. 28, 2026. [Online]. Available: <a href="https://docs.r3.com/en/platform/corda/4.12/enterprise.html">https://docs.r3.com/en/platform/corda/4.12/enterprise.html</a></div>
+</div>
+<div id="ref-3blue1brown_howdoesbitcoin_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">3Blue1Brown, Dir., <em>But how does bitcoin actually work?</em>, (July 07, 2017). Accessed: Oct. 21, 2025. [Online Video]. Available: <a href="https://www.youtube.com/watch?v=bBC-nXj3Ng4&amp;t=4s">https://www.youtube.com/watch?v=bBC-nXj3Ng4&amp;t=4s</a></div>
+</div>
+<div id="ref-androulaki_hyperledgerfabricdistributed_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">E. Androulaki <em>et al.</em>, <span>“Hyperledger fabric: A distributed operating system for permissioned blockchains,”</span> in <em>Proceedings of the <span>Thirteenth EuroSys Conference</span></em>, Porto Portugal: ACM, Apr. 2018, pp. 1–15. doi: <a href="https://doi.org/10.1145/3190508.3190538">10.1145/3190508.3190538</a>.</div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

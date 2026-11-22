@@ -1,3 +1,4 @@
+/* Built by tools/build.py from blockchain-course/modules/primitives/labs/ctf-merkle/lab-data.js. Edit that file, not this copy. */
 /* "One hash for the whole block": build a Bitcoin Merkle root from real transaction IDs.
    Nothing is stored but the IDs: the roots are computed from them, which is the challenge. Needs kit.js and kit/lab.js. */
 (function (root) {
@@ -33,6 +34,7 @@
   function arts(n) { return function (v) { return v.ids.slice(0, n).map(function (i, k) { return { label: 'transaction ID ' + 'ABCD'[k], hex: LEAVES[i], quiet: true }; }); }; }
   Kit.defineLab({
     id: 'ctf-merkle', rev: 1,
+    covers: ['cp-02'],   // the lessons this builds on: the plan checker warns if it is scheduled before them
     title: 'One hash for the whole block', tags: ['Cryptography', 'Merkle trees'], minutes: 12, crumbs: 'Cryptography · Challenge',
     lede: 'A Bitcoin block header has room for exactly one 32-byte hash of its transactions, and a block can hold thousands. That one hash, the <b>Merkle root</b>, still pins down every one of them.',
     real: 'The transaction IDs are real, from Bitcoin\'s main network, and the tree is built exactly the way Bitcoin builds it. The shortcut: these four transactions were never the whole of one block, so no real block has the root you are about to compute.',

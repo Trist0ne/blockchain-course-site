@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CBDCs and Stablecoins</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/conclusion/02-AS-cbdcs_stablecoins.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="as-02" data-code="02-AS" data-src="73eafa5b66846d0f" data-slides="21">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section IX: Applications and Synthesis · Lesson 02-AS</p><h1>CBDCs and Stablecoins</h1></div></section>
+<section class="slide smaller" id="agenda"><h2 class="slide-title">Agenda</h2><div class="slide-body">
+<div style="font-size: 1.0em;">
+<ol type="1">
+<li><strong>Types of Digital Money</strong> — CBDCs, stablecoins, and traditional cryptocurrencies defined</li>
+<li><strong>Trust Architecture</strong> — how control is built into (or out of) each system</li>
+<li><strong>Central Bank Digital Currencies</strong> — who is building them and why</li>
+<li><strong>Global Payment Infrastructure</strong> — the rails that move money across borders</li>
+<li><strong>Stablecoins</strong> — mechanics, major players, and real-world use cases</li>
+<li><strong>Why Governments Care</strong> — sovereignty, sanctions, and the permission layer</li>
+<li><strong>Case Study: USDT on Tron</strong> — the framework applied</li>
+</ol>
+</div>
+</div></section>
+<section class="slide smaller" id="objectives"><h2 class="slide-title">Objectives</h2><div class="slide-body">
+<div style="font-size: 0.85em;">
+<p>By the end of this lesson, you will be able to:</p>
+<ol type="1">
+<li><p>Distinguish <strong>CBDCs</strong>, <strong>stablecoins</strong>, and <strong>cryptocurrencies</strong> by issuer, infrastructure, and state visibility.</p></li>
+<li><p>Apply the <strong>currency layer vs payment infrastructure layer</strong> framework to analyze threats to state control.</p></li>
+<li><p>Assess <strong>geopolitical implications</strong>: sovereignty, sanctions, capital flows, and infrastructure fragmentation.</p></li>
+</ol>
+</div>
+</div></section>
+<section class="slide smaller" id="types-of-digital-money"><h2 class="slide-title">Types of Digital Money</h2><div class="slide-body">
+<div style="font-size: 0.80em;">
+<table data-tbl-colwidths="[16,18,22,24,20]">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 14%" />
+<col style="width: 28%" />
+<col style="width: 31%" />
+<col style="width: 15%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Type</th>
+<th style="text-align: left;">Issuer</th>
+<th style="text-align: left;">Infrastructure</th>
+<th style="text-align: left;">State Visibility</th>
+<th style="text-align: left;">Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="https://en.wikipedia.org/wiki/Central_bank_digital_currency">Central Bank Digital Currency (CBDC)</a></td>
+<td style="text-align: left;">Central bank</td>
+<td style="text-align: left;">State-controlled digital ledger</td>
+<td style="text-align: left;">High — programmable, traceable</td>
+<td style="text-align: left;">China e-CNY</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="https://en.wikipedia.org/wiki/Stablecoin">Stablecoins</a></td>
+<td style="text-align: left;">Private company or protocol</td>
+<td style="text-align: left;">Public or permissioned blockchain</td>
+<td style="text-align: left;">Varies — USDC (moderate) to DAI (low)</td>
+<td style="text-align: left;">USDT, USDC, DAI</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="https://en.wikipedia.org/wiki/Cryptocurrency">Traditional Cryptocurrencies</a></td>
+<td style="text-align: left;">Protocol (no single issuer)</td>
+<td style="text-align: left;">Permissionless blockchain</td>
+<td style="text-align: left;">Low — pseudonymous</td>
+<td style="text-align: left;">Bitcoin, Ethereum</td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li><p>The <strong>issuer</strong> and the <strong>infrastructure</strong> are separable — that separation is what creates geopolitical tension.</p></li>
+<li><p>Not all governments pursue all three: <strong>China banned private stablecoins</strong> (February 2026); the <strong>US legislatively blocked a federal CBDC</strong> (July 2025).</p></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="central-bank-digital-currencies-cbdcs"><h2 class="slide-title">Central Bank Digital Currencies (CBDCs)</h2><div class="slide-body">
+<div style="font-size: 1.2em;">
+<ul>
+<li><p><strong>137 countries</strong> (98% of global GDP) are exploring a CBDC; <strong>72</strong> are in advanced stages; <strong>49</strong> pilots are active worldwide.</p></li>
+<li><p>All CBDC designs are <strong>permissioned by definition</strong> — no sovereign builds on infrastructure it cannot control.</p></li>
+<li><p><strong>Retail CBDCs</strong>: public-facing digital currency for citizens and businesses.</p></li>
+<li><p><strong>Wholesale CBDCs</strong>: interbank settlement systems for financial institutions.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="trust-architecture-cbdcs-vs-permissionless-systems"><h2 class="slide-title">Trust Architecture: CBDCs vs Permissionless Systems</h2><div class="slide-body">
+<div style="font-size: 0.55em;">
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><strong>CBDC: Hierarchical Trust (PKI-like)</strong></p>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 275.03 224.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:367px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 220)">
+<g id="node1" class="node">
+<path fill="#2d3748" stroke="black" d="M139,-216C139,-216 63.3,-216 63.3,-216 57.3,-216 51.3,-210 51.3,-204 51.3,-204 51.3,-187.2 51.3,-187.2 51.3,-181.2 57.3,-175.2 63.3,-175.2 63.3,-175.2 139,-175.2 139,-175.2 145,-175.2 151,-181.2 151,-187.2 151,-187.2 151,-204 151,-204 151,-210 145,-216 139,-216"/>
+<text text-anchor="middle" x="101.15" y="-198.9" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Central Bank</text>
+<text text-anchor="middle" x="101.15" y="-185.7" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">(Root of Trust)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#4a5568" stroke="black" d="M140.3,-128.4C140.3,-128.4 12,-128.4 12,-128.4 6,-128.4 0,-122.4 0,-116.4 0,-116.4 0,-99.6 0,-99.6 0,-93.6 6,-87.6 12,-87.6 12,-87.6 140.3,-87.6 140.3,-87.6 146.3,-87.6 152.3,-93.6 152.3,-99.6 152.3,-99.6 152.3,-116.4 152.3,-116.4 152.3,-122.4 146.3,-128.4 140.3,-128.4"/>
+<text text-anchor="middle" x="76.15" y="-111.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Commercial Banks</text>
+<text text-anchor="middle" x="76.15" y="-98.1" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">(Intermediate Authorities)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M50.89,-181.03C39.54,-175.52 28.86,-167.84 22.13,-157.2 17.35,-149.66 19.38,-142.59 24.81,-136.32"/>
+<polygon fill="black" stroke="black" points="26.97,-139.08 32.12,-129.82 22.32,-133.85 26.97,-139.08"/>
+<text text-anchor="middle" x="50.64" y="-149.1" font-family="Helvetica,sans-Serif" font-size="9.00">licenses, rules</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#e53e3e" stroke-dasharray="5,2" d="M95.35,-174.75C92.29,-164.27 88.47,-151.18 85.04,-139.45"/>
+<polygon fill="#e53e3e" stroke="#e53e3e" points="88.5,-138.82 82.34,-130.2 81.78,-140.78 88.5,-138.82"/>
+<text text-anchor="middle" x="125.91" y="-149.1" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#e53e3e">can revoke/freeze</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#718096" stroke="black" d="M176.42,-40.8C176.42,-40.8 87.88,-40.8 87.88,-40.8 81.88,-40.8 75.88,-34.8 75.88,-28.8 75.88,-28.8 75.88,-12 75.88,-12 75.88,-6 81.88,0 87.88,0 87.88,0 176.42,0 176.42,0 182.42,0 188.42,-6 188.42,-12 188.42,-12 188.42,-28.8 188.42,-28.8 188.42,-34.8 182.42,-40.8 176.42,-40.8"/>
+<text text-anchor="middle" x="132.15" y="-23.7" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">End Users</text>
+<text text-anchor="middle" x="132.15" y="-10.5" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">(Verified Wallets)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#e53e3e" stroke-dasharray="5,2" d="M148.41,-174.88C155.34,-170.06 161.65,-164.22 166.15,-157.2 189.82,-120.26 192.11,-98.83 174.15,-58.8 172.72,-55.61 170.86,-52.57 168.73,-49.72"/>
+<polygon fill="#e53e3e" stroke="#e53e3e" points="171.44,-47.5 162.17,-42.37 166.22,-52.16 171.44,-47.5"/>
+<text text-anchor="middle" x="226.51" y="-110.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#e53e3e">can freeze wallets,</text>
+<text text-anchor="middle" x="226.51" y="-99.9" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#e53e3e">reverse transactions</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M79.01,-87.18C80.98,-78.03 84.25,-67.33 89.61,-58.8 91.72,-55.45 94.21,-52.23 96.92,-49.18"/>
+<polygon fill="black" stroke="black" points="99.34,-51.71 103.9,-42.15 94.37,-46.78 99.34,-51.71"/>
+<text text-anchor="middle" x="131.88" y="-61.5" font-family="Helvetica,sans-Serif" font-size="9.00">KYC, wallet issuance</text>
+</g>
+</g>
+</svg></figure>
+<ul>
+<li>Trust flows <strong>downward</strong> from a root authority</li>
+<li>Every participant is <strong>credentialed</strong> by a higher authority</li>
+<li>The root can <strong>revoke</strong> at any level</li>
+<li>No participation without <strong>authorization</strong></li>
+</ul>
+</div><div class="column" style="width:50%;">
+<p><strong>Permissionless: Distributed Trust (No CA)</strong></p>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 160.67 350.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:215px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 346.6)">
+<g id="node1" class="node">
+<path fill="#744210" stroke="black" d="M99.1,-255C99.1,-255 68,-255 68,-255 62,-255 56,-249 56,-243 56,-243 56,-231 56,-231 56,-225 62,-219 68,-219 68,-219 99.1,-219 99.1,-219 105.1,-219 111.1,-225 111.1,-231 111.1,-231 111.1,-243 111.1,-243 111.1,-249 105.1,-255 99.1,-255"/>
+<text text-anchor="middle" x="83.55" y="-233.7" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Node</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#744210" stroke="black" d="M43.1,-182C43.1,-182 12,-182 12,-182 6,-182 0,-176 0,-170 0,-170 0,-158 0,-158 0,-152 6,-146 12,-146 12,-146 43.1,-146 43.1,-146 49.1,-146 55.1,-152 55.1,-158 55.1,-158 55.1,-170 55.1,-170 55.1,-176 49.1,-182 43.1,-182"/>
+<text text-anchor="middle" x="27.55" y="-160.7" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Node</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M69.99,-218.81C61.19,-207.65 49.76,-193.16 40.98,-182.03"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#744210" stroke="black" d="M87.1,-109C87.1,-109 56,-109 56,-109 50,-109 44,-103 44,-97 44,-97 44,-85 44,-85 44,-79 50,-73 56,-73 56,-73 87.1,-73 87.1,-73 93.1,-73 99.1,-79 99.1,-85 99.1,-85 99.1,-97 99.1,-97 99.1,-103 93.1,-109 87.1,-109"/>
+<text text-anchor="middle" x="71.55" y="-87.7" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Node</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M82.1,-218.63C79.79,-190.95 75.31,-137.15 73,-109.43"/>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M38.2,-145.81C45.12,-134.65 54.1,-120.16 61,-109.03"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#744210" stroke="black" d="M87.1,-36C87.1,-36 56,-36 56,-36 50,-36 44,-30 44,-24 44,-24 44,-12 44,-12 44,-6 50,0 56,0 56,0 87.1,0 87.1,0 93.1,0 99.1,-6 99.1,-12 99.1,-12 99.1,-24 99.1,-24 99.1,-30 93.1,-36 87.1,-36"/>
+<text text-anchor="middle" x="71.55" y="-14.7" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Node</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M26.28,-145.53C25.54,-126.99 26.05,-97.09 34.55,-73 39.31,-59.5 48.35,-46.2 56.3,-36.19"/>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M71.55,-72.81C71.55,-61.65 71.55,-47.16 71.55,-36.03"/>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M87.2,-36.05C95.28,-46.03 104.31,-59.32 108.55,-73 124.56,-124.69 103.3,-188.9 91.08,-218.97"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#975a16" stroke="black" d="M140.67,-342.6C140.67,-342.6 26.43,-342.6 26.43,-342.6 20.43,-342.6 14.43,-336.6 14.43,-330.6 14.43,-330.6 14.43,-313.8 14.43,-313.8 14.43,-307.8 20.43,-301.8 26.43,-301.8 26.43,-301.8 140.67,-301.8 140.67,-301.8 146.67,-301.8 152.67,-307.8 152.67,-313.8 152.67,-313.8 152.67,-330.6 152.67,-330.6 152.67,-336.6 146.67,-342.6 140.67,-342.6"/>
+<text text-anchor="middle" x="83.55" y="-325.5" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Any User</text>
+<text text-anchor="middle" x="83.55" y="-312.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">(Self&#45;Generated Keys)</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="black" stroke-width="2" d="M83.55,-301.48C83.55,-287.45 83.55,-268.78 83.55,-255.32"/>
+<text text-anchor="middle" x="110.31" y="-275.7" font-family="Helvetica,sans-Serif" font-size="9.00">broadcasts tx</text>
+</g>
+</g>
+</svg></figure>
+<ul>
+<li>Trust is <strong>emergent</strong> from consensus, not delegated</li>
+<li>Anyone can generate keys and <strong>participate</strong></li>
+<li>No single entity can <strong>revoke or freeze</strong></li>
+<li>Security from <strong>cryptography + economics</strong>, not authority</li>
+</ul>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="global-cbdc-landscape"><h2 class="slide-title">Global CBDC Landscape</h2><div class="slide-body">
+<div style="font-size: 0.80em;">
+<figure>
+<img src="../img/CBDC_map.png" style="width:85.0%" alt="Source: Atlantic Council CBDC Tracker, 2025" />
+<figcaption aria-hidden="true">Source: Atlantic Council CBDC Tracker, 2025</figcaption>
+</figure>
+<ul>
+<li><strong>3 launched</strong>, <strong>49 pilots</strong>, <strong>20 in development</strong>, <strong>36 researching</strong> — the US is an outlier, having legislatively blocked a retail CBDC.</li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="cbdc-technical-platforms"><h2 class="slide-title">CBDC Technical Platforms</h2><div class="slide-body">
+<div style="font-size: 0.80em;">
+<table data-tbl-colwidths="[20,18,22,40]">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 13%" />
+<col style="width: 39%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Platform</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: left;">Permission Model</th>
+<th style="text-align: left;">CBDC Users</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="https://www.hyperledger.org/projects/fabric">Hyperledger Fabric</a></td>
+<td style="text-align: left;">Permissioned DLT</td>
+<td style="text-align: left;">Private membership (MSP)</td>
+<td style="text-align: left;">Some pilots, enterprise</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="https://www.hyperledger.org/projects/besu">Hyperledger Besu</a></td>
+<td style="text-align: left;">Enterprise Ethereum</td>
+<td style="text-align: left;">Permissioned or public</td>
+<td style="text-align: left;">Nigeria (eNaira), Brazil (Drex)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="https://www.hyperledger.org/projects/iroha">Hyperledger Iroha</a></td>
+<td style="text-align: left;">Permissioned DLT</td>
+<td style="text-align: left;">Role-based access</td>
+<td style="text-align: left;">Cambodia (Bakong)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="https://r3.com/corda/">R3 Corda</a></td>
+<td style="text-align: left;">Distributed ledger</td>
+<td style="text-align: left;">Permissioned</td>
+<td style="text-align: left;">Sweden (e-Krona), Canada (Jasper)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="https://consensys.io/quorum">Quorum</a></td>
+<td style="text-align: left;">Ethereum fork</td>
+<td style="text-align: left;">Consortium</td>
+<td style="text-align: left;">Singapore (Ubin), South Africa</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="https://tezos.com/">Tezos</a></td>
+<td style="text-align: left;">Public blockchain</td>
+<td style="text-align: left;">Permissionless</td>
+<td style="text-align: left;">France wholesale experiments</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="https://www.bis.org/about/bisih/topics/cbdc/mcbdc_bridge.htm">mBridge Ledger</a></td>
+<td style="text-align: left;">Custom CBDC DLT</td>
+<td style="text-align: left;">Central bank only</td>
+<td style="text-align: left;">China, UAE, Thailand, HK, Saudi Arabia</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="https://www.bitt.com/">Bitt Platform</a></td>
+<td style="text-align: left;">Proprietary</td>
+<td style="text-align: left;">Central bank controlled</td>
+<td style="text-align: left;">DCash (ECCU)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="https://www.ecurrency.net/">eCurrency Mint</a></td>
+<td style="text-align: left;">Centralized</td>
+<td style="text-align: left;">Central bank controlled</td>
+<td style="text-align: left;">Jamaica (JAM-DEX)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div></section>
+<section class="slide smaller" id="global-payment-infrastructure-overview"><h2 class="slide-title">Global Payment Infrastructure: Overview</h2><div class="slide-body">
+<div style="font-size: .8em;">
+<p>Money moving across borders travels on <strong>rails</strong> — messaging and settlement systems that were built long before blockchain existed.</p>
+<ul>
+<li><p><strong>Two functions</strong>: <em>messaging</em> (instructions about who pays whom) and <em>settlement</em> (the actual movement of value). These are often separate systems.</p></li>
+<li><p><strong>The dominant rails are American</strong>: SWIFT carries messages; Fedwire and CHIPS settle dollars. Foreign banks reach the dollar system through US correspondent banks — every layer is a potential choke point.</p></li>
+<li><p><strong>Sanctions power flows from infrastructure control</strong>: cutting a country off SWIFT or US correspondent banking is one of the most powerful non-military tools available.</p></li>
+<li><p><strong>Alternatives are emerging</strong>: CIPS (China), SPFS (Russia), and mBridge (CBDC settlement) each reduce dependence on US-controlled infrastructure.</p></li>
+<li><p>The rise of digital money — stablecoins on permissionless chains, CBDCs on sovereign ledgers — is inseparable from this competition for infrastructure control.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="global-payment-infrastructure-compare-and-contrast"><h2 class="slide-title">Global Payment Infrastructure: Compare and Contrast</h2><div class="slide-body">
+<div style="font-size: 0.52em;">
+<table data-tbl-colwidths="[9,16,12,16,13,15,19]">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 16%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 9%" />
+<col style="width: 16%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">System</th>
+<th style="text-align: left;">Description</th>
+<th style="text-align: left;">Operator</th>
+<th style="text-align: left;">Function</th>
+<th style="text-align: left;">Reach</th>
+<th style="text-align: left;">US Leverage</th>
+<th style="text-align: left;">Key Limitation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="https://www.swift.com/about-us/discover-swift/messaging-standards"><strong>SWIFT</strong></a></td>
+<td style="text-align: left;">The global “postal service” for bank-to-bank financial messages; does not move money itself</td>
+<td style="text-align: left;">SWIFT (Belgium, US-influenced)</td>
+<td style="text-align: left;">Messaging — carries transfer instructions between banks</td>
+<td style="text-align: left;">11,000+ institutions, 200+ countries</td>
+<td style="text-align: left;">High — most dollar transactions clear through US correspondents</td>
+<td style="text-align: left;">Messaging only; doesn’t settle. Disconnection is a major sanction tool (Russia 2022)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="https://en.wikipedia.org/wiki/Fedwire"><strong>Fedwire</strong></a> / <a href="https://en.wikipedia.org/wiki/CHIPS_(payment_system)"><strong>CHIPS</strong></a></td>
+<td style="text-align: left;">The US domestic systems where dollars actually settle; the foundation of global dollar clearing</td>
+<td style="text-align: left;">Federal Reserve / The Clearing House (US)</td>
+<td style="text-align: left;">Settlement — where dollars actually move</td>
+<td style="text-align: left;">US domestic + international dollar clearing</td>
+<td style="text-align: left;">Maximum — the dollar’s home rails</td>
+<td style="text-align: left;">Only handles USD; foreign banks need US correspondents to access</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="https://en.wikipedia.org/wiki/Cross-Border_Interbank_Payment_System"><strong>CIPS</strong></a></td>
+<td style="text-align: left;">China’s cross-border yuan system; combines messaging and settlement, reducing dependence on SWIFT</td>
+<td style="text-align: left;">People’s Bank of China</td>
+<td style="text-align: left;">Messaging + settlement for yuan cross-border transactions</td>
+<td style="text-align: left;">1,400+ institutions, 110+ countries</td>
+<td style="text-align: left;">Low — operates independently of US infrastructure</td>
+<td style="text-align: left;">Limited to yuan-denominated transactions; still growing reach</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="https://en.wikipedia.org/wiki/System_for_Transfer_of_Financial_Messages"><strong>SPFS</strong></a></td>
+<td style="text-align: left;">Russia’s SWIFT replacement, built after Crimea sanctions to ensure domestic banks could still communicate</td>
+<td style="text-align: left;">Central Bank of Russia</td>
+<td style="text-align: left;">Messaging — Russia’s SWIFT alternative (est. 2014)</td>
+<td style="text-align: left;">~550 institutions, mostly Russia + former Soviet states</td>
+<td style="text-align: left;">None — built to avoid US/EU leverage</td>
+<td style="text-align: left;">Very limited international reach; not widely trusted outside allies</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="https://www.bis.org/about/bisih/topics/cbdc/mcbdc_bridge.htm"><strong>mBridge</strong></a></td>
+<td style="text-align: left;">A new model: central banks settle directly in each other’s digital currencies, no correspondent banking needed</td>
+<td style="text-align: left;">Consortium (China, UAE, Thailand, HK, Saudi Arabia)</td>
+<td style="text-align: left;">Direct CBDC-to-CBDC settlement — bypasses correspondent banking</td>
+<td style="text-align: left;">Pilot stage; 5 central banks + observers</td>
+<td style="text-align: left;">None — settles without touching dollar infrastructure</td>
+<td style="text-align: left;">Still experimental; governance and scaling unresolved</td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>SWIFT + Fedwire/CHIPS = the <strong>current US-centered system</strong>. CIPS, SPFS, and mBridge = <strong>emerging alternatives</strong>. The fragmentation is already underway.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="stablecoins-types-and-mechanisms"><h2 class="slide-title">Stablecoins: Types and Mechanisms</h2><div class="slide-body">
+<div style="font-size: 1.2em;">
+<ul>
+<li><p><strong>Fiat-collateralized</strong>: reserves of dollars or equivalents back each token (USDT, USDC).</p></li>
+<li><p><strong>Crypto-collateralized</strong>: on-chain collateral, often over-collateralized (DAI).</p></li>
+<li><p><strong>Algorithmic</strong>: supply adjustments attempt to maintain peg without full collateral.</p></li>
+<li><p>The collateral model determines <strong>redemption risk</strong>, <strong>transparency</strong>, and <strong>regulatory surface</strong>.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="trust-architecture-the-stablecoin-hybrid"><h2 class="slide-title">Trust Architecture: The Stablecoin Hybrid</h2><div class="slide-body">
+<div style="font-size: 0.55em;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 484.18 495.03" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:645px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 491.03)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="#e53e3e" stroke-dasharray="5,2" points="8,-277.4 8,-479.03 200,-479.03 200,-277.4 8,-277.4"/>
+<text text-anchor="middle" x="64.34" y="-466.03" font-family="Helvetica,sans-Serif" font-size="10.00">Issuer Layer (CA&#45;like)</text>
+</g>
+<g id="clust2" class="cluster">
+<polygon fill="none" stroke="#2d3748" stroke-dasharray="5,2" points="208,-112.6 208,-362.63 327,-362.63 327,-112.6 208,-112.6"/>
+<text text-anchor="middle" x="267.68" y="-349.63" font-family="Helvetica,sans-Serif" font-size="10.00">Network Layer (No CA)</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#744210" stroke="black" d="M173.3,-451.03C173.3,-451.03 70.7,-451.03 70.7,-451.03 64.7,-451.03 58.7,-445.03 58.7,-439.03 58.7,-439.03 58.7,-422.23 58.7,-422.23 58.7,-416.23 64.7,-410.23 70.7,-410.23 70.7,-410.23 173.3,-410.23 173.3,-410.23 179.3,-410.23 185.3,-416.23 185.3,-422.23 185.3,-422.23 185.3,-439.03 185.3,-439.03 185.3,-445.03 179.3,-451.03 173.3,-451.03"/>
+<text text-anchor="middle" x="122" y="-433.93" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Private Issuer</text>
+<text text-anchor="middle" x="122" y="-420.73" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">(e.g., Tether, Circle)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e53e3e" stroke="black" d="M191.55,-312.32C191.55,-312.32 191.55,-320.94 191.55,-320.94 191.55,-325.25 187.49,-331.01 183.43,-332.46 183.43,-332.46 148.39,-344.96 148.39,-344.96 144.33,-346.41 135.95,-347.85 131.64,-347.85 131.64,-347.85 76.36,-347.85 76.36,-347.85 72.05,-347.85 63.67,-346.41 59.61,-344.96 59.61,-344.96 24.57,-332.46 24.57,-332.46 20.51,-331.01 16.45,-325.25 16.45,-320.94 16.45,-320.94 16.45,-312.32 16.45,-312.32 16.45,-308 20.51,-302.24 24.57,-300.8 24.57,-300.8 59.61,-288.3 59.61,-288.3 63.67,-286.85 72.05,-285.4 76.36,-285.4 76.36,-285.4 131.64,-285.4 131.64,-285.4 135.95,-285.4 144.33,-286.85 148.39,-288.3 148.39,-288.3 183.43,-300.8 183.43,-300.8 187.49,-302.24 191.55,-308 191.55,-312.32"/>
+<text text-anchor="middle" x="104" y="-319.93" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Blacklist /</text>
+<text text-anchor="middle" x="104" y="-306.73" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Freeze Capability</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#e53e3e" stroke-dasharray="5,2" d="M118.82,-409.86C116.57,-395.85 113.47,-376.53 110.68,-359.2"/>
+<polygon fill="#e53e3e" stroke="#e53e3e" points="114.19,-358.98 109.15,-349.66 107.28,-360.09 114.19,-358.98"/>
+<text text-anchor="middle" x="152.68" y="-384.13" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#e53e3e">can freeze</text>
+<text text-anchor="middle" x="152.68" y="-373.33" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#e53e3e">specific addresses</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#2d3748" stroke="black" d="M276.11,-334.63C276.11,-334.63 227.89,-334.63 227.89,-334.63 221.89,-334.63 215.89,-328.63 215.89,-322.63 215.89,-322.63 215.89,-310.63 215.89,-310.63 215.89,-304.63 221.89,-298.63 227.89,-298.63 227.89,-298.63 276.11,-298.63 276.11,-298.63 282.11,-298.63 288.11,-304.63 288.11,-310.63 288.11,-310.63 288.11,-322.63 288.11,-322.63 288.11,-328.63 282.11,-334.63 276.11,-334.63"/>
+<text text-anchor="middle" x="252" y="-313.33" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Validator</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" stroke-width="2" d="M167.29,-409.91C176.6,-404.84 185.99,-398.9 194,-392.23 210.23,-378.7 224.81,-359.91 235.29,-344.57"/>
+<polygon fill="black" stroke="black" stroke-width="2" points="237.31,-347.87 239.9,-337.6 231.46,-344.01 237.31,-347.87"/>
+<text text-anchor="middle" x="260.91" y="-384.13" font-family="Helvetica,sans-Serif" font-size="9.00">mints tokens onto</text>
+<text text-anchor="middle" x="260.91" y="-373.33" font-family="Helvetica,sans-Serif" font-size="9.00">permissionless network</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#2d3748" stroke="black" d="M307.11,-248.4C307.11,-248.4 258.89,-248.4 258.89,-248.4 252.89,-248.4 246.89,-242.4 246.89,-236.4 246.89,-236.4 246.89,-224.4 246.89,-224.4 246.89,-218.4 252.89,-212.4 258.89,-212.4 258.89,-212.4 307.11,-212.4 307.11,-212.4 313.11,-212.4 319.11,-218.4 319.11,-224.4 319.11,-224.4 319.11,-236.4 319.11,-236.4 319.11,-242.4 313.11,-248.4 307.11,-248.4"/>
+<text text-anchor="middle" x="283" y="-227.1" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Validator</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M258.42,-298.18C263.74,-283.72 271.27,-263.28 276.59,-248.83"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#2d3748" stroke="black" d="M305.11,-156.6C305.11,-156.6 256.89,-156.6 256.89,-156.6 250.89,-156.6 244.89,-150.6 244.89,-144.6 244.89,-144.6 244.89,-132.6 244.89,-132.6 244.89,-126.6 250.89,-120.6 256.89,-120.6 256.89,-120.6 305.11,-120.6 305.11,-120.6 311.11,-120.6 317.11,-126.6 317.11,-132.6 317.11,-132.6 317.11,-144.6 317.11,-144.6 317.11,-150.6 311.11,-156.6 305.11,-156.6"/>
+<text text-anchor="middle" x="281" y="-135.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Validator</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M282.61,-212.09C282.26,-196.18 281.74,-172.75 281.38,-156.86"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#975a16" stroke="black" d="M420.64,-165.6C420.64,-165.6 347.36,-165.6 347.36,-165.6 341.36,-165.6 335.36,-159.6 335.36,-153.6 335.36,-153.6 335.36,-123.6 335.36,-123.6 335.36,-117.6 341.36,-111.6 347.36,-111.6 347.36,-111.6 420.64,-111.6 420.64,-111.6 426.64,-111.6 432.64,-117.6 432.64,-123.6 432.64,-123.6 432.64,-153.6 432.64,-153.6 432.64,-159.6 426.64,-165.6 420.64,-165.6"/>
+<text text-anchor="middle" x="384" y="-148.5" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">User A</text>
+<text text-anchor="middle" x="384" y="-135.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">(No KYC at</text>
+<text text-anchor="middle" x="384" y="-122.1" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">protocol level)</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M302.47,-212.09C317.15,-199.04 337.53,-180.92 354.24,-166.06"/>
+<text text-anchor="middle" x="358.77" y="-186.3" font-family="Helvetica,sans-Serif" font-size="9.00">holds tokens</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M267.13,-156.92C256.84,-170.96 243.65,-191.73 238,-212.4 229.94,-241.88 238.63,-277.43 245.46,-298.18"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="#975a16" stroke="black" d="M368.64,-54C368.64,-54 295.36,-54 295.36,-54 289.36,-54 283.36,-48 283.36,-42 283.36,-42 283.36,-12 283.36,-12 283.36,-6 289.36,0 295.36,0 295.36,0 368.64,0 368.64,0 374.64,0 380.64,-6 380.64,-12 380.64,-12 380.64,-42 380.64,-42 380.64,-48 374.64,-54 368.64,-54"/>
+<text text-anchor="middle" x="332" y="-36.9" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">User B</text>
+<text text-anchor="middle" x="332" y="-23.7" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">(No KYC at</text>
+<text text-anchor="middle" x="332" y="-10.5" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">protocol level)</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="black" d="M285.7,-120.15C289.64,-106.66 295.83,-87.7 303.47,-72 306.33,-66.1 309.85,-60.05 313.41,-54.38"/>
+<text text-anchor="middle" x="328.73" y="-80.1" font-family="Helvetica,sans-Serif" font-size="9.00">holds tokens</text>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#38a169" stroke-width="2" d="M372.24,-111.33C366.79,-99.3 360.16,-84.88 354,-72 352.85,-69.59 351.65,-67.12 350.44,-64.63"/>
+<polygon fill="#38a169" stroke="#38a169" stroke-width="2" points="354.32,-64.58 346.75,-57.17 348.04,-67.68 354.32,-64.58"/>
+<text text-anchor="middle" x="420.14" y="-85.5" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#38a169">peer&#45;to&#45;peer transfer</text>
+<text text-anchor="middle" x="420.14" y="-74.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#38a169">(no issuer approval needed)</text>
+</g>
+</g>
+</svg></figure>
+<ul>
+<li><strong>Issuer layer</strong>: centralized, CA-like — can mint, freeze addresses, comply with sanctions (USDC) or not (USDT offshore)</li>
+<li><strong>Network layer</strong>: permissionless, no CA — anyone can receive, hold, and transfer tokens without identity verification</li>
+<li><strong>The gap</strong>: issuer can freeze <em>known</em> addresses reactively, but cannot gate <em>participation</em> at the network level — users transact peer-to-peer without issuer approval</li>
+<li>This hybrid is why stablecoins are <strong>the most contested category</strong> — governments have partial leverage (issuer) but not full control (network)</li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="major-stablecoins-and-use-cases"><h2 class="slide-title">Major Stablecoins and Use Cases</h2><div class="slide-body">
+<div style="font-size: 1.2em;">
+<ul>
+<li><p><strong><a href="https://tether.to/en/transparency/">USDT (Tether)</a></strong>: largest by volume; dominant on Tron for emerging-market payments.</p></li>
+<li><p><strong><a href="https://www.circle.com/usdc">USDC (Circle)</a></strong>: US-regulated; can freeze addresses; sanctions-compliant.</p></li>
+<li><p><strong><a href="https://makerdao.com/en/">DAI (MakerDAO)</a></strong>: decentralized governance; crypto-collateralized; permissionless.</p></li>
+<li><p>Use cases: DeFi liquidity, international payments, crypto market settlement, <strong>inflation hedging</strong>.</p></li>
+<li><p>In practice: shops in Bolivia price goods in USDT; Venezuela’s economy is substantially rewired to stablecoins; Iran’s citizens use Tron-based USDT to hedge a collapsing rial.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="cbdcs-vs-cryptocurrencies"><h2 class="slide-title">CBDCs vs Cryptocurrencies</h2><div class="slide-body">
+<div style="font-size: 0.75em;">
+<table data-tbl-colwidths="[14,43,43]">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 12%" />
+<col style="width: 67%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Dimension</th>
+<th style="text-align: left;">CBDCs</th>
+<th style="text-align: left;">Cryptocurrencies (Bitcoin, Ethereum)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Issuer</td>
+<td style="text-align: left;">Central bank (state liability)</td>
+<td style="text-align: left;">No single issuer (protocol rules)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Infrastructure</td>
+<td style="text-align: left;">Permissioned — state controls nodes, validation, participation</td>
+<td style="text-align: left;">Permissionless — anyone can run a node, validate, transact</td>
+</tr>
+<tr>
+<td style="text-align: left;">Identity</td>
+<td style="text-align: left;">KYC required; state knows participants</td>
+<td style="text-align: left;">Pseudonymous; no identity gate at protocol level</td>
+</tr>
+<tr>
+<td style="text-align: left;">Supply control</td>
+<td style="text-align: left;">Central bank sets monetary policy</td>
+<td style="text-align: left;">Fixed or algorithmic supply; no policy discretion</td>
+</tr>
+<tr>
+<td style="text-align: left;">Censorship</td>
+<td style="text-align: left;">State can freeze, block, or reverse transactions</td>
+<td style="text-align: left;">Censorship-resistant by design; no single point of control</td>
+</tr>
+<tr>
+<td style="text-align: left;">Privacy</td>
+<td style="text-align: left;">Design choice — ranges from cash-like to fully traceable</td>
+<td style="text-align: left;">Pseudonymous on-chain; privacy depends on chain and user behavior</td>
+</tr>
+<tr>
+<td style="text-align: left;">Cross-border</td>
+<td style="text-align: left;">Requires bilateral or multilateral agreements (e.g., mBridge)</td>
+<td style="text-align: left;">Borderless by default; no permission needed</td>
+</tr>
+<tr>
+<td style="text-align: left;">Legal status</td>
+<td style="text-align: left;">Legal tender in issuing jurisdiction</td>
+<td style="text-align: left;">Varies by jurisdiction — legal, restricted, or banned</td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>CBDCs extend state control into digital infrastructure. Cryptocurrencies remove the state from the loop entirely. <strong>Stablecoins sit between them</strong> — which is why they are the most contested.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="why-governments-care"><h2 class="slide-title">Why Governments Care</h2><div class="slide-body">
+<div style="font-size: 1.2em;">
+<ul>
+<li><p><strong>Monetary sovereignty</strong>: control over currency issuance and monetary policy transmission.</p></li>
+<li><p><strong>Payment system modernization</strong>: faster, cheaper, more resilient domestic payments.</p></li>
+<li><p><strong>Financial inclusion</strong>: reaching unbanked populations with digital infrastructure.</p></li>
+<li><p><strong>Sanctions enforcement and capital flow control</strong>: maintaining the state’s ability to restrict and surveil financial activity.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="the-permission-layer-three-challenges-to-state-control"><h2 class="slide-title">The Permission Layer: Three Challenges to State Control</h2><div class="slide-body">
+<div style="font-size: 1.2em;">
+<ul>
+<li><p><strong>Bitcoin/Ethereum</strong> challenge the <strong>currency layer</strong> — they propose alternative units of value. A slow, theoretical threat for most major economies.</p></li>
+<li><p><strong>Stablecoins</strong> challenge the <strong>payment infrastructure layer</strong> — they distribute existing currencies outside sovereign banking channels. An immediate, operational threat.</p></li>
+<li><p><strong>CBDCs</strong> are the state’s attempt to <strong>own both layers</strong> — the currency and the rails.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="case-study-usdt-on-tron"><h2 class="slide-title">Case Study: USDT on Tron</h2><div class="slide-body">
+<div style="font-size: 1.2em;">
+<ul>
+<li><p>Tron carries a <strong>large share</strong> of USDT transfers—low fees enable small-value payments.</p></li>
+<li><p>Functions as <strong>de facto dollar infrastructure</strong> in economies with capital controls or unstable currencies — Venezuela collects ~80% of oil revenue in USDT; Bolivia shops display USDT price tags.</p></li>
+<li><p>Local governments lack visibility and control; the US has <strong>limited reach</strong> over Tron validators.</p></li>
+<li><p>Demonstrates the gap between <strong>issuer control</strong> (Tether froze $182M in a single action, Jan 2026) and <strong>network control</strong> (no one entity controls Tron).</p></li>
+</ul>
+</div>
+<div style="font-size: 0.75em;">
+<p><strong>Reference:</strong> <a href="https://www.atlanticcouncil.org/blogs/new-atlanticist/how-venezuela-uses-crypto-to-sell-oil-and-what-the-us-should-do-about-it/">Atlantic Council — How Venezuela uses crypto to sell oil (Dec 2025)</a></p>
+</div>
+</div></section>
+<section class="slide" id="mbridge-a-test-case"><h2 class="slide-title">mBridge: A Test Case</h2><div class="slide-body">
+<ul>
+<li>Cross-border payments still rely on correspondent banks, messaging layers, and intermediary checkpoints<br />
+</li>
+<li><a href="https://www.bis.org/press/p240605.htm">mBridge</a> began in <strong>2021</strong> through the <strong>Bank for International Settlements (BIS) Innovation Hub</strong>, with China, Hong Kong, Thailand, and the UAE; Saudi Arabia later joined as a full participant<br />
+</li>
+<li>mBridge asks: <em>can central banks settle more directly on a shared digital platform using their own currencies?</em></li>
+</ul>
+</div></section>
+<section class="slide" id="mbridge-so-far"><h2 class="slide-title">mBridge So Far</h2><div class="slide-body">
+<div style="font-size: 0.9em; line-height: 1.18;">
+<ul>
+<li>In <a href="https://www.bis.org/publ/othp40.htm"><strong>2021</strong></a>, the prototype showed that transfers and foreign exchange (FX) transactions could settle in seconds, run <strong>24/7</strong>, and lower costs<br />
+</li>
+<li>In <a href="https://www.bis.org/publ/othp59.htm"><strong>2022</strong></a>, the pilot handled real value: <strong>20 banks</strong> completed <strong>164</strong> transactions worth more than <strong>$22 million</strong><br />
+</li>
+<li>In <a href="https://www.bis.org/press/p240605.htm"><strong>2024</strong></a>, BIS said mBridge had reached <strong>minimum viable product (MVP)</strong> stage: usable for broader testing, but not yet a mature global production system<br />
+</li>
+<li>Cross-border rule alignment remains a friction point: Countries still have to agree on compliance, data visibility, dispute handling, and network membership<br />
+</li>
+</ul>
+</div>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-atlanticcouncil_centralbankdigital_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">Atlantic Council, <span>“Central <span>Bank Digital Currency Tracker</span>.”</span> Accessed: Oct. 20, 2025. [Online]. Available: <a href="https://www.atlanticcouncil.org/cbdctracker/">https://www.atlanticcouncil.org/cbdctracker/</a></div>
+</div>
+<div id="ref-boneh_policycryptocurrenciescbdcs_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">D. Boneh and V. Shoup, <span>“Policy and <span>Cryptocurrencies</span> (<span>CBDCs</span>).”</span> 2020. Available: <a href="https://intensecrypto.org/public/lec_24_policy.html">https://intensecrypto.org/public/lec_24_policy.html</a></div>
+</div>
+<div id="ref-labonte_keyissuesstablecoin_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">M. Labonte and P. Tierno, <span>“Key <span>Issues</span> in <span>Stablecoin Legislation</span> in the 119th <span>Congress</span>,”</span> Congressional Research Service, Washington, D.C., In Focus IF12984, Sept. 2025. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://www.congress.gov/crs_external_products/IF/PDF/IF12984/IF12984.3.pdf">https://www.congress.gov/crs_external_products/IF/PDF/IF12984/IF12984.3.pdf</a></div>
+</div>
+<div id="ref-bis_annualeconomicreport_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">BIS, <span>“Annual <span>Economic Report</span> 2022,”</span> Bank for International Settlements (BIS), Annual AR2022E, June 2022. Available: <a href="https://www.bis.org/publ/arpdf/ar2022e.pdf">https://www.bis.org/publ/arpdf/ar2022e.pdf</a></div>
+</div>
+<div id="ref-yaga_blockchaintechnologyoverview_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">D. Yaga, P. Mell, N. Roby, and K. Scarfone, <span>“Blockchain technology overview,”</span> <span>National Institute of Standards and Technology</span>, Gaithersburg, MD, NIST IR 8202, Oct. 2018. doi: <a href="https://doi.org/10.6028/NIST.IR.8202">10.6028/NIST.IR.8202</a>.</div>
+</div>
+<div id="ref-nakamoto_bitcoinpeertopeerelectronic_2008" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">S. Nakamoto, <span>“Bitcoin: <span class="nocase">A Peer-to-Peer Electronic Cash System</span>.”</span> Satoshi Nakamoto Institute, Oct. 31, 2008. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf">https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf</a></div>
+</div>
+<div id="ref-bis_mbridge_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">Bank for International Settlements, <span>“Project <span class="nocase">mBridge</span> reaches minimum viable product stage.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.bis.org/press/p240605.htm">https://www.bis.org/press/p240605.htm</a></div>
+</div>
+<div id="ref-hyperledger_blockchainplatformenterprise_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">Hyperledger, <span>“A <span>Blockchain Platform</span> for the <span>Enterprise</span> — <span>Hyperledger Fabric Docs</span> main documentation.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://hyperledger-fabric.readthedocs.io/en/release-2.5/">https://hyperledger-fabric.readthedocs.io/en/release-2.5/</a></div>
+</div>
+<div id="ref-swift_getstarted_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">Swift, <span>“Get started with <span>Swift</span>.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.swift.com/your-needs/banking/get-started-with-swift">https://www.swift.com/your-needs/banking/get-started-with-swift</a></div>
+</div>
+<div id="ref-worldbank_financialsector_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">World Bank, <span>“Financial sector.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.worldbank.org/en/topic/financialsector">https://www.worldbank.org/en/topic/financialsector</a></div>
+</div>
+<div id="ref-l32_bis_project_mbridge_connecting_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">Bank for International Settlements Innovation Hub Hong Kong Centre, Hong Kong Monetary Authority, Bank of Thailand, Digital Currency Institute of the People’s Bank of China, and Central Bank of the United Arab Emirates, <span>“Project <span class="nocase">mBridge</span>: Connecting economies through <span>CBDC</span>,”</span> Bank for International Settlements, Oct. 2022. Accessed: Mar. 25, 2026. [Online]. Available: <a href="https://www.bis.org/publ/othp59.htm">https://www.bis.org/publ/othp59.htm</a></div>
+</div>
+<div id="ref-mitdigitalcurrencyinitiative_stablecoinredemptionsnot_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">MIT Digital Currency Initiative, <span>“Stablecoin <span>Redemptions</span>: <span>For Some</span>, <span>Not All</span>.”</span> 2022. Available: <a href="https://www.dci.mit.edu/dci-news/stablecoin-redemptions-for-some-not-all">https://www.dci.mit.edu/dci-news/stablecoin-redemptions-for-some-not-all</a></div>
+</div>
+<div id="ref-u.s.cftc_cftcorderstether_2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">U.S. CFTC, <span>“<span>CFTC Orders Tether</span> to <span>Pay</span> $41 <span>Million</span>.”</span> 2021. Available: <a href="https://www.cftc.gov/PressRoom/PressReleases/8450-21">https://www.cftc.gov/PressRoom/PressReleases/8450-21</a></div>
+</div>
+<div id="ref-l34_euronews_reuters_terra_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">Reuters, <span>“TerraUSD collapse.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://www.euronews.com/next/2022/05/11/fintech-crypto-currency-terra">https://www.euronews.com/next/2022/05/11/fintech-crypto-currency-terra</a></div>
+</div>
+<div id="ref-tether_howitworks_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline">Tether, <span>“How <span>It Works</span>.”</span> 2025. Available: <a href="https://tether.to/en/how-it-works">https://tether.to/en/how-it-works</a></div>
+</div>
+<div id="ref-l34_circle_usdc_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[16] </div><div class="csl-right-inline">Circle, <span>“Introducing USD coin.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://www.circle.com/blog/introducing-usd-coin">https://www.circle.com/blog/introducing-usd-coin</a></div>
+</div>
+<div id="ref-imf_fintechnotes_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[17] </div><div class="csl-right-inline">International Monetary Fund, <span>“IMF fintech notes.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.imf.org/en/Publications/fintech-notes">https://www.imf.org/en/Publications/fintech-notes</a></div>
+</div>
+<div id="ref-l33_coindesk_coindesk_tether_freezes_28m_usdt_on_russian_crypto_exch_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[18] </div><div class="csl-right-inline">CoinDesk, [Online]. Available: <a href="https://www.coindesk.com/policy/2025/03/06/tether-freezes-usd28m-usdt-on-russian-crypto-exchange-garantex">https://www.coindesk.com/policy/2025/03/06/tether-freezes-usd28m-usdt-on-russian-crypto-exchange-garantex</a></div>
+</div>
+<div id="ref-l32_bis_inthanon_lionrock_mbridge_2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[19] </div><div class="csl-right-inline">Bank for International Settlements Innovation Hub Hong Kong Centre, Hong Kong Monetary Authority, Bank of Thailand, Digital Currency Institute of the People’s Bank of China, and Central Bank of the United Arab Emirates, <span>“Inthanon-LionRock to <span class="nocase">mBridge</span>: Building a multi <span>CBDC</span> platform for international payments,”</span> Bank for International Settlements, Sept. 2021. Accessed: Mar. 25, 2026. [Online]. Available: <a href="https://www.bis.org/publ/othp40.htm">https://www.bis.org/publ/othp40.htm</a></div>
+</div>
+<div id="ref-quarmby_tetherrolevenuezela_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[20] </div><div class="csl-right-inline">B. Quarmby, <span>“Tether’s role in <span>Venezuela</span>, <span>Iran</span> highlights the duality of stablecoins,”</span> Cointelegraph. Accessed: Mar. 17, 2026. [Online]. Available: <a href="https://cointelegraph.com/news/tether-role-venezuela-iran-highlights-stablecoin-duality">https://cointelegraph.com/news/tether-role-venezuela-iran-highlights-stablecoin-duality</a></div>
+</div>
+<div id="ref-wood_fiatinflationcrypto_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[21] </div><div class="csl-right-inline">A. Wood, <span>“Fiat inflation drives crypto adoption across the globe,”</span> Cointelegraph. Accessed: Mar. 17, 2026. [Online]. Available: <a href="https://cointelegraph.com/news/fiat-inflation-crypto-adoption-globe">https://cointelegraph.com/news/fiat-inflation-crypto-adoption-globe</a></div>
+</div>
+<div id="ref-wood_a7a5stablecoin_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[22] </div><div class="csl-right-inline">A. Wood, <span>“Stablecoin <span>A7A5</span> grows parallel system for sanctioned companies,”</span> Cointelegraph. Accessed: Mar. 17, 2026. [Online]. Available: <a href="https://cointelegraph.com/news/stablecoin-a7a5-parallel-network-sanctioned-companies">https://cointelegraph.com/news/stablecoin-a7a5-parallel-network-sanctioned-companies</a></div>
+</div>
+<div id="ref-decrypt_chinabansstablecoins_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[23] </div><div class="csl-right-inline">D. Staff, <span>“China formalizes ban on yuan stablecoins, <span>RWA</span> tokenization,”</span> Decrypt. Accessed: Mar. 17, 2026. [Online]. Available: <a href="https://decrypt.co/357221/china-formalizes-ban-on-yuan-stablecoins-rwa-tokenization">https://decrypt.co/357221/china-formalizes-ban-on-yuan-stablecoins-rwa-tokenization</a></div>
+</div>
+<div id="ref-dzilla_antcbdcndaa_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[24] </div><div class="csl-right-inline">Dzilla, <span>“<span>U.S.</span> <span>House</span> embeds anti-<span>CBDC</span> provision into <span>NDAA</span>: Implications for crypto innovation and financial privacy,”</span> Dzilla. Accessed: Mar. 17, 2026. [Online]. Available: <a href="https://dzilla.com/u-s-house-embeds-anti-cbdc-provision-into-ndaa-implications-for-crypto-innovation-and-financial-privacy/">https://dzilla.com/u-s-house-embeds-anti-cbdc-provision-into-ndaa-implications-for-crypto-innovation-and-financial-privacy/</a></div>
+</div>
+<div id="ref-comben_dalioworldorder_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[25] </div><div class="csl-right-inline">C. Comben, <span>“Ray <span class="nocase">Dalio’s</span> world order warning revives case for <span>Bitcoin</span> as neutral money,”</span> Cointelegraph. Accessed: Mar. 17, 2026. [Online]. Available: <a href="https://cointelegraph.com/news/dalio-collapse-world-order-permissionless-money">https://cointelegraph.com/news/dalio-collapse-world-order-permissionless-money</a></div>
+</div>
+<div id="ref-decrypt_iranacceptingcrypto_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[26] </div><div class="csl-right-inline">D. Staff, <span>“Iran accepting crypto payments for weapons—but this may not help it evade sanctions,”</span> Decrypt. Accessed: Mar. 17, 2026. [Online]. Available: <a href="https://decrypt.co/353868/iran-accepting-crypto-payments-for-weapons-but-this-may-not-help-it-evade-sanctions">https://decrypt.co/353868/iran-accepting-crypto-payments-for-weapons-but-this-may-not-help-it-evade-sanctions</a></div>
+</div>
+<div id="ref-haqshanas_cfius_wlfi_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[27] </div><div class="csl-right-inline">A. Haqshanas, <span>“Senators ask <span>Bessent</span> to probe $500<span>M</span> <span>UAE</span> stake in <span>Trump</span>-linked <span>WLFI</span>,”</span> Cointelegraph. Accessed: Mar. 17, 2026. [Online]. Available: <a href="https://cointelegraph.com/news/senators-urge-cfius-probe-uae-stake-trump-linked-wlfi">https://cointelegraph.com/news/senators-urge-cfius-probe-uae-stake-trump-linked-wlfi</a></div>
+</div>
+<div id="ref-cryptoslate_lummismilitary_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[28] </div><div class="csl-right-inline">G. Matos, <span>“Senator <span>Lummis</span> says <span>US</span> military generals support strategic <span>Bitcoin</span> reserve,”</span> CryptoSlate. Accessed: Mar. 17, 2026. [Online]. Available: <a href="https://cryptoslate.com/senator-lummis-says-us-military-generals-support-strategic-bitcoin-reserve/">https://cryptoslate.com/senator-lummis-says-us-military-generals-support-strategic-bitcoin-reserve/</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

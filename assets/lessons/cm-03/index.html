@@ -1,0 +1,1092 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proof of Stake (PoS): Selection, Security, and Finality</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/consensus_primitives/03-CM-pos.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="cm-03" data-code="03-CM" data-src="9b6468dd09201945" data-slides="28">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section IV: Consensus Mechanisms · Lesson 03-CM</p><h1>Proof of Stake (PoS): Selection, Security, and Finality</h1></div></section>
+<section class="slide smaller" id="orientation-proof-of-work-vs-proof-of-stake"><h2 class="slide-title">Orientation: Proof of Work vs Proof of Stake</h2><div class="slide-body">
+<ul>
+<li><strong>Proof of Work (PoW):</strong> security arises from <em>expended computational work</em> - attackers must redo real, costly computation.</li>
+<li><strong>Proof of Stake (PoS):</strong> security arises from <em>economic stake and penalties</em> - validators risk their own capital if they misbehave.</li>
+<li><strong>Common ground:</strong> both rely on fork-choice rules, honest-majority or supermajority assumptions, and robust network propagation to maintain consensus.</li>
+<li><strong>Key distinction:</strong> PoS shifts the security budget from <em>energy costs</em> to <em>capital at risk</em>, introducing different incentives and failure modes.</li>
+<li><strong>PoS purpose:</strong> replace energy-based leader election with stake-weighted selection and penalties.</li>
+<li><strong>Mechanics we’ll cover:</strong> validator roles, keys, stake, activation/deactivation, randomness, leader/committee selection, and <code>public verifiability</code>.</li>
+<li><strong>Security lens:</strong> fork choice, safety/liveness, slashing, nothing-at-stake, long-range attacks, weak subjectivity, and probabilistic vs deterministic finality.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="proof-of-stake-the-full-lifecycle"><h2 class="slide-title">Proof of Stake: The Full Lifecycle</h2><div class="slide-body">
+<p><strong>PoS replaces energy with economics:</strong> validators lock capital, fulfill duties each slot, and lose stake if they misbehave. PoS consists of 4 phases:</p>
+<ol type="1">
+<li><strong>Node Joins</strong> — deposit stake; wait in the activation queue</li>
+<li><strong>Slot Duty</strong> — one validator <em>proposes</em>, a <em>committee</em> attests each slot</li>
+<li><strong>Epoch &amp; Finality</strong> — 32 slots form an epoch; checkpoints drive finality</li>
+<li><strong>Exit</strong> — voluntary exit, unbond, and withdraw stake</li>
+</ol>
+<ul>
+<li><strong>Slot</strong> — the basic unit of time for one block proposal and committee attestation (duration varies by system)</li>
+<li><strong>Epoch</strong> — multiple slots grouped together (e.g., 32 slots in Ethereum) for checkpoints, finality updates, and validator selections</li>
+</ul>
+<div style="position:relative; z-index:-1; top:-150px; max-height:350px; overflow:hidden;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 800.69 139.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1068px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 135.6)">
+<g id="node1" class="node">
+<path fill="#bfdbfe" stroke="black" d="M166.04,-131.6C166.04,-131.6 12,-131.6 12,-131.6 6,-131.6 0,-125.6 0,-119.6 0,-119.6 0,-96 0,-96 0,-90 6,-84 12,-84 12,-84 166.04,-84 166.04,-84 172.04,-84 178.04,-90 178.04,-96 178.04,-96 178.04,-119.6 178.04,-119.6 178.04,-125.6 172.04,-131.6 166.04,-131.6"/>
+<text text-anchor="middle" x="89.02" y="-117.7" font-family="Helvetica,sans-Serif" font-size="11.00">① Join</text>
+<text text-anchor="middle" x="89.02" y="-104.5" font-family="Helvetica,sans-Serif" font-size="11.00">Deposit stake → activation queue</text>
+<text text-anchor="middle" x="89.02" y="-91.3" font-family="Helvetica,sans-Serif" font-size="11.00">→ active validator</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#bbf7d0" stroke="black" d="M485.91,-131.6C485.91,-131.6 318.74,-131.6 318.74,-131.6 312.74,-131.6 306.74,-125.6 306.74,-119.6 306.74,-119.6 306.74,-96 306.74,-96 306.74,-90 312.74,-84 318.74,-84 318.74,-84 485.91,-84 485.91,-84 491.91,-84 497.91,-90 497.91,-96 497.91,-96 497.91,-119.6 497.91,-119.6 497.91,-125.6 491.91,-131.6 485.91,-131.6"/>
+<text text-anchor="middle" x="402.32" y="-117.7" font-family="Helvetica,sans-Serif" font-size="11.00">② Slot Duty &#160;(per slot)</text>
+<text text-anchor="middle" x="402.32" y="-104.5" font-family="Helvetica,sans-Serif" font-size="11.00">Proposer selects txns + builds block</text>
+<text text-anchor="middle" x="402.32" y="-91.3" font-family="Helvetica,sans-Serif" font-size="11.00">Committee attests (votes)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M178.39,-107.8C215.42,-107.8 258.74,-107.8 297.29,-107.8"/>
+<polygon fill="black" stroke="black" points="296.95,-110.6 304.95,-107.8 296.95,-105 296.95,-110.6"/>
+<text text-anchor="middle" x="242.39" y="-110.8" font-family="Helvetica,sans-Serif" font-size="10.00">validator active</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fde68a" stroke="black" d="M780.69,-131.6C780.69,-131.6 629.73,-131.6 629.73,-131.6 623.73,-131.6 617.73,-125.6 617.73,-119.6 617.73,-119.6 617.73,-96 617.73,-96 617.73,-90 623.73,-84 629.73,-84 629.73,-84 780.69,-84 780.69,-84 786.69,-84 792.69,-90 792.69,-96 792.69,-96 792.69,-119.6 792.69,-119.6 792.69,-125.6 786.69,-131.6 780.69,-131.6"/>
+<text text-anchor="middle" x="705.21" y="-117.7" font-family="Helvetica,sans-Serif" font-size="11.00">③ Epoch &amp; Finality &#160;(slot groups)</text>
+<text text-anchor="middle" x="705.21" y="-104.5" font-family="Helvetica,sans-Serif" font-size="11.00">Epoch checkpoint + 2/3 vote</text>
+<text text-anchor="middle" x="705.21" y="-91.3" font-family="Helvetica,sans-Serif" font-size="11.00">→ justified → finalized</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M498.11,-107.8C533.14,-107.8 572.85,-107.8 608,-107.8"/>
+<polygon fill="black" stroke="black" points="607.79,-110.6 615.79,-107.8 607.79,-105 607.79,-110.6"/>
+<text text-anchor="middle" x="557.82" y="-110.8" font-family="Helvetica,sans-Serif" font-size="10.00">end of epoch</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fecdd3" stroke="black" d="M161.16,-47.6C161.16,-47.6 16.88,-47.6 16.88,-47.6 10.88,-47.6 4.88,-41.6 4.88,-35.6 4.88,-35.6 4.88,-12 4.88,-12 4.88,-6 10.88,0 16.88,0 16.88,0 161.16,0 161.16,0 167.16,0 173.16,-6 173.16,-12 173.16,-12 173.16,-35.6 173.16,-35.6 173.16,-41.6 167.16,-47.6 161.16,-47.6"/>
+<text text-anchor="middle" x="89.02" y="-33.7" font-family="Helvetica,sans-Serif" font-size="11.00">④ Exit</text>
+<text text-anchor="middle" x="89.02" y="-20.5" font-family="Helvetica,sans-Serif" font-size="11.00">Exit queue → unbonding period</text>
+<text text-anchor="middle" x="89.02" y="-7.3" font-family="Helvetica,sans-Serif" font-size="11.00">→ stake withdrawn</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#6b7280" stroke-dasharray="5,2" d="M311.39,-83.53C270.96,-72.62 223.29,-59.76 182.56,-48.77"/>
+<polygon fill="#6b7280" stroke="#6b7280" points="183.36,-46.09 174.91,-46.7 181.9,-51.49 183.36,-46.09"/>
+<text text-anchor="middle" x="242.39" y="-76.32" font-family="Helvetica,sans-Serif" font-size="10.00">voluntary exit</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#6b7280" stroke-dasharray="5,2" d="M617.51,-90.53C607.18,-88.99 596.74,-87.69 586.73,-86.8 561,-84.52 533.29,-85.75 507.4,-88.52"/>
+<polygon fill="#6b7280" stroke="#6b7280" points="507.08,-85.74 499.45,-89.43 507.72,-91.3 507.08,-85.74"/>
+<text text-anchor="middle" x="557.82" y="-89.8" font-family="Helvetica,sans-Serif" font-size="10.00">next slot</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide smaller" id="pos-networks-in-practice"><h2 class="slide-title">PoS Networks in Practice</h2><div class="slide-body">
+<div style="font-size: .72em; line-height: 1.12;">
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Network</th>
+<th>How stake shapes block production</th>
+<th>Practical caution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Ethereum</strong></td>
+<td>Validators stake ETH, propose blocks, attest, and can be slashed.</td>
+<td>This lesson’s validator, slashing, and finality language is closest to Ethereum.</td>
+</tr>
+<tr>
+<td><strong>Solana</strong></td>
+<td>Stake is delegated to validators; scheduled leaders produce blocks.</td>
+<td>Timing, voting, fees, and finality behave differently from Ethereum.</td>
+</tr>
+<tr>
+<td><strong>Cardano</strong></td>
+<td>Stake pools receive delegated stake and produce blocks in epochs.</td>
+<td>Delegation and rewards are central; it does not use Ethereum-style slashing.</td>
+</tr>
+<tr>
+<td><strong>TRON</strong></td>
+<td>Token holders vote for a smaller DPoS producer set called Super Representatives.</td>
+<td>Elected producers and resource/fee rules change the governance and trust model.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Takeaway:</strong> PoS is a family label. Validator selection, delegation, penalties, finality, fees, and governance vary by chain.</p>
+</div>
+<p>Do not assume Ethereum’s slashing or finality model applies to every PoS or delegated-PoS network.</p>
+</div></section>
+<section class="slide smaller" id="the-block-proposer-selection-and-building"><h2 class="slide-title">The Block Proposer: Selection and Building</h2><div class="slide-body">
+<p>In each slot, <strong>one validator is selected</strong> to propose the next block:</p>
+<ul>
+<li><strong>Selection</strong> — chosen by stake-weighted randomness (unpredictable, verifiable)
+<ul>
+<li><em>Not</em> a race; selection is deterministic given the randomness source</li>
+<li>Chance of selection proportional to stake held</li>
+</ul></li>
+<li><strong>Responsibilities:</strong>
+<ul>
+<li><strong>Selects transactions</strong> from the mempool according to protocol rules</li>
+<li><strong>Builds and proposes</strong> the block candidate</li>
+<li>If offline or misbehaves, the slot is <em>missed</em> — the chain continues</li>
+</ul></li>
+<li><strong>Key point:</strong> the proposer has <strong>control over transaction ordering</strong></li>
+</ul>
+<div style="position:relative; z-index:-1; top:-150px; max-height:350px; overflow:hidden;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 658.92 139.31" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:879px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 135.31)">
+<g id="node1" class="node">
+<ellipse fill="#e0e7ff" stroke="black" cx="57.14" cy="-97.65" rx="57.14" ry="33.66"/>
+<text text-anchor="middle" x="57.14" y="-107.55" font-family="Helvetica,sans-Serif" font-size="11.00">Verifiable</text>
+<text text-anchor="middle" x="57.14" y="-94.35" font-family="Helvetica,sans-Serif" font-size="11.00">Randomness</text>
+<text text-anchor="middle" x="57.14" y="-81.15" font-family="Helvetica,sans-Serif" font-size="11.00">Beacon</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#bfdbfe" stroke="black" d="M262.23,-115.65C262.23,-115.65 191.97,-115.65 191.97,-115.65 185.97,-115.65 179.97,-109.65 179.97,-103.65 179.97,-103.65 179.97,-91.65 179.97,-91.65 179.97,-85.65 185.97,-79.65 191.97,-79.65 191.97,-79.65 262.23,-79.65 262.23,-79.65 268.23,-79.65 274.23,-85.65 274.23,-91.65 274.23,-91.65 274.23,-103.65 274.23,-103.65 274.23,-109.65 268.23,-115.65 262.23,-115.65"/>
+<text text-anchor="middle" x="227.1" y="-100.95" font-family="Helvetica,sans-Serif" font-size="11.00">Stake&#45;Weighted</text>
+<text text-anchor="middle" x="227.1" y="-87.75" font-family="Helvetica,sans-Serif" font-size="11.00">Selection</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M114.54,-97.65C132.55,-97.65 152.48,-97.65 170.44,-97.65"/>
+<polygon fill="black" stroke="black" points="170.12,-100.45 178.12,-97.65 170.12,-94.85 170.12,-100.45"/>
+<text text-anchor="middle" x="147.13" y="-100.65" font-family="Helvetica,sans-Serif" font-size="10.00">input</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#3b82f6" stroke="black" d="M466.84,-65.65C466.84,-65.65 400.25,-65.65 400.25,-65.65 394.25,-65.65 388.25,-59.65 388.25,-53.65 388.25,-53.65 388.25,-41.65 388.25,-41.65 388.25,-35.65 394.25,-29.65 400.25,-29.65 400.25,-29.65 466.84,-29.65 466.84,-29.65 472.84,-29.65 478.84,-35.65 478.84,-41.65 478.84,-41.65 478.84,-53.65 478.84,-53.65 478.84,-59.65 472.84,-65.65 466.84,-65.65"/>
+<text text-anchor="middle" x="433.55" y="-50.95" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Block Proposer</text>
+<text text-anchor="middle" x="433.55" y="-37.75" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Selected</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M274.49,-86.3C305.62,-78.69 346.7,-68.65 379.18,-60.7"/>
+<polygon fill="black" stroke="black" points="379.52,-63.5 386.62,-58.88 378.19,-58.06 379.52,-63.5"/>
+<text text-anchor="middle" x="331.24" y="-95.05" font-family="Helvetica,sans-Serif" font-size="10.00">deterministic</text>
+<text text-anchor="middle" x="331.24" y="-83.05" font-family="Helvetica,sans-Serif" font-size="10.00">output</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#2563eb" stroke="black" d="M638.92,-65.65C638.92,-65.65 603.5,-65.65 603.5,-65.65 597.5,-65.65 591.5,-59.65 591.5,-53.65 591.5,-53.65 591.5,-41.65 591.5,-41.65 591.5,-35.65 597.5,-29.65 603.5,-29.65 603.5,-29.65 638.92,-29.65 638.92,-29.65 644.92,-29.65 650.92,-35.65 650.92,-41.65 650.92,-41.65 650.92,-53.65 650.92,-53.65 650.92,-59.65 644.92,-65.65 638.92,-65.65"/>
+<text text-anchor="middle" x="621.21" y="-50.95" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Block</text>
+<text text-anchor="middle" x="621.21" y="-37.75" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Proposal</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M479.02,-47.65C510.38,-47.65 551.96,-47.65 581.87,-47.65"/>
+<polygon fill="black" stroke="black" points="581.63,-50.45 589.63,-47.65 581.63,-44.85 581.63,-50.45"/>
+<text text-anchor="middle" x="535.17" y="-50.65" font-family="Helvetica,sans-Serif" font-size="10.00">build + propose</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f3f4f6" stroke="black" d="M269.96,-43C269.96,-45.37 250.75,-47.3 227.1,-47.3 203.46,-47.3 184.25,-45.37 184.25,-43 184.25,-43 184.25,-4.3 184.25,-4.3 184.25,-1.93 203.46,0 227.1,0 250.75,0 269.96,-1.93 269.96,-4.3 269.96,-4.3 269.96,-43 269.96,-43"/>
+<path fill="none" stroke="black" d="M269.96,-43C269.96,-40.63 250.75,-38.7 227.1,-38.7 203.46,-38.7 184.25,-40.63 184.25,-43"/>
+<text text-anchor="middle" x="227.1" y="-26.95" font-family="Helvetica,sans-Serif" font-size="11.00">Mempool</text>
+<text text-anchor="middle" x="227.1" y="-13.75" font-family="Helvetica,sans-Serif" font-size="11.00">(pending txns)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#6b7280" stroke-dasharray="5,2" d="M270.3,-24.68C297.75,-25.77 334.26,-28.02 366.25,-32.65 370.3,-33.24 374.47,-33.94 378.66,-34.72"/>
+<polygon fill="#6b7280" stroke="#6b7280" points="377.92,-37.42 386.31,-36.23 379,-31.93 377.92,-37.42"/>
+<text text-anchor="middle" x="331.24" y="-35.65" font-family="Helvetica,sans-Serif" font-size="10.00">select txns from</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide smaller" id="the-committee-attestation-and-validation"><h2 class="slide-title">The Committee: Attestation and Validation</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:75%;">
+<p>In each slot, <strong>a random subset of validators</strong> attests to the proposed block:</p>
+<ul>
+<li><p><strong>Committee assignment</strong> — a random group is tasked with validating the block</p>
+<ul>
+<li>Each member independently <strong>attests</strong> (votes) on the block they’ve received</li>
+<li>Vote includes: block hash, current chain head, source and target epochs</li>
+<li>Attestations are <strong>stake-weighted</strong> — voting power proportional to stake</li>
+</ul></li>
+<li><p><strong>Canonical acceptance:</strong></p>
+<ul>
+<li>Attestations are <strong>aggregated</strong> into a Quorum Certificate (QC)</li>
+<li><strong>≥ 2/3 of committee stake</strong> required for the block to be considered canonical</li>
+</ul></li>
+</ul>
+</div><div class="column" style="width:25%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 136.10 407.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:181px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 403.6)">
+<g id="node1" class="node">
+<path fill="#3b82f6" stroke="black" d="M97.23,-399.6C97.23,-399.6 29.43,-399.6 29.43,-399.6 23.43,-399.6 17.43,-393.6 17.43,-387.6 17.43,-387.6 17.43,-364 17.43,-364 17.43,-358 23.43,-352 29.43,-352 29.43,-352 97.23,-352 97.23,-352 103.23,-352 109.23,-358 109.23,-364 109.23,-364 109.23,-387.6 109.23,-387.6 109.23,-393.6 103.23,-399.6 97.23,-399.6"/>
+<text text-anchor="middle" x="63.33" y="-385.7" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Block</text>
+<text text-anchor="middle" x="63.33" y="-372.5" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Proposal</text>
+<text text-anchor="middle" x="63.33" y="-359.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">(from proposer)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#bbf7d0" stroke="black" d="M106.71,-300C106.71,-300 19.95,-300 19.95,-300 13.95,-300 7.95,-294 7.95,-288 7.95,-288 7.95,-276 7.95,-276 7.95,-270 13.95,-264 19.95,-264 19.95,-264 106.71,-264 106.71,-264 112.71,-264 118.71,-270 118.71,-276 118.71,-276 118.71,-288 118.71,-288 118.71,-294 112.71,-300 106.71,-300"/>
+<text text-anchor="middle" x="63.33" y="-285.3" font-family="Helvetica,sans-Serif" font-size="11.00">Committee</text>
+<text text-anchor="middle" x="63.33" y="-272.1" font-family="Helvetica,sans-Serif" font-size="11.00">(random validators)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M63.33,-351.63C63.33,-338.81 63.33,-322.82 63.33,-309.5"/>
+<polygon fill="black" stroke="black" points="66.13,-309.87 63.33,-301.87 60.53,-309.87 66.13,-309.87"/>
+<text text-anchor="middle" x="85.29" y="-323" font-family="Helvetica,sans-Serif" font-size="10.00">broadcast</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#86efac" stroke="black" d="M114.66,-212C114.66,-212 12,-212 12,-212 6,-212 0,-206 0,-200 0,-200 0,-188 0,-188 0,-182 6,-176 12,-176 12,-176 114.66,-176 114.66,-176 120.66,-176 126.66,-182 126.66,-188 126.66,-188 126.66,-200 126.66,-200 126.66,-206 120.66,-212 114.66,-212"/>
+<text text-anchor="middle" x="63.33" y="-197.3" font-family="Helvetica,sans-Serif" font-size="11.00">Attestations</text>
+<text text-anchor="middle" x="63.33" y="-184.1" font-family="Helvetica,sans-Serif" font-size="11.00">(stake&#45;weighted votes)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M63.33,-263.6C63.33,-251.59 63.33,-235.4 63.33,-221.76"/>
+<polygon fill="black" stroke="black" points="66.13,-221.89 63.33,-213.89 60.53,-221.89 66.13,-221.89"/>
+<text text-anchor="middle" x="95.71" y="-235" font-family="Helvetica,sans-Serif" font-size="10.00">validate + vote</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fde68a" stroke="black" d="M105.48,-124C105.48,-124 21.18,-124 21.18,-124 15.18,-124 9.18,-118 9.18,-112 9.18,-112 9.18,-100 9.18,-100 9.18,-94 15.18,-88 21.18,-88 21.18,-88 105.48,-88 105.48,-88 111.48,-88 117.48,-94 117.48,-100 117.48,-100 117.48,-112 117.48,-112 117.48,-118 111.48,-124 105.48,-124"/>
+<text text-anchor="middle" x="63.33" y="-109.3" font-family="Helvetica,sans-Serif" font-size="11.00">Quorum Certificate</text>
+<text text-anchor="middle" x="63.33" y="-96.1" font-family="Helvetica,sans-Serif" font-size="11.00">(aggregated sigs)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M63.33,-175.6C63.33,-163.59 63.33,-147.4 63.33,-133.76"/>
+<polygon fill="black" stroke="black" points="66.13,-133.89 63.33,-125.89 60.53,-133.89 66.13,-133.89"/>
+<text text-anchor="middle" x="85.85" y="-147" font-family="Helvetica,sans-Serif" font-size="10.00">aggregate</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#ca8a04" stroke="black" d="M98.77,-36C98.77,-36 27.89,-36 27.89,-36 21.89,-36 15.89,-30 15.89,-24 15.89,-24 15.89,-12 15.89,-12 15.89,-6 21.89,0 27.89,0 27.89,0 98.77,0 98.77,0 104.77,0 110.77,-6 110.77,-12 110.77,-12 110.77,-24 110.77,-24 110.77,-30 104.77,-36 98.77,-36"/>
+<text text-anchor="middle" x="63.33" y="-21.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Block Canonical</text>
+<text text-anchor="middle" x="63.33" y="-8.1" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">(≥ 2/3 stake)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M63.33,-87.6C63.33,-75.59 63.33,-59.4 63.33,-45.76"/>
+<polygon fill="black" stroke="black" points="66.13,-45.89 63.33,-37.89 60.53,-45.89 66.13,-45.89"/>
+<text text-anchor="middle" x="93.62" y="-59" font-family="Helvetica,sans-Serif" font-size="10.00">threshold met</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="epochs-and-checkpoints-organizing-slots"><h2 class="slide-title">Epochs and Checkpoints: Organizing Slots</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:65%;">
+<p><strong>Slots are grouped into larger time units called epochs:</strong></p>
+<ul>
+<li><strong>Epoch</strong> — a collection of consecutive slots</li>
+<li><strong>Checkpoint</strong> — the first block of each epoch; serves as a finality anchor</li>
+</ul>
+<p><strong>Why epochs?</strong></p>
+<ul>
+<li>Organizing slots into epochs allows finality voting to work at a <strong>coarser granularity</strong></li>
+<li>Instead of voting on every single block, validators vote on epoch boundaries</li>
+<li>This reduces voting overhead while maintaining consensus safety</li>
+</ul>
+</div><div class="column" style="width:34%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 132.16 453.30" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:176px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 449.3)">
+<g id="node1" class="node">
+<path fill="#dcfce7" stroke="black" d="M79.04,-445.3C79.04,-445.3 25.3,-445.3 25.3,-445.3 19.3,-445.3 13.3,-439.3 13.3,-433.3 13.3,-433.3 13.3,-421.3 13.3,-421.3 13.3,-415.3 19.3,-409.3 25.3,-409.3 25.3,-409.3 79.04,-409.3 79.04,-409.3 85.04,-409.3 91.04,-415.3 91.04,-421.3 91.04,-421.3 91.04,-433.3 91.04,-433.3 91.04,-439.3 85.04,-445.3 79.04,-445.3"/>
+<text text-anchor="middle" x="52.17" y="-430.6" font-family="Helvetica,sans-Serif" font-size="11.00">Slot 0</text>
+<text text-anchor="middle" x="52.17" y="-417.4" font-family="Helvetica,sans-Serif" font-size="11.00">(epoch start)</text>
+</g>
+
+<g id="node2" class="node">
+<ellipse fill="#f3f4f6" stroke="black" cx="52.17" cy="-324.97" rx="50.66" ry="24.32"/>
+<text text-anchor="middle" x="52.17" y="-328.27" font-family="Helvetica,sans-Serif" font-size="11.00">Slot 1, 2, …</text>
+<text text-anchor="middle" x="52.17" y="-315.07" font-family="Helvetica,sans-Serif" font-size="11.00">N&#45;1</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M52.17,-408.82C52.17,-395.12 52.17,-375.65 52.17,-359.03"/>
+<polygon fill="black" stroke="black" points="54.97,-359.15 52.17,-351.15 49.37,-359.15 54.97,-359.15"/>
+<text text-anchor="middle" x="82.46" y="-376.3" font-family="Helvetica,sans-Serif" font-size="10.00">epoch N slots</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fde68a" stroke="black" d="M84.24,-240.65C84.24,-240.65 20.1,-240.65 20.1,-240.65 14.1,-240.65 8.1,-234.65 8.1,-228.65 8.1,-228.65 8.1,-216.65 8.1,-216.65 8.1,-210.65 14.1,-204.65 20.1,-204.65 20.1,-204.65 84.24,-204.65 84.24,-204.65 90.24,-204.65 96.24,-210.65 96.24,-216.65 96.24,-216.65 96.24,-228.65 96.24,-228.65 96.24,-234.65 90.24,-240.65 84.24,-240.65"/>
+<text text-anchor="middle" x="52.17" y="-225.95" font-family="Helvetica,sans-Serif" font-size="11.00">Checkpoint</text>
+<text text-anchor="middle" x="52.17" y="-212.75" font-family="Helvetica,sans-Serif" font-size="11.00">(Epoch 1 start)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M52.17,-300.2C52.17,-285.13 52.17,-265.62 52.17,-250.07"/>
+<polygon fill="black" stroke="black" points="54.97,-250.49 52.17,-242.49 49.37,-250.49 54.97,-250.49"/>
+<text text-anchor="middle" x="82.46" y="-267.65" font-family="Helvetica,sans-Serif" font-size="10.00">epoch N slots</text>
+</g>
+
+<g id="node4" class="node">
+<ellipse fill="#f3f4f6" stroke="black" cx="52.17" cy="-120.32" rx="52.17" ry="24.32"/>
+<text text-anchor="middle" x="52.17" y="-123.62" font-family="Helvetica,sans-Serif" font-size="11.00">Slot N+1, …</text>
+<text text-anchor="middle" x="52.17" y="-110.42" font-family="Helvetica,sans-Serif" font-size="11.00">N+M&#45;1</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M52.17,-204.17C52.17,-190.47 52.17,-171 52.17,-154.38"/>
+<polygon fill="black" stroke="black" points="54.97,-154.5 52.17,-146.5 49.37,-154.5 54.97,-154.5"/>
+<text text-anchor="middle" x="88.16" y="-171.65" font-family="Helvetica,sans-Serif" font-size="10.00">epoch N+1 slots</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#fde68a" stroke="black" d="M84.24,-36C84.24,-36 20.1,-36 20.1,-36 14.1,-36 8.1,-30 8.1,-24 8.1,-24 8.1,-12 8.1,-12 8.1,-6 14.1,0 20.1,0 20.1,0 84.24,0 84.24,0 90.24,0 96.24,-6 96.24,-12 96.24,-12 96.24,-24 96.24,-24 96.24,-30 90.24,-36 84.24,-36"/>
+<text text-anchor="middle" x="52.17" y="-21.3" font-family="Helvetica,sans-Serif" font-size="11.00">Checkpoint</text>
+<text text-anchor="middle" x="52.17" y="-8.1" font-family="Helvetica,sans-Serif" font-size="11.00">(Epoch 2 start)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M52.17,-95.55C52.17,-80.48 52.17,-60.97 52.17,-45.42"/>
+<polygon fill="black" stroke="black" points="54.97,-45.84 52.17,-37.84 49.37,-45.84 54.97,-45.84"/>
+<text text-anchor="middle" x="88.16" y="-63" font-family="Helvetica,sans-Serif" font-size="10.00">epoch N+1 slots</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="justification-supermajority-vote-links"><h2 class="slide-title">Justification: Supermajority Vote Links</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><strong>Justification</strong> is the first step toward finality:</p>
+<ul>
+<li><strong>What it means</strong> — when a supermajority (≥ 2/3 of total stake) votes for a link between two consecutive checkpoints, that link becomes <em>justified</em></li>
+<li><strong>Vote structure</strong> — validators cast attestations linking the <strong>source checkpoint</strong> (previous epoch) to the <strong>target checkpoint</strong> (current epoch)</li>
+<li><strong>Aggregation</strong> — all attestations in the epoch are counted; if 2/3+ participate, the link is justified</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 427.30 139.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:569px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 135.6)">
+<g id="node1" class="node">
+<path fill="#fde68a" stroke="black" d="M62.54,-131.6C62.54,-131.6 15.51,-131.6 15.51,-131.6 9.51,-131.6 3.51,-125.6 3.51,-119.6 3.51,-119.6 3.51,-96 3.51,-96 3.51,-90 9.51,-84 15.51,-84 15.51,-84 62.54,-84 62.54,-84 68.54,-84 74.54,-90 74.54,-96 74.54,-96 74.54,-119.6 74.54,-119.6 74.54,-125.6 68.54,-131.6 62.54,-131.6"/>
+<text text-anchor="middle" x="39.03" y="-117.7" font-family="Helvetica,sans-Serif" font-size="11.00">Source</text>
+<text text-anchor="middle" x="39.03" y="-104.5" font-family="Helvetica,sans-Serif" font-size="11.00">Checkpoint</text>
+<text text-anchor="middle" x="39.03" y="-91.3" font-family="Helvetica,sans-Serif" font-size="11.00">(Epoch N)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#bbf7d0" stroke="black" d="M234.67,-83.8C234.67,-83.8 168.07,-83.8 168.07,-83.8 162.07,-83.8 156.07,-77.8 156.07,-71.8 156.07,-71.8 156.07,-59.8 156.07,-59.8 156.07,-53.8 162.07,-47.8 168.07,-47.8 168.07,-47.8 234.67,-47.8 234.67,-47.8 240.67,-47.8 246.67,-53.8 246.67,-59.8 246.67,-59.8 246.67,-71.8 246.67,-71.8 246.67,-77.8 240.67,-83.8 234.67,-83.8"/>
+<text text-anchor="middle" x="201.37" y="-69.1" font-family="Helvetica,sans-Serif" font-size="11.00">Validators Vote</text>
+<text text-anchor="middle" x="201.37" y="-55.9" font-family="Helvetica,sans-Serif" font-size="11.00">(≥ 2/3 stake)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M74.82,-98.69C95.81,-93.19 122.99,-86.07 146.69,-79.86"/>
+<polygon fill="black" stroke="black" points="147.09,-82.65 154.11,-77.92 145.67,-77.24 147.09,-82.65"/>
+<text text-anchor="middle" x="117.06" y="-93.56" font-family="Helvetica,sans-Serif" font-size="10.00">source</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#2563eb" stroke="black" d="M407.3,-83.8C407.3,-83.8 351.71,-83.8 351.71,-83.8 345.71,-83.8 339.71,-77.8 339.71,-71.8 339.71,-71.8 339.71,-59.8 339.71,-59.8 339.71,-53.8 345.71,-47.8 351.71,-47.8 351.71,-47.8 407.3,-47.8 407.3,-47.8 413.3,-47.8 419.3,-53.8 419.3,-59.8 419.3,-59.8 419.3,-71.8 419.3,-71.8 419.3,-77.8 413.3,-83.8 407.3,-83.8"/>
+<text text-anchor="middle" x="379.5" y="-69.1" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Justified Link</text>
+<text text-anchor="middle" x="379.5" y="-55.9" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Src → Tgt</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M246.82,-65.8C272.23,-65.8 304.13,-65.8 330.17,-65.8"/>
+<polygon fill="black" stroke="black" points="329.96,-68.6 337.96,-65.8 329.96,-63 329.96,-68.6"/>
+<text text-anchor="middle" x="293.19" y="-68.8" font-family="Helvetica,sans-Serif" font-size="10.00">aggregate</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fde68a" stroke="black" d="M66.06,-47.6C66.06,-47.6 12,-47.6 12,-47.6 6,-47.6 0,-41.6 0,-35.6 0,-35.6 0,-12 0,-12 0,-6 6,0 12,0 12,0 66.06,0 66.06,0 72.06,0 78.06,-6 78.06,-12 78.06,-12 78.06,-35.6 78.06,-35.6 78.06,-41.6 72.06,-47.6 66.06,-47.6"/>
+<text text-anchor="middle" x="39.03" y="-33.7" font-family="Helvetica,sans-Serif" font-size="11.00">Target</text>
+<text text-anchor="middle" x="39.03" y="-20.5" font-family="Helvetica,sans-Serif" font-size="11.00">Checkpoint</text>
+<text text-anchor="middle" x="39.03" y="-7.3" font-family="Helvetica,sans-Serif" font-size="11.00">(Epoch N+1)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M78.43,-33.86C98.87,-39.21 124.34,-45.88 146.7,-51.74"/>
+<polygon fill="black" stroke="black" points="145.83,-54.41 154.28,-53.73 147.25,-48.99 145.83,-54.41"/>
+<text text-anchor="middle" x="117.06" y="-50.31" font-family="Helvetica,sans-Serif" font-size="10.00">target</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+<p><strong>Key insight:</strong> A single justified link means “most validators agree this is the chain.” But one justification alone isn’t enough for irreversibility — we need two.</p>
+</div></section>
+<section class="slide smaller" id="finalization-irreversible-history"><h2 class="slide-title">Finalization: Irreversible History</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:45%;">
+<p><strong>Finalization</strong> makes history irreversible:</p>
+<ul>
+<li><strong>Rule</strong> — when two consecutive checkpoints are both justified, the <strong>earlier one is finalized</strong></li>
+<li><strong>Example:</strong> if Checkpoint N and Checkpoint N+1 are both justified, then Checkpoint N-1 (and all its descendants) is finalized</li>
+<li><strong>Irreversibility</strong> — reversing a finalized block would require a 2/3+ supermajority to sign conflicting justifications, which is provable slashing</li>
+</ul>
+</div><div class="column" style="width:55%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 580.62 215.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:775px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 211)">
+<g id="node1" class="node">
+<path fill="#fde68a" stroke="black" d="M59.03,-207C59.03,-207 12,-207 12,-207 6,-207 0,-201 0,-195 0,-195 0,-183 0,-183 0,-177 6,-171 12,-171 12,-171 59.03,-171 59.03,-171 65.03,-171 71.03,-177 71.03,-183 71.03,-183 71.03,-195 71.03,-195 71.03,-201 65.03,-207 59.03,-207"/>
+<text text-anchor="middle" x="35.52" y="-192.3" font-family="Helvetica,sans-Serif" font-size="11.00">Checkpoint</text>
+<text text-anchor="middle" x="35.52" y="-179.1" font-family="Helvetica,sans-Serif" font-size="11.00">N&#45;1</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#86efac" stroke="black" d="M202.4,-171C202.4,-171 170.05,-171 170.05,-171 164.05,-171 158.05,-165 158.05,-159 158.05,-159 158.05,-147 158.05,-147 158.05,-141 164.05,-135 170.05,-135 170.05,-135 202.4,-135 202.4,-135 208.4,-135 214.4,-141 214.4,-147 214.4,-147 214.4,-159 214.4,-159 214.4,-165 208.4,-171 202.4,-171"/>
+<text text-anchor="middle" x="186.22" y="-156.3" font-family="Helvetica,sans-Serif" font-size="11.00">Justified</text>
+<text text-anchor="middle" x="186.22" y="-143.1" font-family="Helvetica,sans-Serif" font-size="11.00">Link</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M71.38,-180.56C94.72,-174.91 125.38,-167.49 149,-161.77"/>
+<polygon fill="black" stroke="black" points="149.41,-164.55 156.53,-159.95 148.09,-159.11 149.41,-164.55"/>
+<text text-anchor="middle" x="110.87" y="-177.22" font-family="Helvetica,sans-Serif" font-size="10.00">Cp N&#45;1</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fde68a" stroke="black" d="M59.03,-127C59.03,-127 12,-127 12,-127 6,-127 0,-121 0,-115 0,-115 0,-103 0,-103 0,-97 6,-91 12,-91 12,-91 59.03,-91 59.03,-91 65.03,-91 71.03,-97 71.03,-103 71.03,-103 71.03,-115 71.03,-115 71.03,-121 65.03,-127 59.03,-127"/>
+<text text-anchor="middle" x="35.52" y="-112.3" font-family="Helvetica,sans-Serif" font-size="11.00">Checkpoint</text>
+<text text-anchor="middle" x="35.52" y="-99.1" font-family="Helvetica,sans-Serif" font-size="11.00">N</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M71.38,-119.32C94.72,-126.22 125.38,-135.29 149,-142.28"/>
+<polygon fill="black" stroke="black" points="148.08,-144.93 156.55,-144.52 149.67,-139.56 148.08,-144.93"/>
+<text text-anchor="middle" x="110.87" y="-137.94" font-family="Helvetica,sans-Serif" font-size="10.00">Cp N</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#86efac" stroke="black" d="M375.24,-112C375.24,-112 342.89,-112 342.89,-112 336.89,-112 330.89,-106 330.89,-100 330.89,-100 330.89,-88 330.89,-88 330.89,-82 336.89,-76 342.89,-76 342.89,-76 375.24,-76 375.24,-76 381.24,-76 387.24,-82 387.24,-88 387.24,-88 387.24,-100 387.24,-100 387.24,-106 381.24,-112 375.24,-112"/>
+<text text-anchor="middle" x="359.06" y="-97.3" font-family="Helvetica,sans-Serif" font-size="11.00">Justified</text>
+<text text-anchor="middle" x="359.06" y="-84.1" font-family="Helvetica,sans-Serif" font-size="11.00">Link</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M71.23,-107.38C132.27,-104.53 258.29,-98.65 320.97,-95.73"/>
+<polygon fill="black" stroke="black" points="321.1,-98.53 328.96,-95.36 320.83,-92.93 321.1,-98.53"/>
+<text text-anchor="middle" x="186.22" y="-106.48" font-family="Helvetica,sans-Serif" font-size="10.00">Cp N</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fde68a" stroke="black" d="M209.74,-36C209.74,-36 162.71,-36 162.71,-36 156.71,-36 150.71,-30 150.71,-24 150.71,-24 150.71,-12 150.71,-12 150.71,-6 156.71,0 162.71,0 162.71,0 209.74,0 209.74,0 215.74,0 221.74,-6 221.74,-12 221.74,-12 221.74,-24 221.74,-24 221.74,-30 215.74,-36 209.74,-36"/>
+<text text-anchor="middle" x="186.22" y="-21.3" font-family="Helvetica,sans-Serif" font-size="11.00">Checkpoint</text>
+<text text-anchor="middle" x="186.22" y="-8.1" font-family="Helvetica,sans-Serif" font-size="11.00">N+1</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M222.19,-27.75C246.57,-35.15 279.49,-46.36 306.89,-60 312.99,-63.04 319.24,-66.68 325.18,-70.44"/>
+<polygon fill="black" stroke="black" points="323.55,-72.72 331.78,-74.75 326.61,-68.03 323.55,-72.72"/>
+<text text-anchor="middle" x="276.31" y="-63" font-family="Helvetica,sans-Serif" font-size="10.00">Cp N+1</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M214.53,-145.03C238.92,-137.74 275.54,-126.39 306.89,-115 311.74,-113.24 316.81,-111.29 321.79,-109.31"/>
+<polygon fill="black" stroke="black" points="322.83,-111.91 329.2,-106.32 320.73,-106.72 322.83,-111.91"/>
+<text text-anchor="middle" x="276.31" y="-149.66" font-family="Helvetica,sans-Serif" font-size="10.00">2 consecutive</text>
+<text text-anchor="middle" x="276.31" y="-137.66" font-family="Helvetica,sans-Serif" font-size="10.00">justified links</text>
+</g>
+
+<g id="node6" class="node">
+<path fill="#b45309" stroke="black" d="M560.62,-112C560.62,-112 492.81,-112 492.81,-112 486.81,-112 480.81,-106 480.81,-100 480.81,-100 480.81,-88 480.81,-88 480.81,-82 486.81,-76 492.81,-76 492.81,-76 560.62,-76 560.62,-76 566.62,-76 572.62,-82 572.62,-88 572.62,-88 572.62,-100 572.62,-100 572.62,-106 566.62,-112 560.62,-112"/>
+<text text-anchor="middle" x="526.72" y="-97.3" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">FINALIZED</text>
+<text text-anchor="middle" x="526.72" y="-84.1" font-family="Helvetica,sans-Serif" font-size="11.00" fill="white">Checkpoint N&#45;1</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M387.42,-94C410.12,-94 443.12,-94 471.19,-94"/>
+<polygon fill="black" stroke="black" points="470.98,-96.8 478.98,-94 470.98,-91.2 470.98,-96.8"/>
+<text text-anchor="middle" x="434.03" y="-109" font-family="Helvetica,sans-Serif" font-size="10.00">→ Finalize</text>
+<text text-anchor="middle" x="434.03" y="-97" font-family="Helvetica,sans-Serif" font-size="10.00">Cp N&#45;1</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+<div class="callout-warning" data-appearance="simple">
+<p><strong>Cost to reverse:</strong> Undoing a finalized block requires ≥ 1/3 of total stake to sign conflicting votes — provable on-chain and punished by slashing.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="from-slot-validation-to-finality"><h2 class="slide-title">From Slot Validation to Finality</h2><div class="slide-body">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 604.43 1314.20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:805px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 1310.2)">
+<g id="node1" class="node">
+<path fill="#c8e6c9" stroke="black" d="M503.32,-1306.2C503.32,-1306.2 93.12,-1306.2 93.12,-1306.2 87.12,-1306.2 81.12,-1300.2 81.12,-1294.2 81.12,-1294.2 81.12,-1223.8 81.12,-1223.8 81.12,-1217.8 87.12,-1211.8 93.12,-1211.8 93.12,-1211.8 503.32,-1211.8 503.32,-1211.8 509.32,-1211.8 515.32,-1217.8 515.32,-1223.8 515.32,-1223.8 515.32,-1294.2 515.32,-1294.2 515.32,-1300.2 509.32,-1306.2 503.32,-1306.2"/>
+<text text-anchor="middle" x="298.22" y="-1269.8" font-family="Helvetica,sans-Serif" font-size="36.00">Block Proposer</text>
+<text text-anchor="middle" x="298.22" y="-1226.6" font-family="Helvetica,sans-Serif" font-size="36.00">(stake&#45;weighted selection)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fff8e1" stroke="black" d="M498.31,-1128.2C498.31,-1128.2 98.13,-1128.2 98.13,-1128.2 92.13,-1128.2 86.13,-1122.2 86.13,-1116.2 86.13,-1116.2 86.13,-1045.8 86.13,-1045.8 86.13,-1039.8 92.13,-1033.8 98.13,-1033.8 98.13,-1033.8 498.31,-1033.8 498.31,-1033.8 504.31,-1033.8 510.31,-1039.8 510.31,-1045.8 510.31,-1045.8 510.31,-1116.2 510.31,-1116.2 510.31,-1122.2 504.31,-1128.2 498.31,-1128.2"/>
+<text text-anchor="middle" x="298.22" y="-1091.8" font-family="Helvetica,sans-Serif" font-size="36.00">Committee</text>
+<text text-anchor="middle" x="298.22" y="-1048.6" font-family="Helvetica,sans-Serif" font-size="36.00">(random validator subset)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M298.22,-1211.76C298.22,-1190.4 298.22,-1164.78 298.22,-1141.96"/>
+<polygon fill="black" stroke="black" points="302.42,-1142.06 298.22,-1130.06 294.02,-1142.06 302.42,-1142.06"/>
+<text text-anchor="middle" x="392.38" y="-1161.6" font-family="Helvetica,sans-Serif" font-size="28.00">proposes block</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#c8e6c9" stroke="black" d="M487.28,-950.2C487.28,-950.2 109.16,-950.2 109.16,-950.2 103.16,-950.2 97.16,-944.2 97.16,-938.2 97.16,-938.2 97.16,-867.8 97.16,-867.8 97.16,-861.8 103.16,-855.8 109.16,-855.8 109.16,-855.8 487.28,-855.8 487.28,-855.8 493.28,-855.8 499.28,-861.8 499.28,-867.8 499.28,-867.8 499.28,-938.2 499.28,-938.2 499.28,-944.2 493.28,-950.2 487.28,-950.2"/>
+<text text-anchor="middle" x="298.22" y="-913.8" font-family="Helvetica,sans-Serif" font-size="36.00">Attestations</text>
+<text text-anchor="middle" x="298.22" y="-870.6" font-family="Helvetica,sans-Serif" font-size="36.00">(≥ 2/3 committee stake)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M298.22,-1033.76C298.22,-1012.4 298.22,-986.78 298.22,-963.96"/>
+<polygon fill="black" stroke="black" points="302.42,-964.06 298.22,-952.06 294.02,-964.06 302.42,-964.06"/>
+<text text-anchor="middle" x="324.68" y="-983.6" font-family="Helvetica,sans-Serif" font-size="28.00">vote</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#bbdefb" stroke="black" d="M485.33,-772.2C485.33,-772.2 111.1,-772.2 111.1,-772.2 105.1,-772.2 99.1,-766.2 99.1,-760.2 99.1,-760.2 99.1,-689.8 99.1,-689.8 99.1,-683.8 105.1,-677.8 111.1,-677.8 111.1,-677.8 485.33,-677.8 485.33,-677.8 491.33,-677.8 497.33,-683.8 497.33,-689.8 497.33,-689.8 497.33,-760.2 497.33,-760.2 497.33,-766.2 491.33,-772.2 485.33,-772.2"/>
+<text text-anchor="middle" x="298.22" y="-735.8" font-family="Helvetica,sans-Serif" font-size="36.00">Quorum Certificate</text>
+<text text-anchor="middle" x="298.22" y="-692.6" font-family="Helvetica,sans-Serif" font-size="36.00">(aggregated signatures)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M298.22,-855.76C298.22,-834.4 298.22,-808.78 298.22,-785.96"/>
+<polygon fill="black" stroke="black" points="302.42,-786.06 298.22,-774.06 294.02,-786.06 302.42,-786.06"/>
+<text text-anchor="middle" x="361.27" y="-805.6" font-family="Helvetica,sans-Serif" font-size="28.00">aggregate</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#fff9c4" stroke="black" d="M286.39,-624.77C286.39,-624.77 11.83,-577.63 11.83,-577.63 5.91,-576.62 5.91,-574.58 11.83,-573.57 11.83,-573.57 286.39,-526.43 286.39,-526.43 292.3,-525.42 304.13,-525.42 310.04,-526.43 310.04,-526.43 584.61,-573.57 584.61,-573.57 590.52,-574.58 590.52,-576.62 584.61,-577.63 584.61,-577.63 310.04,-624.77 310.04,-624.77 304.13,-625.78 292.3,-625.78 286.39,-624.77"/>
+<text text-anchor="middle" x="298.22" y="-564.8" font-family="Helvetica,sans-Serif" font-size="36.00">Epoch boundary?</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M298.22,-677.36C298.22,-665.66 298.22,-652.89 298.22,-640.5"/>
+<polygon fill="black" stroke="black" points="302.42,-640.79 298.22,-628.79 294.02,-640.79 302.42,-640.79"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#fff176" stroke="black" d="M320.31,-440.8C320.31,-440.8 36.12,-440.8 36.12,-440.8 30.12,-440.8 24.12,-434.8 24.12,-428.8 24.12,-428.8 24.12,-401.6 24.12,-401.6 24.12,-395.6 30.12,-389.6 36.12,-389.6 36.12,-389.6 320.31,-389.6 320.31,-389.6 326.31,-389.6 332.31,-395.6 332.31,-401.6 332.31,-401.6 332.31,-428.8 332.31,-428.8 332.31,-434.8 326.31,-440.8 320.31,-440.8"/>
+<text text-anchor="middle" x="178.22" y="-404.4" font-family="Helvetica,sans-Serif" font-size="36.00">Epoch Checkpoint</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M264.47,-530.06C245.76,-505.36 222.82,-475.07 205.3,-451.94"/>
+<polygon fill="black" stroke="black" points="208.68,-449.46 198.09,-442.43 201.98,-454.53 208.68,-449.46"/>
+<text text-anchor="middle" x="260" y="-474.2" font-family="Helvetica,sans-Serif" font-size="28.00">yes</text>
+</g>
+
+<g id="node8" class="node">
+<path fill="#c8e6c9" stroke="black" d="M401.27,-94.4C401.27,-94.4 179.17,-94.4 179.17,-94.4 173.17,-94.4 167.17,-88.4 167.17,-82.4 167.17,-82.4 167.17,-12 167.17,-12 167.17,-6 173.17,0 179.17,0 179.17,0 401.27,0 401.27,0 407.27,0 413.27,-6 413.27,-12 413.27,-12 413.27,-82.4 413.27,-82.4 413.27,-88.4 407.27,-94.4 401.27,-94.4"/>
+<text text-anchor="middle" x="290.22" y="-58" font-family="Helvetica,sans-Serif" font-size="36.00">Next Proposer</text>
+<text text-anchor="middle" x="290.22" y="-14.8" font-family="Helvetica,sans-Serif" font-size="36.00">Selected</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M324.61,-528.45C369.58,-443.25 449.91,-257.38 382.22,-119.4 379.71,-114.3 376.65,-109.46 373.18,-104.89"/>
+<polygon fill="black" stroke="black" points="376.42,-102.21 365.41,-95.85 370.05,-107.68 376.42,-102.21"/>
+<text text-anchor="middle" x="484.96" y="-322.6" font-family="Helvetica,sans-Serif" font-size="28.00">no (next slot)</text>
+</g>
+
+<g id="node7" class="node">
+<path fill="#f9a825" stroke="black" d="M258.27,-272.4C258.27,-272.4 86.16,-272.4 86.16,-272.4 80.16,-272.4 74.16,-266.4 74.16,-260.4 74.16,-260.4 74.16,-190 74.16,-190 74.16,-184 80.16,-178 86.16,-178 86.16,-178 258.27,-178 258.27,-178 264.27,-178 270.27,-184 270.27,-190 270.27,-190 270.27,-260.4 270.27,-260.4 270.27,-266.4 264.27,-272.4 258.27,-272.4"/>
+<text text-anchor="middle" x="172.22" y="-236" font-family="Helvetica,sans-Serif" font-size="36.00" fill="white">Finalized</text>
+<text text-anchor="middle" x="172.22" y="-192.8" font-family="Helvetica,sans-Serif" font-size="36.00" fill="white">Checkpoint</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="black" d="M168.52,-389.34C165.94,-381.54 163.5,-372.82 162.21,-364.6 158.18,-339 159.31,-310.47 161.96,-286"/>
+<polygon fill="black" stroke="black" points="166.1,-286.8 163.39,-274.37 157.76,-285.77 166.1,-286.8"/>
+<text text-anchor="middle" x="258.71" y="-339.4" font-family="Helvetica,sans-Serif" font-size="28.00">2 consecutive</text>
+<text text-anchor="middle" x="258.71" y="-305.8" font-family="Helvetica,sans-Serif" font-size="28.00">justified epochs</text>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="black" d="M162.63,-177.56C161.06,-158.43 162.49,-136.75 172.29,-119.4 175.39,-113.9 179.12,-108.77 183.29,-104.01"/>
+<polygon fill="black" stroke="black" points="185.96,-107.29 191.39,-95.8 179.98,-101.39 185.96,-107.29"/>
+<text text-anchor="middle" x="274.25" y="-127.8" font-family="Helvetica,sans-Serif" font-size="28.00">epoch advances</text>
+</g>
+</g>
+</svg></figure>
+<div class="callout-note" data-appearance="minimal">
+<p>Committees secure <em>each slot</em>, quorum certificates justify <em>checkpoints</em>, and supermajority links between checkpoints deliver <strong>finality</strong> — the point where history becomes irreversible.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="slashing-making-misbehavior-expensive"><h2 class="slide-title">Slashing — Making Misbehavior Expensive</h2><div class="slide-body">
+<ul>
+<li><p><strong>What it is:</strong> a <strong>cryptoeconomic penalty</strong> applied when validators produce cryptographic proof of misbehavior.</p></li>
+<li><p><strong>Slashable offenses:</strong></p>
+<ul>
+<li><strong>Equivocation:</strong> signing two conflicting blocks or votes in the same slot or height.<br />
+</li>
+<li><strong>Surround or double votes:</strong> voting patterns that “wrap around” a previous vote due to delays, etc..<br />
+</li>
+<li><strong>Failure to participate:</strong> Don’t act when selected as proposer, committee member, checkpoint vote</li>
+</ul></li>
+<li><p><strong>Penalty mechanics:</strong></p>
+<ul>
+<li>Offenders lose part or all of their <strong>staked collateral</strong>; evidence is included on-chain.<br />
+</li>
+<li><strong>Correlated slashing:</strong> if many validators equivocate together, each loses <em>more</em> — deterring cartel behavior.</li>
+<li>Slashing also triggers <strong>forced exit and cooldown</strong>, preventing further influence.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="becoming-a-validator"><h2 class="slide-title">Becoming a Validator</h2><div class="slide-body">
+<ul>
+<li><strong>Role:</strong> In Proof-of-Stake, validators replace miners.
+<ul>
+<li>Instead of racing with hardware and energy (PoW), they are <strong>selected by stake</strong> to propose and attest to blocks.</li>
+</ul></li>
+<li><strong>Participation:</strong>
+<ul>
+<li>Join by making a <strong>stake deposit</strong> and waiting for an <strong>activation epoch</strong>.<br />
+</li>
+<li>Leave through an <strong>exit and withdrawal process</strong>.</li>
+</ul></li>
+<li><strong>Keys and Security:</strong>
+<ul>
+<li><strong>Signing key</strong> — kept online for proposing and voting.</li>
+<li><strong>Withdrawal key</strong> — held offline for custody and recovery.</li>
+</ul></li>
+<li><strong>Operations and Uptime:</strong>
+<ul>
+<li>Validators must stay <strong>online and responsive</strong> to earn rewards and avoid penalties for missed votes.<br />
+</li>
+<li><strong>Double-signing</strong> (e.g., by redundant servers) leads to <strong>slashing</strong> — an enforced loss of stake.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="how-proposers-are-selected"><h2 class="slide-title">How Proposers Are Selected</h2><div class="slide-body">
+<ul>
+<li><p><strong>Goal:</strong> Choose who proposes and votes on each block <em>fairly and unpredictably</em>.</p>
+<ul>
+<li>Selection chance comes from <strong>stake-weighted randomness</strong> to ensure no participant can bias the draw to their favor.</li>
+</ul></li>
+<li><p><strong>Assignment:</strong></p>
+<ul>
+<li>For each slot or round, one (or in some more uncommon protocols, more validators) are chosen to <strong>propose</strong> a block.<br />
+</li>
+<li>Over time, assignments rotate to spread influence and reduce collusion.</li>
+</ul></li>
+<li><p><strong>Fairness and Security:</strong></p>
+<ul>
+<li>Random selection prevents powerful stakers from dominating every round.<br />
+</li>
+<li>Committees average many votes → <strong>Byzantine fault tolerance</strong> through majority agreement.</li>
+</ul></li>
+</ul>
+<p><strong>Key idea:</strong><br />
+Where PoW relies on computational luck, PoS relies on <strong>cryptographically verifiable randomness</strong> — the foundation for modern committee-based and BFT-style consensus.</p>
+</div></section>
+<section class="slide smaller" id="validator-committees"><h2 class="slide-title">Validator Committees</h2><div class="slide-body">
+<ul>
+<li><p><strong>Purpose:</strong> Enable scalable, fault-tolerant consensus by replacing all-to-all voting with <strong>small random samples</strong>.</p></li>
+<li><p><strong>Formation:</strong></p>
+<ul>
+<li>Randomly selected each slot or epoch using an implementation-specific method.</li>
+</ul></li>
+<li><p><strong>Responsibilities:</strong></p>
+<ul>
+<li><strong>Attestation:</strong> vote on proposed blocks or checkpoints.<br />
+</li>
+<li><strong>Aggregation:</strong> combine votes into a single <strong>Quorum Certificate (QC)</strong> or aggregate signature.<br />
+</li>
+<li><strong>Cross-checking:</strong> provide redundant verification of proposer behavior.</li>
+</ul></li>
+<li><p><strong>Requirements:</strong></p>
+<ul>
+<li>Sufficient size to tolerate <em>t</em> Byzantine nodes and reach majority honest votes.<br />
+</li>
+<li>Secure randomness → unbiased membership; low overlap across rounds.</li>
+</ul></li>
+</ul>
+<p><strong>Key idea:</strong> Committees make PoS practical — small, randomly chosen groups stand in for the whole network.</p>
+</div></section>
+<section class="slide smaller" id="from-committees-to-checkpoints"><h2 class="slide-title">From Committees to Checkpoints</h2><div class="slide-body">
+<ul>
+<li><strong>Committee Attestations:</strong>
+<ul>
+<li>Each slot’s committee <strong>attests</strong> to the validity of the proposed block.<br />
+</li>
+<li>Votes are <strong>stake-weighted</strong> and aggregated into a <strong>Quorum Certificate (QC)</strong> once ≥ 2t + 1 signatures are collected.<br />
+</li>
+<li>The QC acts as verifiable evidence that a block is accepted by a supermajority of honest validators on the committee.</li>
+</ul></li>
+<li><strong>Checkpointing and Finality:</strong>
+<ul>
+<li>Every <em>N</em> slots, a block becomes a <strong>checkpoint</strong>.<br />
+</li>
+<li>When a <strong>supermajority (≥ 2/3 of total stake)</strong> attests to a link between two checkpoints, the earlier one is <strong>finalized</strong> — it can no longer be reverted without slashing.<br />
+</li>
+<li>These finalized checkpoints define the chain’s <strong>irreversible history</strong>.</li>
+</ul></li>
+</ul>
+<p><strong>Key idea:</strong><br />
+Slot-level attestations build short-term confidence;<br />
+checkpoint finalization turns that confidence into <strong>permanent consensus.</strong></p>
+</div></section>
+<section class="slide smaller" id="fork-choice-rules"><h2 class="slide-title">Fork Choice Rules</h2><div class="slide-body">
+<ul>
+<li><strong>Why forks happen:</strong>
+<ul>
+<li>Network delays or simultaneous proposals produce <strong>competing blocks</strong> at the same height.<br />
+</li>
+<li>Some committees vote on branch A, others on branch B → temporary divergence.</li>
+</ul></li>
+<li><strong>Tie-breaking &amp; honesty heuristics:</strong>
+<ul>
+<li>Requires mechanism to resolve forks, if and when they occur</li>
+<li>Deterministic rules (hash/slot tiebreak) avoid oscillation.<br />
+</li>
+<li>Ignore obviously late or equivocal votes; rely on <strong>latest</strong> attestations only.</li>
+</ul></li>
+<li><strong>Fork choice</strong> selects the current head (short-term view).<br />
+</li>
+<li><strong>Finality</strong> makes parts of history <strong>irreversible</strong> (long-term safety).</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="safety-and-liveness-pos-invariants"><h2 class="slide-title">Safety and Liveness — PoS Invariants</h2><div class="slide-body">
+<p><em>Recall from Consensus Lecture:</em></p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Property</th>
+<th>Definition</th>
+<th>PoS guarantee</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Safety</strong></td>
+<td>No conflicting commits or later rollbacks</td>
+<td>Cannot finalize two conflicting checkpoints</td>
+</tr>
+<tr>
+<td><strong>Liveness</strong></td>
+<td>The system eventually makes forward progress</td>
+<td>Honest supermajority ensures new checkpoints finalize</td>
+</tr>
+</tbody>
+</table>
+<div class="r-stack">
+<div class="fragment fade-out" data-fragment-index="1" style="transition-duration: 0s;">
+<p><strong>Safety in PoS:</strong></p>
+<ul>
+<li>The protocol must never finalize two conflicting checkpoints</li>
+<li>Any equivocation (double vote or double proposal) produces <strong>on-chain slashable evidence</strong></li>
+<li>Safety holds as long as <strong>≥ 2/3 of total stake is honest</strong></li>
+<li>Safety is preserved even during network partitions — finalization pauses rather than risk a conflicting commit</li>
+</ul>
+</div>
+<div class="fragment fade-in" data-fragment-index="1" style="transition-duration: 0s;">
+<p><strong>Liveness in PoS:</strong></p>
+<ul>
+<li>Under <strong>eventual synchrony</strong> and an <strong>honest supermajority</strong>, new checkpoints continue to finalize</li>
+<li>Leader rotation ensures a new proposer is selected if the current one is offline or unresponsive</li>
+<li>Liveness can degrade under Byzantine behavior or poor network conditions — but <strong>safety is never sacrificed</strong></li>
+</ul>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="nothing-at-stake"><h2 class="slide-title">Nothing-at-Stake</h2><div class="slide-body">
+<p><strong>The problem:</strong> in PoW, signing multiple competing forks costs real energy. In PoS, producing a valid signature is nearly free — so without additional rules, a rational validator has no reason <em>not</em> to sign every fork.</p>
+<ul>
+<li><strong>Nothing-at-stake:</strong> a validator can vote for all competing chains simultaneously with no direct cost, undermining fork resolution and enabling double-finalization attacks.</li>
+</ul>
+<p><strong>Countermeasure — slashing:</strong></p>
+<ul>
+<li>Slashable offenses (equivocation, surround votes) produce <strong>on-chain evidence</strong> that anyone can submit</li>
+<li>Offenders lose a portion of their staked capital — the more validators equivocate together, the larger the penalty (<strong>correlated slashing</strong>)</li>
+<li>This converts the nothing-at-stake incentive into a costly mistake</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="nothing-at-stake-and-economic-security"><h2 class="slide-title">Nothing-at-Stake and Economic Security</h2><div class="slide-body">
+<p><strong>The broader economic security model:</strong></p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Mechanism</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Staking rewards</strong></td>
+<td>Incentivize participation and honest operation</td>
+</tr>
+<tr>
+<td><strong>Slashing</strong></td>
+<td>Deter active misbehavior; scales with coordination</td>
+</tr>
+<tr>
+<td><strong>Inactivity leak</strong></td>
+<td>Drains offline validators during extended partitions to restore liveness</td>
+</tr>
+<tr>
+<td><strong>Penalty calibration</strong></td>
+<td>Tuned to deter adversaries without punishing honest operators for accidents</td>
+</tr>
+</tbody>
+</table>
+<div class="callout-note" data-appearance="minimal">
+<p>The <strong>security budget</strong> is the total stake at risk — the higher it is, the more expensive it becomes to attack the network.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="weak-subjectivity"><h2 class="slide-title">Weak Subjectivity</h2><div class="slide-body">
+<p><strong>The core problem:</strong> in PoW, any node can verify the canonical chain from genesis by checking proof of work — no external input needed. In PoS, signatures are cheap to produce with old keys.</p>
+<ul>
+<li><strong>After a validator exits</strong>, their signing key still exists and could be used to sign an alternative history — there is no “work” that makes a valid signature expensive to produce after the fact.</li>
+<li>A new or returning node syncing from scratch <strong>cannot distinguish the real chain from a fabricated one</strong> using cryptography alone; both may have valid signatures from past validators.</li>
+</ul>
+<p><strong>Weak subjectivity</strong> is the property that PoS nodes require an external, socially-distributed anchor — a <strong>recent trusted checkpoint</strong> — to resolve this ambiguity:</p>
+<ul>
+<li>Nodes that are online continuously can follow the canonical chain in real time without issue</li>
+<li>Nodes <strong>joining for the first time</strong> or <strong>returning after a long absence</strong> must obtain a recent finalized checkpoint hash from a trusted source before syncing</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="weak-subjectivity-practical-mitigations"><h2 class="slide-title">Weak Subjectivity — Practical Mitigations</h2><div class="slide-body">
+<p><strong>The goal:</strong> give new and returning nodes a trustworthy anchor so they can safely join the canonical chain.</p>
+<ul>
+<li><strong>Checkpoint hashes baked into clients</strong> — node software ships with a recent finalized block hash; syncing begins from there rather than from genesis</li>
+<li><strong>Out-of-band distribution</strong> — community channels, block explorers, and trusted peers publish checkpoint hashes independently so no single source can lie undetected</li>
+<li><strong>Unbonding period as a safety window</strong> — stake remains locked after a validator exits, long enough that any fabricated history signed with old keys can still be detected and slashed</li>
+</ul>
+<p><strong>Key rule of thumb:</strong> a node that has been offline longer than the unbonding period must obtain a fresh checkpoint before rejoining — it cannot safely determine the canonical chain on its own.</p>
+<div class="callout-warning" data-appearance="minimal">
+<p><strong>Failure mode:</strong> a node that blindly syncs from an attacker-controlled source without verifying a checkpoint hash is vulnerable to being placed on a fabricated chain.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="censorship-bribery-and-eclipse"><h2 class="slide-title">Censorship, Bribery, and Eclipse</h2><div class="slide-body">
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Attack</th>
+<th>What happens</th>
+<th>PoS mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Censorship</strong></td>
+<td>Proposer deliberately omits transactions from a block</td>
+<td>Stake-weighted randomness rotates proposers; other validators can attest to alternative blocks</td>
+</tr>
+<tr>
+<td><strong>Bribery</strong></td>
+<td>Attacker pays validators to vote for a specific block or chain</td>
+<td>Slashing makes equivocation provably costly; reputation and stake diversity deter coordination</td>
+</tr>
+<tr>
+<td><strong>Eclipse</strong></td>
+<td>Validator’s network connections are hijacked, isolating them from the real chain</td>
+<td>Peer diversity requirements, authenticated connections, and multiple independent relay paths</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide smaller" id="censorship-bribery-and-eclipse-cont."><h2 class="slide-title">Censorship, Bribery, and Eclipse (cont.)</h2><div class="slide-body">
+<p><strong>Why censorship is hard to sustain:</strong></p>
+<ul>
+<li>Any single proposer can censor for one slot, but the next slot’s proposer is selected independently</li>
+<li>Committees are randomly assigned — a censor cannot predict or control which validators will attest</li>
+<li>Persistent censorship requires controlling a majority of proposer slots over time, which is detectable and economically costly</li>
+</ul>
+<p><strong>Why bribery is hard to sustain:</strong></p>
+<ul>
+<li>Bribing enough stake to reach 2/3 supermajority is expensive by design — the security budget scales with total stake</li>
+<li>Slashing evidence is on-chain and permanent; validators who accept bribes and equivocate lose their stake</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="parameters-that-shape-security"><h2 class="slide-title">Parameters that Shape Security</h2><div class="slide-body">
+<p>PoS protocols expose several tunable parameters. Each involves a <strong>trade-off</strong> — there is no universally correct value.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>If too low</th>
+<th>If too high</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Committee size</strong></td>
+<td>Easier to corrupt a committee</td>
+<td>Higher bandwidth and latency</td>
+</tr>
+<tr>
+<td><strong>Epoch length</strong></td>
+<td>More frequent finality overhead</td>
+<td>Slower to detect and recover from failures</td>
+</tr>
+<tr>
+<td><strong>Randomness refresh</strong></td>
+<td>More opportunity for grinding attacks</td>
+<td>Increased coordination overhead</td>
+</tr>
+<tr>
+<td><strong>Slash percentage</strong></td>
+<td>Weak deterrence for misbehavior</td>
+<td>Honest operators fear accidental slashing</td>
+</tr>
+<tr>
+<td><strong>Correlation penalty</strong></td>
+<td>Cartels face low collective cost</td>
+<td>Amplifies punishment for systemic failures</td>
+</tr>
+<tr>
+<td><strong>Fork-choice timeout</strong></td>
+<td>Stalls liveness under partitions</td>
+<td>Faster malicious proposers can exploit the gap</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide smaller" id="pow-vs-pos-at-a-glance"><h2 class="slide-title">PoW vs PoS at a Glance</h2><div class="slide-body">
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Aspect</th>
+<th style="text-align: left;"><strong>Proof of Work (PoW)</strong></th>
+<th style="text-align: left;"><strong>Proof of Stake (PoS)</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Selection Mechanism</strong></td>
+<td style="text-align: left;">Random “wins” by computational work</td>
+<td style="text-align: left;">Lottery weighted by stake (capital at risk)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Primary Cost</strong></td>
+<td style="text-align: left;">Energy consumption (watts)</td>
+<td style="text-align: left;">Locked collateral (opportunity cost)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Fork Choice</strong></td>
+<td style="text-align: left;">Longest / heaviest chain wins</td>
+<td style="text-align: left;">Votes or checkpoints from validators</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Finality</strong></td>
+<td style="text-align: left;">Probabilistic (more blocks → higher confidence)</td>
+<td style="text-align: left;">Often deterministic or semi-final with BFT-style commits</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Security Budget</strong></td>
+<td style="text-align: left;">Mining rewards fund energy costs</td>
+<td style="text-align: left;">Validator rewards and slashing secure stake</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Failure Risks</strong></td>
+<td style="text-align: left;">51% hashpower attacks</td>
+<td style="text-align: left;">Stake concentration, long-range, inactivity</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Common Goal</strong></td>
+<td style="text-align: left;">Economic cost for consensus honesty</td>
+<td style="text-align: left;">Economic penalty for consensus dishonesty</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide" id="proof-of-stake-microlab"><h2 class="slide-title">Proof of Stake Microlab</h2><div class="slide-body">
+<p><a href="/assets/labs/pos-micro">Open Proof of Stake Microlab</a></p>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-nguyen_proofofstakeconsensusmechanisms_2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">C. T. Nguyen, D. T. Hoang, D. N. Nguyen, D. Niyato, H. T. Nguyen, and E. Dutkiewicz, <span>“Proof-of-<span>Stake Consensus Mechanisms</span> for <span>Future Blockchain Networks</span>: <span>Fundamentals</span>, <span>Applications</span> and <span>Opportunities</span>,”</span> <em>IEEE Access</em>, vol. 7, pp. 85727–85745, 2019, doi: <a href="https://doi.org/10.1109/ACCESS.2019.2925010">10.1109/ACCESS.2019.2925010</a>.</div>
+</div>
+<div id="ref-bano_consensusageblockchains_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">S. Bano <em>et al.</em>, <span>“Consensus in the <span>Age</span> of <span>Blockchains</span>.”</span> 2017. Available: <a href="https://arxiv.org/abs/1711.03936">https://arxiv.org/abs/1711.03936</a></div>
+</div>
+<div id="ref-ethereumdevelopers_proofofstakepos_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">Ethereum Developers, <span>“Proof-of-stake (<span>PoS</span>).”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://ethereum.org/developers/docs/consensus-mechanisms/pos/">https://ethereum.org/developers/docs/consensus-mechanisms/pos/</a></div>
+</div>
+<div id="ref-ethereumdevelopers_blockproposal_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">Ethereum Developers, <span>“Block proposal.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://ethereum.org/developers/docs/consensus-mechanisms/pos/block-proposal/">https://ethereum.org/developers/docs/consensus-mechanisms/pos/block-proposal/</a></div>
+</div>
+<div id="ref-namoo908_ethereumbeaconchain_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">Namoo908, <span>“Ethereum <span>Beacon Chain Finality Incident</span>: <span>A Simulation</span> in <span>Validator-Aware Automation</span>.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://medium.com/@nanmwaku97/ethereum-beacon-chain-finality-incident-a-simulation-in-validator-aware-automation-feb1f462a089">https://medium.com/@nanmwaku97/ethereum-beacon-chain-finality-incident-a-simulation-in-validator-aware-automation-feb1f462a089</a></div>
+</div>
+<div id="ref-ethereumdevelopers_ethereumproofofstakeattack_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">Ethereum Developers, <span>“Ethereum proof-of-stake <span>Attack</span> and <span>Defense</span>.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://ethereum.org/developers/docs/consensus-mechanisms/pos/attack-and-defense/">https://ethereum.org/developers/docs/consensus-mechanisms/pos/attack-and-defense/</a></div>
+</div>
+<div id="ref-bagaria_proofofstakelongestchain_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">V. Bagaria <em>et al.</em>, <span>“Proof-of-<span>Stake Longest Chain Protocols</span>: <span>Security</span> vs <span>Predictability</span>,”</span> in <em>Proceedings of the 2022 <span>ACM Workshop</span> on <span>Developments</span> in <span>Consensus</span></em>, Los Angeles CA USA: ACM, Nov. 2022, pp. 29–42. doi: <a href="https://doi.org/10.1145/3560829.3563559">10.1145/3560829.3563559</a>.</div>
+</div>
+<div id="ref-katz_introductionmoderncryptography_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">J. Katz and Y. Lindell, <em>Introduction to <span>Modern Cryptography</span></em>, 3rd ed. <span>Chapman and Hall/CRC</span>, 2020. doi: <a href="https://doi.org/10.1201/9781351133036">10.1201/9781351133036</a>.</div>
+</div>
+<div id="ref-menezes_handbookappliedcryptography_2011" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">A. J. Menezes, P. C. van Oorschot, and S. A. Vanstone, <span>“Handbook of <span>Applied Cryptography</span>.”</span> CRC Press, Aug. 07, 2011. Accessed: Oct. 23, 2025. [Online]. Available: <a href="https://cacr.uwaterloo.ca/hac/">https://cacr.uwaterloo.ca/hac/</a></div>
+</div>
+<div id="ref-shi_proofofstakeoverviewsbc_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline"><span class="nocase">E. Shi <em>et al.</em></span>, <span>“Proof-of-<span>Stake</span>: <span>An Overview</span> (<span>SBC</span> 2020 <span>Summer School</span>).”</span> 2020. Available: <a href="https://tselab.stanford.edu/downloads/PoS_LC_SBC2020.pdf">https://tselab.stanford.edu/downloads/PoS_LC_SBC2020.pdf</a></div>
+</div>
+<div id="ref-deirmentzoglou_surveylongrangeattacks_2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">E. Deirmentzoglou, G. Papakyriakopoulos, and C. Patsakis, <span>“A <span>Survey</span> on <span>Long-Range Attacks</span> for <span>Proof</span> of <span>Stake Protocols</span>,”</span> <em>IEEE Access</em>, vol. 7, pp. 28712–28725, 2019, doi: <a href="https://doi.org/10.1109/ACCESS.2019.2901858">10.1109/ACCESS.2019.2901858</a>.</div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

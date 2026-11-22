@@ -1,0 +1,1177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bitcoin Nodes and Network</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/bitcoin/03-BF-bitcoin_nodes_and_network.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="bf-03" data-code="03-BF" data-src="d1ebc68d98bf4aff" data-slides="25">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section VI: Bitcoin Framework · Lesson 03-BF</p><h1>Bitcoin Nodes and Network</h1></div></section>
+<section class="slide smaller" id="bitcoins-peer-to-peer-network"><h2 class="slide-title">Bitcoin’s Peer-to-Peer Network</h2><div class="slide-body">
+<ul>
+<li><strong>Architecture:</strong> a fully decentralized network where nodes connect directly to one another—no central servers or coordinators.<br />
+</li>
+<li><strong>Connectivity:</strong> each node discovers peers dynamically and maintains multiple simultaneous connections for redundancy and robustness.<br />
+</li>
+<li><strong>Roles within the network:</strong>
+<ul>
+<li><strong>Full nodes:</strong> validate blocks and transactions, and relay data to peers.<br />
+</li>
+<li><strong>Miners:</strong> perform Proof-of-Work and extend the blockchain with new blocks.<br />
+</li>
+<li><strong>SPV (light) clients:</strong> verify transactions using block headers and Merkle proofs without storing full data.<br />
+</li>
+</ul></li>
+<li><strong>Goal:</strong> achieve global resilience, censorship resistance, and permissionless participation through replication and independent validation.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="elements-of-the-bitcoin-network"><h2 class="slide-title">Elements of the Bitcoin Network</h2><div class="slide-body">
+<ul>
+<li><strong>Scale:</strong> typically ~10,000 publicly reachable nodes worldwide (exact count fluctuates over time).<br />
+</li>
+<li><strong>Connectivity:</strong> each node maintains multiple outbound and inbound peer connections to ensure redundancy and fast data propagation.<br />
+</li>
+<li><strong>Core network functions:</strong>
+<ul>
+<li><strong>Transaction relay:</strong> broadcasting and verifying unconfirmed transactions.<br />
+</li>
+<li><strong>Block propagation:</strong> distributing newly mined blocks across the network.<br />
+</li>
+<li><strong>Peer discovery:</strong> finding and maintaining new connections dynamically.<br />
+</li>
+</ul></li>
+<li><strong>Incentive and resilience:</strong> the network’s health depends on broad, independent participation—more nodes mean greater redundancy, decentralization, and censorship resistance.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="what-is-a-bitcoin-node"><h2 class="slide-title">What Is a Bitcoin Node?</h2><div class="slide-body">
+<div class="columns">
+<div class="column">
+<ul>
+<li><strong>Definition:</strong> a node is any computer running Bitcoin software that participates directly in the peer-to-peer network.</li>
+<li>Its <strong>Core functions</strong> include:
+<ul>
+<li><strong>Validation:</strong> checks the correctness of transactions and blocks against consensus rules.<br />
+</li>
+<li><strong>Relay:</strong> shares verified information with connected peers to keep the network synchronized.<br />
+</li>
+<li><strong>Storage:</strong> maintains a local copy (full or partial) of the blockchain ledger.</li>
+</ul></li>
+</ul>
+</div><div class="column">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 293.26 459.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:391px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 455.8)">
+<g id="node1" class="node">
+<ellipse fill="#e0f2fe" stroke="#38bdf8" cx="86" cy="-28.8" rx="28.8" ry="28.8"/>
+<text text-anchor="middle" x="86" y="-25.2" font-family="Inter,Helvetica,Arial" font-size="12.00">Node A</text>
+</g>
+
+<g id="node2" class="node">
+<ellipse fill="#e0f2fe" stroke="#38bdf8" cx="86" cy="-123.4" rx="28.8" ry="28.8"/>
+<text text-anchor="middle" x="86" y="-119.8" font-family="Inter,Helvetica,Arial" font-size="12.00">Node B</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#94a3b8" d="M86,-65.56C86,-72.55 86,-79.89 86,-86.87"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" points="88.1,-65.6 86,-59.6 83.9,-65.6 88.1,-65.6"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" points="83.9,-86.77 86,-92.77 88.1,-86.77 83.9,-86.77"/>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="#e0f2fe" stroke="#38bdf8" cx="57" cy="-218" rx="28.8" ry="28.8"/>
+<text text-anchor="middle" x="57" y="-214.4" font-family="Inter,Helvetica,Arial" font-size="12.00">Node C</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#94a3b8" d="M75.4,-158.24C72.85,-166.4 70.12,-175.11 67.57,-183.26"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" points="77.37,-158.98 77.16,-152.63 73.36,-157.73 77.37,-158.98"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" points="65.71,-182.16 65.92,-188.51 69.72,-183.41 65.71,-182.16"/>
+</g>
+
+<g id="node4" class="node">
+<ellipse fill="#e0f2fe" stroke="#38bdf8" cx="96" cy="-312.6" rx="28.8" ry="28.8"/>
+<text text-anchor="middle" x="96" y="-309" font-family="Inter,Helvetica,Arial" font-size="12.00">Node D</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#94a3b8" d="M91.69,-159.27C93.04,-168.93 94.29,-179.45 95,-189.2 97.14,-218.39 97.26,-251.61 96.93,-276.07"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" points="93.8,-159.2 90.86,-153.56 89.64,-159.8 93.8,-159.2"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" points="94.83,-275.81 96.83,-281.85 99.03,-275.88 94.83,-275.81"/>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#94a3b8" d="M70.72,-251.57C74.42,-260.37 78.44,-269.91 82.16,-278.73"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" points="72.72,-250.9 68.45,-246.19 68.84,-252.53 72.72,-250.9"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" points="80.21,-279.51 84.47,-284.23 84.08,-277.88 80.21,-279.51"/>
+</g>
+
+<g id="node5" class="node">
+<ellipse fill="#e0f2fe" stroke="#38bdf8" cx="38" cy="-423" rx="28.8" ry="28.8"/>
+<text text-anchor="middle" x="38" y="-419.4" font-family="Inter,Helvetica,Arial" font-size="12.00">Node E</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#94a3b8" d="M53.73,-253.9C50.26,-291.03 44.79,-349.45 41.3,-386.72"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" points="55.79,-254.48 54.26,-248.31 51.61,-254.09 55.79,-254.48"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" points="39.24,-386.21 40.77,-392.38 43.42,-386.6 39.24,-386.21"/>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#94a3b8" d="M79.26,-344.89C71.54,-359.32 62.39,-376.41 54.68,-390.83"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" points="81,-346.08 81.98,-339.8 77.3,-344.1 81,-346.08"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" points="52.94,-389.63 51.96,-395.91 56.64,-391.61 52.94,-389.63"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#fef9c3" stroke="#f59e0b" d="M177.8,-441C177.8,-441 144.2,-441 144.2,-441 138.2,-441 132.2,-435 132.2,-429 132.2,-429 132.2,-417 132.2,-417 132.2,-411 138.2,-405 144.2,-405 144.2,-405 177.8,-405 177.8,-405 183.8,-405 189.8,-411 189.8,-417 189.8,-417 189.8,-429 189.8,-429 189.8,-435 183.8,-441 177.8,-441"/>
+<text text-anchor="middle" x="161" y="-419.4" font-family="Inter,Helvetica,Arial" font-size="12.00">User Wallet</text>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="#34d399" d="M91.15,-341.44C90.47,-352.8 91.46,-365.71 96.96,-376.2 103.28,-388.25 114.37,-397.86 125.56,-405.1"/>
+<polygon fill="#34d399" stroke="#34d399" points="124.25,-406.76 130.47,-408.09 126.44,-403.17 124.25,-406.76"/>
+<text text-anchor="middle" x="145.98" y="-363.6" font-family="Helvetica,sans-Serif" font-size="14.00">confirmed block</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#94a3b8" d="M20.84,-390.87C10.76,-369.73 0,-340.77 0,-313.6 0,-122.4 0,-122.4 0,-122.4 0,-89.23 30,-62.94 54.56,-46.98"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" points="18.87,-391.63 23.4,-396.09 22.64,-389.78 18.87,-391.63"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" points="55.42,-48.92 59.38,-43.95 53.18,-45.36 55.42,-48.92"/>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#f59e0b" d="M176.44,-404.83C183.04,-396.67 190.3,-386.46 195,-376.2 206.87,-350.28 209,-342.11 209,-313.6 209,-122.4 209,-122.4 209,-122.4 209,-78.05 157.32,-52.29 120.96,-39.65"/>
+<polygon fill="#f59e0b" stroke="#f59e0b" points="121.7,-37.68 115.35,-37.78 120.37,-41.67 121.7,-37.68"/>
+<text text-anchor="middle" x="247.13" y="-213.8" font-family="Helvetica,sans-Serif" font-size="14.00">broadcast tx</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Why it matters:</strong> nodes <em>are</em> the distributed record—without them, there is no independent verification or decentralized consensus.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="types-of-nodes"><h2 class="slide-title">Types of Nodes</h2><div class="slide-body">
+<ul>
+<li><strong>Full nodes:</strong>
+<ul>
+<li>Store the <em>entire</em> blockchain history.<br />
+</li>
+<li>Independently validate every transaction and consensus rule.<br />
+</li>
+<li>Form the backbone of network integrity and decentralization.</li>
+</ul></li>
+<li><strong>Light clients (SPV):</strong>
+<ul>
+<li>Download only block headers instead of full blocks.<br />
+</li>
+<li>Verify transactions using Merkle proofs provided by full nodes.<br />
+</li>
+<li>Trade some independence for lower bandwidth and storage needs.</li>
+</ul></li>
+<li><strong>Core trade-off:</strong> full validation offers maximum trustlessness, while lightweight clients prioritize accessibility and efficiency.</li>
+</ul>
+<div style="position: relative; top: -175px; z-index: -1; margin-bottom: -200px; ">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 820.92 132.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1095px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 128)">
+<g id="node1" class="node">
+<path fill="#e0f2fe" stroke="#38bdf8" d="M376.4,-36C376.4,-36 307.96,-36 307.96,-36 301.96,-36 295.96,-30 295.96,-24 295.96,-24 295.96,-12 295.96,-12 295.96,-6 301.96,0 307.96,0 307.96,0 376.4,0 376.4,0 382.4,0 388.4,-6 388.4,-12 388.4,-12 388.4,-24 388.4,-24 388.4,-30 382.4,-36 376.4,-36"/>
+<text text-anchor="middle" x="342.18" y="-13.2" font-family="Inter,Helvetica,Arial" font-size="16.00">Full Node 1</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e0f2fe" stroke="#38bdf8" d="M535.85,-70C535.85,-70 467.41,-70 467.41,-70 461.41,-70 455.41,-64 455.41,-58 455.41,-58 455.41,-46 455.41,-46 455.41,-40 461.41,-34 467.41,-34 467.41,-34 535.85,-34 535.85,-34 541.85,-34 547.85,-40 547.85,-46 547.85,-46 547.85,-58 547.85,-58 547.85,-64 541.85,-70 535.85,-70"/>
+<text text-anchor="middle" x="501.63" y="-47.2" font-family="Inter,Helvetica,Arial" font-size="16.00">Full Node 2</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" d="M396.93,-29.61C412.99,-33.08 430.6,-36.88 446.67,-40.35"/>
+<polygon fill="#64748b" stroke="#64748b" points="397.56,-27.24 390.2,-28.15 396.52,-32.03 397.56,-27.24"/>
+<polygon fill="#64748b" stroke="#64748b" points="446.08,-42.73 453.44,-41.81 447.11,-37.94 446.08,-42.73"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e0f2fe" stroke="#38bdf8" d="M800.92,-70C800.92,-70 732.47,-70 732.47,-70 726.47,-70 720.47,-64 720.47,-58 720.47,-58 720.47,-46 720.47,-46 720.47,-40 726.47,-34 732.47,-34 732.47,-34 800.92,-34 800.92,-34 806.92,-34 812.92,-40 812.92,-46 812.92,-46 812.92,-58 812.92,-58 812.92,-64 806.92,-70 800.92,-70"/>
+<text text-anchor="middle" x="766.7" y="-47.2" font-family="Inter,Helvetica,Arial" font-size="16.00">Full Node 3</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" d="M556.6,-52C602.05,-52 666.71,-52 712.06,-52"/>
+<polygon fill="#64748b" stroke="#64748b" points="556.66,-49.55 549.66,-52 556.66,-54.45 556.66,-49.55"/>
+<polygon fill="#64748b" stroke="#64748b" points="711.78,-54.45 718.78,-52 711.78,-49.55 711.78,-54.45"/>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" d="M712.06,-42.65C674.59,-36.52 623.32,-28.93 577.85,-25 515.99,-19.65 444.64,-18.19 397.01,-17.88"/>
+<polygon fill="#64748b" stroke="#64748b" points="711.52,-45.04 718.82,-43.76 712.31,-40.21 711.52,-45.04"/>
+<polygon fill="#64748b" stroke="#64748b" points="397.22,-15.43 390.21,-17.85 397.19,-20.33 397.22,-15.43"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fef9c3" stroke="#f59e0b" d="M141.34,-36C141.34,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 141.34,0 141.34,0 147.34,0 153.34,-6 153.34,-12 153.34,-12 153.34,-24 153.34,-24 153.34,-30 147.34,-36 141.34,-36"/>
+<text text-anchor="middle" x="76.67" y="-13.2" font-family="Inter,Helvetica,Arial" font-size="16.00">Light Client A (SPV)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" d="M161.99,-18C203,-18 251.09,-18 287.12,-18"/>
+<polygon fill="#64748b" stroke="#64748b" points="162.05,-15.55 155.05,-18 162.05,-20.45 162.05,-15.55"/>
+<polygon fill="#64748b" stroke="#64748b" points="287.03,-20.45 294.03,-18 287.03,-15.55 287.03,-20.45"/>
+<text text-anchor="middle" x="224.65" y="-22.2" font-family="Helvetica,sans-Serif" font-size="14.00">headers &amp; proofs</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#fef9c3" stroke="#f59e0b" d="M565.85,-124C565.85,-124 437.4,-124 437.4,-124 431.4,-124 425.4,-118 425.4,-112 425.4,-112 425.4,-100 425.4,-100 425.4,-94 431.4,-88 437.4,-88 437.4,-88 565.85,-88 565.85,-88 571.85,-88 577.85,-94 577.85,-100 577.85,-100 577.85,-112 577.85,-112 577.85,-118 571.85,-124 565.85,-124"/>
+<text text-anchor="middle" x="501.63" y="-101.2" font-family="Inter,Helvetica,Arial" font-size="16.00">Light Client B (SPV)</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#64748b" d="M586.16,-89.67C622.01,-82.57 664.33,-74.04 702.47,-66 705.6,-65.34 708.82,-64.66 712.06,-63.96"/>
+<polygon fill="#64748b" stroke="#64748b" points="586.02,-87.2 579.63,-90.97 586.97,-92.01 586.02,-87.2"/>
+<polygon fill="#64748b" stroke="#64748b" points="712.34,-66.4 718.66,-62.53 711.3,-61.61 712.34,-66.4"/>
+<text text-anchor="middle" x="649.16" y="-91.32" font-family="Helvetica,sans-Serif" font-size="14.00">headers &amp; proofs</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide" id="why-run-a-node"><h2 class="slide-title">Why Run a Node?</h2><div class="slide-body">
+<ul>
+<li><strong>Security:</strong> Verify transactions without trusting others.</li>
+<li><strong>Privacy:</strong> Directly query blockchain data.</li>
+<li><strong>Decentralization:</strong> More nodes, stronger network.</li>
+<li><strong>Control:</strong> Enforce Bitcoin’s consensus rules locally, so your node only accepts blocks and transactions that match the version of Bitcoin you choose to run.</li>
+</ul>
+</div></section>
+<section class="slide" id="setting-up-a-full-node"><h2 class="slide-title">Setting Up a Full Node</h2><div class="slide-body">
+<ul>
+<li><strong>Install:</strong> download and run <em>Bitcoin Core</em>, the open-source reference implementation.<br />
+</li>
+<li>Requirements:
+<ul>
+<li>Disk space: 600+ GB (growing).</li>
+<li>Stable internet connection.</li>
+<li>Regular updates to keep consensus rules current.</li>
+</ul></li>
+<li>Initial block download can take days.</li>
+</ul>
+</div></section>
+<section class="slide" id="setting-up-a-light-client"><h2 class="slide-title">Setting Up a Light Client</h2><div class="slide-body">
+<ul>
+<li><strong>Deployment:</strong> typically built into mobile or desktop wallets for quick setup and low resource use.<br />
+</li>
+<li><strong>Simplified Payment Verification (SPV):</strong>
+<ul>
+<li>Downloads only block headers, not full blocks.<br />
+</li>
+<li>Requests Merkle proofs from connected full nodes to verify specific transactions.<br />
+</li>
+</ul></li>
+<li><strong>Trade-off:</strong> lightweight and fast to sync, but shifts trust toward the full nodes it connects to and assumes they are honest and well-connected.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="joining-the-bitcoin-network"><h2 class="slide-title">Joining the Bitcoin Network</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li><strong>Peer-to-peer architecture:</strong> nodes connect directly without central coordination.<br />
+</li>
+<li><strong>Outbound connections:</strong> by default, a node initiates ~8 outbound TCP connections to maintain healthy network gossip and redundancy.<br />
+</li>
+<li><strong>Peer discovery:</strong>
+<ul>
+<li>Uses <strong>DNS seeds</strong> (publicly maintained domain names) that return IPs of reachable nodes.<br />
+</li>
+<li>May also use <strong>hardcoded “fallback” peers</strong> or <strong>address gossip</strong> from other nodes once connected.</li>
+</ul></li>
+</ul>
+</div><div class="column" style="width:40%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 520.97 665.28" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:695px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 661.28)">
+<g id="node1" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M72.87,-381.4C72.87,-381.4 12,-381.4 12,-381.4 6,-381.4 0,-375.4 0,-369.4 0,-369.4 0,-347 0,-347 0,-341 6,-335 12,-335 12,-335 72.87,-335 72.87,-335 78.87,-335 84.87,-341 84.87,-347 84.87,-347 84.87,-369.4 84.87,-369.4 84.87,-375.4 78.87,-381.4 72.87,-381.4"/>
+<text text-anchor="middle" x="42.43" y="-363" font-family="Inter,Helvetica,Arial" font-size="16.00">New Node</text>
+<text text-anchor="middle" x="42.43" y="-343.8" font-family="Inter,Helvetica,Arial" font-size="16.00">(Joining)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e0f2fe" stroke="#38bdf8" d="M335.29,-545.4C335.29,-545.4 206.89,-545.4 206.89,-545.4 200.89,-545.4 194.89,-539.4 194.89,-533.4 194.89,-533.4 194.89,-511 194.89,-511 194.89,-505 200.89,-499 206.89,-499 206.89,-499 335.29,-499 335.29,-499 341.29,-499 347.29,-505 347.29,-511 347.29,-511 347.29,-533.4 347.29,-533.4 347.29,-539.4 341.29,-545.4 335.29,-545.4"/>
+<text text-anchor="middle" x="271.09" y="-527" font-family="Inter,Helvetica,Arial" font-size="16.00">DNS Seed A</text>
+<text text-anchor="middle" x="271.09" y="-507.8" font-family="Inter,Helvetica,Arial" font-size="16.00">(seed.bitcoin.sipa.be)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M48.81,-381.75C56.27,-409.03 72.42,-453.37 102.87,-478.2 126.37,-497.37 157.37,-508.26 186.28,-514.42"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="185.8,-516.82 193.14,-515.79 186.76,-512.02 185.8,-516.82"/>
+<text text-anchor="middle" x="137.1" y="-514.59" font-family="Helvetica,sans-Serif" font-size="14.00">DNS query</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e0f2fe" stroke="#38bdf8" d="M340.85,-269.4C340.85,-269.4 201.34,-269.4 201.34,-269.4 195.34,-269.4 189.34,-263.4 189.34,-257.4 189.34,-257.4 189.34,-235 189.34,-235 189.34,-229 195.34,-223 201.34,-223 201.34,-223 340.85,-223 340.85,-223 346.85,-223 352.85,-229 352.85,-235 352.85,-235 352.85,-257.4 352.85,-257.4 352.85,-263.4 346.85,-269.4 340.85,-269.4"/>
+<text text-anchor="middle" x="271.09" y="-251" font-family="Inter,Helvetica,Arial" font-size="16.00">DNS Seed B</text>
+<text text-anchor="middle" x="271.09" y="-231.8" font-family="Inter,Helvetica,Arial" font-size="16.00">(seed.bitcoinstats.com)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M53.71,-334.7C63.48,-315.3 80.06,-288.72 102.87,-274.4 125.82,-259.99 153.88,-252.3 180.42,-248.36"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="180.71,-250.79 187.32,-247.43 180.05,-245.93 180.71,-250.79"/>
+<text text-anchor="middle" x="137.1" y="-278.6" font-family="Helvetica,sans-Serif" font-size="14.00">DNS query</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M500.97,-599.2C500.97,-599.2 468.54,-599.2 468.54,-599.2 462.54,-599.2 456.54,-593.2 456.54,-587.2 456.54,-587.2 456.54,-575.2 456.54,-575.2 456.54,-569.2 462.54,-563.2 468.54,-563.2 468.54,-563.2 500.97,-563.2 500.97,-563.2 506.97,-563.2 512.97,-569.2 512.97,-575.2 512.97,-575.2 512.97,-587.2 512.97,-587.2 512.97,-593.2 506.97,-599.2 500.97,-599.2"/>
+<text text-anchor="middle" x="484.76" y="-576.4" font-family="Inter,Helvetica,Arial" font-size="16.00">Peer 1</text>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M45.89,-381.69C52.07,-435.95 70.18,-567.5 102.87,-595.2 202.48,-679.6 374.81,-625.58 448.58,-596.38"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="449.13,-598.8 454.7,-593.91 447.3,-594.26 449.13,-598.8"/>
+<text text-anchor="middle" x="271.09" y="-644.68" font-family="Helvetica,sans-Serif" font-size="14.00">connect</text>
+</g>
+
+<g id="node6" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M500.97,-482.2C500.97,-482.2 468.54,-482.2 468.54,-482.2 462.54,-482.2 456.54,-476.2 456.54,-470.2 456.54,-470.2 456.54,-458.2 456.54,-458.2 456.54,-452.2 462.54,-446.2 468.54,-446.2 468.54,-446.2 500.97,-446.2 500.97,-446.2 506.97,-446.2 512.97,-452.2 512.97,-458.2 512.97,-458.2 512.97,-470.2 512.97,-470.2 512.97,-476.2 506.97,-482.2 500.97,-482.2"/>
+<text text-anchor="middle" x="484.76" y="-459.4" font-family="Inter,Helvetica,Arial" font-size="16.00">Peer 2</text>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M85.18,-366.33C144.82,-378.16 257.73,-401.33 352.85,-425.4 385.3,-433.61 421.79,-444.57 447.98,-452.75"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="447.1,-455.04 454.51,-454.8 448.57,-450.36 447.1,-455.04"/>
+<text text-anchor="middle" x="271.09" y="-429.6" font-family="Helvetica,sans-Serif" font-size="14.00">connect</text>
+</g>
+
+<g id="node7" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M500.97,-323.2C500.97,-323.2 468.54,-323.2 468.54,-323.2 462.54,-323.2 456.54,-317.2 456.54,-311.2 456.54,-311.2 456.54,-299.2 456.54,-299.2 456.54,-293.2 462.54,-287.2 468.54,-287.2 468.54,-287.2 500.97,-287.2 500.97,-287.2 506.97,-287.2 512.97,-293.2 512.97,-299.2 512.97,-299.2 512.97,-311.2 512.97,-311.2 512.97,-317.2 506.97,-323.2 500.97,-323.2"/>
+<text text-anchor="middle" x="484.76" y="-300.4" font-family="Inter,Helvetica,Arial" font-size="16.00">Peer 3</text>
+</g>
+
+<g id="edge10" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M85.07,-344.61C113.99,-335.79 153.59,-324.95 189.34,-319.4 281.74,-305.05 392.23,-303.95 447.91,-304.5"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="447.67,-306.94 454.7,-304.58 447.73,-302.05 447.67,-306.94"/>
+<text text-anchor="middle" x="271.09" y="-323.6" font-family="Helvetica,sans-Serif" font-size="14.00">connect</text>
+</g>
+
+<g id="node8" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M500.97,-206.2C500.97,-206.2 468.54,-206.2 468.54,-206.2 462.54,-206.2 456.54,-200.2 456.54,-194.2 456.54,-194.2 456.54,-182.2 456.54,-182.2 456.54,-176.2 462.54,-170.2 468.54,-170.2 468.54,-170.2 500.97,-170.2 500.97,-170.2 506.97,-170.2 512.97,-176.2 512.97,-182.2 512.97,-182.2 512.97,-194.2 512.97,-194.2 512.97,-200.2 506.97,-206.2 500.97,-206.2"/>
+<text text-anchor="middle" x="484.76" y="-183.4" font-family="Inter,Helvetica,Arial" font-size="16.00">Peer 4</text>
+</g>
+
+<g id="edge11" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M44.25,-334.5C46.89,-295.49 57.87,-217.73 102.87,-174.2 197.05,-83.09 373.45,-141.32 448.5,-172.36"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="447.36,-174.53 454.76,-174.99 449.25,-170.02 447.36,-174.53"/>
+<text text-anchor="middle" x="271.09" y="-143.74" font-family="Helvetica,sans-Serif" font-size="14.00">connect</text>
+</g>
+
+<g id="node9" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M500.97,-71.2C500.97,-71.2 468.54,-71.2 468.54,-71.2 462.54,-71.2 456.54,-65.2 456.54,-59.2 456.54,-59.2 456.54,-47.2 456.54,-47.2 456.54,-41.2 462.54,-35.2 468.54,-35.2 468.54,-35.2 500.97,-35.2 500.97,-35.2 506.97,-35.2 512.97,-41.2 512.97,-47.2 512.97,-47.2 512.97,-59.2 512.97,-59.2 512.97,-65.2 506.97,-71.2 500.97,-71.2"/>
+<text text-anchor="middle" x="484.76" y="-48.4" font-family="Inter,Helvetica,Arial" font-size="16.00">Peer 5</text>
+</g>
+
+<g id="edge12" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M42.68,-334.56C42.55,-289.14 48.87,-189.19 102.87,-132.2 140.71,-92.26 300.13,-98.77 438.54,-67.2 441.61,-66.5 444.76,-65.7 447.92,-64.84"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="448.55,-67.21 454.6,-62.92 447.19,-62.5 448.55,-67.21"/>
+<text text-anchor="middle" x="271.09" y="-106.47" font-family="Helvetica,sans-Serif" font-size="14.00">connect</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M347.71,-528.06C376.86,-532.09 410,-538.9 438.54,-550.4 443.75,-552.5 448.96,-555.27 453.9,-558.29"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="452.31,-560.18 459.52,-561.94 454.99,-556.07 452.31,-560.18"/>
+<text text-anchor="middle" x="404.7" y="-554.6" font-family="Helvetica,sans-Serif" font-size="14.00">returns IPs</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M347.68,-502.93C376.22,-495.47 408.95,-486.69 438.54,-478.2 441.56,-477.33 444.69,-476.41 447.83,-475.47"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="448.49,-477.83 454.48,-473.46 447.07,-473.14 448.49,-477.83"/>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M353.11,-267.47C380.32,-274.78 410.8,-283.16 438.54,-291.2 441.56,-292.08 444.69,-293 447.82,-293.94"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="447.06,-296.27 454.47,-295.97 448.49,-291.59 447.06,-296.27"/>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M353.13,-225.5C380.34,-218.36 410.82,-210.15 438.54,-202.2 441.56,-201.33 444.69,-200.41 447.83,-199.47"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="448.49,-201.83 454.48,-197.46 447.07,-197.14 448.49,-201.83"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fef9c3" stroke="#f59e0b" d="M313.97,-46.4C313.97,-46.4 228.22,-46.4 228.22,-46.4 222.22,-46.4 216.22,-40.4 216.22,-34.4 216.22,-34.4 216.22,-12 216.22,-12 216.22,-6 222.22,0 228.22,0 228.22,0 313.97,0 313.97,0 319.97,0 325.97,-6 325.97,-12 325.97,-12 325.97,-34.4 325.97,-34.4 325.97,-40.4 319.97,-46.4 313.97,-46.4"/>
+<text text-anchor="middle" x="271.09" y="-28" font-family="Inter,Helvetica,Arial" font-size="16.00">Hardcoded</text>
+<text text-anchor="middle" x="271.09" y="-8.8" font-family="Inter,Helvetica,Arial" font-size="16.00">Fallback Peers</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M326.33,-30.89C364.44,-36.29 414.38,-43.37 447.69,-48.09"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="447.28,-50.5 454.55,-49.06 447.97,-45.65 447.28,-50.5"/>
+<text text-anchor="middle" x="404.7" y="-50.92" font-family="Helvetica,sans-Serif" font-size="14.00">fallback</text>
+</g>
+
+<g id="edge13" class="edge">
+<path fill="none" stroke="#34d399" stroke-width="1.1" d="M456.25,-581.56C377.59,-582 154.11,-578.93 102.87,-531.2 63.01,-494.07 49.88,-429.03 45.56,-390.15"/>
+<polygon fill="#34d399" stroke="#34d399" stroke-width="1.1" points="48.02,-390.18 44.89,-383.46 43.15,-390.67 48.02,-390.18"/>
+<text text-anchor="middle" x="271.09" y="-583.94" font-family="Helvetica,sans-Serif" font-size="14.00">addr relay</text>
+</g>
+
+<g id="edge14" class="edge">
+<path fill="none" stroke="#34d399" stroke-width="1.1" d="M456.22,-466.14C403.21,-469.02 283.89,-471.29 189.34,-442.2 150.06,-430.12 109.92,-405.97 81.71,-386.66"/>
+<polygon fill="#34d399" stroke="#34d399" stroke-width="1.1" points="83.32,-384.79 76.17,-382.81 80.52,-388.82 83.32,-384.79"/>
+<text text-anchor="middle" x="271.09" y="-471" font-family="Helvetica,sans-Serif" font-size="14.00">block/tx relay</text>
+</g>
+
+<g id="edge15" class="edge">
+<path fill="none" stroke="#34d399" stroke-width="1.1" d="M456.1,-313.5C450.32,-315.13 444.25,-316.78 438.54,-318.2 400.77,-327.58 391.39,-330.81 352.85,-336.2 261.93,-348.92 154.88,-354.46 93.51,-356.73"/>
+<polygon fill="#34d399" stroke="#34d399" stroke-width="1.1" points="93.73,-354.27 86.83,-356.97 93.91,-359.17 93.73,-354.27"/>
+<text text-anchor="middle" x="271.09" y="-356.12" font-family="Helvetica,sans-Serif" font-size="14.00">addr relay</text>
+</g>
+
+<g id="edge16" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.1" d="M456.31,-184.77C403.46,-179.1 284.39,-170.83 189.34,-197.4 146.84,-209.28 133.66,-214.59 102.87,-246.2 80.37,-269.29 64.16,-302.61 54.41,-326.91"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.1" points="52.21,-325.81 51.96,-333.22 56.78,-327.58 52.21,-325.81"/>
+<text text-anchor="middle" x="271.09" y="-201.6" font-family="Helvetica,sans-Serif" font-size="14.00">ping/pong</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+<p><strong>Goal:</strong> ensure that every honest node can find and maintain diverse peers for transaction relay, block propagation, and consensus updates.</p>
+</div></section>
+<section class="slide smaller" id="node-operator-responsibilities"><h2 class="slide-title">Node Operator Responsibilities</h2><div class="slide-body">
+<ul>
+<li><strong>Maintain consensus:</strong> keep node software updated and aligned with the latest consensus rules.<br />
+</li>
+<li><strong>Policy decisions:</strong>
+<ul>
+<li>Choose which implementation or version of Bitcoin to run—especially relevant during forks or upgrades.<br />
+</li>
+<li>Configure peer connections, including optional blocklists, whitelists, and connection limits.<br />
+</li>
+</ul></li>
+<li><strong>Economic influence:</strong> nodes operated by exchanges, merchants, custodians, and mining pools carry greater weight in practice, since their policy choices affect which rules and transactions the wider ecosystem recognizes.<br />
+</li>
+<li><strong>Stewardship role:</strong> running a node is both a technical and civic act—operators collectively define the active consensus of the network.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="decisions-nodes-make"><h2 class="slide-title">Decisions Nodes Make</h2><div class="slide-body">
+<ul>
+<li><strong>Consensus rules:</strong> choose which version of the protocol to enforce—determining which blocks and transactions are considered valid.<br />
+</li>
+<li><strong>Relay policy:</strong> set minimum transaction fees, rate limits, or filters that shape what data the node will forward to peers.<br />
+</li>
+<li><strong>Network management:</strong> select and manage peers, blocking spammy or malicious nodes while prioritizing reliable connections.<br />
+</li>
+<li><strong>Principle:</strong> each node is a <em>sovereign participant</em>—it independently enforces the rules it accepts, forming consensus through voluntary coordination, not central command.</li>
+</ul>
+<div style="position: relative; top: -125px; z-index: -1;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 377.35 145.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:503px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(7.2 138.4)">
+<g id="node1" class="node">
+<path fill="#fef9c3" stroke="#f59e0b" d="M206.09,-131.2C206.09,-131.2 145.44,-131.2 145.44,-131.2 139.44,-131.2 133.44,-125.2 133.44,-119.2 133.44,-119.2 133.44,-104.8 133.44,-104.8 133.44,-98.8 139.44,-92.8 145.44,-92.8 145.44,-92.8 206.09,-92.8 206.09,-92.8 212.09,-92.8 218.09,-98.8 218.09,-104.8 218.09,-104.8 218.09,-119.2 218.09,-119.2 218.09,-125.2 212.09,-131.2 206.09,-131.2"/>
+<text text-anchor="middle" x="175.76" y="-115" font-family="Inter,Helvetica,Arial" font-size="10.00">Individual Node</text>
+<text text-anchor="middle" x="175.76" y="-103" font-family="Inter,Helvetica,Arial" font-size="10.00">(Operator Policy)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e0f2fe" stroke="#38bdf8" d="M101.53,-84.8C101.53,-84.8 12,-84.8 12,-84.8 6,-84.8 0,-78.8 0,-72.8 0,-72.8 0,-58.4 0,-58.4 0,-52.4 6,-46.4 12,-46.4 12,-46.4 101.53,-46.4 101.53,-46.4 107.53,-46.4 113.53,-52.4 113.53,-58.4 113.53,-58.4 113.53,-72.8 113.53,-72.8 113.53,-78.8 107.53,-84.8 101.53,-84.8"/>
+<text text-anchor="middle" x="56.76" y="-68.6" font-family="Inter,Helvetica,Arial" font-size="10.00">Consensus Rules</text>
+<text text-anchor="middle" x="56.76" y="-56.6" font-family="Inter,Helvetica,Arial" font-size="10.00">(Which blocks are valid)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" d="M133.14,-95.1C127.14,-92.86 120.88,-90.52 114.65,-88.2"/>
+<polygon fill="#64748b" stroke="#64748b" points="115.63,-85.95 108.22,-85.8 113.92,-90.54 115.63,-85.95"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#ecfdf5" stroke="#34d399" d="M219.14,-84.8C219.14,-84.8 132.38,-84.8 132.38,-84.8 126.38,-84.8 120.38,-78.8 120.38,-72.8 120.38,-72.8 120.38,-58.4 120.38,-58.4 120.38,-52.4 126.38,-46.4 132.38,-46.4 132.38,-46.4 219.14,-46.4 219.14,-46.4 225.14,-46.4 231.14,-52.4 231.14,-58.4 231.14,-58.4 231.14,-72.8 231.14,-72.8 231.14,-78.8 225.14,-84.8 219.14,-84.8"/>
+<text text-anchor="middle" x="175.76" y="-68.6" font-family="Inter,Helvetica,Arial" font-size="10.00">Relay Policy</text>
+<text text-anchor="middle" x="175.76" y="-56.6" font-family="Inter,Helvetica,Arial" font-size="10.00">(Mempool &amp; fee filters)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" d="M175.76,-92.43C175.76,-92.28 175.76,-92.13 175.76,-91.98"/>
+<polygon fill="#64748b" stroke="#64748b" points="178.21,-93.75 175.76,-86.75 173.31,-93.75 178.21,-93.75"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fee2e2" stroke="#f87171" d="M350.95,-84.8C350.95,-84.8 250.58,-84.8 250.58,-84.8 244.58,-84.8 238.58,-78.8 238.58,-72.8 238.58,-72.8 238.58,-58.4 238.58,-58.4 238.58,-52.4 244.58,-46.4 250.58,-46.4 250.58,-46.4 350.95,-46.4 350.95,-46.4 356.95,-46.4 362.95,-52.4 362.95,-58.4 362.95,-58.4 362.95,-72.8 362.95,-72.8 362.95,-78.8 356.95,-84.8 350.95,-84.8"/>
+<text text-anchor="middle" x="300.76" y="-68.6" font-family="Inter,Helvetica,Arial" font-size="10.00">Peer Selection</text>
+<text text-anchor="middle" x="300.76" y="-56.6" font-family="Inter,Helvetica,Arial" font-size="10.00">(Connections &amp; reputation)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" d="M218.43,-95.84C225.5,-93.34 232.94,-90.69 240.34,-88.06"/>
+<polygon fill="#64748b" stroke="#64748b" points="241.13,-90.38 246.91,-85.73 239.49,-85.76 241.13,-90.38"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#e0f2fe" stroke="#38bdf8" d="M224.7,-38.4C224.7,-38.4 126.83,-38.4 126.83,-38.4 120.83,-38.4 114.83,-32.4 114.83,-26.4 114.83,-26.4 114.83,-12 114.83,-12 114.83,-6 120.83,0 126.83,0 126.83,0 224.7,0 224.7,0 230.7,0 236.7,-6 236.7,-12 236.7,-12 236.7,-26.4 236.7,-26.4 236.7,-32.4 230.7,-38.4 224.7,-38.4"/>
+<text text-anchor="middle" x="175.76" y="-22.2" font-family="Inter,Helvetica,Arial" font-size="10.00">Network Consensus</text>
+<text text-anchor="middle" x="175.76" y="-10.2" font-family="Inter,Helvetica,Arial" font-size="10.00">Emerges from many nodes</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" stroke-dasharray="5,2" d="M106.54,-46.03C110.32,-44.62 114.16,-43.19 117.98,-41.76"/>
+<polygon fill="#64748b" stroke="#64748b" points="118.68,-44.11 124.38,-39.37 116.97,-39.52 118.68,-44.11"/>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#64748b" stroke-dasharray="5,2" d="M175.76,-46.03C175.76,-45.88 175.76,-45.73 175.76,-45.58"/>
+<polygon fill="#64748b" stroke="#64748b" points="178.21,-47.35 175.76,-40.35 173.31,-47.35 178.21,-47.35"/>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#64748b" stroke-dasharray="5,2" d="M248.48,-46.03C244.4,-44.58 240.26,-43.11 236.14,-41.65"/>
+<polygon fill="#64748b" stroke="#64748b" points="237.08,-39.38 229.67,-39.35 235.44,-44 237.08,-39.38"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide smaller" id="gossip-and-peer-connections"><h2 class="slide-title">Gossip and Peer Connections</h2><div class="slide-body">
+<ul>
+<li><strong>After bootstrap:</strong> each node learns about new peers through a <em>gossip protocol</em>—nodes share information about other reachable nodes.<br />
+</li>
+<li><strong>Address exchange:</strong> <code>addr</code> and <code>addrv2</code> messages advertise known peers, allowing the network to expand organically without a central directory.<br />
+</li>
+<li><strong>Connectivity pattern:</strong> each node maintains roughly 8 outbound and a variable number of inbound connections, forming a constantly shifting mesh topology.<br />
+</li>
+<li><strong>Dynamic behavior:</strong> peers are periodically dropped, replaced, or added—promoting redundancy, fault tolerance, and resistance to partitioning or isolation attacks.</li>
+</ul>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 360.80 180.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:481px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 176.8)">
+<g id="node1" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="25.2" cy="-90" rx="25.2" ry="25.2"/>
+<text text-anchor="middle" x="25.2" y="-86.4" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">Node A</text>
+</g>
+
+<g id="node2" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="176.4" cy="-147.6" rx="25.2" ry="25.2"/>
+<text text-anchor="middle" x="176.4" y="-144" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">Node B</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.2" d="M49.16,-99.13C75.26,-109.07 117.09,-125.01 145.61,-135.87"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.2" points="144.5,-137.7 150.86,-137.87 146,-133.77 144.5,-137.7"/>
+<text text-anchor="middle" x="90.93" y="-121.85" font-family="Helvetica,sans-Serif" font-size="10.00">addr</text>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="183.6" cy="-25.2" rx="25.2" ry="25.2"/>
+<text text-anchor="middle" x="183.6" y="-21.6" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">Node C</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.2" d="M48.91,-80.3C76.64,-68.96 122.6,-50.16 152.99,-37.72"/>
+<polygon fill="#cbd5e1" stroke="#cbd5e1" stroke-width="1.2" points="153.54,-39.76 158.3,-35.55 151.95,-35.88 153.54,-39.76"/>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.2" d="M152.44,-138.47C126.34,-128.53 84.51,-112.59 55.99,-101.73"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.2" points="57.1,-99.9 50.74,-99.73 55.6,-103.83 57.1,-99.9"/>
+<text text-anchor="middle" x="83.16" y="-109.75" font-family="Helvetica,sans-Serif" font-size="10.00">addr list</text>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.2" d="M177.89,-122.24C178.98,-103.69 180.47,-78.37 181.66,-58.24"/>
+<polygon fill="#cbd5e1" stroke="#cbd5e1" stroke-width="1.2" points="183.75,-58.45 182,-52.34 179.55,-58.21 183.75,-58.45"/>
+</g>
+
+<g id="node4" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="327.6" cy="-90" rx="25.2" ry="25.2"/>
+<text text-anchor="middle" x="327.6" y="-86.4" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">Node D</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.2" d="M200.36,-138.47C226.46,-128.53 268.29,-112.59 296.81,-101.73"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.2" points="297.2,-103.83 302.06,-99.73 295.7,-99.9 297.2,-103.83"/>
+<text text-anchor="middle" x="236.85" y="-121.75" font-family="Helvetica,sans-Serif" font-size="10.00">addrv2</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.2" d="M159.89,-34.9C132.16,-46.24 86.2,-65.04 55.81,-77.48"/>
+<polygon fill="#cbd5e1" stroke="#cbd5e1" stroke-width="1.2" points="55.26,-75.44 50.5,-79.65 56.85,-79.32 55.26,-75.44"/>
+</g>
+
+<g id="edge10" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.2" d="M182.11,-50.56C181.02,-69.11 179.53,-94.43 178.34,-114.56"/>
+<polygon fill="#cbd5e1" stroke="#cbd5e1" stroke-width="1.2" points="176.25,-114.35 178,-120.46 180.45,-114.59 176.25,-114.35"/>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.2" d="M206.74,-35.61C231.4,-46.71 270.56,-64.33 297.59,-76.49"/>
+<polygon fill="#cbd5e1" stroke="#cbd5e1" stroke-width="1.2" points="296.53,-78.32 302.87,-78.87 298.26,-74.49 296.53,-78.32"/>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.2" d="M303.64,-99.13C277.54,-109.07 235.71,-125.01 207.19,-135.87"/>
+<polygon fill="#cbd5e1" stroke="#cbd5e1" stroke-width="1.2" points="206.8,-133.77 201.94,-137.87 208.3,-137.7 206.8,-133.77"/>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.2" d="M304.46,-79.59C279.8,-68.49 240.64,-50.87 213.61,-38.71"/>
+<polygon fill="#cbd5e1" stroke="#cbd5e1" stroke-width="1.2" points="214.67,-36.88 208.33,-36.33 212.94,-40.71 214.67,-36.88"/>
+</g>
+</g>
+</svg></figure>
+</div></section>
+<section class="slide smaller" id="communication-protocol-basics"><h2 class="slide-title">Communication Protocol Basics</h2><div class="slide-body">
+<ul>
+<li><strong>Transport layer:</strong> nodes communicate over long-lived TCP connections, exchanging structured messages in both directions.<br />
+</li>
+<li><strong>Message types:</strong> the Bitcoin protocol defines around 30 core message commands—examples include <code>version</code>, <code>verack</code>, <code>inv</code>, <code>getdata</code>, <code>tx</code>, and <code>block</code>.<br />
+</li>
+<li><strong>Message format:</strong>
+<ul>
+<li><strong>Header:</strong> contains the command name, payload length, and checksum for integrity verification.<br />
+</li>
+<li><strong>Payload:</strong> carries the message-specific data (e.g., transaction contents or block headers).<br />
+</li>
+</ul></li>
+<li><strong>Design goal:</strong> minimize overhead while ensuring reliable propagation of transactions, blocks, and peer information across a global network.</li>
+</ul>
+<div style="position: relative; top: -175px; z-index: -1;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 777.29 138.10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1036px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 134.1)">
+<g id="node1" class="node">
+<polygon fill="#f8fafc" stroke="#cbd5e1" points="0,-38.4 0,-120 150.73,-120 150.73,-38.4 0,-38.4"/>
+<text text-anchor="middle" x="38.79" y="-74.4" font-family="Inter,Helvetica,Arial" font-size="16.00">Message</text>
+<polyline fill="none" stroke="#cbd5e1" points="77.58,-38.4 77.58,-120"/>
+<text text-anchor="middle" x="114.16" y="-94.8" font-family="Inter,Helvetica,Arial" font-size="16.00">Header</text>
+<polyline fill="none" stroke="#cbd5e1" points="77.58,-79.2 150.73,-79.2"/>
+<text text-anchor="middle" x="114.16" y="-54" font-family="Inter,Helvetica,Arial" font-size="16.00">Payload</text>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="#e0f2fe" stroke="#38bdf8" points="186.73,-88.8 186.73,-129.6 554.4,-129.6 554.4,-88.8 186.73,-88.8"/>
+<text text-anchor="middle" x="220.62" y="-104.4" font-family="Inter,Helvetica,Arial" font-size="16.00">Header</text>
+<polyline fill="none" stroke="#38bdf8" points="254.52,-88.8 254.52,-129.6"/>
+<text text-anchor="middle" x="298.65" y="-104.4" font-family="Inter,Helvetica,Arial" font-size="16.00">Command</text>
+<polyline fill="none" stroke="#38bdf8" points="342.78,-88.8 342.78,-129.6"/>
+<text text-anchor="middle" x="404.02" y="-104.4" font-family="Inter,Helvetica,Arial" font-size="16.00">Payload Length</text>
+<polyline fill="none" stroke="#38bdf8" points="465.25,-88.8 465.25,-129.6"/>
+<text text-anchor="middle" x="509.82" y="-104.4" font-family="Inter,Helvetica,Arial" font-size="16.00">Checksum</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" d="M150.73,-99.6C159.61,-99.6 168.69,-99.68 177.86,-99.83"/>
+<polygon fill="#64748b" stroke="#64748b" points="177.75,-102.27 184.8,-99.95 177.84,-97.37 177.75,-102.27"/>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="#ecfdf5" stroke="#34d399" points="219.21,-28.8 219.21,-69.6 521.92,-69.6 521.92,-28.8 219.21,-28.8"/>
+<text text-anchor="middle" x="255.78" y="-44.4" font-family="Inter,Helvetica,Arial" font-size="16.00">Payload</text>
+<polyline fill="none" stroke="#34d399" points="292.36,-28.8 292.36,-69.6"/>
+<text text-anchor="middle" x="407.14" y="-44.4" font-family="Inter,Helvetica,Arial" font-size="16.00">Structure Depends on Msg Type</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" d="M150.73,-58.8C170.12,-58.8 190.46,-58.42 210.61,-57.81"/>
+<polygon fill="#64748b" stroke="#64748b" points="210.49,-60.26 217.41,-57.59 210.34,-55.37 210.49,-60.26"/>
+</g>
+
+<g id="node4" class="node">
+<polygon fill="#fff7ed" stroke="#fdba74" points="763.29,-98.4 590.4,-98.4 590.4,0 769.29,0 769.29,-92.4 763.29,-98.4"/>
+<polyline fill="none" stroke="#fdba74" points="763.29,-98.4 763.29,-92.4"/>
+<polyline fill="none" stroke="#fdba74" points="769.29,-92.4 763.29,-92.4"/>
+<text text-anchor="middle" x="679.84" y="-73.2" font-family="Inter,Helvetica,Arial" font-size="16.00">Example message types:</text>
+<text text-anchor="middle" x="679.84" y="-54" font-family="Inter,Helvetica,Arial" font-size="16.00">• version / verack</text>
+<text text-anchor="middle" x="679.84" y="-34.8" font-family="Inter,Helvetica,Arial" font-size="16.00">• inv / getdata</text>
+<text text-anchor="middle" x="679.84" y="-15.6" font-family="Inter,Helvetica,Arial" font-size="16.00">• tx / block</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" stroke-dasharray="1,5" d="M522.05,-49.2C543.05,-49.2 564.12,-49.2 583.7,-49.2"/>
+<polygon fill="#64748b" stroke="#64748b" points="583.49,-50.95 588.49,-49.2 583.49,-47.45 583.49,-50.95"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide smaller" id="transaction-relay"><h2 class="slide-title">Transaction Relay</h2><div class="slide-body">
+<ul>
+<li><strong>Announcement:</strong> when a node receives a new transaction, it advertises it to peers using an <code>inv</code> (inventory) message.<br />
+</li>
+<li><strong>Request:</strong> peers that don’t already have the transaction respond with a <code>getdata</code> message requesting the full data.<br />
+</li>
+<li><strong>Transmission:</strong> the originating node then sends the complete transaction using a <code>tx</code> message.<br />
+</li>
+<li><strong>Goal:</strong> efficient, bandwidth-aware propagation—nodes announce first, then only transmit when requested.</li>
+</ul>
+<div style="position: relative; top: -100px; z-index: -1;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 564.30 153.29" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:752px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 149.29)">
+<g id="node1" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M168,-86.28C168,-86.28 12,-86.28 12,-86.28 6,-86.28 0,-80.28 0,-74.28 0,-74.28 0,-62.28 0,-62.28 0,-56.28 6,-50.28 12,-50.28 12,-50.28 168,-50.28 168,-50.28 174,-50.28 180,-56.28 180,-62.28 180,-62.28 180,-74.28 180,-74.28 180,-80.28 174,-86.28 168,-86.28"/>
+<text text-anchor="middle" x="90" y="-63.48" font-family="Inter,Helvetica,Arial" font-size="16.00">Node A</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M544.3,-86.28C544.3,-86.28 388.3,-86.28 388.3,-86.28 382.3,-86.28 376.3,-80.28 376.3,-74.28 376.3,-74.28 376.3,-62.28 376.3,-62.28 376.3,-56.28 382.3,-50.28 388.3,-50.28 388.3,-50.28 544.3,-50.28 544.3,-50.28 550.3,-50.28 556.3,-56.28 556.3,-62.28 556.3,-62.28 556.3,-74.28 556.3,-74.28 556.3,-80.28 550.3,-86.28 544.3,-86.28"/>
+<text text-anchor="middle" x="466.3" y="-63.48" font-family="Inter,Helvetica,Arial" font-size="16.00">Node B</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#38bdf8" d="M136.56,-86.7C155.27,-93.33 177.35,-99.99 198,-103.28 268.36,-114.5 287.95,-114.5 358.3,-103.28 376.21,-100.43 395.2,-95.04 412.12,-89.34"/>
+<polygon fill="#38bdf8" stroke="#38bdf8" points="412.5,-91.8 418.31,-87.2 410.9,-87.17 412.5,-91.8"/>
+<text text-anchor="middle" x="278.15" y="-132.69" font-family="Helvetica,sans-Serif" font-size="14.00">inv(TX)</text>
+<text text-anchor="middle" x="278.15" y="-115.89" font-family="Helvetica,sans-Serif" font-size="14.00">Advertise new transaction</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#34d399" d="M180.32,-65.95C186.31,-65.84 192.24,-65.75 198,-65.68 269.24,-64.82 287.06,-64.82 358.3,-65.68 361.36,-65.72 364.47,-65.76 367.61,-65.81"/>
+<polygon fill="#34d399" stroke="#34d399" points="367.43,-68.26 374.46,-65.92 367.51,-63.36 367.43,-68.26"/>
+<text text-anchor="middle" x="278.15" y="-86.68" font-family="Helvetica,sans-Serif" font-size="14.00">tx(TX)</text>
+<text text-anchor="middle" x="278.15" y="-69.88" font-family="Helvetica,sans-Serif" font-size="14.00">Send full transaction</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#f59e0b" d="M439.03,-50.05C418.2,-36.77 387.79,-19.89 358.3,-12.68 289.09,4.23 267.21,4.23 198,-12.68 171.74,-19.1 144.74,-33.19 124.44,-45.58"/>
+<polygon fill="#f59e0b" stroke="#f59e0b" points="123.2,-43.46 118.56,-49.25 125.79,-47.62 123.2,-43.46"/>
+<text text-anchor="middle" x="278.15" y="-33.68" font-family="Helvetica,sans-Serif" font-size="14.00">getdata(TX)</text>
+<text text-anchor="middle" x="278.15" y="-16.88" font-family="Helvetica,sans-Serif" font-size="14.00">Request details</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide smaller" id="block-propagation"><h2 class="slide-title">Block Propagation</h2><div class="slide-body">
+<ul>
+<li><strong>Process:</strong> block relay follows the same announce–request–transmit pattern as transactions: <code>inv</code> → <code>getdata</code> → <code>block</code>.<br />
+</li>
+<li><strong>Efficiency improvement:</strong> the <em>compact block relay</em> protocol minimizes bandwidth use by sending:
+<ul>
+<li>Short transaction IDs for transactions peers likely already have.<br />
+</li>
+<li>Only full transactions if the peer’s mempool is missing them.<br />
+</li>
+</ul></li>
+<li><strong>Goal:</strong> achieve rapid, global block propagation to keep miners in sync and reduce the risk of competing forks.</li>
+</ul>
+<div style="position: relative; top: -100px; z-index: -1;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 679.49 193.88" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:905px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 189.88)">
+<g id="node1" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M132,-107.54C132,-107.54 12,-107.54 12,-107.54 6,-107.54 0,-101.54 0,-95.54 0,-95.54 0,-73.14 0,-73.14 0,-67.14 6,-61.14 12,-61.14 12,-61.14 132,-61.14 132,-61.14 138,-61.14 144,-67.14 144,-73.14 144,-73.14 144,-95.54 144,-95.54 144,-101.54 138,-107.54 132,-107.54"/>
+<text text-anchor="middle" x="72" y="-89.14" font-family="Inter,Helvetica,Arial" font-size="16.00">Miner A</text>
+<text text-anchor="middle" x="72" y="-69.94" font-family="Inter,Helvetica,Arial" font-size="16.00">(Finds New Block)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M418.97,-102.34C418.97,-102.34 298.97,-102.34 298.97,-102.34 292.97,-102.34 286.97,-96.34 286.97,-90.34 286.97,-90.34 286.97,-78.34 286.97,-78.34 286.97,-72.34 292.97,-66.34 298.97,-66.34 298.97,-66.34 418.97,-66.34 418.97,-66.34 424.97,-66.34 430.97,-72.34 430.97,-78.34 430.97,-78.34 430.97,-90.34 430.97,-90.34 430.97,-96.34 424.97,-102.34 418.97,-102.34"/>
+<text text-anchor="middle" x="358.97" y="-79.54" font-family="Inter,Helvetica,Arial" font-size="16.00">Peer Node B</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#38bdf8" stroke-width="1.2" d="M92.09,-107.95C108.45,-126.16 133.79,-149.93 162,-160.34 206.6,-176.79 224.37,-176.79 268.97,-160.34 296.64,-150.13 321.55,-127.06 337.93,-109"/>
+<polygon fill="#38bdf8" stroke="#38bdf8" stroke-width="1.2" points="339.58,-110.84 342.37,-103.97 335.9,-107.6 339.58,-110.84"/>
+<text text-anchor="middle" x="215.49" y="-175.98" font-family="Helvetica,sans-Serif" font-size="11.00">1. inv(Block)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#34d399" stroke-width="1.2" d="M144.48,-108C150.36,-109.34 156.25,-110.49 162,-111.34 209.03,-118.32 221.94,-118.32 268.97,-111.34 278.48,-109.93 288.39,-107.71 297.98,-105.14"/>
+<polygon fill="#34d399" stroke="#34d399" stroke-width="1.2" points="298.49,-107.54 304.57,-103.3 297.17,-102.83 298.49,-107.54"/>
+<text text-anchor="middle" x="215.49" y="-133.07" font-family="Helvetica,sans-Serif" font-size="11.00">3. cmpctblock</text>
+<text text-anchor="middle" x="215.49" y="-119.87" font-family="Helvetica,sans-Serif" font-size="11.00">(short TX IDs)</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#f87171" stroke-width="1.2" d="M144.4,-81.37C150.35,-81.2 156.28,-81.05 162,-80.94 209.53,-80.03 221.44,-80.03 268.97,-80.94 271.92,-81 274.92,-81.06 277.96,-81.14"/>
+<polygon fill="#f87171" stroke="#f87171" stroke-width="1.2" points="277.69,-83.58 284.75,-81.32 277.82,-78.68 277.69,-83.58"/>
+<text text-anchor="middle" x="215.49" y="-97.44" font-family="Helvetica,sans-Serif" font-size="11.00">5. blocktxn</text>
+<text text-anchor="middle" x="215.49" y="-84.24" font-family="Helvetica,sans-Serif" font-size="11.00">(send missing TXs)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#f59e0b" stroke-width="1.2" d="M320.8,-66.02C305.19,-59.29 286.6,-52.5 268.97,-49.14 222.27,-40.24 208.7,-40.24 162,-49.14 151.93,-51.06 141.54,-54.1 131.57,-57.61"/>
+<polygon fill="#f59e0b" stroke="#f59e0b" stroke-width="1.2" points="130.74,-55.3 125.02,-60.02 132.43,-59.9 130.74,-55.3"/>
+<text text-anchor="middle" x="215.49" y="-52.44" font-family="Helvetica,sans-Serif" font-size="11.00">2. getdata(Block)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#f87171" stroke-width="1.2" d="M342.48,-65.93C326.26,-48.22 299,-22.61 268.97,-11.94 224.17,3.98 206.8,3.98 162,-11.94 137.98,-20.48 115.72,-38.58 99.48,-54.55"/>
+<polygon fill="#f87171" stroke="#f87171" stroke-width="1.2" points="97.79,-52.77 94.61,-59.47 101.28,-56.21 97.79,-52.77"/>
+<text text-anchor="middle" x="215.49" y="-28.44" font-family="Helvetica,sans-Serif" font-size="11.00">4. getblocktxn</text>
+<text text-anchor="middle" x="215.49" y="-15.24" font-family="Helvetica,sans-Serif" font-size="11.00">(request missing TXs)</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M659.49,-102.34C659.49,-102.34 539.49,-102.34 539.49,-102.34 533.49,-102.34 527.49,-96.34 527.49,-90.34 527.49,-90.34 527.49,-78.34 527.49,-78.34 527.49,-72.34 533.49,-66.34 539.49,-66.34 539.49,-66.34 659.49,-66.34 659.49,-66.34 665.49,-66.34 671.49,-72.34 671.49,-78.34 671.49,-78.34 671.49,-90.34 671.49,-90.34 671.49,-96.34 665.49,-102.34 659.49,-102.34"/>
+<text text-anchor="middle" x="599.49" y="-79.54" font-family="Inter,Helvetica,Arial" font-size="16.00">Peer Node C</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#38bdf8" stroke-width="1.2" d="M431.21,-84.34C458.7,-84.34 490.28,-84.34 518.55,-84.34"/>
+<polygon fill="#38bdf8" stroke="#38bdf8" stroke-width="1.2" points="518.39,-86.79 525.39,-84.34 518.39,-81.89 518.39,-86.79"/>
+<text text-anchor="middle" x="479.23" y="-87.64" font-family="Helvetica,sans-Serif" font-size="11.00">6. inv(Block)</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide smaller" id="fault-tolerance"><h2 class="slide-title">Fault Tolerance</h2><div class="slide-body">
+<ul>
+<li><strong>Redundant connectivity:</strong> each node maintains multiple inbound and outbound links, so losing a few peers does not disconnect it from the network.<br />
+</li>
+<li><strong>Gossip resilience:</strong> Bitcoin’s peer-to-peer gossip protocol ensures that transactions and blocks eventually reach the entire network, even when some links fail.<br />
+</li>
+<li><strong>Potential threats:</strong>
+<ul>
+<li><strong>Eclipse attacks:</strong> an adversary surrounds and isolates a node, controlling all its connections.<br />
+</li>
+<li><strong>Partitioning attacks:</strong> attempt to split the network into disconnected regions to delay consensus or block propagation.<br />
+</li>
+</ul></li>
+<li><strong>Mitigation:</strong> peer and route diversity, rotating connections, and independent discovery methods make large-scale isolation difficult and improve overall network robustness.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="network-growth-and-concerns"><h2 class="slide-title">Network Growth and Concerns</h2><div class="slide-body">
+<ul>
+<li><strong>Dynamic participation:</strong> the number of reachable nodes fluctuates over time as hardware costs, energy prices, and incentives influence who runs infrastructure.<br />
+</li>
+<li><strong>Resource demands:</strong> as the blockchain grows, running a full node requires increasing storage, bandwidth, and processing power—raising the barrier to entry.<br />
+</li>
+<li><strong>Centralization pressures:</strong>
+<ul>
+<li><strong>Mining concentration:</strong> large mining pools dominate block production due to economies of scale.<br />
+</li>
+<li><strong>Node consolidation:</strong> fewer independently operated full nodes reduce network diversity and resilience.<br />
+</li>
+</ul></li>
+<li><strong>Design tension:</strong> achieving scalability often increases efficiency at the expense of decentralization—balancing the two is an ongoing challenge.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="introduction-to-bitcoin-script"><h2 class="slide-title">Introduction to Bitcoin Script</h2><div class="slide-body">
+<ul>
+<li><strong>Purpose:</strong> Bitcoin transactions use a <em>stack-based scripting language</em> to specify the exact conditions required to spend each output (UTXO).<br />
+</li>
+<li><strong>Functionality:</strong> scripts are executed and validated by nodes—if the conditions evaluate to “true,” the spend is accepted.<br />
+</li>
+<li><strong>Design:</strong> intentionally <em>not Turing-complete</em> to avoid loops, reduce complexity, and prioritize safety and determinism.<br />
+</li>
+<li><strong>Heritage:</strong> part of Bitcoin’s design since the Genesis Block—enabling programmable spending rules long before smart contracts became a broader concept.</li>
+</ul>
+<div style="position: relative; top: -100px; z-index: -1;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 655.01 170.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:873px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 166)">
+<g id="node1" class="node">
+<path fill="#e0f2fe" stroke="#38bdf8" d="M204,-162C204,-162 12,-162 12,-162 6,-162 0,-156 0,-150 0,-150 0,-102 0,-102 0,-96 6,-90 12,-90 12,-90 204,-90 204,-90 210,-90 216,-96 216,-102 216,-102 216,-150 216,-150 216,-156 210,-162 204,-162"/>
+<text text-anchor="middle" x="108" y="-140.4" font-family="Inter,Helvetica,Arial" font-size="16.00">Locking Script</text>
+<text text-anchor="middle" x="108" y="-121.2" font-family="Inter,Helvetica,Arial" font-size="16.00">(scriptPubKey)</text>
+<text text-anchor="middle" x="108" y="-102" font-family="Inter,Helvetica,Arial" font-size="16.00">Conditions for Spending</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#ecfdf5" stroke="#34d399" d="M635.01,-107.4C635.01,-107.4 362.06,-107.4 362.06,-107.4 356.06,-107.4 350.06,-101.4 350.06,-95.4 350.06,-95.4 350.06,-66.6 350.06,-66.6 350.06,-60.6 356.06,-54.6 362.06,-54.6 362.06,-54.6 635.01,-54.6 635.01,-54.6 641.01,-54.6 647.01,-60.6 647.01,-66.6 647.01,-66.6 647.01,-95.4 647.01,-95.4 647.01,-101.4 641.01,-107.4 635.01,-107.4"/>
+<text text-anchor="middle" x="498.53" y="-85.8" font-family="Inter,Helvetica,Arial" font-size="16.00">Combined Script Execution</text>
+<text text-anchor="middle" x="498.53" y="-66.6" font-family="Inter,Helvetica,Arial" font-size="16.00">(stack evaluated → TRUE = valid spend)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" d="M216.45,-113.55C255.09,-109.08 299.5,-103.94 341.43,-99.08"/>
+<polygon fill="#64748b" stroke="#64748b" points="341.61,-101.53 348.28,-98.29 341.05,-96.66 341.61,-101.53"/>
+<text text-anchor="middle" x="283.03" y="-115.64" font-family="Helvetica,sans-Serif" font-size="14.00">validation logic</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fef9c3" stroke="#f59e0b" d="M204,-72C204,-72 12,-72 12,-72 6,-72 0,-66 0,-60 0,-60 0,-12 0,-12 0,-6 6,0 12,0 12,0 204,0 204,0 210,0 216,-6 216,-12 216,-12 216,-60 216,-60 216,-66 210,-72 204,-72"/>
+<text text-anchor="middle" x="108" y="-50.4" font-family="Inter,Helvetica,Arial" font-size="16.00">Unlocking Script</text>
+<text text-anchor="middle" x="108" y="-31.2" font-family="Inter,Helvetica,Arial" font-size="16.00">(scriptSig)</text>
+<text text-anchor="middle" x="108" y="-12" font-family="Inter,Helvetica,Arial" font-size="16.00">Provides Data/Signature</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" d="M216.45,-48.45C255.09,-52.92 299.5,-58.06 341.43,-62.92"/>
+<polygon fill="#64748b" stroke="#64748b" points="341.05,-65.34 348.28,-63.71 341.61,-60.47 341.05,-65.34"/>
+<text text-anchor="middle" x="283.03" y="-65.39" font-family="Helvetica,sans-Serif" font-size="14.00">pushed to stack</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide smaller" id="why-bitcoin-script-exists"><h2 class="slide-title">Why Bitcoin Script Exists</h2><div class="slide-body">
+<ul>
+<li><strong>Original vision:</strong> allow transactions to include flexible spending conditions such as multi-signature authorization, time locks, and other constraints.<br />
+</li>
+<li><strong>Purpose:</strong> make money programmable <em>without requiring a central authority</em>—rules are enforced by consensus, not trust.<br />
+</li>
+<li><strong>Role in the system:</strong> serves as the foundation for advanced transaction types and later contract layers (e.g., Lightning, sidechains).<br />
+</li>
+<li><strong>Example:</strong> a time-locked output prevents spending until a specified block height or timestamp is reached.<br />
+</li>
+<li><strong>Enforcement:</strong> full nodes validate these conditions automatically when a spend is attempted, ensuring deterministic and decentralized rule execution.</li>
+</ul>
+<div style="position: relative; top: -150px; z-index: -1;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 890.71 131.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1188px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 127.8)">
+<g id="node1" class="node">
+<path fill="#e0f2fe" stroke="#38bdf8" d="M217.45,-123.8C217.45,-123.8 12,-123.8 12,-123.8 6,-123.8 0,-117.8 0,-111.8 0,-111.8 0,-83 0,-83 0,-77 6,-71 12,-71 12,-71 217.45,-71 217.45,-71 223.45,-71 229.45,-77 229.45,-83 229.45,-83 229.45,-111.8 229.45,-111.8 229.45,-117.8 223.45,-123.8 217.45,-123.8"/>
+<text text-anchor="middle" x="114.73" y="-102.2" font-family="Inter,Helvetica,Arial" font-size="16.00">Unspent Output (UTXO)</text>
+<text text-anchor="middle" x="114.73" y="-83" font-family="Inter,Helvetica,Arial" font-size="16.00">+ Locking Script (Conditions)</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#ecfdf5" stroke="#34d399" d="M575.29,-87.8C575.29,-87.8 423.78,-87.8 423.78,-87.8 417.78,-87.8 411.78,-81.8 411.78,-75.8 411.78,-75.8 411.78,-47 411.78,-47 411.78,-41 417.78,-35 423.78,-35 423.78,-35 575.29,-35 575.29,-35 581.29,-35 587.29,-41 587.29,-47 587.29,-47 587.29,-75.8 587.29,-75.8 587.29,-81.8 581.29,-87.8 575.29,-87.8"/>
+<text text-anchor="middle" x="499.53" y="-66.2" font-family="Inter,Helvetica,Arial" font-size="16.00">Full Node Validation</text>
+<text text-anchor="middle" x="499.53" y="-47" font-family="Inter,Helvetica,Arial" font-size="16.00">Executes Script Stack</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" d="M229.71,-86.79C280.01,-82.1 339.84,-76.5 393.78,-71.4 396.82,-71.11 399.91,-70.82 403.04,-70.52"/>
+<polygon fill="#64748b" stroke="#64748b" points="403.12,-72.98 409.86,-69.88 402.66,-68.1 403.12,-72.98"/>
+<text text-anchor="middle" x="320.61" y="-89.13" font-family="Helvetica,sans-Serif" font-size="14.00">rules + conditions</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fef9c3" stroke="#f59e0b" d="M180.94,-52.8C180.94,-52.8 48.52,-52.8 48.52,-52.8 42.52,-52.8 36.52,-46.8 36.52,-40.8 36.52,-40.8 36.52,-12 36.52,-12 36.52,-6 42.52,0 48.52,0 48.52,0 180.94,0 180.94,0 186.94,0 192.94,-6 192.94,-12 192.94,-12 192.94,-40.8 192.94,-40.8 192.94,-46.8 186.94,-52.8 180.94,-52.8"/>
+<text text-anchor="middle" x="114.73" y="-31.2" font-family="Inter,Helvetica,Arial" font-size="16.00">Spend Attempt</text>
+<text text-anchor="middle" x="114.73" y="-12" font-family="Inter,Helvetica,Arial" font-size="16.00">(Unlocking Script)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" d="M193.19,-33.48C253.85,-39.03 338.5,-46.77 403.29,-52.69"/>
+<polygon fill="#64748b" stroke="#64748b" points="402.79,-55.11 409.99,-53.3 403.24,-50.23 402.79,-55.11"/>
+<text text-anchor="middle" x="320.61" y="-55.26" font-family="Helvetica,sans-Serif" font-size="14.00">provided data/signature</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#d1fae5" stroke="#34d399" d="M867.15,-123.8C867.15,-123.8 683.21,-123.8 683.21,-123.8 677.21,-123.8 671.21,-117.8 671.21,-111.8 671.21,-111.8 671.21,-83 671.21,-83 671.21,-77 677.21,-71 683.21,-71 683.21,-71 867.15,-71 867.15,-71 873.15,-71 879.15,-77 879.15,-83 879.15,-83 879.15,-111.8 879.15,-111.8 879.15,-117.8 873.15,-123.8 867.15,-123.8"/>
+<text text-anchor="middle" x="775.18" y="-102.2" font-family="Inter,Helvetica,Arial" font-size="16.00">Valid Spend</text>
+<text text-anchor="middle" x="775.18" y="-83" font-family="Inter,Helvetica,Arial" font-size="16.00">(if Script evaluates TRUE)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" d="M587.49,-72.84C611.5,-76 637.88,-79.47 663.05,-82.78"/>
+<polygon fill="#64748b" stroke="#64748b" points="662.42,-85.17 669.68,-83.65 663.06,-80.31 662.42,-85.17"/>
+<text text-anchor="middle" x="627.47" y="-84.68" font-family="Helvetica,sans-Serif" font-size="14.00">TRUE</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#fee2e2" stroke="#f87171" d="M870.71,-52.8C870.71,-52.8 679.64,-52.8 679.64,-52.8 673.64,-52.8 667.64,-46.8 667.64,-40.8 667.64,-40.8 667.64,-12 667.64,-12 667.64,-6 673.64,0 679.64,0 679.64,0 870.71,0 870.71,0 876.71,0 882.71,-6 882.71,-12 882.71,-12 882.71,-40.8 882.71,-40.8 882.71,-46.8 876.71,-52.8 870.71,-52.8"/>
+<text text-anchor="middle" x="775.18" y="-31.2" font-family="Inter,Helvetica,Arial" font-size="16.00">Rejected</text>
+<text text-anchor="middle" x="775.18" y="-12" font-family="Inter,Helvetica,Arial" font-size="16.00">(if Script evaluates FALSE)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" d="M587.49,-50.28C610.17,-47.38 634.97,-44.21 658.87,-41.15"/>
+<polygon fill="#64748b" stroke="#64748b" points="659.14,-43.58 665.78,-40.27 658.52,-38.72 659.14,-43.58"/>
+<text text-anchor="middle" x="627.47" y="-51.23" font-family="Helvetica,sans-Serif" font-size="14.00">FALSE</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide smaller" id="bitcoin-script-basics"><h2 class="slide-title">Bitcoin Script Basics</h2><div class="slide-body">
+<div style="font-size: 0.9em; line-height: 1.12;">
+<ul>
+<li><strong>Two components of a Bitcoin transaction input/output pair:</strong>
+<ul>
+<li><strong><code>scriptPubKey</code> (locking script):</strong> defines the spending conditions for a UTXO—what must be provided to unlock it.<br />
+</li>
+<li><strong><code>scriptSig</code> (unlocking script):</strong> provides the data (e.g., signature, public key) needed to satisfy those conditions.<br />
+</li>
+</ul></li>
+<li><strong>Example:</strong> <em>Pay-to-PubKey-Hash (P2PKH)</em> — the most common script type.
+<ul>
+<li>The locking script requires a signature matching a specific public key hash.<br />
+</li>
+<li>The unlocking script supplies that signature and corresponding public key.<br />
+</li>
+</ul></li>
+<li><strong>Execution model:</strong> nodes concatenate both scripts and evaluate them on a stack; if the result is <code>TRUE</code>, the spend is valid.</li>
+</ul>
+</div>
+<div style="position: relative; top: -150px; z-index: -1;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 856.66 170.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1143px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 166)">
+<g id="node1" class="node">
+<path fill="#e0f2fe" stroke="#38bdf8" d="M140.05,-162C140.05,-162 31.18,-162 31.18,-162 25.18,-162 19.18,-156 19.18,-150 19.18,-150 19.18,-102 19.18,-102 19.18,-96 25.18,-90 31.18,-90 31.18,-90 140.05,-90 140.05,-90 146.05,-90 152.05,-96 152.05,-102 152.05,-102 152.05,-150 152.05,-150 152.05,-156 146.05,-162 140.05,-162"/>
+<text text-anchor="middle" x="85.61" y="-140.4" font-family="Inter,Helvetica,Arial" font-size="16.00">Locking Script</text>
+<text text-anchor="middle" x="85.61" y="-121.2" font-family="Inter,Helvetica,Arial" font-size="16.00">(scriptPubKey:</text>
+<text text-anchor="middle" x="85.61" y="-102" font-family="Inter,Helvetica,Arial" font-size="16.00">PubKeyHash)</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#ecfdf5" stroke="#34d399" d="M522.81,-107.4C522.81,-107.4 331.3,-107.4 331.3,-107.4 325.3,-107.4 319.3,-101.4 319.3,-95.4 319.3,-95.4 319.3,-66.6 319.3,-66.6 319.3,-60.6 325.3,-54.6 331.3,-54.6 331.3,-54.6 522.81,-54.6 522.81,-54.6 528.81,-54.6 534.81,-60.6 534.81,-66.6 534.81,-66.6 534.81,-95.4 534.81,-95.4 534.81,-101.4 528.81,-107.4 522.81,-107.4"/>
+<text text-anchor="middle" x="427.06" y="-85.8" font-family="Inter,Helvetica,Arial" font-size="16.00">Execution Stack</text>
+<text text-anchor="middle" x="427.06" y="-66.6" font-family="Inter,Helvetica,Arial" font-size="16.00">(Evaluate Combined Script)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" d="M152.46,-117.27C197.3,-111.33 257.85,-103.3 310.59,-96.31"/>
+<polygon fill="#64748b" stroke="#64748b" points="310.87,-98.74 317.48,-95.39 310.22,-93.88 310.87,-98.74"/>
+<text text-anchor="middle" x="245.26" y="-115.64" font-family="Helvetica,sans-Serif" font-size="14.00">defines conditions</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fef9c3" stroke="#f59e0b" d="M159.23,-72C159.23,-72 12,-72 12,-72 6,-72 0,-66 0,-60 0,-60 0,-12 0,-12 0,-6 6,0 12,0 12,0 159.23,0 159.23,0 165.23,0 171.23,-6 171.23,-12 171.23,-12 171.23,-60 171.23,-60 171.23,-66 165.23,-72 159.23,-72"/>
+<text text-anchor="middle" x="85.61" y="-50.4" font-family="Inter,Helvetica,Arial" font-size="16.00">Unlocking Script</text>
+<text text-anchor="middle" x="85.61" y="-31.2" font-family="Inter,Helvetica,Arial" font-size="16.00">(scriptSig:</text>
+<text text-anchor="middle" x="85.61" y="-12" font-family="Inter,Helvetica,Arial" font-size="16.00">Signature + PubKey)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" d="M171.39,-47.24C213.54,-52.83 265.09,-59.66 310.77,-65.72"/>
+<polygon fill="#64748b" stroke="#64748b" points="310.17,-68.11 317.43,-66.6 310.81,-63.25 310.17,-68.11"/>
+<text text-anchor="middle" x="245.26" y="-68.05" font-family="Helvetica,sans-Serif" font-size="14.00">provides data</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fff7ed" stroke="#fdba74" d="M836.66,-117C836.66,-117 686.31,-117 686.31,-117 680.31,-117 674.31,-111 674.31,-105 674.31,-105 674.31,-57 674.31,-57 674.31,-51 680.31,-45 686.31,-45 686.31,-45 836.66,-45 836.66,-45 842.66,-45 848.66,-51 848.66,-57 848.66,-57 848.66,-105 848.66,-105 848.66,-111 842.66,-117 836.66,-117"/>
+<text text-anchor="middle" x="761.48" y="-95.4" font-family="Inter,Helvetica,Arial" font-size="16.00">Result:</text>
+<text text-anchor="middle" x="761.48" y="-76.2" font-family="Inter,Helvetica,Arial" font-size="16.00">TRUE = Valid Spend</text>
+<text text-anchor="middle" x="761.48" y="-57" font-family="Inter,Helvetica,Arial" font-size="16.00">FALSE = Invalid</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" d="M535.07,-81C577.06,-81 624.86,-81 665.6,-81"/>
+<polygon fill="#64748b" stroke="#64748b" points="665.4,-83.45 672.4,-81 665.4,-78.55 665.4,-83.45"/>
+<text text-anchor="middle" x="604.56" y="-85.2" font-family="Helvetica,sans-Serif" font-size="14.00">check conditions</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide smaller" id="script-primitives"><h2 class="slide-title">Script Primitives</h2><div class="slide-body">
+<div style="font-size: 0.9em; line-height: 1.12;">
+<ul>
+<li><strong>Cryptographic operations:</strong>
+<ul>
+<li><code>OP_CHECKSIG</code> — verifies a single digital signature.<br />
+</li>
+<li><code>OP_CHECKMULTISIG</code> — validates multiple signatures against a set of public keys.</li>
+</ul></li>
+<li><strong>Hashing operations:</strong>
+<ul>
+<li><code>OP_HASH160</code> — applies SHA-256 followed by RIPEMD-160 (used in P2PKH).<br />
+</li>
+<li><code>OP_SHA256</code> — computes a standard SHA-256 hash.</li>
+</ul></li>
+<li><strong>Time-based constraints:</strong>
+<ul>
+<li><code>OP_CHECKLOCKTIMEVERIFY</code> — prevents spending until a specified block height or timestamp.<br />
+</li>
+<li><code>OP_CHECKSEQUENCEVERIFY</code> — enforces relative time locks between transactions.</li>
+</ul></li>
+<li><strong>Control flow:</strong>
+<ul>
+<li><code>OP_IF</code>, <code>OP_ELSE</code>, <code>OP_ENDIF</code> — conditional logic to enable script branches.</li>
+</ul></li>
+<li><strong>Data operations:</strong>
+<ul>
+<li>Push, duplicate (<code>OP_DUP</code>), and compare values on the stack.</li>
+</ul></li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="example-pay-to-pubkey-hash-p2pkh"><h2 class="slide-title">Example: Pay-to-PubKey-Hash (P2PKH)</h2><div class="slide-body">
+<ul>
+<li><p><strong>Overview:</strong> the most common and foundational Bitcoin script type—used in standard single-signature payments.</p></li>
+<li><p><strong>Locking script (<code>scriptPubKey</code>):</strong></p>
+<pre><code>OP_DUP OP_HASH160 &lt;pubKeyHash&gt; OP_EQUALVERIFY OP_CHECKSIG</code></pre></li>
+<li><p><strong>Unlocking script (<code>scriptSig</code>):</strong></p>
+<pre><code>&lt;signature&gt; &lt;pubKey&gt;</code></pre></li>
+<li><p><strong>Meaning:</strong></p>
+<ul>
+<li>The spender must provide a public key whose hash matches <code>&lt;pubKeyHash&gt;</code>.</li>
+<li>The provided signature must correctly verify against that public key.</li>
+</ul></li>
+<li><p><strong>Execution flow:</strong></p>
+<ol type="1">
+<li>The unlocking data is pushed to the stack.</li>
+<li>The locking script runs its operations on the same stack.</li>
+<li>If the final result evaluates to <code>TRUE</code>, the spend is valid.</li>
+</ol></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="summary"><h2 class="slide-title">Summary</h2><div class="slide-body">
+<ul>
+<li><strong>Nodes:</strong> full nodes independently validate and store the entire blockchain; light clients rely on simplified proofs and full nodes for verification.<br />
+</li>
+<li><strong>Network:</strong> a decentralized peer-to-peer system using gossip-based communication and redundant connections for resilience and fault tolerance.<br />
+</li>
+<li><strong>Bitcoin Script:</strong> a stack-based, purpose-built scripting language that enables conditional spending without the risks of general-purpose computation.<br />
+</li>
+<li><strong>Design constraints:</strong> no loops or unbounded logic—prioritizing determinism, auditability, and security over flexibility.<br />
+</li>
+<li><strong>Big picture:</strong> Bitcoin’s architecture reflects a deliberate trade-off: <em>security and simplicity</em> take precedence over expressiveness and speed.</li>
+</ul>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-nakamoto_bitcoinpeertopeerelectronic_2008" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">S. Nakamoto, <span>“Bitcoin: <span class="nocase">A Peer-to-Peer Electronic Cash System</span>.”</span> Satoshi Nakamoto Institute, Oct. 31, 2008. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf">https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf</a></div>
+</div>
+<div id="ref-bitcoin.orgdevelopers_p2pnetworkdeveloper_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">Bitcoin.org Developers, <span>“<span>P2P Network</span> (<span>Developer Guide</span>).”</span> 2024. Available: <a href="https://developer.bitcoin.org/devguide/p2p_network.html">https://developer.bitcoin.org/devguide/p2p_network.html</a></div>
+</div>
+<div id="ref-thebitnodesproject_reachablebitcoinnodes_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">The Bitnodes Project, <span>“Reachable <span>Bitcoin Nodes</span> - <span>Bitnodes</span>.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://bitnodes.io/">https://bitnodes.io/</a></div>
+</div>
+<div id="ref-antonopoulos_masteringbitcoinprogramming_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">A. M. Antonopoulos, <em>Mastering <span>Bitcoin</span>: Programming the open blockchain</em>, Second edition. Sebastopol, CA: O’Reilly, 2017.</div>
+</div>
+<div id="ref-risson_surveyresearchrobust_2004" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">J. Risson and T. Moors, <span>“Survey of <span>Research</span> towards <span class="nocase">Robust Peer-to-Peer Networks</span>,”</span> University of New South Wales, Sydney, Australia, Technical UNSW-EE-P2P-1-1, Sept. 2004. Available: <a href="https://www.cs.umd.edu/projects/p2prg/p2p-overview.pdf">https://www.cs.umd.edu/projects/p2prg/p2p-overview.pdf</a></div>
+</div>
+<div id="ref-bitcoin.orgdevelopers_operatingmodesdeveloper_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">Bitcoin.org Developers, <span>“Operating <span>Modes</span> (<span>Developer Guide</span>).”</span> 2024. Available: <a href="https://developer.bitcoin.org/devguide/operating_modes.html">https://developer.bitcoin.org/devguide/operating_modes.html</a></div>
+</div>
+<div id="ref-bitcoin.orgdevelopers_blockchaindeveloper_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">Bitcoin.org Developers, <span>“Block <span>Chain</span> (<span>Developer Guide</span>).”</span> 2024. Available: <a href="https://developer.bitcoin.org/devguide/block_chain.html">https://developer.bitcoin.org/devguide/block_chain.html</a></div>
+</div>
+<div id="ref-decker_informationpropagationbitcoin_2013" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">C. Decker and R. Wattenhofer, <span>“Information propagation in the <span>Bitcoin</span> network,”</span> in <em><span>IEEE P2P</span> 2013 <span>Proceedings</span></em>, 2013, pp. 1–10. doi: <a href="https://doi.org/10.1109/P2P.2013.6688704">10.1109/P2P.2013.6688704</a>.</div>
+</div>
+<div id="ref-narayanan_bitcoincryptocurrencytechnologies_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">A. Narayanan, J. Bonneau, E. Felten, A. Miller, and S. Goldfeder, <em>Bitcoin and <span>Cryptocurrency Technologies</span></em>. Princeton University Press, 2016.</div>
+</div>
+<div id="ref-bitcoin.orgdevelopers_transactionsdeveloperguide_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">Bitcoin.org Developers, <span>“Transactions (<span>Developer Guide</span>).”</span> 2024. Available: <a href="https://developer.bitcoin.org/devguide/transactions.html">https://developer.bitcoin.org/devguide/transactions.html</a></div>
+</div>
+<div id="ref-corallo_bip152compact_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">M. Corallo, <span>“<span>BIP</span> 152: <span>Compact Block Relay</span>.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://github.com/bitcoin/bips/blob/master/bip-0152.mediawiki">https://github.com/bitcoin/bips/blob/master/bip-0152.mediawiki</a></div>
+</div>
+<div id="ref-apostolaki_hijackingbitcoinrouting_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">M. Apostolaki, A. Zohar, and L. Vanbever, <span>“Hijacking <span>Bitcoin</span>: <span>Routing Attacks</span> on <span>Cryptocurrencies</span>,”</span> in <em>2017 <span>IEEE Symposium</span> on <span>Security</span> and <span>Privacy</span> (<span>SP</span>)</em>, May 2017, pp. 375–392. doi: <a href="https://doi.org/10.1109/SP.2017.29">10.1109/SP.2017.29</a>.</div>
+</div>
+<div id="ref-bitcoin.orgdevelopers_contractsbitcoindeveloper_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">Bitcoin.org Developers, <span>“Contracts (<span>Bitcoin Developer Guide</span>).”</span> 2024. Available: <a href="https://developer.bitcoin.org/devguide/contracts.html">https://developer.bitcoin.org/devguide/contracts.html</a></div>
+</div>
+<div id="ref-todd_bip65op_checklocktimeverify_2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">P. Todd, <span>“<span>BIP</span> 65: <span>OP</span>_<span>CHECKLOCKTIMEVERIFY</span>.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki">https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki</a></div>
+</div>
+<div id="ref-btcdrak_bip112checksequenceverify_2015" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline">BtcDrak, M. Friedenbach, and E. Lombrozo, <span>“<span>BIP</span> 112: <span>CHECKSEQUENCEVERIFY</span>.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki">https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

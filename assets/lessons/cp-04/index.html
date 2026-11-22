@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asymmetric Encryption &amp; Digital Signatures</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/primitives/04-CP-asymmetric_encryption_and_digital_signatures.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="cp-04" data-code="04-CP" data-src="b09180054e92d070" data-slides="32">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section II: Cryptographic Primitives · Lesson 04-CP</p><h1>Asymmetric Encryption &amp; Digital Signatures</h1></div></section>
+<section class="slide" id="the-impossible-secret"><h2 class="slide-title">The Impossible Secret</h2><div class="slide-body">
+<ul>
+<li>Imagine needing to share a password with 1,000 friends around the world.</li>
+<li>How do you keep it safe from spies listening in?</li>
+<li>Before 1976, this was considered <em>impossible</em> without trusted middlemen.</li>
+<li>This is the “key distribution problem.”</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="the-key-distribution-crisis"><h2 class="slide-title">The Key-Distribution Crisis</h2><div class="slide-body">
+<ul>
+<li>In symmetric cryptography, each pair of users needs a <strong>unique shared key</strong>.<br />
+</li>
+<li>Number of keys grows as:<br />
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac><mrow><mi>n</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><mn>2</mn></mfrac><annotation encoding="application/x-tex">
+\frac{n(n-1)}{2}
+</annotation></semantics></math></li>
+<li>For 100 users → 4,950 keys. For 1 million → ≈ 5 × 10¹¹ keys.<br />
+</li>
+<li>Managing, rotating, and securing them is impossible at scale.<br />
+</li>
+<li>We need a model where public information can enable private communication.</li>
+</ul>
+</div></section>
+<section class="slide" id="the-locked-mailbox-analogy"><h2 class="slide-title">The Locked Mailbox Analogy</h2><div class="slide-body">
+<ul>
+<li>Imagine a mailbox with an <strong>open slot</strong> and a <strong>locked door</strong>.<br />
+</li>
+<li>Anyone can drop messages inside (public access).<br />
+</li>
+<li>Only the owner with the private key can open it and read them.<br />
+</li>
+<li>This is the essence of <strong>asymmetric cryptography</strong>:
+<ul>
+<li>One key to <strong>encrypt</strong> (public): mailbox slot</li>
+<li>Another key to <strong>decrypt</strong> (private): mailbox key</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="enter-public-key-cryptography"><h2 class="slide-title">Enter Public-Key Cryptography</h2><div class="slide-body">
+<ul>
+<li><strong>Core idea:</strong> two mathematically linked keys—one public, one private.<br />
+</li>
+<li><strong>Public key:</strong> shared freely for encrypting or verifying.<br />
+</li>
+<li><strong>Private key:</strong> kept secret for decrypting or signing.<br />
+</li>
+<li>The relationship is <strong>easy to compute forward</strong>, but <strong>hard to reverse</strong>.<br />
+</li>
+<li>Foundation for modern internet security and blockchain wallets.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>Public-Key Cryptography and Asymmetric Cryptography are synonymous and mean the same thing.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="symmetric-vs-asymmetric-comparison"><h2 class="slide-title">Symmetric vs Asymmetric Comparison</h2><div class="slide-body">
+<table>
+<colgroup>
+<col style="width: 24%" />
+<col style="width: 36%" />
+<col style="width: 39%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th><strong>Symmetric</strong></th>
+<th><strong>Asymmetric</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Keys</strong></td>
+<td>Same for encrypt/decrypt</td>
+<td>Public/Private pair</td>
+</tr>
+<tr>
+<td><strong>Speed</strong></td>
+<td>Very fast</td>
+<td>Slower (computationally heavy)</td>
+</tr>
+<tr>
+<td><strong>Security Basis</strong></td>
+<td>Shared secret</td>
+<td>Mathematical one-way function</td>
+</tr>
+<tr>
+<td><strong>Scalability</strong></td>
+<td>Poor — <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac><mrow><mi>n</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><mn>2</mn></mfrac><annotation encoding="application/x-tex">\frac{n(n-1)}{2}</annotation></semantics></math> keys</td>
+<td>Excellent — 2 keys per user</td>
+</tr>
+<tr>
+<td><strong>Use Case</strong></td>
+<td>Bulk data encryption</td>
+<td>Key exchange, authentication, signatures</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide" id="trapdoor-functions"><h2 class="slide-title">Trapdoor Functions</h2><div class="slide-body">
+<ul>
+<li>A <strong>trapdoor function</strong> is easy to compute in one direction but infeasible to reverse without a secret.<br />
+</li>
+<li>Example:
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msup><mi>x</mi><mi>e</mi></msup><mrow><mspace width="0.222em"></mspace><mrow><mi mathvariant="normal">mod</mi><mo>&#8289;</mo></mrow><mspace width="0.222em"></mspace><mi>n</mi></mrow></mrow><annotation encoding="application/x-tex">f(x) = x^{e} \bmod n</annotation></semantics></math> is easy to compute.<br />
+</li>
+<li>Recovering <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math> (taking modular roots) is hard without knowing factors of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>.<br />
+</li>
+</ul></li>
+<li>The secret information (like factors <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>) acts as the <strong>trapdoor</strong>.<br />
+</li>
+<li>Enables encryption with one key and decryption with another.</li>
+</ul>
+</div></section>
+<section class="slide" id="diffiehellman-key-exchange-analogy"><h2 class="slide-title">Diffie–Hellman Key Exchange Analogy</h2><div class="slide-body">
+<div style="display: flex; justify-content: center; align-items: center;text-align:center">
+<a class="video-link" href="https://www.youtube.com/watch?v=YEBfamv-_do&amp;t=134s" target="_blank" rel="noopener">Watch the video on YouTube <span aria-hidden="true">↗</span></a>
+</div>
+</div></section>
+<section class="slide" id="diffiehellman-key-exchange-concept"><h2 class="slide-title">Diffie–Hellman Key Exchange Concept</h2><div class="slide-body">
+<ul>
+<li>Goal: two parties derive the <strong>same shared secret</strong> without sending it.<br />
+</li>
+<li>Steps:
+<ol type="1">
+<li>Agree on a public base <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math> and modulus <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>.<br />
+</li>
+<li>Alice picks private <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>; Bob picks private <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>.<br />
+</li>
+<li>Exchange <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>g</mi><mi>a</mi></msup><mrow><mspace width="0.222em"></mspace><mrow><mi mathvariant="normal">mod</mi><mo>&#8289;</mo></mrow><mspace width="0.222em"></mspace><mi>p</mi></mrow></mrow><annotation encoding="application/x-tex">g^a \bmod p</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>g</mi><mi>b</mi></msup><mrow><mspace width="0.222em"></mspace><mrow><mi mathvariant="normal">mod</mi><mo>&#8289;</mo></mrow><mspace width="0.222em"></mspace><mi>p</mi></mrow></mrow><annotation encoding="application/x-tex">g^b \bmod p</annotation></semantics></math>.<br />
+</li>
+<li>Each computes shared key <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>g</mi><msup><mi>a</mi><mi>b</mi></msup></msup><mrow><mspace width="0.222em"></mspace><mrow><mi mathvariant="normal">mod</mi><mo>&#8289;</mo></mrow><mspace width="0.222em"></mspace><mi>p</mi></mrow></mrow><annotation encoding="application/x-tex">g^{a^{b}} \bmod p</annotation></semantics></math>.<br />
+</li>
+</ol></li>
+<li>Even if the messages are intercepted, the secret exponent remains unknown.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="mathematical-backdrop-modular-exponentiation"><h2 class="slide-title">Mathematical Backdrop: Modular Exponentiation</h2><div class="slide-body">
+<ul>
+<li>Core building block of RSA and Diffie–Hellman.<br />
+</li>
+<li>Computations occur <strong>modulo a prime or composite number</strong> — results “wrap around.”<br />
+</li>
+<li>Example:<br />
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>7</mn><mn>4</mn></msup><mrow><mspace width="0.222em"></mspace><mrow><mi mathvariant="normal">mod</mi><mo>&#8289;</mo></mrow><mspace width="0.222em"></mspace><mn>10</mn></mrow><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">
+7^4 \bmod 10 = 1
+</annotation></semantics></math></li>
+<li>Provides non-linear mapping and bounded outputs.<br />
+</li>
+<li>Easy to compute forward, infeasible to reverse without secret factors.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="computational-hardness-assumptions"><h2 class="slide-title">Computational Hardness Assumptions</h2><div class="slide-body">
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 28%" />
+<col style="width: 18%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Description</th>
+<th>Used In</th>
+<th>Current Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Integer Factorization</strong></td>
+<td>Given <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mi>p</mi><mo>×</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">N = p × q</annotation></semantics></math>, find <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>,</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p,q</annotation></semantics></math>.</td>
+<td>RSA</td>
+<td>No polynomial-time algorithm known</td>
+</tr>
+<tr>
+<td><strong>Discrete Logarithm</strong></td>
+<td>Given <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mo>,</mo><mi>y</mi><mo>=</mo><msup><mi>g</mi><mi>x</mi></msup><mrow><mspace width="0.222em"></mspace><mrow><mi mathvariant="normal">mod</mi><mo>&#8289;</mo></mrow><mspace width="0.222em"></mspace><mi>p</mi></mrow></mrow><annotation encoding="application/x-tex">g, y = g^{x} \bmod p</annotation></semantics></math>, find <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>.</td>
+<td>Diffie–Hellman, DSA</td>
+<td>Hard for large p</td>
+</tr>
+<tr>
+<td><strong>Elliptic Curve DL</strong></td>
+<td>Given P, Q = kP on curve, find k.</td>
+<td>ECC, ECDH, ECDSA</td>
+<td>Harder per bit than RSA</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>These “hard” problems underpin asymmetric security.<br />
+</li>
+<li>Quantum algorithms (Shor’s) threaten factorization &amp; discrete logs → motivates <strong>post-quantum cryptography</strong>.</li>
+</ul>
+</div></section>
+<section class="slide" id="from-encryption-to-signing"><h2 class="slide-title">From Encryption to Signing</h2><div class="slide-body">
+<ul>
+<li><strong>Encryption:</strong> uses <strong>public key</strong> to lock, <strong>private key</strong> to unlock.<br />
+</li>
+<li><strong>Digital Signature:</strong> reverses the process—<strong>private key</strong> to sign, <strong>public key</strong> to verify.<br />
+</li>
+<li>Purpose shifts from <strong>confidentiality → authenticity + integrity.</strong><br />
+</li>
+<li>Signatures prove:
+<ul>
+<li>The message came from the claimed sender.<br />
+</li>
+<li>The message has not been altered.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="rsa-emerges"><h2 class="slide-title">RSA Emerges</h2><div class="slide-body">
+<ul>
+<li>RSA is a widely used public-key cryptosystem that relies on the mathematical difficulty of factoring large prime numbers to secure data.</li>
+<li><strong>Origins:</strong> Introduced by Ron Rivest, Adi Shamir, and Leonard Adleman in 1978.</li>
+<li><strong>Capabilities:</strong> It provides a practical system for both <strong>confidentiality</strong> (encryption) and <strong>authenticity</strong> (digital signatures).</li>
+</ul>
+<div style="text-align: center; position:relative; z-index:-1; top:-50px;max-height:400px;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 411.21 198.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:548px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 194)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="gray" stroke-dasharray="5,2" points="8,-8 8,-91 390.76,-91 390.76,-8 8,-8"/>
+<text text-anchor="middle" x="199.38" y="-74.4" font-family="Helvetica,sans-Serif" font-size="14.00">Confidentiality (Encryption)</text>
+</g>
+<g id="clust2" class="cluster">
+<polygon fill="none" stroke="gray" stroke-dasharray="5,2" points="8,-99 8,-182 395.21,-182 395.21,-99 8,-99"/>
+<text text-anchor="middle" x="201.6" y="-165.4" font-family="Helvetica,sans-Serif" font-size="14.00">Authenticity (Signature)</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#e8f5e9" stroke="black" d="M65.91,-44C65.91,-44 22.67,-44 22.67,-44 19.33,-44 16,-40.67 16,-37.33 16,-37.33 16,-30.67 16,-30.67 16,-27.33 19.33,-24 22.67,-24 22.67,-24 65.91,-24 65.91,-24 69.24,-24 72.58,-27.33 72.58,-30.67 72.58,-30.67 72.58,-37.33 72.58,-37.33 72.58,-40.67 69.24,-44 65.91,-44"/>
+<text text-anchor="middle" x="44.29" y="-31" font-family="Helvetica,sans-Serif" font-size="10.00">Message</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f5f7fb" stroke="black" d="M221.28,-44C221.28,-44 173.04,-44 173.04,-44 169.7,-44 166.37,-40.67 166.37,-37.33 166.37,-37.33 166.37,-30.67 166.37,-30.67 166.37,-27.33 169.7,-24 173.04,-24 173.04,-24 221.28,-24 221.28,-24 224.61,-24 227.95,-27.33 227.95,-30.67 227.95,-30.67 227.95,-37.33 227.95,-37.33 227.95,-40.67 224.61,-44 221.28,-44"/>
+<text text-anchor="middle" x="197.16" y="-31" font-family="Helvetica,sans-Serif" font-size="10.00">Ciphertext</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M72.96,-34C95.83,-34 128.65,-34 154.66,-34"/>
+<polygon fill="black" stroke="black" points="154.56,-37.5 164.56,-34 154.56,-30.5 154.56,-37.5"/>
+<text text-anchor="middle" x="119.47" y="-49" font-family="Helvetica,sans-Serif" font-size="10.00"> Encrypt</text>
+<text text-anchor="middle" x="119.47" y="-37" font-family="Helvetica,sans-Serif" font-size="10.00">(Public Key)</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e8f5e9" stroke="black" d="M376.09,-44C376.09,-44 332.85,-44 332.85,-44 329.52,-44 326.18,-40.67 326.18,-37.33 326.18,-37.33 326.18,-30.67 326.18,-30.67 326.18,-27.33 329.52,-24 332.85,-24 332.85,-24 376.09,-24 376.09,-24 379.43,-24 382.76,-27.33 382.76,-30.67 382.76,-30.67 382.76,-37.33 382.76,-37.33 382.76,-40.67 379.43,-44 376.09,-44"/>
+<text text-anchor="middle" x="354.47" y="-31" font-family="Helvetica,sans-Serif" font-size="10.00">Message</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M228.1,-34C252.68,-34 287.65,-34 314.42,-34"/>
+<polygon fill="black" stroke="black" points="314.19,-37.5 324.19,-34 314.19,-30.5 314.19,-37.5"/>
+<text text-anchor="middle" x="274.84" y="-49" font-family="Helvetica,sans-Serif" font-size="10.00"> Decrypt</text>
+<text text-anchor="middle" x="274.84" y="-37" font-family="Helvetica,sans-Serif" font-size="10.00">(Private Key)</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#e8f5e9" stroke="black" d="M65.91,-135C65.91,-135 22.67,-135 22.67,-135 19.33,-135 16,-131.67 16,-128.33 16,-128.33 16,-121.67 16,-121.67 16,-118.33 19.33,-115 22.67,-115 22.67,-115 65.91,-115 65.91,-115 69.24,-115 72.58,-118.33 72.58,-121.67 72.58,-121.67 72.58,-128.33 72.58,-128.33 72.58,-131.67 69.24,-135 65.91,-135"/>
+<text text-anchor="middle" x="44.29" y="-122" font-family="Helvetica,sans-Serif" font-size="10.00">Message</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#fff3e0" stroke="black" d="M219.89,-135C219.89,-135 174.42,-135 174.42,-135 171.09,-135 167.75,-131.67 167.75,-128.33 167.75,-128.33 167.75,-121.67 167.75,-121.67 167.75,-118.33 171.09,-115 174.42,-115 174.42,-115 219.89,-115 219.89,-115 223.23,-115 226.56,-118.33 226.56,-121.67 226.56,-121.67 226.56,-128.33 226.56,-128.33 226.56,-131.67 223.23,-135 219.89,-135"/>
+<text text-anchor="middle" x="197.16" y="-122" font-family="Helvetica,sans-Serif" font-size="10.00">Signature</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M72.96,-125C96.2,-125 129.71,-125 155.91,-125"/>
+<polygon fill="black" stroke="black" points="155.86,-128.5 165.86,-125 155.86,-121.5 155.86,-128.5"/>
+<text text-anchor="middle" x="119.47" y="-140" font-family="Helvetica,sans-Serif" font-size="10.00"> Sign</text>
+<text text-anchor="middle" x="119.47" y="-128" font-family="Helvetica,sans-Serif" font-size="10.00">(Private Key)</text>
+</g>
+
+<g id="node6" class="node">
+<path fill="#e8f5e9" stroke="black" d="M380.54,-135C380.54,-135 328.4,-135 328.4,-135 325.07,-135 321.74,-131.67 321.74,-128.33 321.74,-128.33 321.74,-121.67 321.74,-121.67 321.74,-118.33 325.07,-115 328.4,-115 328.4,-115 380.54,-115 380.54,-115 383.87,-115 387.21,-118.33 387.21,-121.67 387.21,-121.67 387.21,-128.33 387.21,-128.33 387.21,-131.67 383.87,-135 380.54,-135"/>
+<text text-anchor="middle" x="354.47" y="-122" font-family="Helvetica,sans-Serif" font-size="10.00">Verification</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M227.01,-125C250.31,-125 283.49,-125 310.01,-125"/>
+<polygon fill="black" stroke="black" points="309.78,-128.5 319.78,-125 309.78,-121.5 309.78,-128.5"/>
+<text text-anchor="middle" x="274.84" y="-140" font-family="Helvetica,sans-Serif" font-size="10.00"> Verify</text>
+<text text-anchor="middle" x="274.84" y="-128" font-family="Helvetica,sans-Serif" font-size="10.00">(Public Key)</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide" id="rsa-video-optional"><h2 class="slide-title">RSA Video (Optional)</h2><div class="slide-body">
+<div style="display: flex; justify-content: center; align-items: center;text-align:center">
+<a class="video-link" href="https://www.youtube.com/watch?v=hm8s6FAc4pg" target="_blank" rel="noopener">Watch the video on YouTube <span aria-hidden="true">↗</span></a>
+</div>
+</div></section>
+<section class="slide" id="rsa-key-generation-overview"><h2 class="slide-title">RSA Key Generation Overview</h2><div class="slide-body">
+<ol type="1">
+<li><strong>Choose two large primes:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>,</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p, q</annotation></semantics></math> (typically 2048–4096 bits).<br />
+</li>
+<li><strong>Compute:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mi>p</mi><mo>×</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">n = p × q</annotation></semantics></math>.<br />
+</li>
+<li><strong>Find:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mi>–</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mi>–</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\phi(n) = (p – 1)(q – 1)</annotation></semantics></math>.<br />
+</li>
+<li><strong>Select public exponent:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math> (coprime to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\phi(n)</annotation></semantics></math>, often 65537).<br />
+</li>
+<li><strong>Compute private exponent:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo>=</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mrow><mspace width="0.222em"></mspace><mrow><mi mathvariant="normal">mod</mi><mo>&#8289;</mo></mrow><mspace width="0.222em"></mspace><mi>ϕ</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">d = e^{-1} \bmod \phi(n)</annotation></semantics></math>.<br />
+</li>
+<li><strong>Public key = (n, e); Private key = (n, d).</strong></li>
+</ol>
+<ul>
+<li>Decryption works because <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>M</mi><mrow><mi>e</mi><mi>d</mi></mrow></msup><mrow><mspace width="0.222em"></mspace><mrow><mi mathvariant="normal">mod</mi><mo>&#8289;</mo></mrow><mspace width="0.222em"></mspace><mi>n</mi></mrow><mo>=</mo><mi>M</mi></mrow><annotation encoding="application/x-tex">M^{ed} \bmod n = M</annotation></semantics></math>.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="rsa-encryption-decryption"><h2 class="slide-title">RSA Encryption &amp; Decryption</h2><div class="slide-body">
+<ul>
+<li><strong>Encryption:</strong> Anyone with public key (n, e) can compute this. <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><msup><mi>M</mi><mi>e</mi></msup><mrow><mspace width="0.222em"></mspace><mrow><mi mathvariant="normal">mod</mi><mo>&#8289;</mo></mrow><mspace width="0.222em"></mspace><mi>n</mi></mrow></mrow><annotation encoding="application/x-tex">
+C = M^e \bmod n
+</annotation></semantics></math></li>
+<li><strong>Decryption:</strong> Only holder of private key d can compute this. <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo>=</mo><msup><mi>C</mi><mi>d</mi></msup><mrow><mspace width="0.222em"></mspace><mrow><mi mathvariant="normal">mod</mi><mo>&#8289;</mo></mrow><mspace width="0.222em"></mspace><mi>n</mi></mrow></mrow><annotation encoding="application/x-tex">
+M = C^d \bmod n
+</annotation></semantics></math></li>
+<li><strong>Properties:</strong>
+<ul>
+<li>Reversible via modular arithmetic.<br />
+</li>
+<li>Works on small numeric blocks (real data padded and encoded).<br />
+</li>
+<li>Security depends entirely on factoring hardness.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="why-rsa-works-intuition"><h2 class="slide-title">Why RSA Works (Intuition)</h2><div class="slide-body">
+<ul>
+<li>Based on <strong>Euler’s theorem:</strong><br />
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>M</mi><mrow><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo>≡</mo><mn>1</mn><mrow><mspace width="0.222em"></mspace><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">mod</mi><mo>&#8289;</mo></mrow><mspace width="0.222em"></mspace><mi>n</mi><mo stretchy="false" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+M^{\phi(n)} \equiv 1 \pmod{n}
+</annotation></semantics></math> so <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>M</mi><mrow><mi>e</mi><mi>d</mi></mrow></msup><mo>≡</mo><mi>M</mi></mrow><annotation encoding="application/x-tex">M^{ed} \equiv M</annotation></semantics></math>.<br />
+</li>
+<li>Multiplying exponents <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mo>×</mo><mi>d</mi></mrow><annotation encoding="application/x-tex">e × d</annotation></semantics></math> cycles the number “back” to its origin.<br />
+</li>
+<li>Only works if <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mo>,</mo><mi>d</mi></mrow><annotation encoding="application/x-tex">e, d</annotation></semantics></math> chosen correctly relative to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\phi(n)</annotation></semantics></math>.<br />
+</li>
+<li>Inversion without φ(n) is infeasible → security.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="elliptic-curve-cryptography-ecc"><h2 class="slide-title">Elliptic Curve Cryptography (ECC)</h2><div class="slide-body">
+<ul>
+<li>Uses points on a curve:<br />
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>y</mi><mn>2</mn></msup><mo>=</mo><msup><mi>x</mi><mn>3</mn></msup><mo>+</mo><mi>a</mi><mi>x</mi><mo>+</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">
+y^2 = x^3 + ax + b
+</annotation></semantics></math></li>
+<li><strong>Keys:</strong>
+<ul>
+<li>Private key = random integer <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math><br />
+</li>
+<li>Public key = <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo>=</mo><mi>k</mi><mi>P</mi></mrow><annotation encoding="application/x-tex">Q = kP</annotation></semantics></math> (point multiplication)<br />
+</li>
+</ul></li>
+<li><strong>Encryption / key exchange</strong> use <strong>elliptic-curve discrete log problem</strong> — hard to reverse.<br />
+</li>
+<li>Provides equal security with much smaller keys (256-bit ECC ≈ 3072-bit RSA).</li>
+</ul>
+</div></section>
+<section class="slide" id="ecc-video-optional"><h2 class="slide-title">ECC Video (Optional)</h2><div class="slide-body">
+<div style="display: flex; justify-content: center; align-items: center;text-align:center">
+<a class="video-link" href="https://www.youtube.com/watch?v=rzSU2m8oN48&amp;t=68s" target="_blank" rel="noopener">Watch the video on YouTube <span aria-hidden="true">↗</span></a>
+</div>
+</div></section>
+<section class="slide smaller" id="ecc-vs-rsa"><h2 class="slide-title">ECC vs RSA</h2><div class="slide-body">
+<table>
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 32%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Property</th>
+<th><strong>RSA</strong></th>
+<th><strong>ECC</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Underlying Problem</strong></td>
+<td>Integer factorization</td>
+<td>Elliptic-curve discrete log</td>
+</tr>
+<tr>
+<td><strong>Typical Key Size (≈128-bit security)</strong></td>
+<td>3072 bits</td>
+<td>256 bits</td>
+</tr>
+<tr>
+<td><strong>Performance</strong></td>
+<td>Slower key generation &amp; decryption</td>
+<td>Faster operations, smaller keys</td>
+</tr>
+<tr>
+<td><strong>Bandwidth / Storage</strong></td>
+<td>Larger certificates &amp; signatures</td>
+<td>Compact and efficient</td>
+</tr>
+<tr>
+<td><strong>Adoption</strong></td>
+<td>Legacy (TLS, email)</td>
+<td>Modern systems, blockchain (e.g., Bitcoin, Ethereum)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>ECC achieves the same security with far smaller keys.<br />
+</li>
+<li>Ideal for low-power devices and distributed systems.</li>
+</ul>
+</div></section>
+<section class="slide" id="digital-signature-workflow"><h2 class="slide-title">Digital Signature Workflow</h2><div class="slide-body">
+<ol type="1">
+<li>Sender computes message <strong>hash</strong> (e.g., SHA-256).<br />
+</li>
+<li>Sender <strong>signs</strong> the hash with private key → signature <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>.<br />
+</li>
+<li>Receiver gets (message, signature).<br />
+</li>
+<li>Receiver <strong>verifies</strong> by checking:<br />
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Verify</mtext><mo stretchy="false" form="prefix">(</mo><mi>S</mi><mo>,</mo><mi>M</mi><mo>,</mo><mtext mathvariant="normal">public key</mtext><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mtext mathvariant="normal">True</mtext></mrow><annotation encoding="application/x-tex">
+\text{Verify}(S, M, \text{public key}) = \text{True}
+</annotation></semantics></math></li>
+<li>If valid → message authentic and intact.</li>
+</ol>
+<ul>
+<li>Ensures <strong>integrity, authenticity, non-repudiation</strong>.<br />
+</li>
+<li>Used in SSL/TLS, software updates, and blockchain transactions.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="example-rsa-signature"><h2 class="slide-title">Example: RSA Signature</h2><div class="slide-body">
+<ul>
+<li><strong>Signing:</strong><br />
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mi>M</mi><msup><mo stretchy="false" form="postfix">)</mo><mi>d</mi></msup><mrow><mspace width="0.222em"></mspace><mrow><mi mathvariant="normal">mod</mi><mo>&#8289;</mo></mrow><mspace width="0.222em"></mspace><mi>n</mi></mrow></mrow><annotation encoding="application/x-tex">
+S = H(M)^d \bmod n
+</annotation></semantics></math> (hash the message, then raise to private exponent)</li>
+<li><strong>Verification:</strong><br />
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mi>M</mi><mo stretchy="false" form="postfix">)</mo><mover><mo>=</mo><mo accent="false">?</mo></mover><msup><mi>S</mi><mi>e</mi></msup><mrow><mspace width="0.222em"></mspace><mrow><mi mathvariant="normal">mod</mi><mo>&#8289;</mo></mrow><mspace width="0.222em"></mspace><mi>n</mi></mrow></mrow><annotation encoding="application/x-tex">
+H(M) \stackrel{?}{=} S^e \bmod n
+</annotation></semantics></math> (raise signature to public exponent and compare hashes)</li>
+<li>Correctness guaranteed because <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mi>M</mi><msup><mo stretchy="false" form="postfix">)</mo><mi>d</mi></msup><msup><mo stretchy="false" form="postfix">)</mo><mi>e</mi></msup><mo>≡</mo><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mi>M</mi><mo stretchy="false" form="postfix">)</mo><mrow><mspace width="0.222em"></mspace><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">mod</mi><mo>&#8289;</mo></mrow><mspace width="0.222em"></mspace><mi>n</mi><mo stretchy="false" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">(H(M)^{d})^{e} \equiv H(M) \pmod{n}</annotation></semantics></math>.</li>
+<li>Hashing prevents direct message manipulation and collision attacks.</li>
+</ul>
+</div></section>
+<section class="slide" id="digital-signatures-microlab"><h2 class="slide-title">Digital Signatures Microlab</h2><div class="slide-body">
+<div data-align="center">
+<p><a href="/assets/labs/signatures/">Learn with Digital Signatures Microlab</a></p>
+</div>
+</div></section>
+<section class="slide smaller" id="certificates-and-pki-hierarchy"><h2 class="slide-title">Certificates and PKI Hierarchy</h2><div class="slide-body">
+<ul>
+<li><strong>PKI (Public-Key Infrastructure):</strong> system that binds identities to public keys.<br />
+</li>
+<li>Certificates issued and digitally signed by <strong>Certificate Authorities (CAs)</strong>.<br />
+</li>
+<li>Structure:
+<ul>
+<li><strong>Root CA</strong> — self-signed, ultimate trust anchor.<br />
+</li>
+<li><strong>Intermediate CAs</strong> — delegated signers.<br />
+</li>
+<li><strong>End-Entity Certificates</strong> — for servers, users, or devices.<br />
+</li>
+</ul></li>
+<li>Each certificate contains public key, owner info, expiration, and CA signature.</li>
+</ul>
+</div></section>
+<section class="slide" id="certificate-validation-process"><h2 class="slide-title">Certificate Validation Process</h2><div class="slide-body">
+<ol type="1">
+<li>Browser receives server certificate.<br />
+</li>
+<li>Checks <strong>signature chain</strong> up to trusted Root CA.<br />
+</li>
+<li>Validates:
+<ul>
+<li>Certificate not expired.<br />
+</li>
+<li>Domain name matches subject.<br />
+</li>
+<li>Signature of issuer verifies.<br />
+</li>
+</ul></li>
+<li>Checks <strong>revocation status</strong> (CRL / OCSP).<br />
+</li>
+<li>If all checks pass → secure session established.</li>
+</ol>
+</div></section>
+<section class="slide smaller" id="real-world-failure-the-pac4j-jwt-auth-bypass"><h2 class="slide-title">Real-World Failure: The pac4j-jwt Auth Bypass</h2><div class="slide-body">
+<ul>
+<li><strong>The Context:</strong> Web applications use JSON Web Tokens (JWTs) to authenticate users. A JWT contains a payload (e.g., <code>{"user": "alice", "role": "admin"}</code>) secured by a <strong>digital signature</strong>.</li>
+<li><strong>The Vulnerability:</strong> A severe bug in the <code>pac4j-jwt</code> security library allowed attackers to completely bypass authentication.</li>
+<li><strong>How it Failed:</strong>
+<ul>
+<li>A logic flaw in the software’s validation process allowed attackers to craft tokens that tricked the library into <strong>skipping the signature verification step</strong>.</li>
+</ul></li>
+<li><strong>The Impact:</strong> Attackers could forge their identity and gain unauthorized administrative access.</li>
+<li><strong>The Lesson:</strong> Cryptographic math is robust, but <strong>implementation flaws</strong> are the most common point of failure. If the code fails to strictly enforce verification, the entire trust model collapses.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Attacker Mindset:</strong> Don’t break the cryptography; find a way to make the system ignore it.</p>
+</div>
+</div></section>
+<section class="slide" id="public-keys-as-blockchain-addresses"><h2 class="slide-title">Public Keys as Blockchain Addresses</h2><div class="slide-body">
+<ul>
+<li>In blockchain systems, a <strong>public key</strong> identifies a wallet or account.<br />
+</li>
+<li>The <strong>address</strong> is a <strong>hash</strong> of the public key (e.g., Bitcoin uses RIPEMD-160(SHA-256(pubkey))).<br />
+</li>
+<li>Transactions are <strong>digitally signed</strong> with the private key → verified using the public key.<br />
+</li>
+<li>This provides <strong>ownership without identity</strong> — pseudonymity, not anonymity.<br />
+</li>
+<li>Loss of private key = loss of access.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="compromised-keys-and-revocation-failures"><h2 class="slide-title">Compromised Keys and Revocation Failures</h2><div class="slide-body">
+<ul>
+<li><strong>Private-key compromise</strong> breaks authenticity and confidentiality.<br />
+</li>
+<li><strong>Revocation mechanisms:</strong>
+<ul>
+<li>PKI: Certificate Revocation Lists (CRL) and Online Certificate Status Protocol (OCSP).<br />
+</li>
+<li>Blockchain: <em>no central revocation</em> — lost or stolen keys remain valid until funds moved.<br />
+</li>
+</ul></li>
+<li><strong>Famous incidents:</strong>
+<ul>
+<li>2011 DigiNotar CA compromise.<br />
+</li>
+<li>2014 Heartbleed bug exposing private keys.<br />
+</li>
+<li>2016 Bitfinex Bitcoin theft (key management failure).<br />
+</li>
+</ul></li>
+<li>Lesson: cryptography is only as strong as its key hygiene.</li>
+</ul>
+</div></section>
+<section class="slide" id="quantum-threat-preview"><h2 class="slide-title">Quantum Threat Preview</h2><div class="slide-body">
+<ul>
+<li><strong>Shor’s Algorithm (1994):</strong> polynomial-time factoring &amp; discrete-log solver on quantum computers.<br />
+</li>
+<li>Breaks RSA, DH, ECC — renders most current public-key systems insecure.<br />
+</li>
+<li><strong>Post-Quantum Cryptography (PQC):</strong> lattice-based, code-based, and hash-based alternatives.<br />
+</li>
+<li>NIST PQC Standardization (2022 → 2025): CRYSTALS-Kyber (key exchange) and Dilithium (signatures).<br />
+</li>
+<li>Blockchain relevance: future migration to quantum-safe wallets and consensus proofs.</li>
+</ul>
+</div></section>
+<section class="slide" id="summary"><h2 class="slide-title">Summary</h2><div class="slide-body">
+<ul>
+<li>Asymmetric cryptography solves the <strong>key-distribution problem</strong> using <strong>public/private pairs</strong>.<br />
+</li>
+<li><strong>Trapdoor functions</strong> make forward computation easy but reversal infeasible.<br />
+</li>
+<li><strong>RSA</strong> relies on integer factorization; <strong>ECC</strong> on the discrete-log problem.<br />
+</li>
+<li><strong>Digital signatures</strong> provide authenticity and integrity.<br />
+</li>
+<li><strong>PKI</strong> formalizes trust through hierarchical certificate authorities.<br />
+</li>
+<li>Blockchain adapts these principles for decentralized identity and verification.</li>
+</ul>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-diffie_newdirectionscryptography_1976" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">W. Diffie and M. Hellman, <span>“New <span>Directions</span> in <span>Cryptography</span>,”</span> in <em><span>IEEE Transactions</span> on <span>Information Theory</span></em>, 1976, pp. 644–654. doi: <a href="https://doi.org/10.1109/TIT.1976.1055638">10.1109/TIT.1976.1055638</a>.</div>
+</div>
+<div id="ref-menezes_handbookappliedcryptography_2011" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">A. J. Menezes, P. C. van Oorschot, and S. A. Vanstone, <span>“Handbook of <span>Applied Cryptography</span>.”</span> CRC Press, Aug. 07, 2011. Accessed: Oct. 23, 2025. [Online]. Available: <a href="https://cacr.uwaterloo.ca/hac/">https://cacr.uwaterloo.ca/hac/</a></div>
+</div>
+<div id="ref-katz_introductionmoderncryptography_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">J. Katz and Y. Lindell, <em>Introduction to <span>Modern Cryptography</span></em>, 3rd ed. <span>Chapman and Hall/CRC</span>, 2020. doi: <a href="https://doi.org/10.1201/9781351133036">10.1201/9781351133036</a>.</div>
+</div>
+<div id="ref-rivest_methodobtainingdigital_1978" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">R. L. Rivest, A. Shamir, and L. Adleman, <span>“A method for obtaining digital signatures and public-key cryptosystems,”</span> <em>Commun. ACM</em>, vol. 21, no. 2, pp. 120–126, Feb. 1978, doi: <a href="https://doi.org/10.1145/359340.359342">10.1145/359340.359342</a>.</div>
+</div>
+<div id="ref-boneh_hashfunctions_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">D. Boneh and V. Shoup, <span>“Hash <span>Functions</span>.”</span> 2020. Available: <a href="https://intensecrypto.org/public/lec_07_hash_functions.html">https://intensecrypto.org/public/lec_07_hash_functions.html</a></div>
+</div>
+<div id="ref-stinson_cryptographytheorypractice_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">D. R. Stinson and M. B. Paterson, <em>Cryptography: Theory and practice</em>, Fourth edition, first issued in paperback. Boca Raton, FL: Chapman &amp; Hall/CRC Press, 2022.</div>
+</div>
+<div id="ref-boneh_introductionpublickeycryptography_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">D. Boneh and V. Shoup, <span>“Introduction to <span>Public-Key Cryptography</span>.”</span> 2020. Available: <a href="https://intensecrypto.org/public/lec_10_public_key_intro.html">https://intensecrypto.org/public/lec_10_public_key_intro.html</a></div>
+</div>
+<div id="ref-nakamoto_bitcoinpeertopeerelectronic_2008" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">S. Nakamoto, <span>“Bitcoin: <span class="nocase">A Peer-to-Peer Electronic Cash System</span>.”</span> Satoshi Nakamoto Institute, Oct. 31, 2008. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf">https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf</a></div>
+</div>
+<div id="ref-antonopoulos_masteringbitcoinprogramming_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">A. M. Antonopoulos, <em>Mastering <span>Bitcoin</span>: Programming the open blockchain</em>, Second edition. Sebastopol, CA: O’Reilly, 2017.</div>
+</div>
+<div id="ref-barker_recommendationkeymanagement_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">E. Barker, <span>“Recommendation for key management: Part 1 - general,”</span> <span>National Institute of Standards and Technology</span>, Gaithersburg, MD, NIST SP 800-57pt1r5, May 2020. doi: <a href="https://doi.org/10.6028/NIST.SP.800-57pt1r5">10.6028/NIST.SP.800-57pt1r5</a>.</div>
+</div>
+<div id="ref-departmentofjustice_bitfinexhackerwife_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">Department of Justice, <span>“Bitfinex hacker and wife plead guilty to money laundering conspiracy involving billions in cryptocurrency,”</span> U.S. Dept. of Justice, Washington, D.C., Press Release, Aug. 2023. Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://www.justice.gov/archives/opa/pr/bitfinex-hacker-and-wife-plead-guilty-money-laundering-conspiracy-involving-billions">https://www.justice.gov/archives/opa/pr/bitfinex-hacker-and-wife-plead-guilty-money-laundering-conspiracy-involving-billions</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

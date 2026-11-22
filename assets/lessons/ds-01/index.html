@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Distributed Systems</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/distributed_primitives/01-DS-distributed_systems.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="ds-01" data-code="01-DS" data-src="bf6b332eefd42e4a" data-slides="32">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section III: Distributed Systems Fundamentals · Lesson 01-DS</p><h1>Distributed Systems</h1></div></section>
+<section class="slide" id="what-is-a-distributed-system"><h2 class="slide-title">What Is a Distributed System?</h2><div class="slide-body">
+<p><strong>Working definition:</strong> Multiple nodes that communicate over a network to appear as one system to users.</p>
+<ul>
+<li>Examples: web apps with external auth, multiplayer games, file sync, P2P sharing.</li>
+<li>Key properties: resistant to independent failures and unreliable networks; shared ownership.</li>
+<li>Design goal: deliver correct, available service despite those limits.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="clientserver-centralized-index-and-control"><h2 class="slide-title">Client–Server: Centralized Index and Control</h2><div class="slide-body">
+<p><strong>Definition:</strong> Clients request data or service from a centralized server (or cluster) that holds authority.</p>
+<ul>
+<li><strong>Strengths:</strong>
+<ul>
+<li>Simple mental model</li>
+<li>Easier to govern and enforce policy</li>
+<li>Fast, centralized search and indexing</li>
+</ul></li>
+<li><strong>Weaknesses:</strong>
+<ul>
+<li>Control and failure are concentrated (single point of failure)</li>
+<li>Scaling hotspots (the server can become a bottleneck)</li>
+</ul></li>
+<li><strong>Real-world pattern:</strong> Centralized discovery combined with direct data transfer (e.g., DNS, traditional web apps).</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="blackout-at-8-pm-can-we-still-share"><h2 class="slide-title">Blackout at 8 PM: Can We Still Share?</h2><div class="slide-body">
+<ul>
+<li>Imagine an outage of major internet services (AWS, Google, Cloudflare, etc.).
+<ul>
+<li>Your phone has data; your home internet works.</li>
+<li>You can’t reach Google, but you could share a file directly with your neighbor - but how?</li>
+</ul></li>
+<li>Can we still share without a central server?</li>
+<li>What if the internet/cell service are completely down?</li>
+</ul>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div style="text-align:center;">
+<div class="fragment fade-in">
+<p><img src="../img/p2p_vs_central-0.png" style="width:55.0%" /></p>
+</div>
+</div>
+</div><div class="column" style="width:50%;">
+<div style="text-align:center;">
+<div class="fragment fade-in">
+<p><img src="../img/p2p_vs_central-1.png" style="width:55.0%" /></p>
+</div>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="centralized-vs.-p2p"><h2 class="slide-title">Centralized vs. P2P</h2><div class="slide-body">
+<blockquote>
+<p>This is the core idea of a <strong>Peer-to-Peer (P2P)</strong> network.</p>
+</blockquote>
+<ul>
+<li><strong>P2P networks</strong> have been around for decades and were central to early file-sharing systems.
+<ul>
+<li><em>ARPANet (1966)</em> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> early packet-switched network that helped shape the <em>Internet</em></li>
+<li><em>Usenet (1979)</em> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> early distributed discussion system widely associated with the early Internet era</li>
+<li><em>DNS (1983)</em> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> naming infrastructure, essential to the <em>world wide web</em></li>
+</ul></li>
+<li>They do not rely on a central server to work!</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="centralized-vs.-p2p-1"><h2 class="slide-title">Centralized vs. P2P</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:50%;">
+<div style="text-align:center;">
+<strong>Centralized</strong>
+<div style="position:relative;width:100%;max-width:320px;height:220px;margin:0 auto;">
+<p><svg viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;"> <rect x="8" y="8" width="244" height="204" rx="16" fill="#fafafa" stroke="#d0d0d0" stroke-width="2"/> <line x1="130" y1="110" x2="55" y2="40" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="125" y2="28" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="205" y2="42" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="40" y2="102" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="218" y2="100" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="52" y2="182" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="130" y2="192" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="208" y2="178" stroke="#94a3b8" stroke-width="3"/> <circle cx="130" cy="110" r="22" fill="#22c55e" stroke="#15803d" stroke-width="4"/> <circle cx="55" cy="40" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="125" cy="28" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="205" cy="42" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="40" cy="102" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="218" cy="100" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="52" cy="182" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="130" cy="192" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="208" cy="178" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <text x="130" y="116" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#ffffff">Server</text> </svg></p>
+<p><svg class="fragment fade-in" data-fragment-index="1" viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;"> <rect x="8" y="8" width="244" height="204" rx="16" fill="#fafafa" stroke="#d0d0d0" stroke-width="2"/> <line x1="130" y1="110" x2="55" y2="40" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="125" y2="28" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="205" y2="42" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="40" y2="102" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="218" y2="100" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="52" y2="182" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="130" y2="192" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="208" y2="178" stroke="#94a3b8" stroke-width="3"/> <line x1="55" y1="40" x2="130" y2="110" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/> <line x1="130" y1="110" x2="208" y2="178" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/> <circle cx="130" cy="110" r="22" fill="#22c55e" stroke="#15803d" stroke-width="4"/> <circle cx="55" cy="40" r="16" fill="#bbf7d0" stroke="#16a34a" stroke-width="4"/> <circle cx="125" cy="28" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="205" cy="42" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="40" cy="102" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="218" cy="100" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="52" cy="182" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="130" cy="192" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="208" cy="178" r="16" fill="#bbf7d0" stroke="#16a34a" stroke-width="4"/> <text x="130" y="116" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#ffffff">Server</text> </svg></p>
+<p><svg class="fragment fade-in" data-fragment-index="2" viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;"> <rect x="8" y="8" width="244" height="204" rx="16" fill="#fafafa" stroke="#d0d0d0" stroke-width="2"/> <line x1="130" y1="110" x2="55" y2="40" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="125" y2="28" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="205" y2="42" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="40" y2="102" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="218" y2="100" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="52" y2="182" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="130" y2="192" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="208" y2="178" stroke="#94a3b8" stroke-width="3"/> <line x1="55" y1="40" x2="130" y2="110" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/> <line x1="130" y1="110" x2="208" y2="178" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/> <circle cx="130" cy="110" r="22" fill="#22c55e" stroke="#15803d" stroke-width="4"/> <circle cx="55" cy="40" r="16" fill="#bbf7d0" stroke="#16a34a" stroke-width="4"/> <circle cx="125" cy="28" r="16" fill="#ef4444" stroke="#991b1b" stroke-width="4"/> <circle cx="205" cy="42" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="40" cy="102" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="218" cy="100" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="52" cy="182" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="130" cy="192" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="208" cy="178" r="16" fill="#bbf7d0" stroke="#16a34a" stroke-width="4"/> <text x="130" y="116" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#ffffff">Server</text> </svg></p>
+<p><svg class="fragment fade-in" data-fragment-index="3" viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;"> <rect x="8" y="8" width="244" height="204" rx="16" fill="#fafafa" stroke="#d0d0d0" stroke-width="2"/> <line x1="130" y1="110" x2="55" y2="40" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="125" y2="28" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="205" y2="42" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="40" y2="102" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="218" y2="100" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="52" y2="182" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="130" y2="192" stroke="#94a3b8" stroke-width="3"/> <line x1="130" y1="110" x2="208" y2="178" stroke="#94a3b8" stroke-width="3"/> <line x1="55" y1="40" x2="130" y2="110" stroke="#dc2626" stroke-width="5" stroke-linecap="round"/> <line x1="130" y1="110" x2="208" y2="178" stroke="#dc2626" stroke-width="5" stroke-linecap="round"/> <circle cx="130" cy="110" r="24" fill="#ef4444" stroke="#991b1b" stroke-width="5"/> <circle cx="55" cy="40" r="16" fill="#bbf7d0" stroke="#16a34a" stroke-width="4"/> <circle cx="125" cy="28" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="205" cy="42" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="40" cy="102" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="218" cy="100" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="52" cy="182" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="130" cy="192" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="208" cy="178" r="16" fill="#bbf7d0" stroke="#16a34a" stroke-width="4"/> <text x="130" y="116" text-anchor="middle" font-size="12" font-family="sans-serif" fill="#ffffff">Server</text> </svg></p>
+</div>
+</div>
+</div><div class="column" style="width:50%;">
+<div style="text-align:center;">
+<strong>Peer-to-Peer</strong>
+<div style="position:relative;width:100%;max-width:320px;height:220px;margin:0 auto;">
+<p><svg viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;"> <rect x="8" y="8" width="244" height="204" rx="16" fill="#fafafa" stroke="#d0d0d0" stroke-width="2"/> <line x1="48" y1="52" x2="98" y2="38" stroke="#94a3b8" stroke-width="3"/> <line x1="98" y1="38" x2="155" y2="58" stroke="#94a3b8" stroke-width="3"/> <line x1="155" y1="58" x2="208" y2="42" stroke="#94a3b8" stroke-width="3"/> <line x1="48" y1="52" x2="62" y2="112" stroke="#94a3b8" stroke-width="3"/> <line x1="62" y1="112" x2="118" y2="102" stroke="#94a3b8" stroke-width="3"/> <line x1="118" y1="102" x2="155" y2="58" stroke="#94a3b8" stroke-width="3"/> <line x1="118" y1="102" x2="198" y2="110" stroke="#94a3b8" stroke-width="3"/> <line x1="198" y1="110" x2="208" y2="42" stroke="#94a3b8" stroke-width="3"/> <line x1="62" y1="112" x2="78" y2="178" stroke="#94a3b8" stroke-width="3"/> <line x1="78" y1="178" x2="138" y2="182" stroke="#94a3b8" stroke-width="3"/> <line x1="138" y1="182" x2="198" y2="110" stroke="#94a3b8" stroke-width="3"/> <line x1="138" y1="182" x2="210" y2="170" stroke="#94a3b8" stroke-width="3"/> <line x1="118" y1="102" x2="138" y2="182" stroke="#94a3b8" stroke-width="3"/> <line x1="198" y1="110" x2="210" y2="170" stroke="#94a3b8" stroke-width="3"/> <circle cx="48" cy="52" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="98" cy="38" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="155" cy="58" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="208" cy="42" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="62" cy="112" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="118" cy="102" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="198" cy="110" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="78" cy="178" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="138" cy="182" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="210" cy="170" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> </svg></p>
+<p><svg class="fragment fade-in" data-fragment-index="1" viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;"> <rect x="8" y="8" width="244" height="204" rx="16" fill="#fafafa" stroke="#d0d0d0" stroke-width="2"/> <line x1="48" y1="52" x2="98" y2="38" stroke="#94a3b8" stroke-width="3"/> <line x1="98" y1="38" x2="155" y2="58" stroke="#94a3b8" stroke-width="3"/> <line x1="155" y1="58" x2="208" y2="42" stroke="#94a3b8" stroke-width="3"/> <line x1="48" y1="52" x2="62" y2="112" stroke="#94a3b8" stroke-width="3"/> <line x1="62" y1="112" x2="118" y2="102" stroke="#94a3b8" stroke-width="3"/> <line x1="118" y1="102" x2="155" y2="58" stroke="#94a3b8" stroke-width="3"/> <line x1="118" y1="102" x2="198" y2="110" stroke="#94a3b8" stroke-width="3"/> <line x1="198" y1="110" x2="208" y2="42" stroke="#94a3b8" stroke-width="3"/> <line x1="62" y1="112" x2="78" y2="178" stroke="#94a3b8" stroke-width="3"/> <line x1="78" y1="178" x2="138" y2="182" stroke="#94a3b8" stroke-width="3"/> <line x1="138" y1="182" x2="198" y2="110" stroke="#94a3b8" stroke-width="3"/> <line x1="138" y1="182" x2="210" y2="170" stroke="#94a3b8" stroke-width="3"/> <line x1="118" y1="102" x2="138" y2="182" stroke="#94a3b8" stroke-width="3"/> <line x1="198" y1="110" x2="210" y2="170" stroke="#94a3b8" stroke-width="3"/> <line x1="48" y1="52" x2="62" y2="112" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/> <line x1="62" y1="112" x2="78" y2="178" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/> <line x1="78" y1="178" x2="138" y2="182" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/> <line x1="138" y1="182" x2="210" y2="170" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/> <circle cx="48" cy="52" r="16" fill="#bbf7d0" stroke="#16a34a" stroke-width="4"/> <circle cx="98" cy="38" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="155" cy="58" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="208" cy="42" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="62" cy="112" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="118" cy="102" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="198" cy="110" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="78" cy="178" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="138" cy="182" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="210" cy="170" r="16" fill="#bbf7d0" stroke="#16a34a" stroke-width="4"/> </svg></p>
+<p><svg class="fragment fade-in" data-fragment-index="2" viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;"> <rect x="8" y="8" width="244" height="204" rx="16" fill="#fafafa" stroke="#d0d0d0" stroke-width="2"/> <line x1="48" y1="52" x2="98" y2="38" stroke="#94a3b8" stroke-width="3"/> <line x1="98" y1="38" x2="155" y2="58" stroke="#94a3b8" stroke-width="3"/> <line x1="155" y1="58" x2="208" y2="42" stroke="#94a3b8" stroke-width="3"/> <line x1="48" y1="52" x2="62" y2="112" stroke="#94a3b8" stroke-width="3"/> <line x1="62" y1="112" x2="118" y2="102" stroke="#94a3b8" stroke-width="3"/> <line x1="118" y1="102" x2="155" y2="58" stroke="#94a3b8" stroke-width="3"/> <line x1="118" y1="102" x2="198" y2="110" stroke="#94a3b8" stroke-width="3"/> <line x1="198" y1="110" x2="208" y2="42" stroke="#94a3b8" stroke-width="3"/> <line x1="62" y1="112" x2="78" y2="178" stroke="#94a3b8" stroke-width="3"/> <line x1="78" y1="178" x2="138" y2="182" stroke="#94a3b8" stroke-width="3"/> <line x1="138" y1="182" x2="198" y2="110" stroke="#94a3b8" stroke-width="3"/> <line x1="138" y1="182" x2="210" y2="170" stroke="#94a3b8" stroke-width="3"/> <line x1="118" y1="102" x2="138" y2="182" stroke="#94a3b8" stroke-width="3"/> <line x1="198" y1="110" x2="210" y2="170" stroke="#94a3b8" stroke-width="3"/> <line x1="48" y1="52" x2="62" y2="112" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/> <line x1="62" y1="112" x2="78" y2="178" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/> <line x1="78" y1="178" x2="138" y2="182" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/> <line x1="138" y1="182" x2="210" y2="170" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/> <circle cx="48" cy="52" r="16" fill="#bbf7d0" stroke="#16a34a" stroke-width="4"/> <circle cx="98" cy="38" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="155" cy="58" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="208" cy="42" r="16" fill="#ef4444" stroke="#991b1b" stroke-width="4"/> <circle cx="62" cy="112" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="118" cy="102" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="198" cy="110" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="78" cy="178" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="138" cy="182" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="210" cy="170" r="16" fill="#bbf7d0" stroke="#16a34a" stroke-width="4"/> </svg></p>
+<p><svg class="fragment fade-in" data-fragment-index="3" viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;"> <rect x="8" y="8" width="244" height="204" rx="16" fill="#fafafa" stroke="#d0d0d0" stroke-width="2"/> <line x1="48" y1="52" x2="98" y2="38" stroke="#94a3b8" stroke-width="3"/> <line x1="98" y1="38" x2="155" y2="58" stroke="#94a3b8" stroke-width="3"/> <line x1="155" y1="58" x2="208" y2="42" stroke="#94a3b8" stroke-width="3"/> <line x1="48" y1="52" x2="62" y2="112" stroke="#94a3b8" stroke-width="3"/> <line x1="62" y1="112" x2="118" y2="102" stroke="#94a3b8" stroke-width="3"/> <line x1="118" y1="102" x2="155" y2="58" stroke="#94a3b8" stroke-width="3"/> <line x1="118" y1="102" x2="198" y2="110" stroke="#94a3b8" stroke-width="3"/> <line x1="198" y1="110" x2="208" y2="42" stroke="#94a3b8" stroke-width="3"/> <line x1="62" y1="112" x2="78" y2="178" stroke="#94a3b8" stroke-width="3"/> <line x1="78" y1="178" x2="138" y2="182" stroke="#94a3b8" stroke-width="3"/> <line x1="138" y1="182" x2="198" y2="110" stroke="#94a3b8" stroke-width="3"/> <line x1="138" y1="182" x2="210" y2="170" stroke="#94a3b8" stroke-width="3"/> <line x1="118" y1="102" x2="138" y2="182" stroke="#94a3b8" stroke-width="3"/> <line x1="198" y1="110" x2="210" y2="170" stroke="#94a3b8" stroke-width="3"/> <line x1="48" y1="52" x2="62" y2="112" stroke="#dc2626" stroke-width="5" stroke-linecap="round"/> <line x1="62" y1="112" x2="78" y2="178" stroke="#dc2626" stroke-width="5" stroke-linecap="round"/> <line x1="78" y1="178" x2="138" y2="182" stroke="#dc2626" stroke-width="5" stroke-linecap="round"/> <line x1="138" y1="182" x2="210" y2="170" stroke="#dc2626" stroke-width="5" stroke-linecap="round"/> <line x1="48" y1="52" x2="62" y2="112" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/> <line x1="62" y1="112" x2="118" y2="102" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/> <line x1="118" y1="102" x2="198" y2="110" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/> <line x1="198" y1="110" x2="210" y2="170" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/> <circle cx="48" cy="52" r="16" fill="#bbf7d0" stroke="#16a34a" stroke-width="4"/> <circle cx="98" cy="38" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="155" cy="58" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="208" cy="42" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="62" cy="112" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="118" cy="102" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="198" cy="110" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="78" cy="178" r="14" fill="#86efac" stroke="#16a34a" stroke-width="3"/> <circle cx="138" cy="182" r="16" fill="#ef4444" stroke="#991b1b" stroke-width="4"/> <circle cx="210" cy="170" r="16" fill="#bbf7d0" stroke="#16a34a" stroke-width="4"/> </svg></p>
+</div>
+</div>
+</div>
+</div>
+<div class="callout-note fragment fade-in" data-appearance="simple" data-fragment-index="3">
+<p><strong>Takeaway</strong></p>
+<p>P2P overlays are often less efficient than a centralized hub because messages may travel through more hops and coordination is harder. That extra complexity buys robustness: no single chokepoint controls availability, censorship, or total failure.</p>
+</div>
+</div></section>
+<section class="slide" id="centralized-vs.-decentralized-tradeoffs"><h2 class="slide-title">Centralized vs. Decentralized: Trade‑offs</h2><div class="slide-body">
+<p><strong>Centralized</strong></p>
+<ul>
+<li>Clear control and governance</li>
+<li>Strong consistency and observability</li>
+<li>Single point of failure and policy risk</li>
+</ul>
+<p><strong>Decentralized (P2P)</strong></p>
+<ul>
+<li>No central chokepoint; resilient to takedown</li>
+<li>Autonomy for participants; local control</li>
+<li>Higher coordination cost; variable consistency</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="why-distribute-motivations-and-risks"><h2 class="slide-title">Why Distribute? Motivations and Risks</h2><div class="slide-body">
+<p><strong>Motivations</strong></p>
+<ul>
+<li>Scale out capacity and storage</li>
+<li>Place compute near users to reduce perceived delay</li>
+<li>Fault isolation and graceful degradation</li>
+<li>Autonomy between teams or organizations</li>
+</ul>
+<p><strong>Risks</strong></p>
+<ul>
+<li>Coordination complexity and new failure modes</li>
+<li>Latency and bandwidth limits</li>
+<li>Security, trust, and heterogeneous administration</li>
+</ul>
+</div></section>
+<section class="slide" id="distributed-failures"><h2 class="slide-title">Distributed Failures</h2><div class="slide-body">
+<ul>
+<li>Node-level, service-level, and network-level failures are different in scope and impact.
+<ul>
+<li><strong>Node-level</strong> failures affect one machine or process.</li>
+<li><strong>Service-level</strong> failures break a shared application or dependency used by many nodes.</li>
+<li><strong>Network-level</strong> failures partition links, racks, zones, or regions and can disrupt multiple services at once.</li>
+</ul></li>
+<li>Hidden external dependencies can turn a small fault into a major outage.</li>
+<li>Failures may be contained with isolation, timeouts, and graceful degradation.</li>
+</ul>
+</div></section>
+<section class="slide" id="distributed-computing-and-blockchain"><h2 class="slide-title">Distributed Computing and Blockchain</h2><div class="slide-body">
+<ul>
+<li>Blockchains are inherently distributed systems.</li>
+<li>A local-only blockchain would be little more than a personal log; the value comes from shared state across many machines.</li>
+<li>Bitcoin combined distributed networking, cryptography, and incentives into a system with no central operator.</li>
+<li>Understanding failure, propagation, and coordination helps us understand blockchain design constraints.</li>
+</ul>
+</div></section>
+<section class="slide" id="availability-mttf-and-mttr"><h2 class="slide-title">Availability, MTTF, and MTTR</h2><div class="slide-body">
+<ul>
+<li><strong>Availability</strong> ≈ (time the service is operational) ÷ (total time users need it).<br />
+</li>
+<li><strong>MTTF (Mean Time To Failure):</strong> average time a system runs before failing.<br />
+</li>
+<li><strong>MTTR (Mean Time To Repair):</strong> average time to recover and restore service after failure.<br />
+</li>
+<li>To improve availability: increase <strong>MTTF</strong> (fail less often) and reduce <strong>MTTR</strong> (recover faster).<br />
+</li>
+<li>Core design levers: <strong>retry</strong> failed operations and <strong>replicate</strong> critical components.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="the-eight-fallacies"><h2 class="slide-title">The Eight Fallacies</h2><div class="slide-body">
+<ul>
+<li><strong>What they are:</strong> A checklist of common bad assumptions engineers make about networks in distributed systems.</li>
+<li><strong>Why they matter:</strong> These assumptions cause fragile designs, outages, security gaps, and poor user experience.</li>
+<li><strong>Blockchain relevance:</strong> Blockchains are distributed systems on hostile, unreliable networks, so each fallacy shows up in practice.</li>
+<li><strong>Historical origin:</strong> The fallacies were developed over time at Sun Microsystems in the 1990s, largely from internal engineering experience.</li>
+<li><strong>Attribution note:</strong> The first seven are often credited to L. Peter Deutsch; James Gosling is commonly credited with adding the eighth.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>Think of these as a pre-flight checklist: before trusting a design, ask which fallacies it accidentally assumes.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="fallacy-1-the-network-is-reliable"><h2 class="slide-title">Fallacy #1: The Network Is Reliable</h2><div class="slide-body">
+<ul>
+<li><strong>Fallacy:</strong> Messages will get through if we send them.</li>
+<li><strong>Reality:</strong> Networks drop, duplicate, reorder, and delay packets; partial failure is normal.</li>
+<li><strong>Failure mode:</strong> A payment API call times out after server-side success, and the client assumes failure.</li>
+<li><strong>Design response:</strong> Use timeouts, retries with backoff, and idempotent operations with request IDs (meaning retries do not cause duplicate actions).</li>
+<li><strong>Blockchain lens:</strong> Transaction and block propagation is best-effort, not guaranteed.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="fallacy-2-latency-is-zero"><h2 class="slide-title">Fallacy #2: Latency Is Zero</h2><div class="slide-body">
+<ul>
+<li><strong>Fallacy:</strong> Distance and round trips are negligible.</li>
+<li><strong>Reality:</strong> Latency is unavoidable and accumulates across protocol steps.</li>
+<li><strong>Failure mode:</strong> A chatty protocol with multiple back-and-forth exchanges causes visible user lag.</li>
+<li><strong>Design response:</strong> Reduce round trips, batch requests, cache reads, and colocate tightly coupled services.</li>
+<li><strong>Blockchain lens:</strong> Propagation delay affects mempool view, confirmation speed, and fork creation.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>What user-facing blockchain behaviors are really latency artifacts?</p>
+</div>
+</div></section>
+<section class="slide smaller" id="fallacy-3-bandwidth-is-infinite"><h2 class="slide-title">Fallacy #3: Bandwidth Is Infinite</h2><div class="slide-body">
+<ul>
+<li><strong>Fallacy:</strong> We can broadcast freely without cost or congestion.</li>
+<li><strong>Reality:</strong> Throughput is finite, shared, and uneven across participants.</li>
+<li><strong>Failure mode:</strong> Flooding queries or large payload gossip saturates links and starves useful traffic.</li>
+<li><strong>Design response:</strong> Compress data, cap message size, deduplicate inventory, and avoid blind broadcast.</li>
+<li><strong>Blockchain lens:</strong> Bigger or more frequent messages disadvantage low-bandwidth nodes and strain decentralization, many blockchain efforts to minimize amount of data transmitted.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>How can bandwidth pressure quietly centralize a network?</p>
+</div>
+</div></section>
+<section class="slide smaller" id="fallacy-4-the-network-is-secure"><h2 class="slide-title">Fallacy #4: The Network Is Secure</h2><div class="slide-body">
+<ul>
+<li><strong>Fallacy:</strong> Peers and links are trustworthy by default.</li>
+<li><strong>Reality:</strong> Networks are adversarial; spoofing, eclipse attempts, and malicious peers exist.</li>
+<li><strong>Failure mode:</strong> A node accepts biased peer data and gets a distorted view of the network.</li>
+<li><strong>Design response:</strong> Authenticate data, diversify peers, validate independently, and enforce rate limits.</li>
+<li><strong>Blockchain lens:</strong> Signatures protect authenticity, but not peer honesty or availability; public blockchains must handle malicious nodes and network connections.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>What attacks remain possible even with strong cryptographic signatures?</p>
+</div>
+</div></section>
+<section class="slide smaller" id="fallacy-5-topology-doesnt-change"><h2 class="slide-title">Fallacy #5: Topology Doesn’t Change</h2><div class="slide-body">
+<ul>
+<li><strong>Fallacy:</strong> Node membership and paths stay stable.</li>
+<li><strong>Reality:</strong> Churn is constant; nodes join, leave, reboot, and move.</li>
+<li><strong>Failure mode:</strong> Static peer assumptions cause partitions or stalled gossip during churn events.</li>
+<li><strong>Design response:</strong> Continuous peer discovery, health-based eviction, and resilient rebroadcast policies.</li>
+<li><strong>Blockchain lens:</strong> Gossip and peer discovery have to tolerate constant churn - nodes are always leaving or joining the network.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>What breaks if your design assumes a stable peer list?</p>
+</div>
+</div></section>
+<section class="slide smaller" id="fallacy-6-there-is-one-administrator"><h2 class="slide-title">Fallacy #6: There Is One Administrator</h2><div class="slide-body">
+<ul>
+<li><strong>Fallacy:</strong> One authority controls policy, upgrades, and operations.</li>
+<li><strong>Reality:</strong> Real systems span teams and organizations with different incentives, timelines, and governance.</li>
+<li><strong>Failure mode:</strong> Incompatible upgrades or policy divergence split behavior across clients or operators.</li>
+<li><strong>Design response:</strong> Version negotiation, staged rollouts, explicit governance, and backward compatibility windows.</li>
+<li><strong>Blockchain lens:</strong> Permissionless/public networks coordinate upgrades without a single administrator.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>Who gets to decide protocol changes in a decentralized network?</p>
+</div>
+</div></section>
+<section class="slide smaller" id="fallacy-7-transport-cost-is-zero"><h2 class="slide-title">Fallacy #7: Transport Cost Is Zero</h2><div class="slide-body">
+<ul>
+<li><strong>Fallacy:</strong> Moving data has negligible monetary and resource cost.</li>
+<li><strong>Reality:</strong> Egress, relay, storage, and compute costs shape architecture viability.</li>
+<li><strong>Failure mode:</strong> High relay or egress burden pushes smaller operators offline, reducing decentralization.</li>
+<li><strong>Design response:</strong> Efficient relay protocols, pruning or light modes, and incentive-aware resource budgeting.</li>
+<li><strong>Blockchain lens:</strong> Node operating cost directly affects participation and diversity.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>Who pays for “free” decentralization in practice?</p>
+</div>
+</div></section>
+<section class="slide smaller" id="fallacy-8-the-network-is-homogeneous"><h2 class="slide-title">Fallacy #8: The Network Is Homogeneous</h2><div class="slide-body">
+<ul>
+<li><strong>Fallacy:</strong> All nodes run similar hardware, software, and links.</li>
+<li><strong>Reality:</strong> Heterogeneity is the norm across clients, OSes, devices, and connection quality.</li>
+<li><strong>Failure mode:</strong> Assumptions tied to one stack cause interoperability bugs and uneven behavior.</li>
+<li><strong>Design response:</strong> Protocol conformance testing, feature negotiation, and graceful fallback paths.</li>
+<li><strong>Blockchain lens:</strong> There is no oversight on who can join, and that means making no assumptions about the devices connecting; multi-client diversity improves resilience but increases compatibility burden.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>When does client diversity increase safety, and when does it increase risk?</p>
+</div>
+</div></section>
+<section class="slide smaller" id="the-eight-fallacies-of-distributed-computing"><h2 class="slide-title">The Eight Fallacies of Distributed Computing</h2><div class="slide-body">
+<ul>
+<li>The transport network is reliable.</li>
+<li>Latency is zero.</li>
+<li>Bandwidth is infinite.</li>
+<li>The system network is secure.</li>
+<li>Topology doesn’t change.</li>
+<li>There is one administrator.</li>
+<li>Transport cost is zero.</li>
+<li>The network is homogeneous.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="case-study-napster"><h2 class="slide-title">Case Study: Napster</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:225px;">
+<p><img src="../img/napster_logo.png" data-align="center" width="200" /></p>
+</div><div class="column">
+<p><strong>Napster</strong> was an early 2000s P2P file-sharing network that caused significant controversy by enabling widespread music piracy.</p>
+<p>Famously shut down in 2001 after a court ruling found it liable for contributory copyright infringement.</p>
+</div>
+</div>
+<ul>
+<li>Napster’s network featured a hybrid P2P model consisting of:
+<ul>
+<li><em>centralized index:</em> users register file metadata with Napster’s servers.</li>
+<li><em>Peer-to-peer transfer:</em> actual files move directly between users.</li>
+<li><em>Result:</em> fast search, but central control and a central point of failure.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller nostretch" id="case-study-gnutella-flooding"><h2 class="slide-title">Case Study: Gnutella &amp; “Flooding”</h2><div class="slide-body">
+<dl>
+<dt><img src="../img/gnutella-logo-transparent.png" data-align="center" width="200" /></dt>
+<dd>
+<p>An early P2P file-sharing network that showed the pros and cons of an unstructured, “flooding” design.</p>
+</dd>
+</dl>
+<div class="r-stack">
+<div class="fragment fade-in-then-out">
+<section id="how-gnutella-worked" class="level4">
+<h4>How Gnutella Worked:</h4>
+<ol type="1">
+<li><strong>Join:</strong> A new peer (a “servent”) connects to one or more known peers.</li>
+<li><strong>Search:</strong> To find a file, the peer sends a <code>Query</code> message to all its neighbors.</li>
+<li><strong>Flood:</strong> Those neighbors send the <code>Query</code> to <em>their</em> neighbors, and so on. A “Time-to-Live” (TTL) counter stops the flood from going on forever.</li>
+<li><strong>Respond:</strong> If a peer has the file, it sends a <code>QueryHit</code> (a “Here it is!”) message <em>back along the same path</em> the query came from.</li>
+</ol>
+</section>
+</div>
+<div class="fragment fade-up">
+<section id="problems" class="level4">
+<h4>Problems:</h4>
+<ul>
+<li><strong>Massive Traffic:</strong> A single query could create a “broadcast storm,” flooding the network with duplicate messages.</li>
+<li><strong>Poor Scaling:</strong> The network couldn’t grow large without being overwhelmed by search traffic.</li>
+</ul>
+</section>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="gnutellas-fix-supernodes-smart-flooding"><h2 class="slide-title">Gnutella’s Fix: Supernodes &amp; “Smart Flooding”</h2><div class="slide-body">
+<p>To solve its scaling problem, Gnutella 0.6 created a two-level hierarchy. This idea is central to how blockchains work today.</p>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><strong>The Gnutella 0.6 Model</strong></p>
+<ul>
+<li><strong>Supernodes (or “Ultrapeers”):</strong> Peers with good bandwidth and uptime. They acted as powerful hubs, indexing the files of all the weaker peers connected to them.</li>
+<li><strong>Leaf Nodes:</strong> Regular users (like on a home PC). They would connect <em>only</em> to a Supernode and send their searches <em>only</em> to that Supernode.</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<p><strong>The “Smart Flood”</strong></p>
+<ol type="1">
+<li>A Leaf Node sends a query to its Supernode.</li>
+<li>The Supernode checks its <em>own</em> index of files from all its <em>other</em> leaves.</li>
+<li>If no match is found, the Supernode <em>only</em> floods the query to <em>other Supernodes</em>.</li>
+</ol>
+<p>This was a huge improvement. It stopped millions of weak leaf nodes from participating in the network-clogging flood.</p>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="the-blockchain-link"><h2 class="slide-title">The Blockchain Link</h2><div class="slide-body">
+<p>This two-tier model from gnutella is the direct ancestor of modern blockchains.</p>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><strong>Supernode</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> <strong>Full Node</strong></p>
+<ul>
+<li>A powerful, always-on computer.</li>
+<li>Downloads and validates <em>every transaction</em> and <em>every block</em>.</li>
+<li>Acts as a hub for the network, serving data to weaker peers.</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<p><strong>Leaf Node</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> <strong>Light Client</strong></p>
+<ul>
+<li>Your mobile phone wallet or hardware wallet.</li>
+<li>Doesn’t download the whole blockchain.</li>
+<li>Connects to a trusted Full Node to query network</li>
+</ul>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="gossip-in-a-blockchain-network"><h2 class="slide-title">Gossip in a Blockchain Network</h2><div class="slide-body">
+<ul>
+<li>In many blockchains, this two-tier network uses <strong>gossip</strong> to spread new information.</li>
+<li>When you send a transaction, your node does not flood the whole network at once.</li>
+<li>It forwards the transaction to a small set of peers, who validate it and relay it onward if it is new.</li>
+<li>This is a controlled flood built for spreading new transactions and blocks quickly across a changing network.</li>
+</ul>
+</div></section>
+<section class="slide" id="scientific-applications"><h2 class="slide-title">Scientific Applications</h2><div class="slide-body">
+<p><img src="../img/SETI_at_home_logo.png" data-align="center" width="200" /></p>
+<section id="setihomes-screensaver-supercomputer" class="level3">
+<h3>SETI@home’s “Screensaver Supercomputer”</h3>
+<ul>
+<li>Millions of volunteers lent idle CPU time to analyze radio telescope data to aid SETI in its search of extraterrestrial intelligence.</li>
+<li>Work units were distributed; results validated redundantly to detect errors and cheating.</li>
+<li>Showed how P2P/volunteer computing can reach supercomputer‑scale.</li>
+</ul>
+
+</section>
+</div></section>
+<section class="slide" id="volunteer-computing-pipeline-boinc"><h2 class="slide-title">Volunteer Computing Pipeline: BOINC</h2><div class="slide-body">
+<ul>
+<li><p>Generalized platform: fetch work → compute → upload results → validate → credit</p></li>
+<li><p>Redundancy and quorum rules detect errors and malicious results.</p></li>
+<li><p>Widely used beyond SETI for science projects.</p></li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>BOINC: Berkeley Open Infrastructure for Network Computing.</p>
+</div>
+</div></section>
+<section class="slide" id="communications-application-skypes-p2p-telephony"><h2 class="slide-title">Communications Application: Skype’s P2P Telephony</h2><div class="slide-body">
+<ul>
+<li>Early Skype used supernodes and end‑to‑end encrypted P2P paths.</li>
+<li>Login/authentication used central servers; after login, a supernode P2P overlay provided directory lookups, signaling, and NAT traversal via relays when needed.</li>
+<li>Demonstrated P2P for real‑time voice at global scale.</li>
+</ul>
+</div></section>
+<section class="slide" id="summary"><h2 class="slide-title">Summary</h2><div class="slide-body">
+<ul>
+<li>What distributed systems are</li>
+<li>Client–server vs. P2P</li>
+<li>Centralized vs. decentralized trade-offs</li>
+<li>The fallacies</li>
+<li>Resilience patterns: retries, replication, graceful degradation</li>
+<li>Historical applications (Napster, Gnutella, SETI@home/BOINC, Skype, Bitcoin)</li>
+</ul>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-lamport_distributedsystems_1987" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">L. Lamport, <span>“Distributed <span>Systems</span>,”</span> 1987, Available: <a href="https://lamport.azurewebsites.net/pubs/distributed-system.txt">https://lamport.azurewebsites.net/pubs/distributed-system.txt</a></div>
+</div>
+<div id="ref-lampson_mitocwprinciples_2002" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">B. Lampson and M. Rinard, <span>“<span>MIT OCW</span>: <span>Principles</span> of <span>Computer Systems</span> (<span>Distributed Systems</span> notes).”</span> 2002. Available: <a href="https://ocw.mit.edu/courses/6-826-principles-of-computer-systems-spring-2002/lecture-notes/">https://ocw.mit.edu/courses/6-826-principles-of-computer-systems-spring-2002/lecture-notes/</a></div>
+</div>
+<div id="ref-kozinski_amrecordsinc_2001" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">A. Kozinski, <em>A&amp;<span>M Records</span>, <span>Inc</span>. V. <span>Napster</span>, <span>Inc</span>.</em>, vol. 239. United States Court of Appeals (9th Cir. 2001), 2001, p. 1004. Available: <a href="https://law.justia.com/cases/federal/appellate-courts/F3/239/1004/636120/">https://law.justia.com/cases/federal/appellate-courts/F3/239/1004/636120/</a></div>
+</div>
+<div id="ref-kirk_gnutellaprotocolspecification_2004" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">P. Kirk, <span>“The <span>Gnutella Protocol Specification</span> v0.4.”</span> July 20, 2004. Accessed: Oct. 20, 2025. [Online]. Available: <a href="https://rfc-gnutella.sourceforge.net/developer/stable/index.html">https://rfc-gnutella.sourceforge.net/developer/stable/index.html</a></div>
+</div>
+<div id="ref-lamport_byzantinegeneralsproblem_1982" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">L. Lamport, R. Shostak, and M. Pease, <span>“The <span>Byzantine Generals Problem</span>,”</span> in <em><span>ACM Transactions</span> on <span>Programming Languages</span> and <span>Systems</span></em>, 1982, pp. 382–401. Available: <a href="https://nakamotoinstitute.org/static/docs/the-byzantine-generals-problem.pdf">https://nakamotoinstitute.org/static/docs/the-byzantine-generals-problem.pdf</a></div>
+</div>
+<div id="ref-nakamoto_bitcoinpeertopeerelectronic_2008" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">S. Nakamoto, <span>“Bitcoin: <span class="nocase">A Peer-to-Peer Electronic Cash System</span>.”</span> Satoshi Nakamoto Institute, Oct. 31, 2008. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf">https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf</a></div>
+</div>
+<div id="ref-vogels_eightfallaciesdistributed_1997" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline"><span class="nocase">W. Vogels <em>et al.</em></span>, <span>“The <span>Eight Fallacies</span> of <span>Distributed Computing</span>.”</span> 1997. Available: <a href="https://arnon.me/wp-content/uploads/Files/fallacies.pdf">https://arnon.me/wp-content/uploads/Files/fallacies.pdf</a></div>
+</div>
+<div id="ref-yaga_blockchaintechnologyoverview_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">D. Yaga, P. Mell, N. Roby, and K. Scarfone, <span>“Blockchain technology overview,”</span> <span>National Institute of Standards and Technology</span>, Gaithersburg, MD, NIST IR 8202, Oct. 2018. doi: <a href="https://doi.org/10.6028/NIST.IR.8202">10.6028/NIST.IR.8202</a>.</div>
+</div>
+<div id="ref-ripeanu_mappinggnutellanetwork_2002" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">M. Ripeanu, I. Foster, and A. Iamnitchi, <span>“Mapping the <span>Gnutella Network</span>: <span>Properties</span> of <span class="nocase">Large-Scale Peer-to-Peer Systems</span> and <span>Implications</span> for <span>System Design</span>.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="http://arxiv.org/abs/cs/0209028">http://arxiv.org/abs/cs/0209028</a></div>
+</div>
+<div id="ref-bitcoin.orgdevelopers_p2pnetworkdeveloper_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">Bitcoin.org Developers, <span>“<span>P2P Network</span> (<span>Developer Guide</span>).”</span> 2024. Available: <a href="https://developer.bitcoin.org/devguide/p2p_network.html">https://developer.bitcoin.org/devguide/p2p_network.html</a></div>
+</div>
+<div id="ref-decker_informationpropagationbitcoin_2013" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">C. Decker and R. Wattenhofer, <span>“Information propagation in the <span>Bitcoin</span> network,”</span> in <em><span>IEEE P2P</span> 2013 <span>Proceedings</span></em>, 2013, pp. 1–10. doi: <a href="https://doi.org/10.1109/P2P.2013.6688704">10.1109/P2P.2013.6688704</a>.</div>
+</div>
+<div id="ref-setiathomeproject_setihome_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">SETI@home Project, <span>“About <span>SETI</span>@home.”</span> 2020. Available: <a href="https://setiathome.berkeley.edu/sah_about.php">https://setiathome.berkeley.edu/sah_about.php</a></div>
+</div>
+<div id="ref-anderson_boincplatformvolunteer_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">D. P. Anderson, <span>“<span>BOINC</span>: <span>A Platform</span> for <span>Volunteer Computing</span>,”</span> <em>J Grid Computing</em>, vol. 18, no. 1, pp. 99–122, Mar. 2020, doi: <a href="https://doi.org/10.1007/s10723-019-09497-9">10.1007/s10723-019-09497-9</a>.</div>
+</div>
+<div id="ref-boincproject_howboincworks_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">BOINC Project, <span>“How <span>BOINC Works</span>.”</span> 2023. Available: <a href="https://github.com/BOINC/boinc/wiki/How-BOINC-works">https://github.com/BOINC/boinc/wiki/How-BOINC-works</a></div>
+</div>
+<div id="ref-baset_analysisskypepeertopeer_2006" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline">S. A. Baset and H. G. Schulzrinne, <span>“An <span>Analysis</span> of the <span class="nocase">Skype Peer-to-Peer Internet Telephony Protocol</span>,”</span> in <em>Proceedings <span>IEEE INFOCOM</span> 2006. <span>25TH IEEE International Conference</span> on <span>Computer Communications</span></em>, Barcelona, Spain: IEEE, 2006, pp. 1–11. doi: <a href="https://doi.org/10.1109/INFOCOM.2006.312">10.1109/INFOCOM.2006.312</a>.</div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

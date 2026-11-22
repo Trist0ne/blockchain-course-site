@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Distributed Ledgers</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/distributed_primitives/04-DS-distributed_ledgers.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="ds-04" data-code="04-DS" data-src="b17a10e19ab7a881" data-slides="26">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section III: Distributed Systems Fundamentals · Lesson 04-DS</p><h1>Distributed Ledgers</h1></div></section>
+<section class="slide" id="the-shared-notebook-problem"><h2 class="slide-title">The Shared Notebook Problem</h2><div class="slide-body">
+<p><strong>Scenario:</strong> Three agencies must keep the same incident log. No one is “the boss.” Changes must be visible, final, and independently verifiable.</p>
+<ul>
+<li>What happens when Agency B writes an entry while Agency A is offline?</li>
+<li>What if someone needs to correct a past entry — can they just edit it?</li>
+<li>Does the order of entries matter? What if two agencies write at the same time?</li>
+<li>What if one agency’s copy gets corrupted — how do the others know?</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="from-logs-to-ledgers"><h2 class="slide-title">From Logs to Ledgers</h2><div class="slide-body">
+<ul>
+<li><strong>Logs</strong> record events or actions over time — server access logs, transaction histories, audit trails.
+<ul>
+<li>Each entry is append-only: you add to the end, you don’t edit the past.</li>
+</ul></li>
+<li><strong>What challenges do we face when trying to distribute logs?</strong>
+<ul>
+<li><em>Consistency:</em> If multiple nodes write simultaneously, which version is correct?</li>
+<li><em>Integrity:</em> How do you detect if one node silently edits a past entry?</li>
+<li><em>Ordering:</em> Does the sequence of entries matter? (Yes — especially for financial transactions, access records, or anything where “who went first” has consequences.)</li>
+</ul></li>
+<li>A <strong>ledger</strong> takes the append-only log and adds the machinery to solve these problems across multiple participants:
+<ul>
+<li><strong>Replication</strong> — every participant holds a copy, so no single node controls the record</li>
+<li><strong>Hash-linking</strong> — each entry commits to the one before it, making retroactive edits detectable</li>
+<li><strong>Consensus</strong> — a process to agree on what gets appended and in what order</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="a-distributed-ledger"><h2 class="slide-title">A Distributed Ledger</h2><div class="slide-body">
+<p><strong>Definition:</strong> A distributed ledger is a shared, append‑only record replicated across multiple participants, where entries are accepted and ordered according to a consensus process, and tamper‑evidence is provided by cryptographic linking.</p>
+<ul>
+<li>Replicated state</li>
+<li>Append‑only, tamper‑evident history</li>
+<li>Agreement on order (consensus)</li>
+</ul>
+</div></section>
+<section class="slide" id="distributed-ledger-vs.-centralized-database-comparecontrast"><h2 class="slide-title">Distributed Ledger vs. Centralized Database (Compare/Contrast)</h2><div class="slide-body">
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Feature</th>
+<th style="text-align: left;"><strong>Distributed Ledger</strong></th>
+<th style="text-align: left;"><strong>Centralized Database</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Trust Model</td>
+<td style="text-align: left;">Adversarial-tolerant</td>
+<td style="text-align: left;">Admin-trusted</td>
+</tr>
+<tr>
+<td style="text-align: left;">Mutability</td>
+<td style="text-align: left;">Append-only</td>
+<td style="text-align: left;">Mutable</td>
+</tr>
+<tr>
+<td style="text-align: left;">Ordering</td>
+<td style="text-align: left;">Consensus-ordered</td>
+<td style="text-align: left;">index-based ordering</td>
+</tr>
+<tr>
+<td style="text-align: left;">Governance</td>
+<td style="text-align: left;">Protocol / Consortium</td>
+<td style="text-align: left;">Owner</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide" id="immutability-source"><h2 class="slide-title">Immutability Source</h2><div class="slide-body">
+<ul>
+<li>Hash‑chaining makes retroactive edits detectable.
+<ul>
+<li>What would this look like in practice?</li>
+<li>If I drop the oldest entries to save space:
+<ul>
+<li>can I still add new data to the chain?</li>
+<li>under what circumstances can I detect if someone else has made changes to dropped data?</li>
+</ul></li>
+</ul></li>
+<li>Distributed replication makes unilateral edits ineffective.</li>
+<li>Requires a consensus model to derive finality.</li>
+</ul>
+</div></section>
+<section class="slide" id="transparency-vs.-privacy"><h2 class="slide-title">Transparency vs. Privacy</h2><div class="slide-body">
+<ul>
+<li><strong>Transparency:</strong> anyone (or any permitted member) can verify state changes.</li>
+<li><strong>Privacy:</strong> access control, encryption, or partitioning restricts who sees what.</li>
+<li>Are there ways around the tension between these two?
+<ul>
+<li>Commit private data through hashing</li>
+<li>Zero-knowledge Proofs</li>
+<li>Homomorphic Encryption</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="permissioned-ledgers"><h2 class="slide-title">Permissioned Ledgers</h2><div class="slide-body">
+<p>A <strong>permissioned ledger</strong> is a distributed ledger where participation is restricted to known, authenticated entities admitted through a governance process.</p>
+<ul>
+<li><strong>Membership is curated:</strong> organizations join by invitation or application — each participant is identified and authenticated (e.g., via certificates from a Membership Service Provider).</li>
+<li><strong>Access control is explicit:</strong> policies define who can propose transactions, who must endorse them, who orders them, and who can read which data.</li>
+<li><strong>Performance and privacy can be tuned:</strong> because participants are known, the system can optimize for throughput and use private data channels.</li>
+<li><strong>Exemplar:</strong> Hyperledger Fabric separates execution, ordering, and validation — a modular architecture built for enterprise inter-organizational workflows.</li>
+</ul>
+<p><em>What are potential use cases for permissioned ledgers outside of finance?</em></p>
+</div></section>
+<section class="slide smaller" id="permissionless-ledgers"><h2 class="slide-title">Permissionless Ledgers</h2><div class="slide-body">
+<p>A <strong>permissionless ledger</strong> is a distributed ledger where anyone can participate — read, write, and validate — without needing approval from a central authority.</p>
+<ul>
+<li><strong>Open by default:</strong> participation is gated by protocol rules, not an access control list. Identity is expressed through key pairs, not real-world vetting.</li>
+<li><strong>Sybil resistance through economics:</strong> because anyone can join, the system uses economic or computational costs (proof of work, proof of stake) to prevent one actor from cheaply overwhelming the network.</li>
+<li><strong>Probabilistic or economic finality:</strong> confidence in an entry grows as the network builds on top of it, rather than being declared final by an authority.</li>
+<li><strong>Exemplar:</strong> Bitcoin — transactions are authorized by digital signatures, broadcast peer-to-peer, and accepted into the shared history by nodes following common validation rules.</li>
+</ul>
+<p><em>Where would you want to use permissionless ledgers outside of cryptocurrencies?</em></p>
+</div></section>
+<section class="slide smaller" id="permissioned-vs.-permissionless-comparison"><h2 class="slide-title">Permissioned vs. Permissionless: Comparison</h2><div class="slide-body">
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Dimension</th>
+<th><strong>Permissioned</strong></th>
+<th><strong>Permissionless</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Membership</strong></td>
+<td>Known, authenticated; join by governance</td>
+<td>Open; anyone with software + keys</td>
+</tr>
+<tr>
+<td><strong>Identity</strong></td>
+<td>Real-world identity via certificates/MSP</td>
+<td>Pseudonymous via key pairs</td>
+</tr>
+<tr>
+<td><strong>Sybil resistance</strong></td>
+<td>Admission control</td>
+<td>Economic cost (PoW, PoS)</td>
+</tr>
+<tr>
+<td><strong>Throughput</strong></td>
+<td>Higher (fewer nodes, known trust)</td>
+<td>Lower (broad replication, open membership)</td>
+</tr>
+<tr>
+<td><strong>Finality</strong></td>
+<td>Deterministic (once ordered, it’s final)</td>
+<td>Probabilistic (confidence grows over time)</td>
+</tr>
+<tr>
+<td><strong>Privacy</strong></td>
+<td>Private channels / selective disclosure</td>
+<td>Public by default (all nodes see all data)</td>
+</tr>
+<tr>
+<td><strong>Trust assumption</strong></td>
+<td>Trust the governance process</td>
+<td>Trust the protocol + economic incentives</td>
+</tr>
+<tr>
+<td><strong>Example</strong></td>
+<td>Hyperledger Fabric</td>
+<td>Bitcoin, Ethereum</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide smaller" id="governance-models"><h2 class="slide-title">Governance Models</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><strong>Permissionless Governance</strong></p>
+<ul>
+<li>Changes proposed via improvement proposals (BIPs, EIPs)</li>
+<li>Adopted through rough consensus among independent operators</li>
+<li>Disagreements can lead to <strong>hard forks</strong> — the network splits and both chains continue (e.g., Bitcoin vs. Bitcoin Cash)</li>
+<li>No authority can force an upgrade; users “vote with their nodes”</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<p><strong>Permissioned Governance</strong></p>
+<ul>
+<li>Changes governed by charters, contracts, or consortium votes</li>
+<li>Membership changes require formal approval</li>
+<li>Disagreements resolved through contractual or legal processes — not forks</li>
+<li>A governing body can mandate upgrades, revoke membership, or roll back errors</li>
+</ul>
+</div>
+</div>
+<ul>
+<li>In both models: <strong>clarity on governance reduces technical surprises.</strong> Write down decision rights before arguing about throughput.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="threats-to-distributed-ledgers"><h2 class="slide-title">Threats to Distributed Ledgers</h2><div class="slide-body">
+<p>Both permissioned and permissionless ledgers face threats — but the specific risks differ:</p>
+<ul>
+<li><strong>Network partitions and eclipse attacks:</strong> An adversary isolates a node or group of nodes, feeding them a false view of the network.
+<ul>
+<li><em>Permissionless:</em> eclipsed miners/validators may waste resources on the wrong chain.</li>
+<li><em>Permissioned:</em> a partitioned organization may miss critical updates or fall out of sync.</li>
+</ul></li>
+<li><strong>Majority or collusion attacks:</strong> An actor (or coalition) gains enough influence to control the ledger.
+<ul>
+<li><em>Permissionless:</em> 51% attacks — amassing hash power or stake to rewrite recent history.</li>
+<li><em>Permissioned:</em> colluding member organizations can push fraudulent transactions if endorsement policies are too weak.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="threats-to-distributed-ledgers-cont."><h2 class="slide-title">Threats to Distributed Ledgers (cont.)</h2><div class="slide-body">
+<ul>
+<li><strong>Long-range or history rewrite attacks:</strong> An attacker uses old credentials (keys or stake) to construct an alternative version of distant history and present it as legitimate. Unlike a 51% attack on recent blocks, this targets the deep past.
+<ul>
+<li><em>Permissionless:</em> in proof-of-stake systems without checkpointing, an attacker who held stake months ago can cheaply build a competing chain from that point forward. Proof-of-work is less vulnerable because re-mining old blocks requires re-spending real energy.</li>
+<li><em>Permissioned:</em> largely mitigated by deterministic finality. Once a block is committed by the ordering service, it is final and there is no mechanism to “fork from the past.”</li>
+</ul></li>
+<li><strong>Insider and operational failures:</strong> Key compromise, misconfigured policies, or governance failures.
+<ul>
+<li><em>Permissionless:</em> lost private keys = lost funds, permanently.</li>
+<li><em>Permissioned:</em> compromised admin credentials can alter membership, endorsement policies, or channel configurations.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="consensus"><h2 class="slide-title">Consensus</h2><div class="slide-body">
+<p><strong>Consensus</strong> is the process by which distributed nodes agree on a single, consistent ordering of events — ensuring that every participant sees the same history, even when some nodes fail or act maliciously.</p>
+<ul>
+<li><strong>Finality:</strong> There is a point at which an entry is considered permanent. This can be <strong>deterministic</strong> (a protocol step declares it final, as in BFT-based systems) or <strong>probabilistic</strong> (confidence grows as more work builds on top, as in Bitcoin). <em>Think: “when can I treat this as done?”</em></li>
+</ul>
+<p>Different consensus families (PoW, PoS, BFT) deliver these properties under different assumptions. We will unpack specific algorithms in the next lesson.</p>
+</div></section>
+<section class="slide" id="tradeoffs"><h2 class="slide-title">Trade‑offs</h2><div class="slide-body">
+<p>We saw the permissioned vs. permissionless comparison — now zoom out to the underlying trade-off:</p>
+<ul>
+<li><strong>Decentralization</strong> increases overhead: more verification, more propagation, more conservative assumptions → lower throughput, higher latency.</li>
+<li><strong>Centralization</strong> boosts speed and privacy — but concentrates power and risk in fewer hands.</li>
+<li>The <strong>design choice</strong> is where you want the trust boundary to lie.</li>
+<li>There is no one-size-fits-all solution.</li>
+</ul>
+</div></section>
+<section class="slide" id="case-study-a-hyperledger-fabric-permissioned"><h2 class="slide-title">Case Study A — Hyperledger Fabric (Permissioned)</h2><div class="slide-body">
+<ul>
+<li><strong>Membership Service Provider (MSP):</strong> known organizations with verifiable identities.<br />
+</li>
+<li><strong>Execute–Order–Validate</strong> architecture separates execution from consensus.<br />
+</li>
+<li><strong>Endorsement policies</strong> define which peers must approve a transaction.<br />
+</li>
+<li><strong>Private channels</strong> and <strong>collections</strong> restrict data visibility.<br />
+</li>
+<li>Focus: governance, confidentiality, and modular consensus.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="case-study-b-public-sector-ebsi-estonia-ksi"><h2 class="slide-title">Case Study B — Public Sector: EBSI &amp; Estonia (KSI)</h2><div class="slide-body">
+<ul>
+<li><strong>European Blockchain Services Infrastructure (EBSI)</strong>
+<ul>
+<li>EU initiative to provide a shared, permissioned ledger for trusted cross-border services.<br />
+</li>
+<li>Focus areas: digital diplomas, verifiable credentials, business registries, and document notarization.<br />
+</li>
+<li>Operated by national authorities under EU governance
+<ul>
+<li>Trust through institutional federation rather than mining.</li>
+</ul></li>
+</ul></li>
+<li><strong>Estonia — Keyless Signature Infrastructure (KSI)</strong>
+<ul>
+<li>Protects the integrity of government and healthcare data through hash-linked proofs anchored in public ledgers.<br />
+</li>
+<li>Nation-scale auditability without exposing data by using hashes instead of content.<br />
+</li>
+<li>Public, permissioned ledger.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="case-study-c-bitcoin-ledger-permissionless"><h2 class="slide-title">Case Study C — Bitcoin Ledger (Permissionless)</h2><div class="slide-body">
+<ul>
+<li>Anyone can validate; open read/write under rules.
+<ul>
+<li>Anyone <em>can</em> write, although they need to solve a puzzle first</li>
+</ul></li>
+<li>Pseudonymous keys and public auditability of transactions.</li>
+<li>Payments cleared via network‑verified history as recorded in the ledger.</li>
+</ul>
+</div></section>
+<section class="slide" id="poll-when-does-a-distributed-ledger-help"><h2 class="slide-title">Poll: When Does a Distributed Ledger Help?</h2><div class="slide-body">
+<ul>
+<li><strong>A.</strong> Multi‑company supply provenance with audits and no trusted hub<br />
+</li>
+<li><strong>B.</strong> Single‑company HR system with strict privacy and 100k writes/sec<br />
+</li>
+<li><strong>C.</strong> Cross‑border diploma verification among universities<br />
+</li>
+<li><strong>D.</strong> Internal sensor telemetry with one operator and strict real‑time needs</li>
+<li><strong>E.</strong> An online karma system for use in a psuedo-anonymous message board</li>
+</ul>
+</div></section>
+<section class="slide" id="when-a-centralized-database-wins"><h2 class="slide-title">When a Centralized Database Wins</h2><div class="slide-body">
+<ul>
+<li>One owner can be trusted to administer the truth.</li>
+<li>Heavy transaction processing requirements with strict latency targets.</li>
+<li>Regular changes to data and rich queries.</li>
+</ul>
+</div></section>
+<section class="slide" id="design-questions"><h2 class="slide-title">Design Questions</h2><div class="slide-body">
+<ul>
+<li>Who are the writers and readers? Is membership open or curated?</li>
+<li>What are the trust assumptions and incentives?</li>
+<li>What privacy model is required?</li>
+<li>What throughput/latency is acceptable?</li>
+<li>What is the governance and upgrade process?</li>
+<li>What external systems must interoperate?</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="common-pitfalls"><h2 class="slide-title">Common Pitfalls</h2><div class="slide-body">
+<ul>
+<li><strong>”Blockchain everywhere” without a trust problem</strong>
+<ul>
+<li>If there’s no multi-party trust issue, a database run by the responsible owner is simpler, faster, and cheaper.</li>
+<li>Ask: “Would a shared spreadsheet with an auditor solve this?” If yes, you probably don’t need a ledger.</li>
+</ul></li>
+<li><strong>Ignoring identity/governance in permissioned designs</strong>
+<ul>
+<li>Permissioned ledgers are identity-driven systems. If you don’t define who can join, who can sign, and how upgrades are approved <em>before</em> writing code, you’ll discover obligations mid-incident.</li>
+<li>PKI, membership services, and endorsement policies are core components, not afterthoughts.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="common-pitfalls-cont."><h2 class="slide-title">Common Pitfalls (cont.)</h2><div class="slide-body">
+<ul>
+<li><strong>Assuming “transparent” means “public data”</strong>
+<ul>
+<li>Transparency means <em>verifiability</em>: proving that rules were followed and history is intact.</li>
+<li>It does not mean exposing personally identifiable information. Design for selective disclosure: make proofs broadly checkable and limit payload visibility to authorized parties.</li>
+</ul></li>
+<li><strong>Underestimating operational complexity</strong>
+<ul>
+<li>Distributed systems require monitoring, key rotation, upgrade coordination, and incident response across multiple organizations.</li>
+<li>The hardest problems are often social (governance disputes, key compromise response) rather than technical.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="micro-lab-tamper-evident-ledger"><h2 class="slide-title">Micro Lab: Tamper-Evident Ledger</h2><div class="slide-body">
+<p><a href="/assets/labs/tamper-ledger/tamper_ledger_lab.html">Open Tamper-Evident Ledger Lab</a></p>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-yaga_blockchaintechnologyoverview_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">D. Yaga, P. Mell, N. Roby, and K. Scarfone, <span>“Blockchain technology overview,”</span> <span>National Institute of Standards and Technology</span>, Gaithersburg, MD, NIST IR 8202, Oct. 2018. doi: <a href="https://doi.org/10.6028/NIST.IR.8202">10.6028/NIST.IR.8202</a>.</div>
+</div>
+<div id="ref-ukgovernmentchiefscientificadviser_distributedledgertechnology_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">UK Government Chief Scientific Adviser, <span>“Distributed <span>Ledger Technology</span>: <span>Beyond Block Chain</span>.”</span> 2016. Available: <a href="https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/492972/gs-16-1-distributed-ledger-technology.pdf">https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/492972/gs-16-1-distributed-ledger-technology.pdf</a></div>
+</div>
+<div id="ref-nakamoto_bitcoinpeertopeerelectronic_2008" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">S. Nakamoto, <span>“Bitcoin: <span class="nocase">A Peer-to-Peer Electronic Cash System</span>.”</span> Satoshi Nakamoto Institute, Oct. 31, 2008. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf">https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf</a></div>
+</div>
+<div id="ref-haber_howtimestampdigital_1991" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">S. Haber and W. S. Stornetta, <span>“How to time-stamp a digital document,”</span> <em>J. Cryptology</em>, vol. 3, no. 2, pp. 99–111, Jan. 1991, doi: <a href="https://doi.org/10.1007/BF00196791">10.1007/BF00196791</a>.</div>
+</div>
+<div id="ref-ruan_blockchainsvsdistributed_2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">P. Ruan <em>et al.</em>, <span>“Blockchains vs. <span>Distributed Databases</span>: <span>Dichotomy</span> and <span>Fusion</span>.”</span> Accessed: Oct. 17, 2025. [Online]. Available: <a href="https://arxiv.org/abs/1910.01310">https://arxiv.org/abs/1910.01310</a></div>
+</div>
+<div id="ref-androulaki_hyperledgerfabricdistributed_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">E. Androulaki <em>et al.</em>, <span>“Hyperledger fabric: A distributed operating system for permissioned blockchains,”</span> in <em>Proceedings of the <span>Thirteenth EuroSys Conference</span></em>, Porto Portugal: ACM, Apr. 2018, pp. 1–15. doi: <a href="https://doi.org/10.1145/3190508.3190538">10.1145/3190508.3190538</a>.</div>
+</div>
+<div id="ref-boneh_zeroknowledgeproofs_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">D. Boneh and V. Shoup, <span>“Zero <span>Knowledge Proofs</span> — <span>Introduction</span>.”</span> 2020. Available: <a href="https://intensecrypto.org/public/lec_14_zero_knowledge.html">https://intensecrypto.org/public/lec_14_zero_knowledge.html</a></div>
+</div>
+<div id="ref-boneh_fullyhomomorphicencryption_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">D. Boneh and V. Shoup, <span>“Fully <span>Homomorphic Encryption</span> (<span>FHE</span>) — <span>Overview</span>.”</span> 2020. Available: <a href="https://intensecrypto.org/public/lec_15_FHE.html">https://intensecrypto.org/public/lec_15_FHE.html</a></div>
+</div>
+<div id="ref-hyperledger_blockchainplatformenterprise_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">Hyperledger, <span>“A <span>Blockchain Platform</span> for the <span>Enterprise</span> — <span>Hyperledger Fabric Docs</span> main documentation.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://hyperledger-fabric.readthedocs.io/en/release-2.5/">https://hyperledger-fabric.readthedocs.io/en/release-2.5/</a></div>
+</div>
+<div id="ref-deirmentzoglou_surveylongrangeattacks_2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">E. Deirmentzoglou, G. Papakyriakopoulos, and C. Patsakis, <span>“A <span>Survey</span> on <span>Long-Range Attacks</span> for <span>Proof</span> of <span>Stake Protocols</span>,”</span> <em>IEEE Access</em>, vol. 7, pp. 28712–28725, 2019, doi: <a href="https://doi.org/10.1109/ACCESS.2019.2901858">10.1109/ACCESS.2019.2901858</a>.</div>
+</div>
+<div id="ref-europeancommission_europeanblockchainservices_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">European Commission, <span>“European blockchain services infrastructure | <span>Shaping Europe</span>’s digital future.”</span> Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://digital-strategy.ec.europa.eu/en/policies/european-blockchain-services-infrastructure">https://digital-strategy.ec.europa.eu/en/policies/european-blockchain-services-infrastructure</a></div>
+</div>
+<div id="ref-europeancommission_vcframeworkebsi_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">European Commission, <span>“<span>VC Framework</span> | <span>EBSI</span> hub.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://hub.ebsi.eu/vc-framework">https://hub.ebsi.eu/vc-framework</a></div>
+</div>
+<div id="ref-estoniabusinessandinnovationagency_ksiblockchain_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">Estonia Business and Innovation Agency, <span>“<span>KSI</span> blockchain.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://e-estonia.com/solutions/cyber-security/ksi-blockchain/">https://e-estonia.com/solutions/cyber-security/ksi-blockchain/</a></div>
+</div>
+<div id="ref-europeancommission_ebsihub_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">European Commission, <span>“<span>EBSI Hub</span>.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://hub.ebsi.eu/">https://hub.ebsi.eu/</a></div>
+</div>
+<div id="ref-hyperledgerfabricdocs_chaincodedevelopers_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline">Hyperledger Fabric Docs, <span>“Chaincode for <span>Developers</span>.”</span> 2018. Available: <a href="https://hyperledger-fabric.readthedocs.io/en/release-1.3/chaincode4ade.html">https://hyperledger-fabric.readthedocs.io/en/release-1.3/chaincode4ade.html</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

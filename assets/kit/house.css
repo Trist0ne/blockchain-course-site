@@ -363,6 +363,10 @@ a.mapitem:hover { border-color: var(--accent); }
 .mapitem .t { font-weight: 600; font-size: 0.92rem; display: block; }
 .mapitem .s { font-size: 0.78rem; color: var(--ink-3); display: block; margin-top: 0.15rem; }
 .mapitem.done { border-color: var(--ok); }
+.mapitem.lesson { border-color: transparent; background: var(--surface-2); padding: 0.35rem 0.6rem; display: grid; grid-template-columns: auto 1fr; gap: 0 0.5rem; align-items: baseline; }
+.mapitem.lesson .t { font-weight: 500; font-size: 0.88rem; }
+.mapitem.lesson .s { grid-column: 2; margin-top: 0; }
+.mapitem.lesson .tag { font-size: 0.68rem; }
 .flags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
 .flag { display: inline-flex; align-items: center; gap: 0.3rem; font-family: var(--mono); font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--ink-3); }
 .flag svg { width: 0.8rem; height: 0.8rem; fill: none; stroke: currentColor; stroke-width: 2; }

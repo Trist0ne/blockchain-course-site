@@ -1,0 +1,1726 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Final Technical Review</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/conclusion/04-AS-final_technical_review.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="as-04" data-code="04-AS" data-src="ad2ea04d6256269a" data-slides="61">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section IX: Applications and Synthesis · Lesson 04-AS</p><h1>Final Technical Review</h1></div></section>
+<section class="slide" id="why-this-technical-review-matters"><h2 class="slide-title">Why This Technical Review Matters</h2><div class="slide-body">
+<ul>
+<li>This course moved quickly across cryptography, distributed systems, consensus, Bitcoin, Ethereum, and forensics</li>
+<li>The final exam asks you to explain how these ideas fit together, not just recognize isolated terms</li>
+<li>Today is a focused rebuild of the technical stack before the course closes</li>
+</ul>
+</div></section>
+<section class="slide" id="technical-review-objectives"><h2 class="slide-title">Technical Review Objectives</h2><div class="slide-body">
+<p>By the end of this review, you should be able to:</p>
+<ol type="1">
+<li>Explain the core technical role of hashing, Merkle roots, and digital signatures in blockchain systems</li>
+<li>Contrast centralized, distributed, permissioned, and permissionless architectures</li>
+<li>Compare classical consensus, Proof of Work, and Proof of Stake at a high level</li>
+<li>Reconstruct the key technical ideas behind Bitcoin and Ethereum</li>
+<li>Explain how blockchain forensics relies on both transparent ledgers and off-chain identity links</li>
+</ol>
+</div></section>
+<section class="slide" id="the-blockchain-stack-at-a-glance"><h2 class="slide-title"><a href="../introduction/02-IN-blockchain_at_a_glance.html#/the-three-pillars" target="_blank">The Blockchain Stack at a Glance</a></h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:64%;">
+<ul>
+<li><strong>Cryptography</strong> gives integrity, commitments, and authorization</li>
+<li><strong>Peer-to-peer networking</strong> moves transactions and blocks without a central server</li>
+<li><strong>Consensus</strong> lets many nodes converge on one ledger history</li>
+<li><strong>Ledger/data structures</strong> record history in a tamper-evident form</li>
+<li><strong>Applications</strong> build wallets, tokens, smart contracts, and services on top</li>
+</ul>
+</div><div class="column" style="width:36%;">
+<div style="background:transparent; border-radius:12px; padding:0.45rem; text-align:center;">
+<p><img src="../img/simple_blockchain.png" alt="Simplified blockchain transaction flow from user through wallet, RPC provider, node, and blockchain." style="width:34%; border-radius:8px;" /></p>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="one-transaction-end-to-end"><h2 class="slide-title"><a href="../introduction/02-IN-blockchain_at_a_glance.html#/putting-it-together-the-lifecycle-of-a-transaction" target="_blank">One Transaction, End to End</a></h2><div class="slide-body">
+<ol type="1">
+<li>A user creates a transaction and signs it with a private key</li>
+<li>The transaction is broadcast across a peer-to-peer network</li>
+<li>Nodes validate structure, signatures, and policy rules</li>
+<li>A miner or validator proposes a block containing the transaction</li>
+<li>Consensus determines whether that block becomes part of the accepted history</li>
+<li>The transaction later becomes evidence for accounting, auditing, or forensics</li>
+</ol>
+</div></section>
+<section class="slide" id="why-cryptography-matters-in-blockchain"><h2 class="slide-title"><a href="../primitives/01-CP-cryptography_intro.html#/how-blockchain-uses-cryptography" target="_blank">Why Cryptography Matters in Blockchain</a></h2><div class="slide-body">
+<ul>
+<li>Blockchain does not eliminate trust problems by magic</li>
+<li>It replaces some trust in institutions with trust in math, protocol rules, and distributed verification</li>
+<li>Cryptography helps answer three core questions:
+<ul>
+<li>Has data changed?</li>
+<li>Who authorized this action?</li>
+<li>Can many parties verify the same claim efficiently?</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="hashing-what-problem-does-it-solve"><h2 class="slide-title"><a href="../primitives/02-CP-hashing_and_merkle_trees.html#/what-is-a-cryptographic-hash-function" target="_blank">Hashing: What Problem Does It Solve?</a></h2><div class="slide-body">
+<ul>
+<li>A cryptographic hash maps arbitrary input to a fixed-length digest</li>
+<li>Hashes are used as compact fingerprints of data</li>
+<li>In blockchains, hashes support:
+<ul>
+<li>Tamper evidence</li>
+<li>Block linking</li>
+<li>Commitments to large data sets</li>
+<li>Efficient verification</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="hash-properties-that-matter-for-blockchain"><h2 class="slide-title"><a href="../primitives/02-CP-hashing_and_merkle_trees.html#/hash-function-properties" target="_blank">Hash Properties That Matter for Blockchain</a></h2><div class="slide-body">
+<ul>
+<li><strong>Deterministic</strong>: same input, same output</li>
+<li><strong>Preimage resistant</strong>: hard to recover the original input from the digest</li>
+<li><strong>Second-preimage resistant</strong>: hard to find a different input with the same digest as a chosen message</li>
+<li><strong>Collision resistant</strong>: hard to find any two distinct inputs with the same digest</li>
+<li><strong>Avalanche effect</strong>: small input changes produce very different outputs</li>
+</ul>
+</div></section>
+<section class="slide" id="avalanche-effect-tiny-change-very-different-output"><h2 class="slide-title"><a href="../primitives/02-CP-hashing_and_merkle_trees.html#/avalanche-effect" target="_blank">Avalanche Effect: Tiny Change, Very Different Output</a></h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:56%;">
+<ul>
+<li>One small change in input should produce a radically different digest</li>
+<li>That makes hash outputs hard to predict and helps expose tampering</li>
+</ul>
+<pre class="text"><code>Hash(&quot;HELLO&quot;)
+3615f80c9d293ed7402687f94b22d58e...
+
+Hash(&quot;HELLo&quot;)
+c6f4b0a7af12e91b3ca3e1e7100e2971...</code></pre>
+</div><div class="column" style="width:44%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 268.84 112.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:359px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 108)">
+<g id="node1" class="node">
+<path fill="#e0f2fe" stroke="#38bdf8" d="M74.69,-104C74.69,-104 44.69,-104 44.69,-104 38.69,-104 32.69,-98 32.69,-92 32.69,-92 32.69,-80 32.69,-80 32.69,-74 38.69,-68 44.69,-68 44.69,-68 74.69,-68 74.69,-68 80.69,-68 86.69,-74 86.69,-80 86.69,-80 86.69,-92 86.69,-92 86.69,-98 80.69,-104 74.69,-104"/>
+<text text-anchor="middle" x="59.69" y="-82.7" font-family="Helvetica,sans-Serif" font-size="11.00">HELLO</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M107.37,-36C107.37,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 107.37,0 107.37,0 113.37,0 119.37,-6 119.37,-12 119.37,-12 119.37,-24 119.37,-24 119.37,-30 113.37,-36 107.37,-36"/>
+<text text-anchor="middle" x="59.69" y="-14.7" font-family="Helvetica,sans-Serif" font-size="11.00">3615f80c9d293ed7...</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M59.69,-67.66C59.69,-60.74 59.69,-52.63 59.69,-45.03"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="62.14,-45.12 59.69,-38.12 57.24,-45.12 62.14,-45.12"/>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fee2e2" stroke="#f87171" d="M217.69,-104C217.69,-104 187.69,-104 187.69,-104 181.69,-104 175.69,-98 175.69,-92 175.69,-92 175.69,-80 175.69,-80 175.69,-74 181.69,-68 187.69,-68 187.69,-68 217.69,-68 217.69,-68 223.69,-68 229.69,-74 229.69,-80 229.69,-80 229.69,-92 229.69,-92 229.69,-98 223.69,-104 217.69,-104"/>
+<text text-anchor="middle" x="202.69" y="-82.7" font-family="Helvetica,sans-Serif" font-size="11.00">HELLo</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M248.84,-36C248.84,-36 156.53,-36 156.53,-36 150.53,-36 144.53,-30 144.53,-24 144.53,-24 144.53,-12 144.53,-12 144.53,-6 150.53,0 156.53,0 156.53,0 248.84,0 248.84,0 254.84,0 260.84,-6 260.84,-12 260.84,-12 260.84,-24 260.84,-24 260.84,-30 254.84,-36 248.84,-36"/>
+<text text-anchor="middle" x="202.69" y="-14.7" font-family="Helvetica,sans-Serif" font-size="11.00">c6f4b0a7af12e91b...</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M202.69,-67.66C202.69,-60.74 202.69,-52.63 202.69,-45.03"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="205.14,-45.12 202.69,-38.12 200.24,-45.12 205.14,-45.12"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="hashing-in-blockchain-practice"><h2 class="slide-title"><a href="../primitives/02-CP-hashing_and_merkle_trees.html#/where-youll-see-them-nonexhaustive" target="_blank">Hashing in Blockchain Practice</a></h2><div class="slide-body">
+<ul>
+<li>Blocks include hashes of previous blocks to form a chain</li>
+<li>Transactions and headers are hashed repeatedly during validation and consensus</li>
+<li>Nodes can compare short digests instead of entire files or histories</li>
+<li>If a hash-linked record changes, later hashes no longer match</li>
+</ul>
+</div></section>
+<section class="slide" id="merkle-trees-why-they-exist"><h2 class="slide-title"><a href="../primitives/02-CP-hashing_and_merkle_trees.html#/merkle-trees-motivation" target="_blank">Merkle Trees: Why They Exist</a></h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:58%;">
+<ul>
+<li>A block can contain many transactions</li>
+<li>Instead of storing every transaction in the header, the system commits to them with a tree of hashes</li>
+<li>Leaf hashes represent individual items</li>
+<li>Parent hashes combine child hashes until a single top value remains</li>
+<li>Top value: the <strong>Merkle root</strong></li>
+</ul>
+</div><div class="column" style="width:42%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 219.99 81.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:293px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 77.6)">
+<g id="node1" class="node">
+<path fill="#e0f2fe" stroke="#0369a1" d="M134.93,-73.6C134.93,-73.6 75.78,-73.6 75.78,-73.6 72.58,-73.6 69.38,-70.4 69.38,-67.2 69.38,-67.2 69.38,-60.8 69.38,-60.8 69.38,-57.6 72.58,-54.4 75.78,-54.4 75.78,-54.4 134.93,-54.4 134.93,-54.4 138.13,-54.4 141.33,-57.6 141.33,-60.8 141.33,-60.8 141.33,-67.2 141.33,-67.2 141.33,-70.4 138.13,-73.6 134.93,-73.6"/>
+<text text-anchor="middle" x="105.35" y="-61" font-family="Helvetica,sans-Serif" font-size="10.00">r = H(p1 ‖ p2)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e0f2fe" stroke="#0369a1" d="M96.26,-46.4C96.26,-46.4 40.45,-46.4 40.45,-46.4 37.25,-46.4 34.05,-43.2 34.05,-40 34.05,-40 34.05,-33.6 34.05,-33.6 34.05,-30.4 37.25,-27.2 40.45,-27.2 40.45,-27.2 96.26,-27.2 96.26,-27.2 99.46,-27.2 102.66,-30.4 102.66,-33.6 102.66,-33.6 102.66,-40 102.66,-40 102.66,-43.2 99.46,-46.4 96.26,-46.4"/>
+<text text-anchor="middle" x="68.35" y="-33.8" font-family="Helvetica,sans-Serif" font-size="10.00">p1 = H(a ‖ b)</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M81.71,-46.9C82.15,-47.19 82.59,-47.49 83.03,-47.79"/>
+<polygon fill="black" stroke="black" points="80.9,-50.58 91.14,-53.32 84.84,-44.79 80.9,-50.58"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e0f2fe" stroke="#0369a1" d="M170.98,-46.4C170.98,-46.4 115.73,-46.4 115.73,-46.4 112.53,-46.4 109.33,-43.2 109.33,-40 109.33,-40 109.33,-33.6 109.33,-33.6 109.33,-30.4 112.53,-27.2 115.73,-27.2 115.73,-27.2 170.98,-27.2 170.98,-27.2 174.18,-27.2 177.38,-30.4 177.38,-33.6 177.38,-33.6 177.38,-40 177.38,-40 177.38,-43.2 174.18,-46.4 170.98,-46.4"/>
+<text text-anchor="middle" x="143.35" y="-33.8" font-family="Helvetica,sans-Serif" font-size="10.00">p2 = H(c ‖ d)</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M129.64,-46.9C129.2,-47.19 128.76,-47.48 128.32,-47.77"/>
+<polygon fill="black" stroke="black" points="126.59,-44.72 120.19,-53.16 130.46,-50.55 126.59,-44.72"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f3f4f6" stroke="#9ca3af" d="M38.31,-19.2C38.31,-19.2 6.4,-19.2 6.4,-19.2 3.2,-19.2 0,-16 0,-12.8 0,-12.8 0,-6.4 0,-6.4 0,-3.2 3.2,0 6.4,0 6.4,0 38.31,0 38.31,0 41.51,0 44.71,-3.2 44.71,-6.4 44.71,-6.4 44.71,-12.8 44.71,-12.8 44.71,-16 41.51,-19.2 38.31,-19.2"/>
+<text text-anchor="middle" x="22.35" y="-6.6" font-family="Helvetica,sans-Serif" font-size="10.00">a = H(A)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M38.96,-19.7C40.02,-20.28 41.09,-20.86 42.18,-21.46"/>
+<polygon fill="black" stroke="black" points="40.15,-24.34 50.6,-26.07 43.51,-18.2 40.15,-24.34"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#f3f4f6" stroke="#9ca3af" d="M90.31,-19.2C90.31,-19.2 58.4,-19.2 58.4,-19.2 55.2,-19.2 52,-16 52,-12.8 52,-12.8 52,-6.4 52,-6.4 52,-3.2 55.2,0 58.4,0 58.4,0 90.31,0 90.31,0 93.51,0 96.71,-3.2 96.71,-6.4 96.71,-6.4 96.71,-12.8 96.71,-12.8 96.71,-16 93.51,-19.2 90.31,-19.2"/>
+<text text-anchor="middle" x="74.35" y="-6.6" font-family="Helvetica,sans-Serif" font-size="10.00">b = H(B)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M72.19,-19.7C72.15,-19.85 72.12,-19.99 72.08,-20.14"/>
+<polygon fill="black" stroke="black" points="69.72,-14.96 70.81,-25.5 76.53,-16.58 69.72,-14.96"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#f3f4f6" stroke="#9ca3af" d="M153.3,-19.2C153.3,-19.2 121.4,-19.2 121.4,-19.2 118.2,-19.2 115,-16 115,-12.8 115,-12.8 115,-6.4 115,-6.4 115,-3.2 118.2,0 121.4,0 121.4,0 153.3,0 153.3,0 156.5,0 159.7,-3.2 159.7,-6.4 159.7,-6.4 159.7,-12.8 159.7,-12.8 159.7,-16 156.5,-19.2 153.3,-19.2"/>
+<text text-anchor="middle" x="137.35" y="-6.6" font-family="Helvetica,sans-Serif" font-size="10.00">c = H(C)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M139.52,-19.7C139.56,-19.85 139.59,-19.99 139.63,-20.14"/>
+<polygon fill="black" stroke="black" points="135.18,-16.58 140.9,-25.5 141.99,-14.96 135.18,-16.58"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="#f3f4f6" stroke="#9ca3af" d="M205.59,-19.2C205.59,-19.2 173.12,-19.2 173.12,-19.2 169.92,-19.2 166.72,-16 166.72,-12.8 166.72,-12.8 166.72,-6.4 166.72,-6.4 166.72,-3.2 169.92,0 173.12,0 173.12,0 205.59,0 205.59,0 208.79,0 211.99,-3.2 211.99,-6.4 211.99,-6.4 211.99,-12.8 211.99,-12.8 211.99,-16 208.79,-19.2 205.59,-19.2"/>
+<text text-anchor="middle" x="189.35" y="-6.6" font-family="Helvetica,sans-Serif" font-size="10.00">d = H(D)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M172.75,-19.7C171.69,-20.28 170.62,-20.86 169.53,-21.46"/>
+<polygon fill="black" stroke="black" points="168.2,-18.2 161.11,-26.07 171.56,-24.34 168.2,-18.2"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="why-the-merkle-root-matters"><h2 class="slide-title"><a href="../primitives/02-CP-hashing_and_merkle_trees.html#/merkle-proofs-membership" target="_blank">Why the Merkle Root Matters</a></h2><div class="slide-body">
+<ul>
+<li>It is a compact commitment to all transactions in the block</li>
+<li>Changing even one transaction changes the Merkle root</li>
+<li>It allows efficient inclusion proofs without downloading the full block body</li>
+<li>It lets lightweight clients verify membership with a path of sibling hashes</li>
+<li>The Merkle root is <strong>not</strong> just another field in the block header</li>
+<li>It is the block’s compact cryptographic commitment to the full transaction set</li>
+<li>It matters because it enables:
+<ul>
+<li>Tamper detection</li>
+<li>Efficient verification</li>
+<li>Lightweight client proofs</li>
+<li>Header-first validation strategies</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="asymmetric-crypto-and-digital-signatures"><h2 class="slide-title"><a href="../primitives/04-CP-asymmetric_encryption_and_digital_signatures.html#/digital-signature-workflow" target="_blank">Asymmetric Crypto and Digital Signatures</a></h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:58%;">
+<ul>
+<li>Public-key cryptography separates a public verification key from a private signing key</li>
+<li>In blockchain, signatures are often more important than encryption</li>
+<li>A valid signature shows that the holder of the private key authorized the transaction</li>
+<li>Other nodes can verify that authorization using only the public key or address data</li>
+</ul>
+</div><div class="column" style="width:42%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 243.86 332.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:325px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 328)">
+<g id="node1" class="node">
+<path fill="#dbeafe" stroke="black" d="M55.13,-324C55.13,-324 12,-324 12,-324 6,-324 0,-318 0,-312 0,-312 0,-300 0,-300 0,-294 6,-288 12,-288 12,-288 55.13,-288 55.13,-288 61.13,-288 67.13,-294 67.13,-300 67.13,-300 67.13,-312 67.13,-312 67.13,-318 61.13,-324 55.13,-324"/>
+<text text-anchor="middle" x="33.57" y="-303" font-family="Helvetica,sans-Serif" font-size="10.00">Private Key</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fef3c7" stroke="black" d="M91.09,-252C91.09,-252 24.05,-252 24.05,-252 18.05,-252 12.05,-246 12.05,-240 12.05,-240 12.05,-228 12.05,-228 12.05,-222 18.05,-216 24.05,-216 24.05,-216 91.09,-216 91.09,-216 97.09,-216 103.09,-222 103.09,-228 103.09,-228 103.09,-240 103.09,-240 103.09,-246 97.09,-252 91.09,-252"/>
+<text text-anchor="middle" x="57.57" y="-231" font-family="Helvetica,sans-Serif" font-size="10.00">Sign Transaction</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M39.5,-287.7C42.06,-280.24 45.11,-271.32 47.98,-262.97"/>
+<polygon fill="black" stroke="black" points="51.28,-264.13 51.21,-253.54 44.66,-261.86 51.28,-264.13"/>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f1f5f9" stroke="black" d="M165.64,-324C165.64,-324 97.49,-324 97.49,-324 91.49,-324 85.49,-318 85.49,-312 85.49,-312 85.49,-300 85.49,-300 85.49,-294 91.49,-288 97.49,-288 97.49,-288 165.64,-288 165.64,-288 171.64,-288 177.64,-294 177.64,-300 177.64,-300 177.64,-312 177.64,-312 177.64,-318 171.64,-324 165.64,-324"/>
+<text text-anchor="middle" x="131.57" y="-303" font-family="Helvetica,sans-Serif" font-size="10.00">Transaction Data</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M113.27,-287.7C104.47,-279.37 93.75,-269.22 84.07,-260.07"/>
+<polygon fill="black" stroke="black" points="86.67,-257.72 77,-253.39 81.86,-262.8 86.67,-257.72"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#dcfce7" stroke="black" d="M172.03,-108C172.03,-108 91.11,-108 91.11,-108 85.11,-108 79.11,-102 79.11,-96 79.11,-96 79.11,-84 79.11,-84 79.11,-78 85.11,-72 91.11,-72 91.11,-72 172.03,-72 172.03,-72 178.03,-72 184.03,-78 184.03,-84 184.03,-84 184.03,-96 184.03,-96 184.03,-102 178.03,-108 172.03,-108"/>
+<text text-anchor="middle" x="131.57" y="-87" font-family="Helvetica,sans-Serif" font-size="10.00">Network Verification</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M131.57,-287.85C131.57,-251.14 131.57,-164.66 131.57,-119.53"/>
+<polygon fill="black" stroke="black" points="135.07,-119.75 131.57,-109.75 128.07,-119.75 135.07,-119.75"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fde68a" stroke="black" d="M91.25,-180C91.25,-180 25.88,-180 25.88,-180 19.88,-180 13.88,-174 13.88,-168 13.88,-168 13.88,-156 13.88,-156 13.88,-150 19.88,-144 25.88,-144 25.88,-144 91.25,-144 91.25,-144 97.25,-144 103.25,-150 103.25,-156 103.25,-156 103.25,-168 103.25,-168 103.25,-174 97.25,-180 91.25,-180"/>
+<text text-anchor="middle" x="58.57" y="-159" font-family="Helvetica,sans-Serif" font-size="10.00">Digital Signature</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M57.81,-215.7C57.92,-208.41 58.04,-199.73 58.16,-191.54"/>
+<polygon fill="black" stroke="black" points="61.66,-191.67 58.3,-181.62 54.66,-191.57 61.66,-191.67"/>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M76.61,-143.7C85.3,-135.37 95.88,-125.22 105.42,-116.07"/>
+<polygon fill="black" stroke="black" points="107.59,-118.84 112.38,-109.39 102.74,-113.79 107.59,-118.84"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#dbeafe" stroke="black" d="M223.86,-180C223.86,-180 171.27,-180 171.27,-180 165.27,-180 159.27,-174 159.27,-168 159.27,-168 159.27,-156 159.27,-156 159.27,-150 165.27,-144 171.27,-144 171.27,-144 223.86,-144 223.86,-144 229.86,-144 235.86,-150 235.86,-156 235.86,-156 235.86,-168 235.86,-168 235.86,-174 229.86,-180 223.86,-180"/>
+<text text-anchor="middle" x="197.57" y="-165" font-family="Helvetica,sans-Serif" font-size="10.00">Public Key /</text>
+<text text-anchor="middle" x="197.57" y="-153" font-family="Helvetica,sans-Serif" font-size="10.00">Address Data</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M181.25,-143.7C173.5,-135.47 164.08,-125.48 155.53,-116.42"/>
+<polygon fill="black" stroke="black" points="158.14,-114.08 148.73,-109.21 153.05,-118.88 158.14,-114.08"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="#bbf7d0" stroke="black" d="M164.25,-36C164.25,-36 98.88,-36 98.88,-36 92.88,-36 86.88,-30 86.88,-24 86.88,-24 86.88,-12 86.88,-12 86.88,-6 92.88,0 98.88,0 98.88,0 164.25,0 164.25,0 170.25,0 176.25,-6 176.25,-12 176.25,-12 176.25,-24 176.25,-24 176.25,-30 170.25,-36 164.25,-36"/>
+<text text-anchor="middle" x="131.57" y="-15" font-family="Helvetica,sans-Serif" font-size="10.00">Accept or Reject</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="black" d="M131.57,-71.7C131.57,-64.41 131.57,-55.73 131.57,-47.54"/>
+<polygon fill="black" stroke="black" points="135.07,-47.62 131.57,-37.62 128.07,-47.62 135.07,-47.62"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="keys-wallets-addresses-and-ownership"><h2 class="slide-title"><a href="../primitives/04-CP-asymmetric_encryption_and_digital_signatures.html#/public-keys-as-blockchain-addresses" target="_blank">Keys, Wallets, Addresses, and Ownership</a></h2><div class="slide-body">
+<ul>
+<li>A <strong>private key</strong> is the critical secret</li>
+<li>A <strong>public key</strong> is derived from the private key and supports verification</li>
+<li>An <strong>address</strong> is usually a shorter identifier derived from public-key material or script conditions</li>
+<li>A <strong>wallet</strong> manages keys, addresses, and signing operations</li>
+<li>Control of funds depends on control of keys, not on knowing someone’s name</li>
+</ul>
+</div></section>
+<section class="slide" id="when-cryptography-fails-in-practice"><h2 class="slide-title"><a href="../primitives/05-CP-crypto_assumptions_and_challenges.html#/case-study-linux.encoder-rng-failure" target="_blank">When Cryptography Fails in Practice</a></h2><div class="slide-body">
+<ul>
+<li>Strong algorithms do not help if implementations are weak</li>
+<li>Common failures include:
+<ul>
+<li>Poor randomness</li>
+<li>Weak key generation</li>
+<li>Key leakage</li>
+<li>Bad validation logic</li>
+<li>Unsafe wallet recovery procedures</li>
+</ul></li>
+<li>Blockchain losses often come from operational failures, not broken math</li>
+</ul>
+</div></section>
+<section class="slide" id="cryptographic-challenges-moving-forward"><h2 class="slide-title"><a href="../primitives/05-CP-crypto_assumptions_and_challenges.html#/pqc-migration-in-blockchain-systems" target="_blank">Cryptographic Challenges Moving Forward</a></h2><div class="slide-body">
+<ul>
+<li><strong>Quantum risk</strong> is more serious for current public-key systems like RSA and ECC than for hash functions</li>
+<li>Hash-based security is weakened by Grover-style speedups, but not destroyed in the same way signature systems are threatened by Shor-style attacks</li>
+<li>Blockchain migration challenges include:
+<ul>
+<li>Large installed key base</li>
+<li>Long-lived addresses</li>
+<li>Backward compatibility</li>
+<li>“Harvest now, decrypt later” style concerns for public data and exposed keys</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="case-reminder-milk-sad-and-bad-entropy"><h2 class="slide-title"><a href="../primitives/05-CP-crypto_assumptions_and_challenges.html#/when-good-crypto-goes-bad-milk-sad-cve-2023-39910" target="_blank">Case Reminder: Milk Sad and Bad Entropy</a></h2><div class="slide-body">
+<ul>
+<li>Wallet safety depends on good randomness</li>
+<li>If seed phrases or private keys are generated from weak entropy, the wallet may be predictable</li>
+<li>The lesson is broader than one bug:
+<ul>
+<li>Cryptography can be correct on paper and still fail in deployment</li>
+<li>Blockchain systems amplify the cost of key-management mistakes because irreversible transfers are easy</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="centralized-vs-distributed-architectures"><h2 class="slide-title"><a href="../distributed_primitives/01-DS-distributed_systems.html#/centralized-vs.-decentralized-tradeoffs" target="_blank">Centralized vs Distributed Architectures</a></h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:52%;">
+<ul>
+<li>A centralized system has a clear control point and often a simpler operating model</li>
+<li>A distributed system spreads responsibility across multiple machines or organizations</li>
+<li>Blockchain adopts distributed designs to reduce reliance on a single trusted operator</li>
+<li>This improves resilience in some ways, but also adds coordination, latency, and consistency problems</li>
+</ul>
+</div><div class="column" style="width:48%;">
+<div style="text-align:center; line-height:0.9;">
+<p><img src="../img/p2p_vs_central-0.png" style="width:50.0%" data-fig-alt="Centralized network during outage." /> <img src="../img/p2p_vs_central-1.png" style="width:50.0%" data-fig-alt="Peer-to-peer network during outage." /></p>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide" id="why-blockchain-pushes-toward-p2p"><h2 class="slide-title"><a href="../distributed_primitives/01-DS-distributed_systems.html#/gossip-in-a-blockchain-network" target="_blank">Why Blockchain Pushes Toward P2P</a></h2><div class="slide-body">
+<ul>
+<li>Permissionless blockchains try to minimize trust in any single operator or organization
+<ul>
+<li>A central server would have to be trusted not to fail, censor, or behavoe maliciously</li>
+</ul></li>
+<li>Blockchain networks want many participants to receive transactions, validate blocks, relay information, and maintain ledger history</li>
+<li>P2P design supports openness, redundancy, and censorship resistance, while permissioned systems often reintroduce more trusted service layers</li>
+</ul>
+</div></section>
+<section class="slide" id="gossip-vs-dhts"><h2 class="slide-title"><a href="../distributed_primitives/02-DS-p2p_design.html#/scalability-challenges" target="_blank">Gossip vs DHTs</a></h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:56%;">
+<ul>
+<li><strong>Gossip/unstructured relay</strong> is good for spreading new information widely</li>
+<li><strong>Distributed Hash Table/structured overlay routing</strong> is good for efficient lookup in large networks</li>
+<li>Tradeoff:
+<ul>
+<li>Gossip favors resilience and simple dissemination</li>
+<li>DHTs favor efficient routing and discovery</li>
+</ul></li>
+</ul>
+</div><div class="column" style="width:44%;">
+<div style="display:flex; flex-direction:column; gap:0.8rem; align-items:center; margin-top:0.35rem;">
+<p><img src="../img/gnutella.png" alt="Unstructured broadcast-style peer network." style="width:75%; border-radius:8px;" /> <img src="../img/chord_node_id_assignment.png" alt="Chord overlay ring." style="width:75%; border-radius:8px;" /></p>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide" id="peer-discovery-and-churn"><h2 class="slide-title"><a href="../distributed_primitives/02-DS-p2p_design.html#/membership-and-churn" target="_blank">Peer Discovery and Churn</a></h2><div class="slide-body">
+<ul>
+<li>New nodes need a way to find their first peers</li>
+<li>Real networks must handle nodes joining, leaving, failing, or moving</li>
+<li>A healthy blockchain network needs:
+<ul>
+<li>Bootstrapping mechanisms</li>
+<li>Ongoing peer replacement</li>
+<li>Diversity in connections</li>
+<li>Tolerance for churn and partial partitions</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="p2p-threats-sybil-and-eclipse"><h2 class="slide-title"><a href="../distributed_primitives/02-DS-p2p_design.html#/the-great-p2p-weakness-sybil-eclipse-attacks" target="_blank">P2P Threats: Sybil and Eclipse</a></h2><div class="slide-body">
+<ul>
+<li>A <strong>Sybil attack</strong> tries to gain influence by creating many fake identities</li>
+<li>An <strong>eclipse attack</strong> tries to isolate a node from honest peers and control what it sees</li>
+<li>These attacks matter because even strong cryptography is not enough if a node’s network view is manipulated</li>
+<li>Open systems need technical and economic defenses, not just identity checks</li>
+</ul>
+</div></section>
+<section class="slide" id="permissioned-vs-permissionless-systems"><h2 class="slide-title"><a href="../distributed_primitives/04-DS-distributed_ledgers.html#/permissioned-vs.-permissionless-comparison" target="_blank">Permissioned vs Permissionless Systems</a></h2><div class="slide-body">
+<ul>
+<li><strong>Permissionless</strong> systems allow open participation and must resist unknown adversaries</li>
+<li><strong>Permissioned</strong> systems restrict membership and usually know who participants are</li>
+<li>This changes:
+<ul>
+<li>Admission control</li>
+<li>Identity management</li>
+<li>Governance</li>
+<li>Privacy expectations</li>
+<li>Consensus design</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="where-hyperledger-fabric-fits"><h2 class="slide-title"><a href="../permissioned_ledger/02-PC-hlf_and_distributed_ledgers.html#/the-big-picture-end-to-end-fabric-path" target="_blank">Where Hyperledger Fabric Fits</a></h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:64%;">
+<ul>
+<li>Fabric is a permissioned distributed ledger platform</li>
+<li>It assumes known organizations, managed identities, and policy-driven participation</li>
+<li>Trust is managed through:
+<ul>
+<li>MSPs and certificate authorities</li>
+<li>Endorsement policies</li>
+<li>Ordering services</li>
+<li>Governance agreements</li>
+</ul></li>
+</ul>
+</div><div class="column" style="width:36%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 205.93 404.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:275px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 400)">
+<g id="node1" class="node">
+<path fill="#dbeafe" stroke="#94a3b8" d="M128.31,-396C128.31,-396 69.62,-396 69.62,-396 63.62,-396 57.62,-390 57.62,-384 57.62,-384 57.62,-372 57.62,-372 57.62,-366 63.62,-360 69.62,-360 69.62,-360 128.31,-360 128.31,-360 134.31,-360 140.31,-366 140.31,-372 140.31,-372 140.31,-384 140.31,-384 140.31,-390 134.31,-396 128.31,-396"/>
+<text text-anchor="middle" x="98.96" y="-375" font-family="Helvetica,sans-Serif" font-size="10.00">Submitting Org</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#bfdbfe" stroke="#94a3b8" d="M126.65,-324C126.65,-324 71.28,-324 71.28,-324 65.28,-324 59.28,-318 59.28,-312 59.28,-312 59.28,-300 59.28,-300 59.28,-294 65.28,-288 71.28,-288 71.28,-288 126.65,-288 126.65,-288 132.65,-288 138.65,-294 138.65,-300 138.65,-300 138.65,-312 138.65,-312 138.65,-318 132.65,-324 126.65,-324"/>
+<text text-anchor="middle" x="98.96" y="-303" font-family="Helvetica,sans-Serif" font-size="10.00">Identity Check</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M98.96,-359.7C98.96,-352.49 98.96,-343.93 98.96,-335.82"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="102.46,-336.07 98.96,-326.07 95.46,-336.07 102.46,-336.07"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#dcfce7" stroke="#94a3b8" d="M77.93,-252C77.93,-252 12,-252 12,-252 6,-252 0,-246 0,-240 0,-240 0,-228 0,-228 0,-222 6,-216 12,-216 12,-216 77.93,-216 77.93,-216 83.93,-216 89.93,-222 89.93,-228 89.93,-228 89.93,-240 89.93,-240 89.93,-246 83.93,-252 77.93,-252"/>
+<text text-anchor="middle" x="44.96" y="-231" font-family="Helvetica,sans-Serif" font-size="10.00">Approving Org A</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M85.61,-287.7C79.53,-279.81 72.2,-270.3 65.44,-261.55"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="68.24,-259.44 59.36,-253.66 62.7,-263.72 68.24,-259.44"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#bbf7d0" stroke="#94a3b8" d="M185.93,-252C185.93,-252 120,-252 120,-252 114,-252 108,-246 108,-240 108,-240 108,-228 108,-228 108,-222 114,-216 120,-216 120,-216 185.93,-216 185.93,-216 191.93,-216 197.93,-222 197.93,-228 197.93,-228 197.93,-240 197.93,-240 197.93,-246 191.93,-252 185.93,-252"/>
+<text text-anchor="middle" x="152.96" y="-231" font-family="Helvetica,sans-Serif" font-size="10.00">Approving Org B</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M112.31,-287.7C118.39,-279.81 125.73,-270.3 132.48,-261.55"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="135.23,-263.72 138.57,-253.66 129.69,-259.44 135.23,-263.72"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#fef3c7" stroke="#94a3b8" d="M162.49,-180C162.49,-180 35.44,-180 35.44,-180 29.44,-180 23.44,-174 23.44,-168 23.44,-168 23.44,-156 23.44,-156 23.44,-150 29.44,-144 35.44,-144 35.44,-144 162.49,-144 162.49,-144 168.49,-144 174.49,-150 174.49,-156 174.49,-156 174.49,-168 174.49,-168 174.49,-174 168.49,-180 162.49,-180"/>
+<text text-anchor="middle" x="98.96" y="-165" font-family="Helvetica,sans-Serif" font-size="10.00">Ordering Service</text>
+<text text-anchor="middle" x="98.96" y="-153" font-family="Helvetica,sans-Serif" font-size="10.00">(Single Node or Small Cluster)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M58.31,-215.7C64.39,-207.81 71.73,-198.3 78.48,-189.55"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="81.23,-191.72 84.57,-181.66 75.69,-187.44 81.23,-191.72"/>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M139.61,-215.7C133.53,-207.81 126.2,-198.3 119.44,-189.55"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="122.24,-187.44 113.36,-181.66 116.7,-191.72 122.24,-187.44"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#fde68a" stroke="#94a3b8" d="M162.22,-108C162.22,-108 35.71,-108 35.71,-108 29.71,-108 23.71,-102 23.71,-96 23.71,-96 23.71,-84 23.71,-84 23.71,-78 29.71,-72 35.71,-72 35.71,-72 162.22,-72 162.22,-72 168.22,-72 174.22,-78 174.22,-84 174.22,-84 174.22,-96 174.22,-96 174.22,-102 168.22,-108 162.22,-108"/>
+<text text-anchor="middle" x="98.96" y="-87" font-family="Helvetica,sans-Serif" font-size="10.00">Validating / Committing Nodes</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M98.96,-143.7C98.96,-136.49 98.96,-127.93 98.96,-119.82"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="102.46,-120.07 98.96,-110.07 95.46,-120.07 102.46,-120.07"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="#fee2e2" stroke="#94a3b8" d="M128.04,-36C128.04,-36 69.88,-36 69.88,-36 63.88,-36 57.88,-30 57.88,-24 57.88,-24 57.88,-12 57.88,-12 57.88,-6 63.88,0 69.88,0 69.88,0 128.04,0 128.04,0 134.04,0 140.04,-6 140.04,-12 140.04,-12 140.04,-24 140.04,-24 140.04,-30 134.04,-36 128.04,-36"/>
+<text text-anchor="middle" x="98.96" y="-15" font-family="Helvetica,sans-Serif" font-size="10.00">Shared Ledger</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M98.96,-71.7C98.96,-64.49 98.96,-55.93 98.96,-47.82"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="102.46,-48.07 98.96,-38.07 95.46,-48.07 102.46,-48.07"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="what-consensus-is-actually-trying-to-guarantee"><h2 class="slide-title"><a href="../consensus_primitives/01-CM-consensus_in_distributed_systems_and_blockchains_intro.html#/consensus-properties-slva-and-fpic" target="_blank">What Consensus Is Actually Trying to Guarantee</a></h2><div class="slide-body">
+<ul>
+<li>Consensus is about getting many nodes to agree on ledger state or history</li>
+<li>Earlier in the course, we framed the core properties as <strong>SLVA</strong>:
+<ul>
+<li><strong>Safety</strong>: honest nodes do not finalize conflicting outcomes</li>
+<li><strong>Liveness</strong>: the system continues making progress</li>
+<li><strong>Validity</strong>: decided values must satisfy the protocol’s rules</li>
+<li><strong>Agreement</strong>: honest nodes converge on the same result</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="classical-vs-economic-consensus"><h2 class="slide-title"><a href="../consensus_primitives/01-CM-consensus_in_distributed_systems_and_blockchains_intro.html#/comparing-consensus-families" target="_blank">Classical vs Economic Consensus</a></h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:75%;">
+<ul>
+<li><strong>Classical consensus</strong> usually assumes known participants and focuses on message exchange, quorum rules, and fault models</li>
+<li><strong>Economic consensus</strong> adds incentives, resource costs, or stake penalties to shape behavior in open systems</li>
+<li><strong>Permissioned ledgers</strong>: usable because membership is curated and identity is managed</li>
+<li><strong>Permissionless blockchains</strong>: needed because anyone may try to participate, relay, or attack</li>
+</ul>
+</div><div class="column" style="width:25%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 116.31 260.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:155px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 256)">
+<g id="node1" class="node">
+<path fill="#dbeafe" stroke="black" d="M70.64,-252C70.64,-252 37.67,-252 37.67,-252 31.67,-252 25.67,-246 25.67,-240 25.67,-240 25.67,-228 25.67,-228 25.67,-222 31.67,-216 37.67,-216 37.67,-216 70.64,-216 70.64,-216 76.64,-216 82.64,-222 82.64,-228 82.64,-228 82.64,-240 82.64,-240 82.64,-246 76.64,-252 70.64,-252"/>
+<text text-anchor="middle" x="54.15" y="-230.7" font-family="Helvetica,sans-Serif" font-size="11.00">Propose</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#dcfce7" stroke="black" d="M69.15,-180C69.15,-180 39.15,-180 39.15,-180 33.15,-180 27.15,-174 27.15,-168 27.15,-168 27.15,-156 27.15,-156 27.15,-150 33.15,-144 39.15,-144 39.15,-144 69.15,-144 69.15,-144 75.15,-144 81.15,-150 81.15,-156 81.15,-156 81.15,-168 81.15,-168 81.15,-174 75.15,-180 69.15,-180"/>
+<text text-anchor="middle" x="54.15" y="-158.7" font-family="Helvetica,sans-Serif" font-size="11.00">Vote</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" d="M54.15,-215.7C54.15,-207.47 54.15,-197.48 54.15,-188.42"/>
+<polygon fill="#64748b" stroke="#64748b" points="56.6,-188.62 54.15,-181.62 51.7,-188.62 56.6,-188.62"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fef3c7" stroke="black" d="M69.15,-108C69.15,-108 39.15,-108 39.15,-108 33.15,-108 27.15,-102 27.15,-96 27.15,-96 27.15,-84 27.15,-84 27.15,-78 33.15,-72 39.15,-72 39.15,-72 69.15,-72 69.15,-72 75.15,-72 81.15,-78 81.15,-84 81.15,-84 81.15,-96 81.15,-96 81.15,-102 75.15,-108 69.15,-108"/>
+<text text-anchor="middle" x="54.15" y="-86.7" font-family="Helvetica,sans-Serif" font-size="11.00">Commit</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" d="M54.15,-143.7C54.15,-135.47 54.15,-125.48 54.15,-116.42"/>
+<polygon fill="#64748b" stroke="#64748b" points="56.6,-116.62 54.15,-109.62 51.7,-116.62 56.6,-116.62"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#ede9fe" stroke="black" d="M96.31,-36C96.31,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 96.31,0 96.31,0 102.31,0 108.31,-6 108.31,-12 108.31,-12 108.31,-24 108.31,-24 108.31,-30 102.31,-36 96.31,-36"/>
+<text text-anchor="middle" x="54.15" y="-14.7" font-family="Helvetica,sans-Serif" font-size="11.00">Quorum Certificate</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" d="M54.15,-71.7C54.15,-63.47 54.15,-53.48 54.15,-44.42"/>
+<polygon fill="#64748b" stroke="#64748b" points="56.6,-44.62 54.15,-37.62 51.7,-44.62 56.6,-44.62"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="proof-of-work"><h2 class="slide-title"><a href="../consensus_primitives/02-CM-pow_and_security.html#/the-pow-rule-at-a-glance" target="_blank">Proof of Work</a></h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li>PoW uses a computational puzzle to make block production costly</li>
+<li>Producing a block is expensive, but checking a proposed block is cheap</li>
+<li>This creates an objective eligibility rule for blocks in open networks</li>
+<li>Security comes from the real-world cost of rewriting history at scale</li>
+</ul>
+</div><div class="column" style="width:40%;">
+<p><img src="../img/proof-of-work.png" style="width:92.0%" /></p>
+</div>
+</div>
+</div></section>
+<section class="slide" id="difficulty-work-and-probabilistic-finality"><h2 class="slide-title"><a href="../consensus_primitives/02-CM-pow_and_security.html#/difficulty-hash-rate-and-expected-work" target="_blank">Difficulty, Work, and Probabilistic Finality</a></h2><div class="slide-body">
+<ul>
+<li>The <strong>target</strong> determines how hard it is to find a valid block</li>
+<li><strong>Difficulty adjustment</strong> may be used to help keep average block intervals near an intended schedule</li>
+<li>Finality in PoW is usually probabilistic:
+<ul>
+<li>A payment becomes safer as more work accumulates after it</li>
+<li>The chain is never impossible to fork or replace, but doing so becomes costlier as more work accumulates</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="common-pow-attack-themes"><h2 class="slide-title"><a href="../consensus_primitives/02-CM-pow_and_security.html#/majority-hash-attacks" target="_blank">Common PoW Attack Themes</a></h2><div class="slide-body">
+<ul>
+<li><strong>Majority hash-power attacks</strong>: dominant mining power can outcompete honest miners and replace recent chain history.</li>
+<li><strong>Double-spend attempts</strong>: an attacker spends funds, then tries to build an alternate branch that excludes the original payment.</li>
+<li><strong>Selfish mining and strategic withholding</strong>: miners keep blocks private to gain an advantage over honest miners.</li>
+<li><strong>Censorship through block construction choices</strong>: miners or pools can refuse to include selected transactions.</li>
+<li><strong>Network-level attacks</strong>: routing, eclipse, or partition attacks distort what miners and nodes see.</li>
+</ul>
+</div></section>
+<section class="slide" id="proof-of-stake"><h2 class="slide-title"><a href="../consensus_primitives/03-CM-pos.html#/proof-of-stake-process" target="_blank">Proof of Stake</a></h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:48%;">
+<ul>
+<li>PoS replaces energy-intensive work with stake-weighted participation</li>
+<li>Core flow:
+<ul>
+<li>A proposer is selected for a slot or round</li>
+<li>A committee attests to the proposed block</li>
+<li>Votes accumulate toward checkpoints and finality</li>
+</ul></li>
+</ul>
+</div><div class="column" style="width:52%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 457.70 400.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:611px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 396)">
+<g id="node1" class="node">
+<path fill="#e3f2fd" stroke="black" d="M327.35,-392C327.35,-392 226.65,-392 226.65,-392 220.65,-392 214.65,-386 214.65,-380 214.65,-380 214.65,-367.2 214.65,-367.2 214.65,-361.2 220.65,-355.2 226.65,-355.2 226.65,-355.2 327.35,-355.2 327.35,-355.2 333.35,-355.2 339.35,-361.2 339.35,-367.2 339.35,-367.2 339.35,-380 339.35,-380 339.35,-386 333.35,-392 327.35,-392"/>
+<text text-anchor="middle" x="277" y="-377.2" font-family="Helvetica,sans-Serif" font-size="12.00">Block Proposer</text>
+<text text-anchor="middle" x="277" y="-362.8" font-family="Helvetica,sans-Serif" font-size="12.00">(Validator for Slot N)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fff8e1" stroke="black" d="M260.7,-303.2C260.7,-303.2 113.3,-303.2 113.3,-303.2 107.3,-303.2 101.3,-297.2 101.3,-291.2 101.3,-291.2 101.3,-278.4 101.3,-278.4 101.3,-272.4 107.3,-266.4 113.3,-266.4 113.3,-266.4 260.7,-266.4 260.7,-266.4 266.7,-266.4 272.7,-272.4 272.7,-278.4 272.7,-278.4 272.7,-291.2 272.7,-291.2 272.7,-297.2 266.7,-303.2 260.7,-303.2"/>
+<text text-anchor="middle" x="187" y="-288.4" font-family="Helvetica,sans-Serif" font-size="12.00">Slot N Committee</text>
+<text text-anchor="middle" x="187" y="-274" font-family="Helvetica,sans-Serif" font-size="12.00">(random subset of validators)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" d="M252.71,-354.79C245.1,-348.85 236.84,-342 229.74,-335.2 221.51,-327.33 213.17,-318.03 206.06,-309.64"/>
+<polygon fill="#64748b" stroke="#64748b" points="208.22,-308.4 201.85,-304.6 204.46,-311.54 208.22,-308.4"/>
+<text text-anchor="middle" x="263.37" y="-326.2" font-family="Helvetica,sans-Serif" font-size="10.00">proposes block</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#c8e6c9" stroke="black" d="M260.71,-214.4C260.71,-214.4 117.29,-214.4 117.29,-214.4 111.29,-214.4 105.29,-208.4 105.29,-202.4 105.29,-202.4 105.29,-189.6 105.29,-189.6 105.29,-183.6 111.29,-177.6 117.29,-177.6 117.29,-177.6 260.71,-177.6 260.71,-177.6 266.71,-177.6 272.71,-183.6 272.71,-189.6 272.71,-189.6 272.71,-202.4 272.71,-202.4 272.71,-208.4 266.71,-214.4 260.71,-214.4"/>
+<text text-anchor="middle" x="189" y="-199.6" font-family="Helvetica,sans-Serif" font-size="12.00">Stake&#45;Weighted Attestations</text>
+<text text-anchor="middle" x="189" y="-185.2" font-family="Helvetica,sans-Serif" font-size="12.00">(2t+1 votes)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" d="M187.4,-266.23C187.69,-253.85 188.08,-237.04 188.4,-223.09"/>
+<polygon fill="#64748b" stroke="#64748b" points="190.84,-223.4 188.55,-216.35 185.94,-223.29 190.84,-223.4"/>
+<text text-anchor="middle" x="213.69" y="-237.4" font-family="Helvetica,sans-Serif" font-size="10.00">attest votes</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#bbdefb" stroke="black" d="M312.01,-125.6C312.01,-125.6 189.99,-125.6 189.99,-125.6 183.99,-125.6 177.99,-119.6 177.99,-113.6 177.99,-113.6 177.99,-100.8 177.99,-100.8 177.99,-94.8 183.99,-88.8 189.99,-88.8 189.99,-88.8 312.01,-88.8 312.01,-88.8 318.01,-88.8 324.01,-94.8 324.01,-100.8 324.01,-100.8 324.01,-113.6 324.01,-113.6 324.01,-119.6 318.01,-125.6 312.01,-125.6"/>
+<text text-anchor="middle" x="251" y="-110.8" font-family="Helvetica,sans-Serif" font-size="12.00">Quorum Certificate (QC)</text>
+<text text-anchor="middle" x="251" y="-96.4" font-family="Helvetica,sans-Serif" font-size="12.00">Aggregated Signatures</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" d="M201.55,-177.43C210.73,-164.58 223.31,-146.97 233.48,-132.72"/>
+<polygon fill="#64748b" stroke="#64748b" points="235.3,-134.39 237.38,-127.27 231.32,-131.54 235.3,-134.39"/>
+<text text-anchor="middle" x="246.23" y="-148.6" font-family="Helvetica,sans-Serif" font-size="10.00">aggregate</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#64748b" d="M264.64,-125.89C268.94,-131.94 273.47,-138.88 277,-145.6 284.06,-159.05 285.68,-162.78 289,-177.6 335.36,-384.42 305.48,-319.91 301,-335.2 299.72,-339.55 297.77,-343.87 295.52,-347.95"/>
+<polygon fill="#64748b" stroke="#64748b" points="293.57,-346.44 292.01,-353.69 297.75,-349 293.57,-346.44"/>
+<text text-anchor="middle" x="326.85" y="-237.4" font-family="Helvetica,sans-Serif" font-size="10.00">new round</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#f0f4c3" stroke="black" d="M190.02,-36.8C190.02,-36.8 137.98,-36.8 137.98,-36.8 131.98,-36.8 125.98,-30.8 125.98,-24.8 125.98,-24.8 125.98,-12 125.98,-12 125.98,-6 131.98,0 137.98,0 137.98,0 190.02,0 190.02,0 196.02,0 202.02,-6 202.02,-12 202.02,-12 202.02,-24.8 202.02,-24.8 202.02,-30.8 196.02,-36.8 190.02,-36.8"/>
+<text text-anchor="middle" x="164" y="-22" font-family="Helvetica,sans-Serif" font-size="12.00">Checkpoint</text>
+<text text-anchor="middle" x="164" y="-7.6" font-family="Helvetica,sans-Serif" font-size="12.00">(Finalized)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" d="M204.15,-88.4C195.04,-83.21 186.27,-76.74 179.62,-68.8 173.99,-62.08 170.38,-53.31 168.07,-45.03"/>
+<polygon fill="#64748b" stroke="#64748b" points="170.52,-44.72 166.52,-38.48 165.75,-45.86 170.52,-44.72"/>
+<text text-anchor="middle" x="233.81" y="-59.8" font-family="Helvetica,sans-Serif" font-size="10.00">supermajority stake vote</text>
+</g>
+
+<g id="node6" class="node">
+<polygon fill="#ffe082" stroke="black" points="418.04,-36.8 249.96,-36.8 249.96,0 424.04,0 424.04,-30.8 418.04,-36.8"/>
+<polyline fill="none" stroke="black" points="418.04,-36.8 418.04,-30.8"/>
+<polyline fill="none" stroke="black" points="424.04,-30.8 418.04,-30.8"/>
+<text text-anchor="middle" x="337" y="-22" font-family="Helvetica,sans-Serif" font-size="12.00">Pacemaker / Timeout</text>
+<text text-anchor="middle" x="337" y="-7.6" font-family="Helvetica,sans-Serif" font-size="12.00">(view change, leader rotation)</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="5,2" d="M274.15,-88.34C281.39,-82.39 289.25,-75.55 296,-68.8 303.91,-60.88 311.92,-51.58 318.74,-43.19"/>
+<polygon fill="#7f7f7f" stroke="#7f7f7f" points="320.29,-45.17 322.75,-38.18 316.47,-42.11 320.29,-45.17"/>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#64748b" d="M125.55,-22.98C77.08,-29.85 0,-49.66 0,-106.2 0,-285.8 0,-285.8 0,-285.8 0,-328.98 124.12,-353.25 206.19,-364.57"/>
+<polygon fill="#64748b" stroke="#64748b" points="205.73,-366.98 212.99,-365.49 206.38,-362.12 205.73,-366.98"/>
+<text text-anchor="middle" x="36.42" y="-193" font-family="Helvetica,sans-Serif" font-size="10.00">epoch advances</text>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="5,2" d="M361.58,-37.12C380.34,-52.88 403,-77.8 403,-106.2 403,-285.8 403,-285.8 403,-285.8 403,-317.13 376.25,-338.02 347.4,-351.44"/>
+<polygon fill="#7f7f7f" stroke="#7f7f7f" points="346.44,-349.18 341.02,-354.25 348.41,-353.67 346.44,-349.18"/>
+<text text-anchor="middle" x="426.35" y="-193" font-family="Helvetica,sans-Serif" font-size="10.00">new round</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="validators-committees-and-finality"><h2 class="slide-title"><a href="../consensus_primitives/03-CM-pos.html#/becoming-a-validator" target="_blank">Validators, Committees, and Finality</a></h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li>A validator is a participant authorized by stake to help secure the chain</li>
+<li>Committees are randomly selected subsets of validators that check proposals in a slot</li>
+<li>This structure avoids every validator talking to every other validator on every block</li>
+<li>Every epoch, a stake-weighted supermajority vote finalizes the blocks</li>
+</ul>
+</div><div class="column" style="width:40%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 116.95 260.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:156px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 256)">
+<g id="node1" class="node">
+<path fill="#dbeafe" stroke="black" d="M79.21,-252C79.21,-252 29.74,-252 29.74,-252 23.74,-252 17.74,-246 17.74,-240 17.74,-240 17.74,-228 17.74,-228 17.74,-222 23.74,-216 29.74,-216 29.74,-216 79.21,-216 79.21,-216 85.21,-216 91.21,-222 91.21,-228 91.21,-228 91.21,-240 91.21,-240 91.21,-246 85.21,-252 79.21,-252"/>
+<text text-anchor="middle" x="54.47" y="-237.3" font-family="Helvetica,sans-Serif" font-size="11.00">Proposer</text>
+<text text-anchor="middle" x="54.47" y="-224.1" font-family="Helvetica,sans-Serif" font-size="11.00">builds block</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fef3c7" stroke="black" d="M77.06,-180C77.06,-180 31.88,-180 31.88,-180 25.88,-180 19.88,-174 19.88,-168 19.88,-168 19.88,-156 19.88,-156 19.88,-150 25.88,-144 31.88,-144 31.88,-144 77.06,-144 77.06,-144 83.06,-144 89.06,-150 89.06,-156 89.06,-156 89.06,-168 89.06,-168 89.06,-174 83.06,-180 77.06,-180"/>
+<text text-anchor="middle" x="54.47" y="-165.3" font-family="Helvetica,sans-Serif" font-size="11.00">Committee</text>
+<text text-anchor="middle" x="54.47" y="-152.1" font-family="Helvetica,sans-Serif" font-size="11.00">attests</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.2" d="M54.47,-215.7C54.47,-207.56 54.47,-197.69 54.47,-188.7"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.2" points="56.92,-188.92 54.47,-181.92 52.02,-188.92 56.92,-188.92"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#dcfce7" stroke="black" d="M96.95,-108C96.95,-108 12,-108 12,-108 6,-108 0,-102 0,-96 0,-96 0,-84 0,-84 0,-78 6,-72 12,-72 12,-72 96.95,-72 96.95,-72 102.95,-72 108.95,-78 108.95,-84 108.95,-84 108.95,-96 108.95,-96 108.95,-102 102.95,-108 96.95,-108"/>
+<text text-anchor="middle" x="54.47" y="-93.3" font-family="Helvetica,sans-Serif" font-size="11.00">Epoch / checkpoint</text>
+<text text-anchor="middle" x="54.47" y="-80.1" font-family="Helvetica,sans-Serif" font-size="11.00">aggregation</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.2" d="M54.47,-143.7C54.47,-135.56 54.47,-125.69 54.47,-116.7"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.2" points="56.92,-116.92 54.47,-109.92 52.02,-116.92 56.92,-116.92"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#ede9fe" stroke="black" d="M69.47,-36C69.47,-36 39.47,-36 39.47,-36 33.47,-36 27.47,-30 27.47,-24 27.47,-24 27.47,-12 27.47,-12 27.47,-6 33.47,0 39.47,0 39.47,0 69.47,0 69.47,0 75.47,0 81.47,-6 81.47,-12 81.47,-12 81.47,-24 81.47,-24 81.47,-30 75.47,-36 69.47,-36"/>
+<text text-anchor="middle" x="54.47" y="-21.3" font-family="Helvetica,sans-Serif" font-size="11.00">Finality</text>
+<text text-anchor="middle" x="54.47" y="-8.1" font-family="Helvetica,sans-Serif" font-size="11.00">signal</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.2" d="M54.47,-71.7C54.47,-63.56 54.47,-53.69 54.47,-44.7"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.2" points="56.92,-44.92 54.47,-37.92 52.02,-44.92 56.92,-44.92"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="common-pos-attack-themes"><h2 class="slide-title"><a href="../consensus_primitives/03-CM-pos.html#/nothing-at-stake" target="_blank">Common PoS Attack Themes</a></h2><div class="slide-body">
+<ul>
+<li><strong>Nothing-at-stake incentives</strong>: validators may be tempted to support multiple forks if equivocation is not punished.</li>
+<li><strong>Long-range attacks</strong>: old validator keys or historical stake can be abused to fabricate an alternate past.</li>
+<li><strong>Weak subjectivity</strong>: new or offline nodes need trustworthy recent checkpoints to avoid bad histories.</li>
+<li><strong>Censorship and cartel behavior</strong>: large validator groups can coordinate to delay or exclude targeted transactions.</li>
+<li><strong>Bribery and concentration risks</strong>: stake concentration can make collusion or economic coercion more effective.</li>
+</ul>
+</div></section>
+<section class="slide" id="consensus-families"><h2 class="slide-title"><a href="../consensus_primitives/01-CM-consensus_in_distributed_systems_and_blockchains_intro.html#/comparing-consensus-families" target="_blank">Consensus Families</a></h2><div class="slide-body">
+<ul>
+<li><strong>Permissioned/classical</strong> consensus gives strong deterministic finality under curated membership</li>
+<li><strong>PoW</strong> gives open participation with computationally costly block production and probabilistic finality</li>
+<li><strong>PoS</strong> gives open participation with stake-based security enforced through slashing and structured finality</li>
+<li>The right question is not “which one is best?” but “which assumptions and tradeoffs fit the system?”</li>
+</ul>
+</div></section>
+<section class="slide" id="why-bitcoin-emerged"><h2 class="slide-title"><a href="../bitcoin/01-BF-bitcoin_origins_and_mechanics.html#/prebitcoin-timeline" target="_blank">Why Bitcoin Emerged</a></h2><div class="slide-body">
+<ul>
+<li>Bitcoin grew out of long-running digital cash efforts and cypherpunk thinking</li>
+<li>The 2008 financial crisis sharpened distrust in centralized financial intermediaries</li>
+<li>Thecombination of existing concepts drawn from cryptography, peer-to-peer networking, trust and conesensus, and lessons from failed digital cash efforts provided the foundation for Bitcoin and subsequent blockchain techniolgies
+<ul>
+<li>Nakamoto (Proof-of-Work) consensus was the final key to making the decentralized digital cash work</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="bitcoins-core-design-synthesis"><h2 class="slide-title"><a href="../bitcoin/01-BF-bitcoin_origins_and_mechanics.html#/lessons-from-precursors-4" target="_blank">Bitcoin’s Core Design Synthesis</a></h2><div class="slide-body">
+<ul>
+<li>Digital signatures define who can authorize spending</li>
+<li>Peer-to-peer networking spreads transactions and blocks</li>
+<li>Proof of Work helps open participants converge on one history</li>
+<li>Hash-linked blocks and Merkle commitments make history tamper-evident</li>
+<li>Together, these mechanisms address double-spending without a central operator</li>
+</ul>
+</div></section>
+<section class="slide" id="bitcoin-block-structure"><h2 class="slide-title"><a href="../bitcoin/02-BF-transactions_and_mining.html#/the-data-structure-of-a-block" target="_blank">Bitcoin Block Structure</a></h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:58%;">
+<ul>
+<li>A Bitcoin block contains a header plus a body of transactions</li>
+<li>Key header fields include:
+<ul>
+<li>Version</li>
+<li>Previous block hash</li>
+<li>Merkle root</li>
+<li>Timestamp</li>
+<li>Difficulty target representation</li>
+<li>Nonce</li>
+</ul></li>
+</ul>
+</div><div class="column" style="width:42%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 454.00 751.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:605px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 747)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="#999999" points="8,-8 8,-735 438,-735 438,-8 8,-8"/>
+<text text-anchor="middle" x="223" y="-722" font-family="Helvetica,sans-Serif" font-size="10.00">Bitcoin Block</text>
+</g>
+<g id="clust2" class="cluster">
+<polygon fill="none" stroke="#c8d6e5" points="16,-612.6 16,-707 430,-707 430,-612.6 16,-612.6"/>
+<text text-anchor="middle" x="223" y="-694" font-family="Helvetica,sans-Serif" font-size="10.00">Transactions (ordered)</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#f5f7fb" stroke="black" d="M179.91,-336.5C179.91,-336.5 322.09,-336.5 322.09,-336.5 328.09,-336.5 334.09,-342.5 334.09,-348.5 334.09,-348.5 334.09,-498.1 334.09,-498.1 334.09,-504.1 328.09,-510.1 322.09,-510.1 322.09,-510.1 179.91,-510.1 179.91,-510.1 173.91,-510.1 167.91,-504.1 167.91,-498.1 167.91,-498.1 167.91,-348.5 167.91,-348.5 167.91,-342.5 173.91,-336.5 179.91,-336.5"/>
+<text text-anchor="middle" x="251" y="-493.5" font-family="Helvetica,sans-Serif" font-size="14.00">Block Header (80 bytes)</text>
+<polyline fill="none" stroke="black" points="167.91,-485.3 334.09,-485.3"/>
+<text text-anchor="middle" x="251" y="-468.7" font-family="Helvetica,sans-Serif" font-size="14.00">Version</text>
+<polyline fill="none" stroke="black" points="167.91,-460.5 334.09,-460.5"/>
+<text text-anchor="middle" x="251" y="-443.9" font-family="Helvetica,sans-Serif" font-size="14.00">Prev Block Hash</text>
+<polyline fill="none" stroke="black" points="167.91,-435.7 334.09,-435.7"/>
+<text text-anchor="middle" x="251" y="-419.1" font-family="Helvetica,sans-Serif" font-size="14.00">Merkle Root</text>
+<polyline fill="none" stroke="black" points="167.91,-410.9 334.09,-410.9"/>
+<text text-anchor="middle" x="251" y="-394.3" font-family="Helvetica,sans-Serif" font-size="14.00">Timestamp</text>
+<polyline fill="none" stroke="black" points="167.91,-386.1 334.09,-386.1"/>
+<text text-anchor="middle" x="251" y="-369.5" font-family="Helvetica,sans-Serif" font-size="14.00">nBits (Target)</text>
+<polyline fill="none" stroke="black" points="167.91,-361.3 334.09,-361.3"/>
+<text text-anchor="middle" x="251" y="-344.7" font-family="Helvetica,sans-Serif" font-size="14.00">Nonce</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f5f7fb" stroke="black" d="M214.93,-256.9C214.93,-256.9 287.07,-256.9 287.07,-256.9 293.07,-256.9 299.07,-262.9 299.07,-268.9 299.07,-268.9 299.07,-286.5 299.07,-286.5 299.07,-292.5 293.07,-298.5 287.07,-298.5 287.07,-298.5 214.93,-298.5 214.93,-298.5 208.93,-298.5 202.93,-292.5 202.93,-286.5 202.93,-286.5 202.93,-268.9 202.93,-268.9 202.93,-262.9 208.93,-256.9 214.93,-256.9"/>
+<text text-anchor="middle" x="251" y="-281.9" font-family="Helvetica,sans-Serif" font-size="14.00">Included</text>
+<text text-anchor="middle" x="251" y="-265.1" font-family="Helvetica,sans-Serif" font-size="14.00">Transactions</text>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="black" d="M251,-336.28C251,-327 251,-318.05 251,-310.08"/>
+<polygon fill="black" stroke="black" points="254.5,-310.34 251,-300.34 247.5,-310.34 254.5,-310.34"/>
+</g>
+
+<g id="node9" class="node">
+<path fill="#fff3e0" stroke="black" d="M288.24,-219.4C288.24,-219.4 213.76,-219.4 213.76,-219.4 207.76,-219.4 201.76,-213.4 201.76,-207.4 201.76,-207.4 201.76,-195.4 201.76,-195.4 201.76,-189.4 207.76,-183.4 213.76,-183.4 213.76,-183.4 288.24,-183.4 288.24,-183.4 294.24,-183.4 300.24,-189.4 300.24,-195.4 300.24,-195.4 300.24,-207.4 300.24,-207.4 300.24,-213.4 294.24,-219.4 288.24,-219.4"/>
+<text text-anchor="middle" x="251" y="-197.2" font-family="Helvetica,sans-Serif" font-size="14.00">Hash Header</text>
+</g>
+
+<g id="edge10" class="edge">
+<path fill="none" stroke="black" d="M251,-256.79C251,-248.96 251,-239.82 251,-231.29"/>
+<polygon fill="black" stroke="black" points="254.5,-231.35 251,-221.35 247.5,-231.35 254.5,-231.35"/>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="none" stroke="black" points="134.27,-679 23.73,-679 23.73,-620.6 134.27,-620.6 134.27,-679"/>
+<text text-anchor="middle" x="79" y="-662.4" font-family="Helvetica,sans-Serif" font-size="14.00">Coinbase</text>
+<text text-anchor="middle" x="79" y="-645.6" font-family="Helvetica,sans-Serif" font-size="14.00">(extraNonce,</text>
+<text text-anchor="middle" x="79" y="-628.8" font-family="Helvetica,sans-Serif" font-size="14.00">subsidy + fees)</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M79.41,-620.36C81.62,-561.6 93.92,-424.87 159,-336 168.21,-323.42 181.11,-312.98 194.33,-304.61"/>
+<polygon fill="black" stroke="black" points="195.86,-307.77 202.66,-299.65 192.28,-301.75 195.86,-307.77"/>
+</g>
+
+<g id="node8" class="node">
+<ellipse fill="#e8f5e9" stroke="black" cx="251" cy="-565.6" rx="63.09" ry="18"/>
+<text text-anchor="middle" x="251" y="-561.4" font-family="Helvetica,sans-Serif" font-size="14.00">Merkle Root</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M128.32,-620.18C133.24,-617.54 138.19,-614.97 143,-612.6 162.8,-602.82 185.18,-593.08 204.42,-585.1"/>
+<polygon fill="black" stroke="black" points="205.72,-588.35 213.64,-581.31 203.06,-581.87 205.72,-588.35"/>
+</g>
+
+<g id="node4" class="node">
+<polygon fill="none" stroke="black" points="206,-667.8 152,-667.8 152,-631.8 206,-631.8 206,-667.8"/>
+<text text-anchor="middle" x="179" y="-645.6" font-family="Helvetica,sans-Serif" font-size="14.00">tx1</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M194.27,-631.37C204.33,-619.88 217.67,-604.65 228.89,-591.85"/>
+<polygon fill="black" stroke="black" points="231.29,-594.41 235.25,-584.58 226.03,-589.8 231.29,-594.41"/>
+</g>
+
+<g id="node5" class="node">
+<polygon fill="none" stroke="black" points="278,-667.8 224,-667.8 224,-631.8 278,-631.8 278,-667.8"/>
+<text text-anchor="middle" x="251" y="-645.6" font-family="Helvetica,sans-Serif" font-size="14.00">tx2</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M251,-631.37C251,-620.91 251,-607.34 251,-595.33"/>
+<polygon fill="black" stroke="black" points="254.5,-595.52 251,-585.52 247.5,-595.52 254.5,-595.52"/>
+</g>
+
+<g id="node6" class="node">
+<polygon fill="none" stroke="black" points="350,-667.8 296,-667.8 296,-631.8 350,-631.8 350,-667.8"/>
+<text text-anchor="middle" x="323" y="-645.6" font-family="Helvetica,sans-Serif" font-size="14.00">tx3</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M307.73,-631.37C297.67,-619.88 284.33,-604.65 273.11,-591.85"/>
+<polygon fill="black" stroke="black" points="275.97,-589.8 266.75,-584.58 270.71,-594.41 275.97,-589.8"/>
+</g>
+
+<g id="node7" class="node">
+<polygon fill="none" stroke="black" points="422,-667.8 368,-667.8 368,-631.8 422,-631.8 422,-667.8"/>
+<text text-anchor="middle" x="395" y="-645.6" font-family="Helvetica,sans-Serif" font-size="14.00">... txn</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="black" d="M396.79,-631.44C401.08,-581.03 407.25,-432.11 343,-336 334.42,-323.16 321.88,-312.66 308.81,-304.33"/>
+<polygon fill="black" stroke="black" points="310.93,-301.52 300.54,-299.41 307.35,-307.53 310.93,-301.52"/>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M380.42,-631.51C374.29,-624.98 366.78,-617.87 359,-612.6 341.79,-600.94 321.15,-591.27 302.55,-583.86"/>
+<polygon fill="black" stroke="black" points="303.88,-580.62 293.29,-580.3 301.37,-587.15 303.88,-580.62"/>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="black" d="M287.58,-550.6C304.94,-541.9 324.05,-528.84 334.09,-510.6 350.6,-480.59 368.98,-435.53 346.36,-425.38"/>
+<polygon fill="black" stroke="black" points="347.05,-421.95 336.58,-423.57 345.78,-428.83 347.05,-421.95"/>
+</g>
+
+<g id="node10" class="node">
+<polygon fill="#ffe0b2" stroke="black" points="162,-146.4 58.7,-128.4 162,-110.4 265.3,-128.4 162,-146.4"/>
+<text text-anchor="middle" x="162" y="-124.2" font-family="Helvetica,sans-Serif" font-size="14.00">hash &lt; target?</text>
+</g>
+
+<g id="edge11" class="edge">
+<path fill="none" stroke="black" d="M229.46,-183.21C217.2,-173.44 201.75,-161.11 188.73,-150.72"/>
+<polygon fill="black" stroke="black" points="190.94,-148.01 180.94,-144.51 186.57,-153.48 190.94,-148.01"/>
+</g>
+
+<g id="node11" class="node">
+<polygon fill="none" stroke="black" points="280.43,-57.6 165.57,-57.6 165.57,-16 280.43,-16 280.43,-57.6"/>
+<text text-anchor="middle" x="223" y="-41" font-family="Helvetica,sans-Serif" font-size="14.00">Change nonce /</text>
+<text text-anchor="middle" x="223" y="-24.2" font-family="Helvetica,sans-Serif" font-size="14.00">extraNonce</text>
+</g>
+
+<g id="edge12" class="edge">
+<path fill="none" stroke="black" d="M172.63,-111.79C180.97,-99.54 192.83,-82.12 202.95,-67.26"/>
+<polygon fill="black" stroke="black" points="205.7,-69.43 208.43,-59.19 199.91,-65.49 205.7,-69.43"/>
+<text text-anchor="middle" x="203.94" y="-79.8" font-family="Helvetica,sans-Serif" font-size="14.00">no</text>
+</g>
+
+<g id="edge13" class="edge">
+<path fill="none" stroke="black" d="M242.21,-57.84C253.89,-71.47 267.73,-90.57 274,-110.4 280.52,-131.03 273.89,-154.75 266.1,-172.66"/>
+<polygon fill="black" stroke="black" points="262.98,-171.08 261.86,-181.62 269.31,-174.08 262.98,-171.08"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="bitcoin-transactions-and-the-utxo-model"><h2 class="slide-title"><a href="../bitcoin/02-BF-transactions_and_mining.html#/transactions-and-the-utxo-model" target="_blank">Bitcoin Transactions and the UTXO Model</a></h2><div class="slide-body">
+<ul>
+<li>Bitcoin tracks spendable outputs, not account balances</li>
+<li>A transaction consumes old outputs and creates new outputs</li>
+<li>Change usually returns to a new output controlled by the sender</li>
+<li>This model matters for:
+<ul>
+<li>Transaction structure</li>
+<li>Fee calculation</li>
+<li>Wallet behavior</li>
+<li>Forensic clustering heuristics</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="bitcoin-monetary-policy-and-difficulty"><h2 class="slide-title"><a href="../bitcoin/01-BF-bitcoin_origins_and_mechanics.html#/monetary-policy" target="_blank">Bitcoin Monetary Policy and Difficulty</a></h2><div class="slide-body">
+<ul>
+<li>New coins enter circulation through block subsidies</li>
+<li>The subsidy schedule declines over time through halvings</li>
+<li>The total supply cap is designed around a 21 million BTC limit</li>
+<li>Difficulty adjusts every 2016 blocks to target about a 10-minute average block interval despite changes in hash rate</li>
+</ul>
+</div></section>
+<section class="slide" id="bitcoin-nodes-relay-and-peer-discovery"><h2 class="slide-title"><a href="../bitcoin/03-BF-bitcoin_nodes_and_network.html#/joining-the-bitcoin-network" target="_blank">Bitcoin Nodes, Relay, and Peer Discovery</a></h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:55%;">
+<ul>
+<li>Full nodes validate rules and maintain the ledger independently</li>
+<li>Transactions and blocks spread through peer-to-peer relay</li>
+<li>New nodes need a bootstrapping path to peers</li>
+<li>Once connected, nodes keep learning about the network through peer communication and gossip propagation</li>
+</ul>
+</div><div class="column" style="width:45%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 545.85 394.35" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:728px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 390.35)">
+<g id="node1" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M85.31,-196.35C85.31,-196.35 24.44,-196.35 24.44,-196.35 18.44,-196.35 12.44,-190.35 12.44,-184.35 12.44,-184.35 12.44,-161.95 12.44,-161.95 12.44,-155.95 18.44,-149.95 24.44,-149.95 24.44,-149.95 85.31,-149.95 85.31,-149.95 91.31,-149.95 97.31,-155.95 97.31,-161.95 97.31,-161.95 97.31,-184.35 97.31,-184.35 97.31,-190.35 91.31,-196.35 85.31,-196.35"/>
+<text text-anchor="middle" x="54.88" y="-177.95" font-family="Inter,Helvetica,Arial" font-size="16.00">New Node</text>
+<text text-anchor="middle" x="54.88" y="-158.75" font-family="Inter,Helvetica,Arial" font-size="16.00">(Joining)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e0f2fe" stroke="#38bdf8" d="M360.18,-254.35C360.18,-254.35 231.78,-254.35 231.78,-254.35 225.78,-254.35 219.78,-248.35 219.78,-242.35 219.78,-242.35 219.78,-219.95 219.78,-219.95 219.78,-213.95 225.78,-207.95 231.78,-207.95 231.78,-207.95 360.18,-207.95 360.18,-207.95 366.18,-207.95 372.18,-213.95 372.18,-219.95 372.18,-219.95 372.18,-242.35 372.18,-242.35 372.18,-248.35 366.18,-254.35 360.18,-254.35"/>
+<text text-anchor="middle" x="295.98" y="-235.95" font-family="Inter,Helvetica,Arial" font-size="16.00">DNS Seed A</text>
+<text text-anchor="middle" x="295.98" y="-216.75" font-family="Inter,Helvetica,Arial" font-size="16.00">(seed.bitcoin.sipa.be)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M97.8,-183.32C129.18,-190.94 173.14,-201.6 211.59,-210.93"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="210.71,-213.23 218.09,-212.5 211.86,-208.47 210.71,-213.23"/>
+<text text-anchor="middle" x="161.98" y="-209.83" font-family="Helvetica,sans-Serif" font-size="14.00">DNS query</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e0f2fe" stroke="#38bdf8" d="M365.73,-84.35C365.73,-84.35 226.22,-84.35 226.22,-84.35 220.22,-84.35 214.22,-78.35 214.22,-72.35 214.22,-72.35 214.22,-49.95 214.22,-49.95 214.22,-43.95 220.22,-37.95 226.22,-37.95 226.22,-37.95 365.73,-37.95 365.73,-37.95 371.73,-37.95 377.73,-43.95 377.73,-49.95 377.73,-49.95 377.73,-72.35 377.73,-72.35 377.73,-78.35 371.73,-84.35 365.73,-84.35"/>
+<text text-anchor="middle" x="295.98" y="-65.95" font-family="Inter,Helvetica,Arial" font-size="16.00">DNS Seed B</text>
+<text text-anchor="middle" x="295.98" y="-46.75" font-family="Inter,Helvetica,Arial" font-size="16.00">(seed.bitcoinstats.com)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M69.51,-149.61C82.08,-130.19 102.55,-103.6 127.75,-89.35 151.11,-76.15 179.03,-68.78 205.31,-64.75"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="205.53,-67.19 212.12,-63.79 204.85,-62.34 205.53,-67.19"/>
+<text text-anchor="middle" x="161.98" y="-93.55" font-family="Helvetica,sans-Serif" font-size="14.00">DNS query</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M525.85,-273.15C525.85,-273.15 493.42,-273.15 493.42,-273.15 487.42,-273.15 481.42,-267.15 481.42,-261.15 481.42,-261.15 481.42,-249.15 481.42,-249.15 481.42,-243.15 487.42,-237.15 493.42,-237.15 493.42,-237.15 525.85,-237.15 525.85,-237.15 531.85,-237.15 537.85,-243.15 537.85,-249.15 537.85,-249.15 537.85,-261.15 537.85,-261.15 537.85,-267.15 531.85,-273.15 525.85,-273.15"/>
+<text text-anchor="middle" x="509.64" y="-250.35" font-family="Inter,Helvetica,Arial" font-size="16.00">Peer 1</text>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M84.55,-196.68C97.32,-206.51 112.81,-217.61 127.75,-226.15 164.03,-246.92 173.46,-253.86 214.22,-263.15 322.26,-287.79 354.21,-289.91 463.42,-271.15 466.66,-270.6 469.96,-269.84 473.25,-268.94"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="473.72,-271.36 479.71,-266.98 472.3,-266.67 473.72,-271.36"/>
+<text text-anchor="middle" x="295.98" y="-287.85" font-family="Helvetica,sans-Serif" font-size="14.00">connect</text>
+</g>
+
+<g id="node6" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M525.85,-218.15C525.85,-218.15 493.42,-218.15 493.42,-218.15 487.42,-218.15 481.42,-212.15 481.42,-206.15 481.42,-206.15 481.42,-194.15 481.42,-194.15 481.42,-188.15 487.42,-182.15 493.42,-182.15 493.42,-182.15 525.85,-182.15 525.85,-182.15 531.85,-182.15 537.85,-188.15 537.85,-194.15 537.85,-194.15 537.85,-206.15 537.85,-206.15 537.85,-212.15 531.85,-218.15 525.85,-218.15"/>
+<text text-anchor="middle" x="509.64" y="-195.35" font-family="Inter,Helvetica,Arial" font-size="16.00">Peer 2</text>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M97.62,-172.93C159.07,-172.92 277.45,-174.13 377.73,-182.35 409.98,-185 446.43,-190.13 472.67,-194.21"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="472.21,-196.62 479.51,-195.29 472.97,-191.78 472.21,-196.62"/>
+<text text-anchor="middle" x="295.98" y="-186.55" font-family="Helvetica,sans-Serif" font-size="14.00">connect</text>
+</g>
+
+<g id="node7" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M525.85,-114.15C525.85,-114.15 493.42,-114.15 493.42,-114.15 487.42,-114.15 481.42,-108.15 481.42,-102.15 481.42,-102.15 481.42,-90.15 481.42,-90.15 481.42,-84.15 487.42,-78.15 493.42,-78.15 493.42,-78.15 525.85,-78.15 525.85,-78.15 531.85,-78.15 537.85,-84.15 537.85,-90.15 537.85,-90.15 537.85,-102.15 537.85,-102.15 537.85,-108.15 531.85,-114.15 525.85,-114.15"/>
+<text text-anchor="middle" x="509.64" y="-91.35" font-family="Inter,Helvetica,Arial" font-size="16.00">Peer 3</text>
+</g>
+
+<g id="edge10" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M97.66,-166.05C185.93,-151.04 390.07,-116.32 472.83,-102.25"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="473.01,-104.7 479.5,-101.11 472.19,-99.87 473.01,-104.7"/>
+<text text-anchor="middle" x="295.98" y="-150.25" font-family="Helvetica,sans-Serif" font-size="14.00">connect</text>
+</g>
+
+<g id="node8" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M525.85,-48.15C525.85,-48.15 493.42,-48.15 493.42,-48.15 487.42,-48.15 481.42,-42.15 481.42,-36.15 481.42,-36.15 481.42,-24.15 481.42,-24.15 481.42,-18.15 487.42,-12.15 493.42,-12.15 493.42,-12.15 525.85,-12.15 525.85,-12.15 531.85,-12.15 537.85,-18.15 537.85,-24.15 537.85,-24.15 537.85,-36.15 537.85,-36.15 537.85,-42.15 531.85,-48.15 525.85,-48.15"/>
+<text text-anchor="middle" x="509.64" y="-25.35" font-family="Inter,Helvetica,Arial" font-size="16.00">Peer 4</text>
+</g>
+
+<g id="edge11" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M67.01,-149.87C79.33,-125.93 101,-88.66 127.75,-63.15 160.01,-32.4 171.21,-24.05 214.22,-12.35 304.93,12.32 416.94,-7.55 473.06,-20.76"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="472.25,-23.09 479.63,-22.35 473.4,-18.32 472.25,-23.09"/>
+<text text-anchor="middle" x="295.98" y="-16.55" font-family="Helvetica,sans-Serif" font-size="14.00">connect</text>
+</g>
+
+<g id="node9" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M312.19,-371.15C312.19,-371.15 279.76,-371.15 279.76,-371.15 273.76,-371.15 267.76,-365.15 267.76,-359.15 267.76,-359.15 267.76,-347.15 267.76,-347.15 267.76,-341.15 273.76,-335.15 279.76,-335.15 279.76,-335.15 312.19,-335.15 312.19,-335.15 318.19,-335.15 324.19,-341.15 324.19,-347.15 324.19,-347.15 324.19,-359.15 324.19,-359.15 324.19,-365.15 318.19,-371.15 312.19,-371.15"/>
+<text text-anchor="middle" x="295.98" y="-348.35" font-family="Inter,Helvetica,Arial" font-size="16.00">Peer 5</text>
+</g>
+
+<g id="edge12" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M63.09,-196.8C73.06,-225.56 93.77,-273.66 127.75,-301.15 165.93,-332.05 222.52,-344.66 259.08,-349.76"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="258.55,-352.16 265.81,-350.63 259.18,-347.3 258.55,-352.16"/>
+<text text-anchor="middle" x="161.98" y="-339.66" font-family="Helvetica,sans-Serif" font-size="14.00">connect</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M372.5,-239.72C406.56,-243.58 445.21,-247.96 472.6,-251.07"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="472.19,-253.49 479.42,-251.84 472.74,-248.62 472.19,-253.49"/>
+<text text-anchor="middle" x="429.58" y="-254.17" font-family="Helvetica,sans-Serif" font-size="14.00">returns IPs</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M372.5,-220.09C406.56,-215.11 445.21,-209.45 472.6,-205.43"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="472.86,-207.87 479.43,-204.43 472.15,-203.02 472.86,-207.87"/>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M378.21,-74.59C410.88,-79.99 446.88,-85.94 472.76,-90.22"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="472.18,-92.61 479.49,-91.33 472.98,-87.78 472.18,-92.61"/>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M378.21,-49.26C410.88,-44.47 446.88,-39.2 472.76,-35.41"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="472.91,-37.86 479.48,-34.43 472.2,-33.02 472.91,-37.86"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fef9c3" stroke="#f59e0b" d="M97.75,-386.35C97.75,-386.35 12,-386.35 12,-386.35 6,-386.35 0,-380.35 0,-374.35 0,-374.35 0,-351.95 0,-351.95 0,-345.95 6,-339.95 12,-339.95 12,-339.95 97.75,-339.95 97.75,-339.95 103.75,-339.95 109.75,-345.95 109.75,-351.95 109.75,-351.95 109.75,-374.35 109.75,-374.35 109.75,-380.35 103.75,-386.35 97.75,-386.35"/>
+<text text-anchor="middle" x="54.88" y="-367.95" font-family="Inter,Helvetica,Arial" font-size="16.00">Hardcoded</text>
+<text text-anchor="middle" x="54.88" y="-348.75" font-family="Inter,Helvetica,Arial" font-size="16.00">Fallback Peers</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M110.13,-360.89C155.6,-358.98 219.26,-356.32 258.76,-354.67"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="258.74,-357.12 265.63,-354.38 258.53,-352.23 258.74,-357.12"/>
+<text text-anchor="middle" x="161.98" y="-364.12" font-family="Helvetica,sans-Serif" font-size="14.00">fallback</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="mining-pools-and-their-role"><h2 class="slide-title"><a href="../consensus_primitives/02-CM-pow_and_security.html#/mining-pools-variance-and-payouts" target="_blank">Mining Pools and Their Role</a></h2><div class="slide-body">
+<ul>
+<li>Solo mining has high reward variance</li>
+<li>Pools reduce variance by letting miners combine effort and share payouts</li>
+<li>Pools change incentives and centralization pressures even if the protocol remains permissionless</li>
+<li>Pools are economically important, but they are not identical to the protocol itself</li>
+<li>Concentration in pools can create real security concerns</li>
+</ul>
+</div></section>
+<section class="slide" id="ethereums-goals"><h2 class="slide-title"><a href="../ethereum/01-EF-ethereum_intro.html#/beyond-cryptocurrency-buterins-vision" target="_blank">Ethereum’s Goals</a></h2><div class="slide-body">
+<ul>
+<li>Ethereum extends blockchain beyond payments into general-purpose programmable state</li>
+<li>The core vision is a platform for smart contracts and decentralized applications</li>
+<li>Ethereum shifts the central design question from “How do we transfer digital money?” to “How do we execute shared logic on a decentralized system?”</li>
+</ul>
+</div></section>
+<section class="slide" id="evm-gas-and-global-state"><h2 class="slide-title"><a href="../ethereum/01-EF-ethereum_intro.html#/the-ethereum-virtual-machine-evm" target="_blank">EVM, Gas, and Global State</a></h2><div class="slide-body">
+<ul>
+<li>Ethereum maintains a shared global state rather than Bitcoin’s UTXO set</li>
+<li>The EVM executes contract logic deterministically</li>
+<li>Gas meters computation and storage use; the base fee is burned while tips can go to the proposer</li>
+<li>If a transaction runs out of gas, state changes revert but the spent gas is still lost</li>
+</ul>
+</div></section>
+<section class="slide" id="accounts-vs-utxos"><h2 class="slide-title"><a href="../ethereum/01-EF-ethereum_intro.html#/transaction-models-utxo-vs-accounts" target="_blank">Accounts vs UTXOs</a></h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:54%;">
+<ul>
+<li>Bitcoin’s UTXO model represents value as discrete spendable outputs</li>
+<li>Ethereum’s account model represents balances and contract state directly</li>
+<li>The difference affects:
+<ul>
+<li>Transaction structure</li>
+<li>Smart contract design</li>
+<li>Wallet semantics</li>
+<li>Forensics and tracing</li>
+</ul></li>
+</ul>
+</div><div class="column" style="width:46%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 386.02 320.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:515px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 316)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="#bdbdbd" points="8,-8 8,-152 370.02,-152 370.02,-8 8,-8"/>
+<text text-anchor="middle" x="189.01" y="-139" font-family="Helvetica,sans-Serif" font-size="10.00">Bitcoin UTXO</text>
+</g>
+<g id="clust2" class="cluster">
+<polygon fill="none" stroke="#bdbdbd" points="18.45,-160 18.45,-304 242.87,-304 242.87,-160 18.45,-160"/>
+<text text-anchor="middle" x="130.66" y="-291" font-family="Helvetica,sans-Serif" font-size="10.00">Ethereum Accounts</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#fff9c4" stroke="black" d="M78.9,-52C78.9,-52 28,-52 28,-52 22,-52 16,-46 16,-40 16,-40 16,-28 16,-28 16,-22 22,-16 28,-16 28,-16 78.9,-16 78.9,-16 84.9,-16 90.9,-22 90.9,-28 90.9,-28 90.9,-40 90.9,-40 90.9,-46 84.9,-52 78.9,-52"/>
+<text text-anchor="middle" x="53.45" y="-31" font-family="Helvetica,sans-Serif" font-size="10.00">UTXO 8 BTC</text>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="#e3f2fd" stroke="black" stroke-width="2" cx="204.65" cy="-75" rx="18" ry="18"/>
+<text text-anchor="middle" x="204.65" y="-72" font-family="Helvetica,sans-Serif" font-size="10.00">Tx</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M91.22,-28C134.24,-28 198.65,-28 198.65,-28 198.65,-28 198.65,-46.25 198.65,-46.25"/>
+<polygon fill="black" stroke="black" points="195.15,-46.25 198.65,-56.25 202.15,-46.25 195.15,-46.25"/>
+</g>
+
+<g id="node2" class="node">
+<path fill="#ffe0b2" stroke="black" d="M78.9,-124C78.9,-124 28,-124 28,-124 22,-124 16,-118 16,-112 16,-112 16,-100 16,-100 16,-94 22,-88 28,-88 28,-88 78.9,-88 78.9,-88 84.9,-88 90.9,-94 90.9,-100 90.9,-100 90.9,-112 90.9,-112 90.9,-118 84.9,-124 78.9,-124"/>
+<text text-anchor="middle" x="53.45" y="-103" font-family="Helvetica,sans-Serif" font-size="10.00">UTXO 5 BTC</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M91.22,-103.33C134.24,-103.33 198.65,-103.33 198.65,-103.33 198.65,-103.33 198.65,-102.25 198.65,-102.25"/>
+<polygon fill="black" stroke="black" points="202.15,-103.97 198.65,-93.97 195.15,-103.97 202.15,-103.97"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#e8f5e9" stroke="black" d="M344.18,-52C344.18,-52 297.71,-52 297.71,-52 291.71,-52 285.71,-46 285.71,-40 285.71,-40 285.71,-28 285.71,-28 285.71,-22 291.71,-16 297.71,-16 297.71,-16 344.18,-16 344.18,-16 350.18,-16 356.18,-22 356.18,-28 356.18,-28 356.18,-40 356.18,-40 356.18,-46 350.18,-52 344.18,-52"/>
+<text text-anchor="middle" x="320.95" y="-31" font-family="Helvetica,sans-Serif" font-size="10.00">Bob 10 BTC</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M210.65,-57.91C210.65,-49.03 210.65,-40 210.65,-40 210.65,-40 273.93,-40 273.93,-40"/>
+<polygon fill="black" stroke="black" points="273.93,-43.5 283.93,-40 273.93,-36.5 273.93,-43.5"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#d1c4e9" stroke="black" d="M350.02,-124C350.02,-124 291.87,-124 291.87,-124 285.87,-124 279.87,-118 279.87,-112 279.87,-112 279.87,-100 279.87,-100 279.87,-94 285.87,-88 291.87,-88 291.87,-88 350.02,-88 350.02,-88 356.02,-88 362.02,-94 362.02,-100 362.02,-100 362.02,-112 362.02,-112 362.02,-118 356.02,-124 350.02,-124"/>
+<text text-anchor="middle" x="320.95" y="-103" font-family="Helvetica,sans-Serif" font-size="10.00">Change 3 BTC</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M210.65,-92.07C210.65,-102.43 210.65,-113.67 210.65,-113.67 210.65,-113.67 268.05,-113.67 268.05,-113.67"/>
+<polygon fill="black" stroke="black" points="268.05,-117.17 278.05,-113.67 268.05,-110.17 268.05,-117.17"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#fff9c4" stroke="black" d="M68.45,-249C68.45,-249 38.45,-249 38.45,-249 32.45,-249 26.45,-243 26.45,-237 26.45,-237 26.45,-225 26.45,-225 26.45,-219 32.45,-213 38.45,-213 38.45,-213 68.45,-213 68.45,-213 74.45,-213 80.45,-219 80.45,-225 80.45,-225 80.45,-237 80.45,-237 80.45,-243 74.45,-249 68.45,-249"/>
+<text text-anchor="middle" x="53.45" y="-234" font-family="Helvetica,sans-Serif" font-size="10.00">Alice</text>
+<text text-anchor="middle" x="53.45" y="-222" font-family="Helvetica,sans-Serif" font-size="10.00">13 ETH</text>
+</g>
+
+<g id="node7" class="node">
+<path fill="#e8f5e9" stroke="black" d="M220.52,-204C220.52,-204 188.77,-204 188.77,-204 182.77,-204 176.77,-198 176.77,-192 176.77,-192 176.77,-180 176.77,-180 176.77,-174 182.77,-168 188.77,-168 188.77,-168 220.52,-168 220.52,-168 226.52,-168 232.52,-174 232.52,-180 232.52,-180 232.52,-192 232.52,-192 232.52,-198 226.52,-204 220.52,-204"/>
+<text text-anchor="middle" x="204.65" y="-189" font-family="Helvetica,sans-Serif" font-size="10.00">Bob</text>
+<text text-anchor="middle" x="204.65" y="-177" font-family="Helvetica,sans-Serif" font-size="10.00">+10 ETH</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M80.83,-226.5C124.4,-226.5 204.65,-226.5 204.65,-226.5 204.65,-226.5 204.65,-215.87 204.65,-215.87"/>
+<polygon fill="black" stroke="black" points="208.15,-215.87 204.65,-205.87 201.15,-215.87 208.15,-215.87"/>
+<text text-anchor="middle" x="132.66" y="-207.7" font-family="Helvetica,sans-Serif" font-size="9.00">&#45;10 ETH</text>
+</g>
+
+<g id="node8" class="node">
+<path fill="#d1c4e9" stroke="black" d="M222.87,-276C222.87,-276 186.42,-276 186.42,-276 180.42,-276 174.42,-270 174.42,-264 174.42,-264 174.42,-252 174.42,-252 174.42,-246 180.42,-240 186.42,-240 186.42,-240 222.87,-240 222.87,-240 228.87,-240 234.87,-246 234.87,-252 234.87,-252 234.87,-264 234.87,-264 234.87,-270 228.87,-276 222.87,-276"/>
+<text text-anchor="middle" x="204.65" y="-261" font-family="Helvetica,sans-Serif" font-size="10.00">Alice</text>
+<text text-anchor="middle" x="204.65" y="-249" font-family="Helvetica,sans-Serif" font-size="10.00">3 ETH left</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M80.83,-244.5C80.83,-244.5 162.58,-244.5 162.58,-244.5"/>
+<polygon fill="black" stroke="black" points="162.58,-248 172.58,-244.5 162.58,-241 162.58,-248"/>
+<text text-anchor="middle" x="132.66" y="-259.7" font-family="Helvetica,sans-Serif" font-size="9.00">post&#45;state</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="the-merge-and-two-layer-ethereum"><h2 class="slide-title"><a href="../ethereum/03-EF-ethereum_network.html#/two-networks-one-chain" target="_blank">The Merge and Two-Layer Ethereum</a></h2><div class="slide-body">
+<ul>
+<li>Ethereum moved from PoW to PoS in <strong>The Merge</strong></li>
+<li>The modern system separates:
+<ul>
+<li><strong>Execution layer</strong>: transactions, EVM execution, state transitions</li>
+<li><strong>Consensus layer</strong>: validator coordination, fork choice, finality</li>
+</ul></li>
+<li>The application state stayed continuous, but the block-production and finality engine changed underneath it</li>
+<li>That separation matters because scaling, client software, and upgrades often affect one layer more than the other</li>
+</ul>
+</div></section>
+<section class="slide" id="eoas-vs-contract-accounts"><h2 class="slide-title"><a href="../ethereum/01-EF-ethereum_intro.html#/accounts-global-state-eoa-vs-contract" target="_blank">EOAs vs Contract Accounts</a></h2><div class="slide-body">
+<ul>
+<li><strong>Externally Owned Accounts (EOAs)</strong> are controlled by private keys and initiate transactions</li>
+<li><strong>Contract accounts</strong> hold code and storage, but only execute when called</li>
+<li>This distinction matters for:
+<ul>
+<li>Wallet behavior and nonce handling</li>
+<li>Access control and smart contract design</li>
+<li>Forensics, because some addresses are users and some are programs</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="block-building"><h2 class="slide-title"><a href="../ethereum/03-EF-ethereum_network.html#/builder-relay-stack-and-mev" target="_blank">Block Building</a></h2><div class="slide-body">
+<ul>
+<li>Block construction is often specialized rather than handled only by the proposer</li>
+<li><strong>Maximal Extractable Value (MEV)</strong> is the value gained from transaction ordering, inclusion, or exclusion</li>
+<li>Key actors:
+<ul>
+<li>Searchers identify profitable orderings</li>
+<li>Builders assemble candidate blocks</li>
+<li>Relays forward bids and blocks to proposers</li>
+</ul></li>
+<li>That makes Ethereum block production an ecosystem with real censorship and centralization pressure</li>
+</ul>
+</div></section>
+<section class="slide" id="smart-contracts-what-they-are"><h2 class="slide-title"><a href="../ethereum/04-EF-smart_contracts.html#/smart-contracts-concept-and-scope" target="_blank">Smart Contracts: What They Are</a></h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:56%;">
+<ul>
+<li>A smart contract is code stored on-chain and executed by the network</li>
+<li>It can hold state, enforce rules, and expose callable functions</li>
+<li>Smart contracts support:
+<ul>
+<li>Tokens</li>
+<li>Exchanges</li>
+<li>Lending</li>
+<li>Governance</li>
+<li>NFT logic</li>
+</ul></li>
+</ul>
+</div><div class="column" style="width:44%;">
+<figure class="diagram mermaid"><svg aria-roledescription="sequence" role="graphics-document document" viewBox="-50 -10 689 355" style="max-width: 689px;" xmlns="http://www.w3.org/2000/svg" width="100%" id="mmd2"><g><rect class="actor actor-bottom" ry="3" rx="3" name="B" height="65" width="150" stroke="#666" fill="#eaeaea" y="269" x="439"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="301.5" x="514"><tspan dy="0" x="514">Contract B</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="A" height="65" width="150" stroke="#666" fill="#eaeaea" y="269" x="234"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="301.5" x="309"><tspan dy="0" x="309">Contract A</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="U" height="65" width="150" stroke="#666" fill="#eaeaea" y="269" x="0"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="301.5" x="75"><tspan dy="0" x="75">User (EOA)</tspan></text></g><g><line name="B" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="269" x2="514" y1="65" x1="514" id="actor9"></line><g id="root-9"><rect class="actor actor-top" ry="3" rx="3" name="B" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="439"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="514"><tspan dy="0" x="514">Contract B</tspan></text></g></g><g><line name="A" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="269" x2="309" y1="65" x1="309" id="actor8"></line><g id="root-8"><rect class="actor actor-top" ry="3" rx="3" name="A" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="234"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="309"><tspan dy="0" x="309">Contract A</tspan></text></g></g><g><line name="U" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="269" x2="75" y1="65" x1="75" id="actor7"></line><g id="root-7"><rect class="actor actor-top" ry="3" rx="3" name="U" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="0"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="75"><tspan dy="0" x="75">User (EOA)</tspan></text></g></g><style>#mmd2{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;fill:#000000;}#mmd2 .error-icon{fill:#552222;}#mmd2 .error-text{fill:#552222;stroke:#552222;}#mmd2 .edge-thickness-normal{stroke-width:1px;}#mmd2 .edge-thickness-thick{stroke-width:3.5px;}#mmd2 .edge-pattern-solid{stroke-dasharray:0;}#mmd2 .edge-thickness-invisible{stroke-width:0;fill:none;}#mmd2 .edge-pattern-dashed{stroke-dasharray:3;}#mmd2 .edge-pattern-dotted{stroke-dasharray:2;}#mmd2 .marker{fill:#666;stroke:#666;}#mmd2 .marker.cross{stroke:#666;}#mmd2 svg{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;}#mmd2 p{margin:0;}#mmd2 .actor{stroke:hsl(0, 0%, 83%);fill:#eee;}#mmd2 text.actor&gt;tspan{fill:#333;stroke:none;}#mmd2 .actor-line{stroke:hsl(0, 0%, 83%);}#mmd2 .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:#333;}#mmd2 .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:#333;}#mmd2 #arrowhead path{fill:#333;stroke:#333;}#mmd2 .sequenceNumber{fill:white;}#mmd2 #sequencenumber{fill:#333;}#mmd2 #crosshead path{fill:#333;stroke:#333;}#mmd2 .messageText{fill:#333;stroke:none;}#mmd2 .labelBox{stroke:hsl(0, 0%, 83%);fill:#eee;}#mmd2 .labelText,#mmd2 .labelText&gt;tspan{fill:#333;stroke:none;}#mmd2 .loopText,#mmd2 .loopText&gt;tspan{fill:#333;stroke:none;}#mmd2 .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:hsl(0, 0%, 83%);fill:hsl(0, 0%, 83%);}#mmd2 .note{stroke:#999;fill:#666;}#mmd2 .noteText,#mmd2 .noteText&gt;tspan{fill:#fff;stroke:none;}#mmd2 .activation0{fill:#f4f4f4;stroke:#666;}#mmd2 .activation1{fill:#f4f4f4;stroke:#666;}#mmd2 .activation2{fill:#f4f4f4;stroke:#666;}#mmd2 .actorPopupMenu{position:absolute;}#mmd2 .actorPopupMenuPanel{position:absolute;fill:#eee;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#mmd2 .actor-man line{stroke:hsl(0, 0%, 83%);fill:#eee;}#mmd2 .actor-man circle,#mmd2 line{stroke:hsl(0, 0%, 83%);fill:#eee;stroke-width:2px;}#mmd2 :root{--mermaid-font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;}</style><g></g><defs><symbol height="24" width="24" id="computer"><path d="M2 2v13h20v-13h-20zm18 11h-16v-9h16v9zm-10.228 6l.466-1h3.524l.467 1h-4.457zm14.228 3h-24l2-6h2.104l-1.33 4h18.45l-1.297-4h2.073l2 6zm-5-10h-14v-7h14v7z" transform="scale(.5)"></path></symbol></defs><defs><symbol clip-rule="evenodd" fill-rule="evenodd" id="database"><path d="M12.258.001l.256.004.255.005.253.008.251.01.249.012.247.015.246.016.242.019.241.02.239.023.236.024.233.027.231.028.229.031.225.032.223.034.22.036.217.038.214.04.211.041.208.043.205.045.201.046.198.048.194.05.191.051.187.053.183.054.18.056.175.057.172.059.168.06.163.061.16.063.155.064.15.066.074.033.073.033.071.034.07.034.069.035.068.035.067.035.066.035.064.036.064.036.062.036.06.036.06.037.058.037.058.037.055.038.055.038.053.038.052.038.051.039.05.039.048.039.047.039.045.04.044.04.043.04.041.04.04.041.039.041.037.041.036.041.034.041.033.042.032.042.03.042.029.042.027.042.026.043.024.043.023.043.021.043.02.043.018.044.017.043.015.044.013.044.012.044.011.045.009.044.007.045.006.045.004.045.002.045.001.045v17l-.001.045-.002.045-.004.045-.006.045-.007.045-.009.044-.011.045-.012.044-.013.044-.015.044-.017.043-.018.044-.02.043-.021.043-.023.043-.024.043-.026.043-.027.042-.029.042-.03.042-.032.042-.033.042-.034.041-.036.041-.037.041-.039.041-.04.041-.041.04-.043.04-.044.04-.045.04-.047.039-.048.039-.05.039-.051.039-.052.038-.053.038-.055.038-.055.038-.058.037-.058.037-.06.037-.06.036-.062.036-.064.036-.064.036-.066.035-.067.035-.068.035-.069.035-.07.034-.071.034-.073.033-.074.033-.15.066-.155.064-.16.063-.163.061-.168.06-.172.059-.175.057-.18.056-.183.054-.187.053-.191.051-.194.05-.198.048-.201.046-.205.045-.208.043-.211.041-.214.04-.217.038-.22.036-.223.034-.225.032-.229.031-.231.028-.233.027-.236.024-.239.023-.241.02-.242.019-.246.016-.247.015-.249.012-.251.01-.253.008-.255.005-.256.004-.258.001-.258-.001-.256-.004-.255-.005-.253-.008-.251-.01-.249-.012-.247-.015-.245-.016-.243-.019-.241-.02-.238-.023-.236-.024-.234-.027-.231-.028-.228-.031-.226-.032-.223-.034-.22-.036-.217-.038-.214-.04-.211-.041-.208-.043-.204-.045-.201-.046-.198-.048-.195-.05-.19-.051-.187-.053-.184-.054-.179-.056-.176-.057-.172-.059-.167-.06-.164-.061-.159-.063-.155-.064-.151-.066-.074-.033-.072-.033-.072-.034-.07-.034-.069-.035-.068-.035-.067-.035-.066-.035-.064-.036-.063-.036-.062-.036-.061-.036-.06-.037-.058-.037-.057-.037-.056-.038-.055-.038-.053-.038-.052-.038-.051-.039-.049-.039-.049-.039-.046-.039-.046-.04-.044-.04-.043-.04-.041-.04-.04-.041-.039-.041-.037-.041-.036-.041-.034-.041-.033-.042-.032-.042-.03-.042-.029-.042-.027-.042-.026-.043-.024-.043-.023-.043-.021-.043-.02-.043-.018-.044-.017-.043-.015-.044-.013-.044-.012-.044-.011-.045-.009-.044-.007-.045-.006-.045-.004-.045-.002-.045-.001-.045v-17l.001-.045.002-.045.004-.045.006-.045.007-.045.009-.044.011-.045.012-.044.013-.044.015-.044.017-.043.018-.044.02-.043.021-.043.023-.043.024-.043.026-.043.027-.042.029-.042.03-.042.032-.042.033-.042.034-.041.036-.041.037-.041.039-.041.04-.041.041-.04.043-.04.044-.04.046-.04.046-.039.049-.039.049-.039.051-.039.052-.038.053-.038.055-.038.056-.038.057-.037.058-.037.06-.037.061-.036.062-.036.063-.036.064-.036.066-.035.067-.035.068-.035.069-.035.07-.034.072-.034.072-.033.074-.033.151-.066.155-.064.159-.063.164-.061.167-.06.172-.059.176-.057.179-.056.184-.054.187-.053.19-.051.195-.05.198-.048.201-.046.204-.045.208-.043.211-.041.214-.04.217-.038.22-.036.223-.034.226-.032.228-.031.231-.028.234-.027.236-.024.238-.023.241-.02.243-.019.245-.016.247-.015.249-.012.251-.01.253-.008.255-.005.256-.004.258-.001.258.001zm-9.258 20.499v.01l.001.021.003.021.004.022.005.021.006.022.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.023.018.024.019.024.021.024.022.025.023.024.024.025.052.049.056.05.061.051.066.051.07.051.075.051.079.052.084.052.088.052.092.052.097.052.102.051.105.052.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.048.144.049.147.047.152.047.155.047.16.045.163.045.167.043.171.043.176.041.178.041.183.039.187.039.19.037.194.035.197.035.202.033.204.031.209.03.212.029.216.027.219.025.222.024.226.021.23.02.233.018.236.016.24.015.243.012.246.01.249.008.253.005.256.004.259.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.021.224-.024.22-.026.216-.027.212-.028.21-.031.205-.031.202-.034.198-.034.194-.036.191-.037.187-.039.183-.04.179-.04.175-.042.172-.043.168-.044.163-.045.16-.046.155-.046.152-.047.148-.048.143-.049.139-.049.136-.05.131-.05.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.053.083-.051.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.05.023-.024.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.023.01-.022.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.127l-.077.055-.08.053-.083.054-.085.053-.087.052-.09.052-.093.051-.095.05-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.045-.118.044-.12.043-.122.042-.124.042-.126.041-.128.04-.13.04-.132.038-.134.038-.135.037-.138.037-.139.035-.142.035-.143.034-.144.033-.147.032-.148.031-.15.03-.151.03-.153.029-.154.027-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.01-.179.008-.179.008-.181.006-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.006-.179-.008-.179-.008-.178-.01-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.027-.153-.029-.151-.03-.15-.03-.148-.031-.146-.032-.145-.033-.143-.034-.141-.035-.14-.035-.137-.037-.136-.037-.134-.038-.132-.038-.13-.04-.128-.04-.126-.041-.124-.042-.122-.042-.12-.044-.117-.043-.116-.045-.113-.045-.112-.046-.109-.047-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.05-.093-.052-.09-.051-.087-.052-.085-.053-.083-.054-.08-.054-.077-.054v4.127zm0-5.654v.011l.001.021.003.021.004.021.005.022.006.022.007.022.009.022.01.022.011.023.012.023.013.023.015.024.016.023.017.024.018.024.019.024.021.024.022.024.023.025.024.024.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.052.11.051.114.051.119.052.123.05.127.051.131.05.135.049.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.044.171.042.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.022.23.02.233.018.236.016.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.012.241-.015.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.048.139-.05.136-.049.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.051.051-.049.023-.025.023-.024.021-.025.02-.024.019-.024.018-.024.017-.024.015-.023.014-.023.013-.024.012-.022.01-.023.01-.023.008-.022.006-.022.006-.022.004-.021.004-.022.001-.021.001-.021v-4.139l-.077.054-.08.054-.083.054-.085.052-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.044-.118.044-.12.044-.122.042-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.035-.143.033-.144.033-.147.033-.148.031-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.009-.179.009-.179.007-.181.007-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.007-.179-.007-.179-.009-.178-.009-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.031-.146-.033-.145-.033-.143-.033-.141-.035-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.04-.126-.041-.124-.042-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.051-.093-.051-.09-.051-.087-.053-.085-.052-.083-.054-.08-.054-.077-.054v4.139zm0-5.666v.011l.001.02.003.022.004.021.005.022.006.021.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.024.018.023.019.024.021.025.022.024.023.024.024.025.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.051.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.043.171.043.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.021.23.02.233.018.236.017.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.013.241-.014.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.049.139-.049.136-.049.131-.051.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.049.023-.025.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.022.01-.023.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.153l-.077.054-.08.054-.083.053-.085.053-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.048-.105.048-.106.048-.109.046-.111.046-.114.046-.115.044-.118.044-.12.043-.122.043-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.034-.143.034-.144.033-.147.032-.148.032-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.024-.161.024-.162.023-.163.023-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.01-.178.01-.179.009-.179.007-.181.006-.182.006-.182.004-.184.003-.184.001-.185.001-.185-.001-.184-.001-.184-.003-.182-.004-.182-.006-.181-.006-.179-.007-.179-.009-.178-.01-.176-.01-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.023-.162-.023-.161-.024-.159-.024-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.032-.146-.032-.145-.033-.143-.034-.141-.034-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.041-.126-.041-.124-.041-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.048-.105-.048-.102-.048-.1-.05-.097-.049-.095-.051-.093-.051-.09-.052-.087-.052-.085-.053-.083-.053-.08-.054-.077-.054v4.153zm8.74-8.179l-.257.004-.254.005-.25.008-.247.011-.244.012-.241.014-.237.016-.233.018-.231.021-.226.022-.224.023-.22.026-.216.027-.212.028-.21.031-.205.032-.202.033-.198.034-.194.036-.191.038-.187.038-.183.04-.179.041-.175.042-.172.043-.168.043-.163.045-.16.046-.155.046-.152.048-.148.048-.143.048-.139.049-.136.05-.131.05-.126.051-.123.051-.118.051-.114.052-.11.052-.106.052-.101.052-.096.052-.092.052-.088.052-.083.052-.079.052-.074.051-.07.052-.065.051-.06.05-.056.05-.051.05-.023.025-.023.024-.021.024-.02.025-.019.024-.018.024-.017.023-.015.024-.014.023-.013.023-.012.023-.01.023-.01.022-.008.022-.006.023-.006.021-.004.022-.004.021-.001.021-.001.021.001.021.001.021.004.021.004.022.006.021.006.023.008.022.01.022.01.023.012.023.013.023.014.023.015.024.017.023.018.024.019.024.02.025.021.024.023.024.023.025.051.05.056.05.06.05.065.051.07.052.074.051.079.052.083.052.088.052.092.052.096.052.101.052.106.052.11.052.114.052.118.051.123.051.126.051.131.05.136.05.139.049.143.048.148.048.152.048.155.046.16.046.163.045.168.043.172.043.175.042.179.041.183.04.187.038.191.038.194.036.198.034.202.033.205.032.21.031.212.028.216.027.22.026.224.023.226.022.231.021.233.018.237.016.241.014.244.012.247.011.25.008.254.005.257.004.26.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.022.224-.023.22-.026.216-.027.212-.028.21-.031.205-.032.202-.033.198-.034.194-.036.191-.038.187-.038.183-.04.179-.041.175-.042.172-.043.168-.043.163-.045.16-.046.155-.046.152-.048.148-.048.143-.048.139-.049.136-.05.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.05.051-.05.023-.025.023-.024.021-.024.02-.025.019-.024.018-.024.017-.023.015-.024.014-.023.013-.023.012-.023.01-.023.01-.022.008-.022.006-.023.006-.021.004-.022.004-.021.001-.021.001-.021-.001-.021-.001-.021-.004-.021-.004-.022-.006-.021-.006-.023-.008-.022-.01-.022-.01-.023-.012-.023-.013-.023-.014-.023-.015-.024-.017-.023-.018-.024-.019-.024-.02-.025-.021-.024-.023-.024-.023-.025-.051-.05-.056-.05-.06-.05-.065-.051-.07-.052-.074-.051-.079-.052-.083-.052-.088-.052-.092-.052-.096-.052-.101-.052-.106-.052-.11-.052-.114-.052-.118-.051-.123-.051-.126-.051-.131-.05-.136-.05-.139-.049-.143-.048-.148-.048-.152-.048-.155-.046-.16-.046-.163-.045-.168-.043-.172-.043-.175-.042-.179-.041-.183-.04-.187-.038-.191-.038-.194-.036-.198-.034-.202-.033-.205-.032-.21-.031-.212-.028-.216-.027-.22-.026-.224-.023-.226-.022-.231-.021-.233-.018-.237-.016-.241-.014-.244-.012-.247-.011-.25-.008-.254-.005-.257-.004-.26-.001-.26.001z" transform="scale(.5)"></path></symbol></defs><defs><symbol height="24" width="24" id="clock"><path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.848 12.459c.202.038.202.333.001.372-1.907.361-6.045 1.111-6.547 1.111-.719 0-1.301-.582-1.301-1.301 0-.512.77-5.447 1.125-7.445.034-.192.312-.181.343.014l.985 6.238 5.394 1.011z" transform="scale(.5)"></path></symbol></defs><defs><marker orient="auto-start-reverse" markerHeight="12" markerWidth="12" markerUnits="userSpaceOnUse" refY="5" refX="7.9" id="arrowhead"><path d="M -1 0 L 10 5 L 0 10 z"></path></marker></defs><defs><marker refY="4.5" refX="4" orient="auto" markerHeight="8" markerWidth="15" id="crosshead"><path style="stroke-dasharray: 0, 0;" d="M 1,2 L 6,7 M 6,2 L 1,7" stroke-width="1pt" stroke="#000000" fill="none"></path></marker></defs><defs><marker orient="auto" markerHeight="28" markerWidth="20" refY="7" refX="15.5" id="filled-head"><path d="M 18,7 L9,13 L14,7 L9,1 Z"></path></marker></defs><defs><marker orient="auto" markerHeight="40" markerWidth="60" refY="15" refX="15" id="sequencenumber"><circle r="6" cy="15" cx="15"></circle></marker></defs><text style="font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="80" x="191">tx: call A.f(x), value = v</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="111" x2="305" y1="111" x1="76"></line><text style="font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="126" x="410">external call B.g(y)</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="157" x2="510" y1="157" x1="310"></line><text style="font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="172" x="413">return / revert</text><line style="stroke-dasharray: 3, 3; fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine1" y2="203" x2="313" y1="203" x1="513"></line><text style="font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="218" x="194">return / revert</text><line style="stroke-dasharray: 3, 3; fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine1" y2="249" x2="79" y1="249" x1="308"></line></svg></figure>
+<pre class="solidity"><code>contract Counter {
+  uint256 public count;
+  function inc() external { count += 1; }
+}</code></pre>
+</div>
+</div>
+</div></section>
+<section class="slide" id="smart-contract-risks-and-security"><h2 class="slide-title"><a href="../ethereum/04-EF-smart_contracts.html#/reentrancy-anatomy-and-defenses" target="_blank">Smart Contract Risks and Security</a></h2><div class="slide-body">
+<ul>
+<li>Bugs become security problems when code directly controls assets or permissions</li>
+<li>Important risks include reentrancy, bad access control, unsafe upgrades, oracle dependence, and randomness misuse</li>
+<li><strong>Reentrancy</strong>: an external call lets untrusted code call back before state is updated</li>
+<li>Reused code and copied patterns can spread both best practices and vulnerabilities at scale</li>
+<li>Code quality, governance, and operational controls still matter</li>
+</ul>
+</div></section>
+<section class="slide" id="oracles-and-off-chain-dependencies"><h2 class="slide-title"><a href="../ethereum/04-EF-smart_contracts.html#/randomness-oracles-and-external-data" target="_blank">Oracles and Off-Chain Dependencies</a></h2><div class="slide-body">
+<ul>
+<li>Smart contracts cannot directly observe the outside world</li>
+<li><strong>Oracles</strong> bridge in prices, events, or other off-chain facts</li>
+<li>That makes them useful, but also reintroduces trust and manipulation risk</li>
+<li>If the oracle is wrong, delayed, or censored, what does the contract do?</li>
+</ul>
+<div class="callout-warning" data-appearance="simple">
+<p>Where and why did trust re-enter the system?</p>
+</div>
+</div></section>
+<section class="slide" id="layer-2s-rollups-and-blobs"><h2 class="slide-title"><a href="../ethereum/01-EF-ethereum_intro.html#/proto-danksharding-eip-4844-blob-data-for-l2s" target="_blank">Layer 2s, Rollups, and Blobs</a></h2><div class="slide-body">
+<ul>
+<li><strong>Layer 2</strong> systems move execution or aggregation away from Layer 1 while still relying on Ethereum for settlement or data availability</li>
+<li><strong>Optimistic rollups</strong> rely on fraud proofs and challenge periods</li>
+<li><strong>ZK rollups</strong> rely on validity proofs that show the state transition was correct</li>
+<li><strong>Blob data</strong> from EIP-4844 gives rollups cheaper temporary data space without expanding permanent state</li>
+</ul>
+</div></section>
+<section class="slide" id="ethereum-upgrades-eips-and-client-diversity"><h2 class="slide-title"><a href="../ethereum/01-EF-ethereum_intro.html#/governance-ethereum-improvement-proposals-eips" target="_blank">Ethereum Upgrades, EIPs, and Client Diversity</a></h2><div class="slide-body">
+<ul>
+<li><strong>EIPs</strong> are the formal mechanism for proposing and standardizing protocol changes</li>
+<li>Ethereum evolves through coordinated upgrades rather than staying frozen</li>
+<li>Client diversity matters because a monoculture bug can threaten liveness or safety across the network</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Examples to keep in view</strong></p>
+<ul>
+<li>The Merge</li>
+<li>Rollup-centered scaling</li>
+<li>Blob data and the broader danksharding roadmap</li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="tokens-and-standards"><h2 class="slide-title"><a href="../ethereum/05-EF-digital_assets_tokenization_and_nfts.html#/digital-assets-tokenization-and-nfts" target="_blank">Tokens and Standards</a></h2><div class="slide-body">
+<ul>
+<li>Tokens are smart-contract-defined assets or rights</li>
+<li>Common standards:
+<ul>
+<li><strong>ERC-20</strong> defines fungible-token balances, transfers, and allowances</li>
+<li><strong>ERC-721</strong> defines unique NFT ownership and transfer</li>
+<li><strong>ERC-1155</strong> supports mixed fungible and non-fungible token IDs in one contract</li>
+<li><strong>ERC-165</strong> lets contracts advertise which interfaces they implement</li>
+</ul></li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>Native ETH is a protocol asset; most tokens and NFTs are smart-contract assets that follow shared standards.</p>
+</div>
+</div></section>
+<section class="slide" id="nfts-and-tokenization"><h2 class="slide-title"><a href="../ethereum/05-EF-digital_assets_tokenization_and_nfts.html#/realworld-assets-rwas-and-tokenization" target="_blank">NFTs and Tokenization</a></h2><div class="slide-body">
+<ul>
+<li>Fungible tokens are interchangeable units; NFTs track distinct records or items</li>
+<li>Tokenization links blockchain records to claims about assets, access, identity, or provenance</li>
+<li>The token is the on-chain record, but its legal, social, or physical meaning depends on surrounding rules and institutions</li>
+</ul>
+<div style="position: relative; top: -95px;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 492.34 98.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:656px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 94)">
+<g id="node1" class="node">
+<path fill="#dbeafe" stroke="black" d="M72.91,-63C72.91,-63 12,-63 12,-63 6,-63 0,-57 0,-51 0,-51 0,-39 0,-39 0,-33 6,-27 12,-27 12,-27 72.91,-27 72.91,-27 78.91,-27 84.91,-33 84.91,-39 84.91,-39 84.91,-51 84.91,-51 84.91,-57 78.91,-63 72.91,-63"/>
+<text text-anchor="middle" x="42.46" y="-42" font-family="Helvetica,sans-Serif" font-size="10.00">Issuer / Creator</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e9d5ff" stroke="black" d="M194.38,-63C194.38,-63 132.91,-63 132.91,-63 126.91,-63 120.91,-57 120.91,-51 120.91,-51 120.91,-39 120.91,-39 120.91,-33 126.91,-27 132.91,-27 132.91,-27 194.38,-27 194.38,-27 200.38,-27 206.38,-33 206.38,-39 206.38,-39 206.38,-51 206.38,-51 206.38,-57 200.38,-63 194.38,-63"/>
+<text text-anchor="middle" x="163.65" y="-48" font-family="Helvetica,sans-Serif" font-size="10.00">Token Contract</text>
+<text text-anchor="middle" x="163.65" y="-36" font-family="Helvetica,sans-Serif" font-size="10.00">(ERC standard)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M85.14,-45C93.89,-45 103.21,-45 112.24,-45"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="112.12,-47.45 119.12,-45 112.12,-42.55 112.12,-47.45"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#dcfce7" stroke="black" d="M348.1,-90C348.1,-90 254.38,-90 254.38,-90 248.38,-90 242.38,-84 242.38,-78 242.38,-78 242.38,-66 242.38,-66 242.38,-60 248.38,-54 254.38,-54 254.38,-54 348.1,-54 348.1,-54 354.1,-54 360.1,-60 360.1,-66 360.1,-66 360.1,-78 360.1,-78 360.1,-84 354.1,-90 348.1,-90"/>
+<text text-anchor="middle" x="301.24" y="-75" font-family="Helvetica,sans-Serif" font-size="10.00">Ownership / balances /</text>
+<text text-anchor="middle" x="301.24" y="-63" font-family="Helvetica,sans-Serif" font-size="10.00">approvals</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M206.8,-53.39C215.38,-55.1 224.59,-56.94 233.77,-58.76"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="233.19,-61.15 240.54,-60.11 234.15,-56.34 233.19,-61.15"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fef3c7" stroke="black" d="M336.42,-36C336.42,-36 266.06,-36 266.06,-36 260.06,-36 254.06,-30 254.06,-24 254.06,-24 254.06,-12 254.06,-12 254.06,-6 260.06,0 266.06,0 266.06,0 336.42,0 336.42,0 342.42,0 348.42,-6 348.42,-12 348.42,-12 348.42,-24 348.42,-24 348.42,-30 342.42,-36 336.42,-36"/>
+<text text-anchor="middle" x="301.24" y="-15" font-family="Helvetica,sans-Serif" font-size="10.00">Metadata / claims</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M206.8,-36.61C219.05,-34.17 232.6,-31.47 245.5,-28.9"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="245.84,-31.33 252.23,-27.56 244.88,-26.52 245.84,-31.33"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#fde68a" stroke="black" d="M472.34,-63C472.34,-63 408.1,-63 408.1,-63 402.1,-63 396.1,-57 396.1,-51 396.1,-51 396.1,-39 396.1,-39 396.1,-33 402.1,-27 408.1,-27 408.1,-27 472.34,-27 472.34,-27 478.34,-27 484.34,-33 484.34,-39 484.34,-39 484.34,-51 484.34,-51 484.34,-57 478.34,-63 472.34,-63"/>
+<text text-anchor="middle" x="440.22" y="-48" font-family="Helvetica,sans-Serif" font-size="10.00">Apps / markets /</text>
+<text text-anchor="middle" x="440.22" y="-36" font-family="Helvetica,sans-Serif" font-size="10.00">indexers</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M360.33,-60.55C369.39,-58.76 378.7,-56.93 387.61,-55.17"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="387.97,-57.6 394.37,-53.84 387.03,-52.79 387.97,-57.6"/>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M348.61,-27.14C361.09,-29.6 374.67,-32.28 387.42,-34.79"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="386.69,-37.14 394.03,-36.09 387.64,-32.34 386.69,-37.14"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide" id="graph-thinking-and-heuristics"><h2 class="slide-title"><a href="../forensics/02-FO-foundations_obfuscation_tracing.html#/the-analysts-mindset-graph-thinking" target="_blank">Graph Thinking and Heuristics</a></h2><div class="slide-body">
+<ul>
+<li>Blockchain forensics often begins with transaction graph structure</li>
+<li>Common heuristics and patterns:
+<ul>
+<li>Fan-in/fan-out</li>
+<li>Common-input ownership (CIOH)</li>
+<li>Peeling chains and change detection</li>
+<li>Address clustering</li>
+</ul></li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>Heuristics generate investigative leads and clustering hypotheses, but they are clues, not proof.</p>
+</div>
+</div></section>
+<section class="slide" id="obfuscation-and-countermeasures"><h2 class="slide-title"><a href="../forensics/02-FO-foundations_obfuscation_tracing.html#/obfuscation-service-mixers-tumblers" target="_blank">Obfuscation and Countermeasures</a></h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li>Adversaries use mixers, CoinJoin, bridges, chain hopping, and privacy-preserving assets to make tracing harder</li>
+<li>Investigators respond with flow analysis, cross-chain tracing, timing correlation, and service-level intelligence</li>
+</ul>
+</div><div class="column" style="width:40%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 347.83 227.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:464px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 223)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="8,-8 8,-211 83.56,-211 83.56,-8 8,-8"/>
+<text text-anchor="middle" x="45.78" y="-194.4" font-family="Helvetica,sans-Serif" font-size="14.00">Deposits</text>
+</g>
+<g id="clust2" class="cluster">
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="221.69,-17 221.69,-202 331.83,-202 331.83,-17 221.69,-17"/>
+<text text-anchor="middle" x="276.76" y="-185.4" font-family="Helvetica,sans-Serif" font-size="14.00">Withdrawals</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#ffdddd" stroke="black" d="M63.17,-57.8C63.17,-57.8 28.39,-57.8 28.39,-57.8 22.39,-57.8 16.39,-51.8 16.39,-45.8 16.39,-45.8 16.39,-28.2 16.39,-28.2 16.39,-22.2 22.39,-16.2 28.39,-16.2 28.39,-16.2 63.17,-16.2 63.17,-16.2 69.17,-16.2 75.17,-22.2 75.17,-28.2 75.17,-28.2 75.17,-45.8 75.17,-45.8 75.17,-51.8 69.17,-57.8 63.17,-57.8"/>
+<text text-anchor="middle" x="45.78" y="-41.2" font-family="Helvetica,sans-Serif" font-size="14.00">User A</text>
+<text text-anchor="middle" x="45.78" y="-24.4" font-family="Helvetica,sans-Serif" font-size="14.00">(Illicit)</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f5f7fb" stroke="black" d="M193.69,-141.18C193.69,-146.6 175.28,-151 152.62,-151 129.96,-151 111.56,-146.6 111.56,-141.18 111.56,-141.18 111.56,-52.82 111.56,-52.82 111.56,-47.4 129.96,-43 152.62,-43 175.28,-43 193.69,-47.4 193.69,-52.82 193.69,-52.82 193.69,-141.18 193.69,-141.18"/>
+<path fill="none" stroke="black" d="M193.69,-141.18C193.69,-135.76 175.28,-131.36 152.62,-131.36 129.96,-131.36 111.56,-135.76 111.56,-141.18"/>
+<text text-anchor="middle" x="152.62" y="-92.8" font-family="Helvetica,sans-Serif" font-size="14.00">Mixer Pool</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M75.43,-53.4C83.45,-57.98 92.4,-63.11 101.28,-68.19"/>
+<polygon fill="black" stroke="black" points="99.49,-71.2 109.91,-73.13 102.97,-65.12 99.49,-71.2"/>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e8f5e9" stroke="black" d="M63.17,-117.8C63.17,-117.8 28.39,-117.8 28.39,-117.8 22.39,-117.8 16.39,-111.8 16.39,-105.8 16.39,-105.8 16.39,-88.2 16.39,-88.2 16.39,-82.2 22.39,-76.2 28.39,-76.2 28.39,-76.2 63.17,-76.2 63.17,-76.2 69.17,-76.2 75.17,-82.2 75.17,-88.2 75.17,-88.2 75.17,-105.8 75.17,-105.8 75.17,-111.8 69.17,-117.8 63.17,-117.8"/>
+<text text-anchor="middle" x="45.78" y="-101.2" font-family="Helvetica,sans-Serif" font-size="14.00">User B</text>
+<text text-anchor="middle" x="45.78" y="-84.4" font-family="Helvetica,sans-Serif" font-size="14.00">(Licit)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M75.43,-97C83.01,-97 91.44,-97 99.85,-97"/>
+<polygon fill="black" stroke="black" points="99.71,-100.5 109.71,-97 99.71,-93.5 99.71,-100.5"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e8f5e9" stroke="black" d="M63.56,-177.8C63.56,-177.8 28,-177.8 28,-177.8 22,-177.8 16,-171.8 16,-165.8 16,-165.8 16,-148.2 16,-148.2 16,-142.2 22,-136.2 28,-136.2 28,-136.2 63.56,-136.2 63.56,-136.2 69.56,-136.2 75.56,-142.2 75.56,-148.2 75.56,-148.2 75.56,-165.8 75.56,-165.8 75.56,-171.8 69.56,-177.8 63.56,-177.8"/>
+<text text-anchor="middle" x="45.78" y="-161.2" font-family="Helvetica,sans-Serif" font-size="14.00">User C</text>
+<text text-anchor="middle" x="45.78" y="-144.4" font-family="Helvetica,sans-Serif" font-size="14.00">(Licit)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M75.98,-140.29C83.91,-135.75 92.72,-130.71 101.45,-125.71"/>
+<polygon fill="black" stroke="black" points="102.96,-128.88 109.9,-120.88 99.48,-122.81 102.96,-128.88"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#ffdddd" stroke="black" d="M311.44,-61C311.44,-61 242.08,-61 242.08,-61 236.08,-61 230.08,-55 230.08,-49 230.08,-49 230.08,-37 230.08,-37 230.08,-31 236.08,-25 242.08,-25 242.08,-25 311.44,-25 311.44,-25 317.44,-25 323.44,-31 323.44,-37 323.44,-37 323.44,-49 323.44,-49 323.44,-55 317.44,-61 311.44,-61"/>
+<text text-anchor="middle" x="276.76" y="-38.8" font-family="Helvetica,sans-Serif" font-size="14.00">New Addr A&#39;</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M193.95,-79.17C203.55,-74.93 213.91,-70.34 223.94,-65.91"/>
+<polygon fill="black" stroke="black" points="225.1,-69.22 232.83,-61.98 222.27,-62.82 225.1,-69.22"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#e8f5e9" stroke="black" d="M311.44,-115C311.44,-115 242.08,-115 242.08,-115 236.08,-115 230.08,-109 230.08,-103 230.08,-103 230.08,-91 230.08,-91 230.08,-85 236.08,-79 242.08,-79 242.08,-79 311.44,-79 311.44,-79 317.44,-79 323.44,-85 323.44,-91 323.44,-91 323.44,-103 323.44,-103 323.44,-109 317.44,-115 311.44,-115"/>
+<text text-anchor="middle" x="276.76" y="-92.8" font-family="Helvetica,sans-Serif" font-size="14.00">New Addr B&#39;</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M193.95,-97C201.88,-97 210.34,-97 218.7,-97"/>
+<polygon fill="black" stroke="black" points="218.47,-100.5 228.47,-97 218.46,-93.5 218.47,-100.5"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="#e8f5e9" stroke="black" d="M311.83,-169C311.83,-169 241.69,-169 241.69,-169 235.69,-169 229.69,-163 229.69,-157 229.69,-157 229.69,-145 229.69,-145 229.69,-139 235.69,-133 241.69,-133 241.69,-133 311.83,-133 311.83,-133 317.83,-133 323.83,-139 323.83,-145 323.83,-145 323.83,-157 323.83,-157 323.83,-163 317.83,-169 311.83,-169"/>
+<text text-anchor="middle" x="276.76" y="-146.8" font-family="Helvetica,sans-Serif" font-size="14.00">New Addr C&#39;</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M193.95,-114.83C203.55,-119.07 213.91,-123.66 223.94,-128.09"/>
+<polygon fill="black" stroke="black" points="222.27,-131.18 232.83,-132.02 225.1,-124.78 222.27,-131.18"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="privacy-coins"><h2 class="slide-title"><a href="../forensics/02-FO-foundations_obfuscation_tracing.html#/the-shift-in-strategy-privacy-preserving-blockchains" target="_blank">Privacy Coins</a></h2><div class="slide-body">
+<ul>
+<li>Privacy coins change the problem because the transaction graph is intentionally hidden or degraded</li>
+<li><strong>Monero</strong> uses ring signatures, stealth addresses, and RingCT to hide sender, receiver, and amount</li>
+<li><strong>Zcash</strong> uses optional shielded transactions backed by zk-SNARKs</li>
+<li>Investigators often pivot from on-chain tracing toward:
+<ul>
+<li>Entry and exit points</li>
+<li>Timing and amount correlation</li>
+<li>Device or server-side evidence</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="attribution"><h2 class="slide-title"><a href="../forensics/02-FO-foundations_obfuscation_tracing.html#/the-final-step-attribution" target="_blank">Attribution</a></h2><div class="slide-body">
+<ul>
+<li>On-chain transparency alone rarely gives a real-world name immediately</li>
+<li>Attribution often depends on off-chain links such as:
+<ul>
+<li>Exchange records</li>
+<li>KYC/AML processes</li>
+<li>Seized devices or cloud accounts</li>
+<li>OSINT and behavioral traces</li>
+</ul></li>
+<li>The key lesson is that blockchain forensics combines technical tracing with institutional and investigative leverage</li>
+</ul>
+</div></section>
+<section class="slide" id="course-purpose"><h2 class="slide-title">Course Purpose</h2><div class="slide-body">
+<ul>
+<li>It is the combination of:
+<ul>
+<li>Cryptographic commitments</li>
+<li>Distributed communication</li>
+<li>Consensus under adversarial conditions</li>
+<li>Incentive design</li>
+<li>Application-layer logic</li>
+</ul></li>
+<li>If one layer is weak, the overall system can still fail</li>
+</ul>
+</div></section>
+<section class="slide" id="final-exam-review-prompts"><h2 class="slide-title">Final Exam Review Prompts</h2><div class="slide-body">
+<ul>
+<li>What does the Merkle root do, and why is it in the block header?</li>
+<li>Why are digital signatures central to blockchain ownership?</li>
+<li>Why does a permissionless blockchain need a different consensus model than a permissioned ledger?</li>
+<li>How does Bitcoin’s UTXO model differ from Ethereum’s account model?</li>
+<li>Why are blockchain forensics possible even when users begin with pseudonymous addresses?</li>
+</ul>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-yaga_blockchaintechnologyoverview_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">D. Yaga, P. Mell, N. Roby, and K. Scarfone, <span>“Blockchain technology overview,”</span> <span>National Institute of Standards and Technology</span>, Gaithersburg, MD, NIST IR 8202, Oct. 2018. doi: <a href="https://doi.org/10.6028/NIST.IR.8202">10.6028/NIST.IR.8202</a>.</div>
+</div>
+<div id="ref-narayanan_bitcoincryptocurrencytechnologies_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">A. Narayanan, J. Bonneau, E. Felten, A. Miller, and S. Goldfeder, <em>Bitcoin and <span>Cryptocurrency Technologies</span></em>. Princeton University Press, 2016.</div>
+</div>
+<div id="ref-bonneau_sokresearchperspectives_2015" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">J. Bonneau, A. Miller, J. Clark, A. Narayanan, J. A. Kroll, and E. W. Felten, <span>“<span>SoK</span>: <span>Research Perspectives</span> and <span>Challenges</span> for <span>Bitcoin</span> and <span>Cryptocurrencies</span>,”</span> in <em>2015 <span>IEEE Symposium</span> on <span>Security</span> and <span>Privacy</span></em>, 2015, pp. 104–121. doi: <a href="https://doi.org/10.1109/SP.2015.14">10.1109/SP.2015.14</a>.</div>
+</div>
+<div id="ref-antonopoulos_masteringbitcoinprogramming_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">A. M. Antonopoulos, <em>Mastering <span>Bitcoin</span>: Programming the open blockchain</em>, Second edition. Sebastopol, CA: O’Reilly, 2017.</div>
+</div>
+<div id="ref-antonopoulos_masteringethereum_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">A. M. Antonopoulos and G. Wood, <span>“Mastering <span>Ethereum</span>.”</span> 2018. Available: <a href="https://github.com/ethereumbook/ethereumbook">https://github.com/ethereumbook/ethereumbook</a></div>
+</div>
+<div id="ref-merkle_digitalsignaturebased_1988" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">R. C. Merkle, <span>“A <span>Digital Signature Based</span> on a <span>Conventional Encryption Function</span>,”</span> in <em>Advances in <span>Cryptology</span> — <span>CRYPTO</span> ’87</em>, vol. 293, C. Pomerance, Ed., Berlin, Heidelberg: Springer Berlin Heidelberg, 1988, pp. 369–378. doi: <a href="https://doi.org/10.1007/3-540-48184-2_32">10.1007/3-540-48184-2_32</a>.</div>
+</div>
+<div id="ref-nakamoto_bitcoinpeertopeerelectronic_2008" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">S. Nakamoto, <span>“Bitcoin: <span class="nocase">A Peer-to-Peer Electronic Cash System</span>.”</span> Satoshi Nakamoto Institute, Oct. 31, 2008. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf">https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf</a></div>
+</div>
+<div id="ref-bitcoin.orgdevelopers_walletsdeveloperguide_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">Bitcoin.org Developers, <span>“Wallets (<span>Developer Guide</span>).”</span> 2024. Available: <a href="https://developer.bitcoin.org/devguide/wallets.html">https://developer.bitcoin.org/devguide/wallets.html</a></div>
+</div>
+<div id="ref-sec_sec_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">U.S. Securities and Exchange Commission, <span>“U.s. Securities and exchange commission.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.sec.gov">https://www.sec.gov</a></div>
+</div>
+<div id="ref-boneh_quantumcryptographyimplications_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">D. Boneh and V. Shoup, <span>“Quantum <span>Cryptography</span> — <span>Implications</span>.”</span> 2020. Available: <a href="https://intensecrypto.org/public/lec_19_quantum.html">https://intensecrypto.org/public/lec_19_quantum.html</a></div>
+</div>
+<div id="ref-l34_nist_pqc_project_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">National Institute of Standards and Technology, <span>“Post-quantum cryptography project.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://csrc.nist.gov/projects/post-quantum-cryptography">https://csrc.nist.gov/projects/post-quantum-cryptography</a></div>
+</div>
+<div id="ref-l35_milksad_update2_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">C. Reitter, <span>“Milk sad: Update #2 - trust wallet ranges, uncompressed pubkeys.”</span> Accessed: Mar. 28, 2026. [Online]. Available: <a href="https://milksad.info/posts/research-update-2/">https://milksad.info/posts/research-update-2/</a></div>
+</div>
+<div id="ref-ukgovernmentchiefscientificadviser_distributedledgertechnology_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">UK Government Chief Scientific Adviser, <span>“Distributed <span>Ledger Technology</span>: <span>Beyond Block Chain</span>.”</span> 2016. Available: <a href="https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/492972/gs-16-1-distributed-ledger-technology.pdf">https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/492972/gs-16-1-distributed-ledger-technology.pdf</a></div>
+</div>
+<div id="ref-singh_eclipseattacksoverlay_2006" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">A. Singh, T.-W. Ngan, P. Druschel, and D. S. Wallach, <span>“Eclipse <span>Attacks</span> on <span>Overlay Networks</span>: <span>Threats</span> and <span>Defenses</span>,”</span> in <em>Proceedings <span>IEEE INFOCOM</span> 2006. <span>25TH IEEE International Conference</span> on <span>Computer Communications</span></em>, Barcelona, Spain: IEEE, 2006, pp. 1–12. doi: <a href="https://doi.org/10.1109/INFOCOM.2006.231">10.1109/INFOCOM.2006.231</a>.</div>
+</div>
+<div id="ref-heilman_eclipseattacksbitcoins_2015" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline">E. Heilman, A. Kendler, A. Zohar, and S. Goldberg, <span>“Eclipse <span>Attacks</span> on <span>Bitcoin</span>’s <span class="nocase">Peer-to-Peer Network</span>.”</span> Accessed: Oct. 21, 2025. [Online]. Available: <a href="https://eprint.iacr.org/2015/263">https://eprint.iacr.org/2015/263</a></div>
+</div>
+<div id="ref-androulaki_hyperledgerfabricdistributed_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[16] </div><div class="csl-right-inline">E. Androulaki <em>et al.</em>, <span>“Hyperledger fabric: A distributed operating system for permissioned blockchains,”</span> in <em>Proceedings of the <span>Thirteenth EuroSys Conference</span></em>, Porto Portugal: ACM, Apr. 2018, pp. 1–15. doi: <a href="https://doi.org/10.1145/3190508.3190538">10.1145/3190508.3190538</a>.</div>
+</div>
+<div id="ref-hyperledger_blockchainplatformenterprise_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[17] </div><div class="csl-right-inline">Hyperledger, <span>“A <span>Blockchain Platform</span> for the <span>Enterprise</span> — <span>Hyperledger Fabric Docs</span> main documentation.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://hyperledger-fabric.readthedocs.io/en/release-2.5/">https://hyperledger-fabric.readthedocs.io/en/release-2.5/</a></div>
+</div>
+<div id="ref-buterin_ethereumnextgenerationsmart_2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[18] </div><div class="csl-right-inline">V. Buterin, <span>“Ethereum: <span>A Next-Generation Smart Contract</span> and <span>Decentralized Application Platform</span>.”</span> Ethereum.org, 2014. Available: <a href="https://ethereum.org/content/whitepaper/whitepaper-pdf/Ethereum_Whitepaper_-_Buterin_2014.pdf">https://ethereum.org/content/whitepaper/whitepaper-pdf/Ethereum_Whitepaper_-_Buterin_2014.pdf</a></div>
+</div>
+<div id="ref-l34_ethereumorg_merge_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[19] </div><div class="csl-right-inline"><span class="nocase">ethereum.org</span>, <span>“The merge.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://ethereum.org/roadmap/merge/">https://ethereum.org/roadmap/merge/</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

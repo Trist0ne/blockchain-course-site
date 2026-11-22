@@ -1,6 +1,11 @@
-# Written by tools/cut_delivery.py. Publishes this folder with GitLab Pages; nothing is built. Ignored on GitHub.
+# Written by tools/cut_delivery.py. Ignored on GitHub.
+# pages:   publishes this folder with GitLab Pages whenever the class repo changes (nothing is built).
+# hand-in: every student hand-in starts a pipeline carrying the record. The pipeline itself is the record, so its one
+#          job is manual and never runs: no runner time is used.
 pages:
   stage: deploy
+  image: alpine:latest   # the smallest image: the job only copies files (a shell runner ignores this)
+  interruptible: true    # a newer change cancels an older build still waiting: a burst of updates costs one build
   script:
     - mkdir .public
     - cp -r index.html assets .nojekyll .public/
@@ -9,4 +14,11 @@ pages:
     paths:
       - public
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+hand-in:
+  stage: deploy
+  script:
+    - echo "A hand-in. The record is in this pipeline's variables; the instructor dashboard reads it."
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "trigger" || $CI_PIPELINE_SOURCE == "api"
+      when: manual

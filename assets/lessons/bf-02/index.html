@@ -1,0 +1,1355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bitcoin — Transactions and Mining</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/bitcoin/02-BF-transactions_and_mining.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="bf-02" data-code="02-BF" data-src="83864aa7a673b1ec" data-slides="27">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section VI: Bitcoin Framework · Lesson 02-BF</p><h1>Bitcoin — Transactions and Mining</h1></div></section>
+<section class="slide" id="agenda"><h2 class="slide-title">Agenda</h2><div class="slide-body">
+<ul>
+<li>First, we start with wallets, keys, and addresses: what a Bitcoin user actually controls.</li>
+<li>Next, we follow how a transaction is created, broadcast, and represented in the UTXO model.</li>
+<li>Then, we examine blocks, mining, and how miners assemble and propagate valid blocks.</li>
+<li>Finally, we connect confirmations, chain growth, and mining practice into one end-to-end system.</li>
+</ul>
+</div></section>
+<section class="slide" id="from-wallet-to-block"><h2 class="slide-title">From Wallet to Block</h2><div class="slide-body">
+<ul>
+<li>This lesson follows two linked actions in Bitcoin: <strong>transactions</strong> and <strong>mining</strong>.</li>
+<li>Users create and sign transactions; miners gather valid transactions into blocks.</li>
+<li>Together, these actions move value, update the ledger, and secure the network.</li>
+</ul>
+<p><strong>Let’s start with what a Bitcoin user actually has: a wallet that manages keys, addresses, and the authority to spend Bitcoin.</strong></p>
+</div></section>
+<section class="slide smaller" id="what-are-wallets"><h2 class="slide-title">What Are Wallets?</h2><div class="slide-body">
+<p>A user typically interacts with the Bitcoin network using a <strong>wallet</strong>, which serves several purposes:</p>
+<ul>
+<li><strong>Key manager</strong>: it creates or stores the private keys, often from a seed phrase.</li>
+<li><strong>Signer</strong>: it produces the digital signatures needed to authorize spending.</li>
+<li><strong>State viewer</strong>: it tracks which UTXOs and balances the user can control on-chain.</li>
+<li><strong>Applies spending policy</strong>: coin selection, fee estimation, change outputs, and address reuse rules.</li>
+</ul>
+<p>Two important clarifications:</p>
+<ul>
+<li><strong>Wallets do not hold coins</strong>. Coins remain on-chain; the wallet holds the cryptographic authority to control them.</li>
+<li><strong>Backups and recovery</strong> matter: seed phrase security is often more important than the wallet interface itself.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Seed phrase:</strong> a human-readable backup phrase that a wallet can use to regenerate the private keys it manages.</p>
+</div>
+</div></section>
+<section class="slide" id="wallets-addresses-and-keys"><h2 class="slide-title">Wallets, Addresses, and Keys</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:52%;">
+<div style="font-size: 0.84em; line-height: 1.16;">
+<ul>
+<li><p>Wallets usually manage <strong>many keys and many addresses</strong>, not just one.</p></li>
+<li><p>Addresses are typically derived from <strong>public keys</strong>, while the matching <strong>private keys</strong> let a wallet control value sent to those addresses.</p></li>
+<li><p>Wallets often generate a <strong>new address for each transaction</strong> to improve privacy, as address reuse can leak information.</p></li>
+</ul>
+</div>
+</div><div class="column" style="width:48%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 413.82 418.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:552px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 414.6)">
+<g id="clust1" class="cluster">
+<path fill="none" stroke="#cbd5e1" d="M20,-240.8C20,-240.8 379,-240.8 379,-240.8 385,-240.8 391,-246.8 391,-252.8 391,-252.8 391,-328 391,-328 391,-334 385,-340 379,-340 379,-340 20,-340 20,-340 14,-340 8,-334 8,-328 8,-328 8,-252.8 8,-252.8 8,-246.8 14,-240.8 20,-240.8"/>
+<text text-anchor="middle" x="199.5" y="-323.4" font-family="Helvetica,sans-Serif" font-size="14.00">Keys</text>
+</g>
+<g id="clust2" class="cluster">
+<path fill="none" stroke="#cbd5e1" d="M52,-127.2C52,-127.2 346,-127.2 346,-127.2 352,-127.2 358,-133.2 358,-139.2 358,-139.2 358,-192 358,-192 358,-198 352,-204 346,-204 346,-204 52,-204 52,-204 46,-204 40,-198 40,-192 40,-192 40,-139.2 40,-139.2 40,-133.2 46,-127.2 52,-127.2"/>
+<text text-anchor="middle" x="199" y="-187.4" font-family="Helvetica,sans-Serif" font-size="14.00">Addresses</text>
+</g>
+<g id="clust3" class="cluster">
+<path fill="none" stroke="#cbd5e1" d="M58,-8C58,-8 340,-8 340,-8 346,-8 352,-14 352,-20 352,-20 352,-78.4 352,-78.4 352,-84.4 346,-90.4 340,-90.4 340,-90.4 58,-90.4 58,-90.4 52,-90.4 46,-84.4 46,-78.4 46,-78.4 46,-20 46,-20 46,-14 52,-8 58,-8"/>
+<text text-anchor="middle" x="199" y="-73.8" font-family="Helvetica,sans-Serif" font-size="14.00">UTXOs</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#e0f2fe" stroke="#38bdf8" d="M263.86,-410.6C263.86,-410.6 134.14,-410.6 134.14,-410.6 128.14,-410.6 122.14,-404.6 122.14,-398.6 122.14,-398.6 122.14,-381 122.14,-381 122.14,-375 128.14,-369 134.14,-369 134.14,-369 263.86,-369 263.86,-369 269.86,-369 275.86,-375 275.86,-381 275.86,-381 275.86,-398.6 275.86,-398.6 275.86,-404.6 269.86,-410.6 263.86,-410.6"/>
+<text text-anchor="middle" x="199" y="-394" font-family="Helvetica,sans-Serif" font-size="14.00">Wallet</text>
+<text text-anchor="middle" x="199" y="-377.2" font-family="Helvetica,sans-Serif" font-size="14.00">(manages many keys)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M104.41,-307.2C104.41,-307.2 27.59,-307.2 27.59,-307.2 21.59,-307.2 15.59,-301.2 15.59,-295.2 15.59,-295.2 15.59,-260.8 15.59,-260.8 15.59,-254.8 21.59,-248.8 27.59,-248.8 27.59,-248.8 104.41,-248.8 104.41,-248.8 110.41,-248.8 116.41,-254.8 116.41,-260.8 116.41,-260.8 116.41,-295.2 116.41,-295.2 116.41,-301.2 110.41,-307.2 104.41,-307.2"/>
+<text text-anchor="middle" x="66" y="-290.6" font-family="Helvetica,sans-Serif" font-size="14.00">Private Key A</text>
+<text text-anchor="middle" x="66" y="-273.8" font-family="Helvetica,sans-Serif" font-size="14.00">+</text>
+<text text-anchor="middle" x="66" y="-257" font-family="Helvetica,sans-Serif" font-size="14.00">Public Key A</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M139.08,-368.51C139.08,-336.07 139.08,-278 139.08,-278 139.08,-278 125.72,-278 125.72,-278"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="125.72,-275.55 118.72,-278 125.72,-280.45 125.72,-275.55"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M237.41,-307.2C237.41,-307.2 160.59,-307.2 160.59,-307.2 154.59,-307.2 148.59,-301.2 148.59,-295.2 148.59,-295.2 148.59,-260.8 148.59,-260.8 148.59,-254.8 154.59,-248.8 160.59,-248.8 160.59,-248.8 237.41,-248.8 237.41,-248.8 243.41,-248.8 249.41,-254.8 249.41,-260.8 249.41,-260.8 249.41,-295.2 249.41,-295.2 249.41,-301.2 243.41,-307.2 237.41,-307.2"/>
+<text text-anchor="middle" x="199" y="-290.6" font-family="Helvetica,sans-Serif" font-size="14.00">Private Key B</text>
+<text text-anchor="middle" x="199" y="-273.8" font-family="Helvetica,sans-Serif" font-size="14.00">+</text>
+<text text-anchor="middle" x="199" y="-257" font-family="Helvetica,sans-Serif" font-size="14.00">Public Key B</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M199,-368.51C199,-368.51 199,-316.63 199,-316.63"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="201.45,-316.63 199,-309.63 196.55,-316.63 201.45,-316.63"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M370.79,-307.2C370.79,-307.2 293.21,-307.2 293.21,-307.2 287.21,-307.2 281.21,-301.2 281.21,-295.2 281.21,-295.2 281.21,-260.8 281.21,-260.8 281.21,-254.8 287.21,-248.8 293.21,-248.8 293.21,-248.8 370.79,-248.8 370.79,-248.8 376.79,-248.8 382.79,-254.8 382.79,-260.8 382.79,-260.8 382.79,-295.2 382.79,-295.2 382.79,-301.2 376.79,-307.2 370.79,-307.2"/>
+<text text-anchor="middle" x="332" y="-290.6" font-family="Helvetica,sans-Serif" font-size="14.00">Private Key C</text>
+<text text-anchor="middle" x="332" y="-273.8" font-family="Helvetica,sans-Serif" font-size="14.00">+</text>
+<text text-anchor="middle" x="332" y="-257" font-family="Helvetica,sans-Serif" font-size="14.00">Public Key C</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M258.92,-368.51C258.92,-336.07 258.92,-278 258.92,-278 258.92,-278 271.88,-278 271.88,-278"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="271.88,-280.45 278.88,-278 271.88,-275.55 271.88,-280.45"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M115.52,-171.2C115.52,-171.2 60.48,-171.2 60.48,-171.2 54.48,-171.2 48.48,-165.2 48.48,-159.2 48.48,-159.2 48.48,-147.2 48.48,-147.2 48.48,-141.2 54.48,-135.2 60.48,-135.2 60.48,-135.2 115.52,-135.2 115.52,-135.2 121.52,-135.2 127.52,-141.2 127.52,-147.2 127.52,-147.2 127.52,-159.2 127.52,-159.2 127.52,-165.2 121.52,-171.2 115.52,-171.2"/>
+<text text-anchor="middle" x="88" y="-149" font-family="Helvetica,sans-Serif" font-size="14.00">Address 1</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M82.44,-248.42C82.44,-248.42 82.44,-180.33 82.44,-180.33"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="84.89,-180.33 82.44,-173.33 79.99,-180.33 84.89,-180.33"/>
+<text text-anchor="middle" x="96.07" y="-216.2" font-family="Helvetica,sans-Serif" font-size="14.00">derive</text>
+</g>
+
+<g id="node6" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M226.52,-171.2C226.52,-171.2 171.48,-171.2 171.48,-171.2 165.48,-171.2 159.48,-165.2 159.48,-159.2 159.48,-159.2 159.48,-147.2 159.48,-147.2 159.48,-141.2 165.48,-135.2 171.48,-135.2 171.48,-135.2 226.52,-135.2 226.52,-135.2 232.52,-135.2 238.52,-141.2 238.52,-147.2 238.52,-147.2 238.52,-159.2 238.52,-159.2 238.52,-165.2 232.52,-171.2 226.52,-171.2"/>
+<text text-anchor="middle" x="199" y="-149" font-family="Helvetica,sans-Serif" font-size="14.00">Address 2</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M199,-248.42C199,-248.42 199,-180.33 199,-180.33"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="201.45,-180.33 199,-173.33 196.55,-180.33 201.45,-180.33"/>
+<text text-anchor="middle" x="218.07" y="-216.2" font-family="Helvetica,sans-Serif" font-size="14.00">derive</text>
+</g>
+
+<g id="node7" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M337.52,-171.2C337.52,-171.2 282.48,-171.2 282.48,-171.2 276.48,-171.2 270.48,-165.2 270.48,-159.2 270.48,-159.2 270.48,-147.2 270.48,-147.2 270.48,-141.2 276.48,-135.2 282.48,-135.2 282.48,-135.2 337.52,-135.2 337.52,-135.2 343.52,-135.2 349.52,-141.2 349.52,-147.2 349.52,-147.2 349.52,-159.2 349.52,-159.2 349.52,-165.2 343.52,-171.2 337.52,-171.2"/>
+<text text-anchor="middle" x="310" y="-149" font-family="Helvetica,sans-Serif" font-size="14.00">Address 3</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M315.36,-248.42C315.36,-248.42 315.36,-180.33 315.36,-180.33"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="317.81,-180.33 315.36,-173.33 312.91,-180.33 317.81,-180.33"/>
+<text text-anchor="middle" x="340.07" y="-216.2" font-family="Helvetica,sans-Serif" font-size="14.00">derive</text>
+</g>
+
+<g id="node8" class="node">
+<path fill="#ecfdf5" stroke="#34d399" d="M117.57,-57.6C117.57,-57.6 66.43,-57.6 66.43,-57.6 60.43,-57.6 54.43,-51.6 54.43,-45.6 54.43,-45.6 54.43,-28 54.43,-28 54.43,-22 60.43,-16 66.43,-16 66.43,-16 117.57,-16 117.57,-16 123.57,-16 129.57,-22 129.57,-28 129.57,-28 129.57,-45.6 129.57,-45.6 129.57,-51.6 123.57,-57.6 117.57,-57.6"/>
+<text text-anchor="middle" x="92" y="-41" font-family="Helvetica,sans-Serif" font-size="14.00">UTXO</text>
+<text text-anchor="middle" x="92" y="-24.2" font-family="Helvetica,sans-Serif" font-size="14.00">0.40 BTC</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M90.97,-134.76C90.97,-134.76 90.97,-66.88 90.97,-66.88"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="93.42,-66.88 90.97,-59.88 88.52,-66.88 93.42,-66.88"/>
+<text text-anchor="middle" x="119.41" y="-102.6" font-family="Helvetica,sans-Serif" font-size="14.00">locks value to</text>
+</g>
+
+<g id="node9" class="node">
+<path fill="#ecfdf5" stroke="#34d399" d="M224.57,-57.6C224.57,-57.6 173.43,-57.6 173.43,-57.6 167.43,-57.6 161.43,-51.6 161.43,-45.6 161.43,-45.6 161.43,-28 161.43,-28 161.43,-22 167.43,-16 173.43,-16 173.43,-16 224.57,-16 224.57,-16 230.57,-16 236.57,-22 236.57,-28 236.57,-28 236.57,-45.6 236.57,-45.6 236.57,-51.6 230.57,-57.6 224.57,-57.6"/>
+<text text-anchor="middle" x="199" y="-41" font-family="Helvetica,sans-Serif" font-size="14.00">UTXO</text>
+<text text-anchor="middle" x="199" y="-24.2" font-family="Helvetica,sans-Serif" font-size="14.00">0.15 BTC</text>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M199,-134.76C199,-134.76 199,-66.88 199,-66.88"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="201.45,-66.88 199,-59.88 196.55,-66.88 201.45,-66.88"/>
+<text text-anchor="middle" x="241.41" y="-102.6" font-family="Helvetica,sans-Serif" font-size="14.00">locks value to</text>
+</g>
+
+<g id="node10" class="node">
+<path fill="#ecfdf5" stroke="#34d399" d="M331.57,-57.6C331.57,-57.6 280.43,-57.6 280.43,-57.6 274.43,-57.6 268.43,-51.6 268.43,-45.6 268.43,-45.6 268.43,-28 268.43,-28 268.43,-22 274.43,-16 280.43,-16 280.43,-16 331.57,-16 331.57,-16 337.57,-16 343.57,-22 343.57,-28 343.57,-28 343.57,-45.6 343.57,-45.6 343.57,-51.6 337.57,-57.6 331.57,-57.6"/>
+<text text-anchor="middle" x="306" y="-41" font-family="Helvetica,sans-Serif" font-size="14.00">UTXO</text>
+<text text-anchor="middle" x="306" y="-24.2" font-family="Helvetica,sans-Serif" font-size="14.00">0.08 BTC</text>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M307.03,-134.76C307.03,-134.76 307.03,-66.88 307.03,-66.88"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="309.48,-66.88 307.03,-59.88 304.58,-66.88 309.48,-66.88"/>
+<text text-anchor="middle" x="363.41" y="-102.6" font-family="Helvetica,sans-Serif" font-size="14.00">locks value to</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="where-addresses-come-from"><h2 class="slide-title">Where Addresses Come From</h2><div class="slide-body">
+<div style="font-size: 0.88em; line-height: 1.14;">
+<ul>
+<li>Wallets usually start from one <strong>seed phrase</strong>, then deterministically derive many private keys, public keys, and fresh addresses.</li>
+<li>This lets one wallet recover and regenerate many addresses from one backup root.</li>
+<li>The derivation happens locally in wallet software, not through any central registry or issuer.</li>
+<li>Common address formats include legacy (<code>1...</code>) and SegWit (<code>3...</code> or <code>bc1...</code>).</li>
+</ul>
+</div>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 1183.43 77.12" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1577px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 73.12)">
+<g id="node1" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M117.99,-58.32C117.99,-58.32 12,-58.32 12,-58.32 6,-58.32 0,-52.32 0,-46.32 0,-46.32 0,-22.8 0,-22.8 0,-16.8 6,-10.8 12,-10.8 12,-10.8 117.99,-10.8 117.99,-10.8 123.99,-10.8 129.99,-16.8 129.99,-22.8 129.99,-22.8 129.99,-46.32 129.99,-46.32 129.99,-52.32 123.99,-58.32 117.99,-58.32"/>
+<text text-anchor="middle" x="65" y="-29.16" font-family="Helvetica,sans-Serif" font-size="18.00">Seed Phrase</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M381.76,-58.32C381.76,-58.32 278.8,-58.32 278.8,-58.32 272.8,-58.32 266.8,-52.32 266.8,-46.32 266.8,-46.32 266.8,-22.8 266.8,-22.8 266.8,-16.8 272.8,-10.8 278.8,-10.8 278.8,-10.8 381.76,-10.8 381.76,-10.8 387.76,-10.8 393.76,-16.8 393.76,-22.8 393.76,-22.8 393.76,-46.32 393.76,-46.32 393.76,-52.32 387.76,-58.32 381.76,-58.32"/>
+<text text-anchor="middle" x="330.28" y="-29.16" font-family="Helvetica,sans-Serif" font-size="18.00">Private Keys</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.2" d="M130.23,-34.56C130.23,-34.56 257.85,-34.56 257.85,-34.56"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.2" points="257.85,-37.01 264.85,-34.56 257.85,-32.11 257.85,-37.01"/>
+<text text-anchor="middle" x="198.4" y="-38.46" font-family="Helvetica,sans-Serif" font-size="13.00">derive many</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M617.58,-58.32C617.58,-58.32 521.62,-58.32 521.62,-58.32 515.62,-58.32 509.62,-52.32 509.62,-46.32 509.62,-46.32 509.62,-22.8 509.62,-22.8 509.62,-16.8 515.62,-10.8 521.62,-10.8 521.62,-10.8 617.58,-10.8 617.58,-10.8 623.58,-10.8 629.58,-16.8 629.58,-22.8 629.58,-22.8 629.58,-46.32 629.58,-46.32 629.58,-52.32 623.58,-58.32 617.58,-58.32"/>
+<text text-anchor="middle" x="569.6" y="-29.16" font-family="Helvetica,sans-Serif" font-size="18.00">Public Keys</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.2" d="M394.1,-34.56C394.1,-34.56 500.44,-34.56 500.44,-34.56"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.2" points="500.44,-37.01 507.44,-34.56 500.44,-32.11 500.44,-37.01"/>
+<text text-anchor="middle" x="451.69" y="-38.46" font-family="Helvetica,sans-Serif" font-size="13.00">compute</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M879.78,-58.32C879.78,-58.32 735.77,-58.32 735.77,-58.32 729.77,-58.32 723.77,-52.32 723.77,-46.32 723.77,-46.32 723.77,-22.8 723.77,-22.8 723.77,-16.8 729.77,-10.8 735.77,-10.8 735.77,-10.8 879.78,-10.8 879.78,-10.8 885.78,-10.8 891.78,-16.8 891.78,-22.8 891.78,-22.8 891.78,-46.32 891.78,-46.32 891.78,-52.32 885.78,-58.32 879.78,-58.32"/>
+<text text-anchor="middle" x="807.77" y="-29.16" font-family="Helvetica,sans-Serif" font-size="18.00">Hash160(pubkey)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.2" d="M630.01,-34.56C630.01,-34.56 714.79,-34.56 714.79,-34.56"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.2" points="714.79,-37.01 721.79,-34.56 714.79,-32.11 714.79,-37.01"/>
+<text text-anchor="middle" x="676.68" y="-38.46" font-family="Helvetica,sans-Serif" font-size="13.00">hash</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M1163.43,-69.12C1163.43,-69.12 1012.43,-69.12 1012.43,-69.12 1006.43,-69.12 1000.43,-63.12 1000.43,-57.12 1000.43,-57.12 1000.43,-12 1000.43,-12 1000.43,-6 1006.43,0 1012.43,0 1012.43,0 1163.43,0 1163.43,0 1169.43,0 1175.43,-6 1175.43,-12 1175.43,-12 1175.43,-57.12 1175.43,-57.12 1175.43,-63.12 1169.43,-69.12 1163.43,-69.12"/>
+<text text-anchor="middle" x="1087.93" y="-39.96" font-family="Helvetica,sans-Serif" font-size="18.00">Addresses</text>
+<text text-anchor="middle" x="1087.93" y="-18.36" font-family="Helvetica,sans-Serif" font-size="18.00">(Base58 / Bech32)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.2" d="M892.21,-34.56C892.21,-34.56 991.45,-34.56 991.45,-34.56"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.2" points="991.45,-37.01 998.45,-34.56 991.45,-32.11 991.45,-37.01"/>
+<text text-anchor="middle" x="946.1" y="-38.46" font-family="Helvetica,sans-Serif" font-size="13.00">encode</text>
+</g>
+</g>
+</svg></figure>
+</div></section>
+<section class="slide smaller" id="how-people-actually-use-bitcoin"><h2 class="slide-title">How People Actually Use Bitcoin</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:50%;">
+<div style="font-size: 0.78em; line-height: 1.14;">
+<p><strong>Exchange or brokerage path</strong></p>
+<ul>
+<li>Onboard with identity checks and KYC.</li>
+<li>Buy BTC through the platform.</li>
+<li>Keep it with the custodian or withdraw to a Bitcoin address.</li>
+<li>Examples: Coinbase, Kraken, Gemini, Binance.US, Robinhood Crypto.</li>
+</ul>
+</div>
+</div><div class="column" style="width:50%;">
+<div style="font-size: 0.78em; line-height: 1.14;">
+<p><strong>Self-custody path</strong></p>
+<ul>
+<li>Wallet creates a seed, keys, and receiving addresses.</li>
+<li>User signs a transaction, then broadcasts it to the network.</li>
+<li>Confirmations accumulate as miners add later blocks.</li>
+<li>Examples: Bitcoin Core, Electrum, Sparrow, BlueWallet, Exodus, Ledger, Trezor.</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Tradeoff:</strong> platforms offer convenience and account recovery, but may custody funds and link activity to identity; self-custody gives direct control, but seed loss or theft can be irreversible.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="transactions-and-the-utxo-model"><h2 class="slide-title">Transactions and the UTXO Model</h2><div class="slide-body">
+<ul>
+<li>Bitcoin enters circulation in a <strong>coinbase transaction</strong>, the first transaction of every block.</li>
+<li>That reward appears as an <strong>Unspent Transaction Output (UTXO)</strong> credited to that block’s miner.</li>
+<li>A <strong>UTXO</strong> is a spendable output, like a receipt for a specific amount of bitcoin from an earlier transaction.</li>
+<li>Wallet balances are the <strong>sum of the UTXOs</strong> a wallet can spend.</li>
+<li>UTXOs are <strong>indivisible</strong>: each one must be spent in full or not at all.</li>
+<li>Transactions use UTXOs as <strong>inputs</strong> and create new UTXOs as <strong>outputs</strong>.</li>
+<li>New outputs usually go to the <strong>recipient</strong> and back to the <strong>sender</strong> as change.</li>
+<li>Each UTXO is locked by a script, and spending it requires unlocking data (such as a valid digital signature and public key).</li>
+<li>After signing a transaction, the wallet broadcasts it to the peer-to-peer network.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Smallest unit:</strong> One bitcoin can be divided into <strong>100,000,000 satoshis</strong>, so <strong>1 satoshi = 0.00000001 BTC</strong>.</p>
+</div>
+</div></section>
+<section class="slide" id="utxo-visualized"><h2 class="slide-title">UTXO Visualized</h2><div class="slide-body">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 1278.00 1018.20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1704px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 1014.2)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="#e2e8f0" points="632,-846.2 632,-1002.2 1262,-1002.2 1262,-846.2 632,-846.2"/>
+<text text-anchor="middle" x="947" y="-985.6" font-family="Helvetica,sans-Serif" font-size="14.00">Existing UTXOs (Unspent Outputs)</text>
+</g>
+<g id="clust2" class="cluster">
+<polygon fill="none" stroke="#e2e8f0" points="8,-183 8,-827.2 628,-827.2 628,-183 8,-183"/>
+<text text-anchor="middle" x="318" y="-810.6" font-family="Helvetica,sans-Serif" font-size="14.00">Spending Transaction</text>
+</g>
+<g id="clust3" class="cluster">
+<polygon fill="none" stroke="#e2e8f0" points="274,-8 274,-164 1120,-164 1120,-8 274,-8"/>
+<text text-anchor="middle" x="697" y="-147.4" font-family="Helvetica,sans-Serif" font-size="14.00">After Inclusion in a Block</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M926.05,-969.4C926.05,-969.4 651.95,-969.4 651.95,-969.4 645.95,-969.4 639.95,-963.4 639.95,-957.4 639.95,-957.4 639.95,-866.2 639.95,-866.2 639.95,-860.2 645.95,-854.2 651.95,-854.2 651.95,-854.2 926.05,-854.2 926.05,-854.2 932.05,-854.2 938.05,-860.2 938.05,-866.2 938.05,-866.2 938.05,-957.4 938.05,-957.4 938.05,-963.4 932.05,-969.4 926.05,-969.4"/>
+<text text-anchor="middle" x="789" y="-931.6" font-family="Inter,Helvetica,Arial" font-size="22.00">UTXO A</text>
+<text text-anchor="middle" x="789" y="-905.2" font-family="Inter,Helvetica,Arial" font-size="22.00">TXID:...:0</text>
+<text text-anchor="middle" x="789" y="-878.8" font-family="Inter,Helvetica,Arial" font-size="22.00">scriptPubKey (locks to Alice)</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M608.05,-794.4C608.05,-794.4 443.95,-794.4 443.95,-794.4 437.95,-794.4 431.95,-788.4 431.95,-782.4 431.95,-782.4 431.95,-717.6 431.95,-717.6 431.95,-711.6 437.95,-705.6 443.95,-705.6 443.95,-705.6 608.05,-705.6 608.05,-705.6 614.05,-705.6 620.05,-711.6 620.05,-717.6 620.05,-717.6 620.05,-782.4 620.05,-782.4 620.05,-788.4 614.05,-794.4 608.05,-794.4"/>
+<text text-anchor="middle" x="526" y="-756.6" font-family="Inter,Helvetica,Arial" font-size="22.00">Inputs</text>
+<text text-anchor="middle" x="526" y="-730.2" font-family="Inter,Helvetica,Arial" font-size="22.00">(ref TXID:index)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M695.16,-853.79C665.65,-835.85 633.38,-816.24 605.01,-799"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="606.56,-797.08 599.3,-795.54 604.01,-801.27 606.56,-797.08"/>
+</g>
+
+<g id="node8" class="node">
+<path fill="#fee2e2" stroke="#f87171" d="M1100.21,-131.2C1100.21,-131.2 851.79,-131.2 851.79,-131.2 845.79,-131.2 839.79,-125.2 839.79,-119.2 839.79,-119.2 839.79,-28 839.79,-28 839.79,-22 845.79,-16 851.79,-16 851.79,-16 1100.21,-16 1100.21,-16 1106.21,-16 1112.21,-22 1112.21,-28 1112.21,-28 1112.21,-119.2 1112.21,-119.2 1112.21,-125.2 1106.21,-131.2 1100.21,-131.2"/>
+<text text-anchor="middle" x="976" y="-93.4" font-family="Inter,Helvetica,Arial" font-size="22.00">Consumed:</text>
+<text text-anchor="middle" x="976" y="-67" font-family="Inter,Helvetica,Arial" font-size="22.00">UTXO A, UTXO B</text>
+<text text-anchor="middle" x="976" y="-40.6" font-family="Inter,Helvetica,Arial" font-size="22.00">(removed from UTXO set)</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#f87171" stroke-width="1.1" stroke-dasharray="5,2" d="M906.76,-853.74C980.64,-816.05 1062,-770.19 1062,-751 1062,-751 1062,-751 1062,-247.6 1062,-208.78 1044.42,-169.7 1025.16,-138.52"/>
+<polygon fill="#f87171" stroke="#f87171" stroke-width="1.1" points="1027.47,-137.6 1021.65,-133 1023.33,-140.22 1027.47,-137.6"/>
+<text text-anchor="middle" x="1079.12" y="-507" font-family="Helvetica,sans-Serif" font-size="14.00">spent</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f8fafc" stroke="#cbd5e1" d="M1242.05,-969.4C1242.05,-969.4 967.95,-969.4 967.95,-969.4 961.95,-969.4 955.95,-963.4 955.95,-957.4 955.95,-957.4 955.95,-866.2 955.95,-866.2 955.95,-860.2 961.95,-854.2 967.95,-854.2 967.95,-854.2 1242.05,-854.2 1242.05,-854.2 1248.05,-854.2 1254.05,-860.2 1254.05,-866.2 1254.05,-866.2 1254.05,-957.4 1254.05,-957.4 1254.05,-963.4 1248.05,-969.4 1242.05,-969.4"/>
+<text text-anchor="middle" x="1105" y="-931.6" font-family="Inter,Helvetica,Arial" font-size="22.00">UTXO B</text>
+<text text-anchor="middle" x="1105" y="-905.2" font-family="Inter,Helvetica,Arial" font-size="22.00">TXID:...:1</text>
+<text text-anchor="middle" x="1105" y="-878.8" font-family="Inter,Helvetica,Arial" font-size="22.00">scriptPubKey (locks to Alice)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M969.79,-853.82C962.12,-851.12 954.49,-848.56 947,-846.2 840.31,-812.58 714.89,-785.8 628.87,-769.31"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="629.38,-766.92 622.04,-768.01 628.46,-771.73 629.38,-766.92"/>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#f87171" stroke-width="1.1" stroke-dasharray="5,2" d="M1112.41,-853.96C1115.77,-823.48 1119,-785.25 1119,-751 1119,-751 1119,-751 1119,-247.6 1119,-204.68 1092.52,-166.66 1062.35,-137.28"/>
+<polygon fill="#f87171" stroke="#f87171" stroke-width="1.1" points="1064.25,-135.7 1057.49,-132.66 1060.88,-139.25 1064.25,-135.7"/>
+<text text-anchor="middle" x="1136.12" y="-507" font-family="Helvetica,sans-Serif" font-size="14.00">spent</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fef9c3" stroke="#f59e0b" d="M595.73,-652.8C595.73,-652.8 400.27,-652.8 400.27,-652.8 394.27,-652.8 388.27,-646.8 388.27,-640.8 388.27,-640.8 388.27,-549.6 388.27,-549.6 388.27,-543.6 394.27,-537.6 400.27,-537.6 400.27,-537.6 595.73,-537.6 595.73,-537.6 601.73,-537.6 607.73,-543.6 607.73,-549.6 607.73,-549.6 607.73,-640.8 607.73,-640.8 607.73,-646.8 601.73,-652.8 595.73,-652.8"/>
+<text text-anchor="middle" x="498" y="-615" font-family="Inter,Helvetica,Arial" font-size="22.00">Unlocking Data</text>
+<text text-anchor="middle" x="498" y="-588.6" font-family="Inter,Helvetica,Arial" font-size="22.00">(scriptSig / witness)</text>
+<text text-anchor="middle" x="498" y="-562.2" font-family="Inter,Helvetica,Arial" font-size="22.00">(signature + pubkey)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M517.98,-705.21C515.47,-691.52 512.64,-676.11 509.93,-661.28"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="512.4,-661.2 508.73,-654.76 507.58,-662.08 512.4,-661.2"/>
+<text text-anchor="middle" x="554.96" y="-675" font-family="Helvetica,sans-Serif" font-size="14.00">script checks</text>
+</g>
+
+<g id="node11" class="node">
+<polygon fill="#fee2e2" stroke="#f87171" points="1028.15,-639.6 635.85,-639.6 635.85,-550.8 1034.15,-550.8 1034.15,-633.6 1028.15,-639.6"/>
+<polyline fill="none" stroke="#f87171" points="1028.15,-639.6 1028.15,-633.6"/>
+<polyline fill="none" stroke="#f87171" points="1034.15,-633.6 1028.15,-633.6"/>
+<text text-anchor="middle" x="835" y="-601.8" font-family="Inter,Helvetica,Arial" font-size="22.00">Double&#45;spend check:</text>
+<text text-anchor="middle" x="835" y="-575.4" font-family="Inter,Helvetica,Arial" font-size="22.00">An output can be consumed at most once</text>
+</g>
+
+<g id="edge11" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" stroke-dasharray="1,5" d="M614.55,-705.21C653.98,-685.71 700.47,-662.72 740.57,-642.89"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="741.24,-644.52 744.95,-640.73 739.69,-641.38 741.24,-644.52"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#e0f2fe" stroke="#38bdf8" d="M586.4,-484.8C586.4,-484.8 355.6,-484.8 355.6,-484.8 349.6,-484.8 343.6,-478.8 343.6,-472.8 343.6,-472.8 343.6,-355.2 343.6,-355.2 343.6,-349.2 349.6,-343.2 355.6,-343.2 355.6,-343.2 586.4,-343.2 586.4,-343.2 592.4,-343.2 598.4,-349.2 598.4,-355.2 598.4,-355.2 598.4,-472.8 598.4,-472.8 598.4,-478.8 592.4,-484.8 586.4,-484.8"/>
+<text text-anchor="middle" x="471" y="-447" font-family="Inter,Helvetica,Arial" font-size="22.00">Transaction Logic</text>
+<text text-anchor="middle" x="471" y="-420.6" font-family="Inter,Helvetica,Arial" font-size="22.00">• verifies scripts</text>
+<text text-anchor="middle" x="471" y="-394.2" font-family="Inter,Helvetica,Arial" font-size="22.00">• sums inputs ≥ outputs</text>
+<text text-anchor="middle" x="471" y="-367.8" font-family="Inter,Helvetica,Arial" font-size="22.00">• includes fee</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M489.46,-537.5C487.35,-523.48 485.05,-508.22 482.81,-493.38"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="485.29,-493.38 481.82,-486.83 480.44,-494.12 485.29,-493.38"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#ecfdf5" stroke="#34d399" d="M291.57,-306.2C291.57,-306.2 28.43,-306.2 28.43,-306.2 22.43,-306.2 16.43,-300.2 16.43,-294.2 16.43,-294.2 16.43,-203 16.43,-203 16.43,-197 22.43,-191 28.43,-191 28.43,-191 291.57,-191 291.57,-191 297.57,-191 303.57,-197 303.57,-203 303.57,-203 303.57,-294.2 303.57,-294.2 303.57,-300.2 297.57,-306.2 291.57,-306.2"/>
+<text text-anchor="middle" x="160" y="-268.4" font-family="Inter,Helvetica,Arial" font-size="22.00">Output #0</text>
+<text text-anchor="middle" x="160" y="-242" font-family="Inter,Helvetica,Arial" font-size="22.00">Recipient: Bob</text>
+<text text-anchor="middle" x="160" y="-215.6" font-family="Inter,Helvetica,Arial" font-size="22.00">scriptPubKey (locks to Bob)</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M343.16,-345.83C320.88,-334.13 297.82,-322.01 275.89,-310.49"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="277.31,-308.47 269.97,-307.38 275.03,-312.8 277.31,-308.47"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="#ecfdf5" stroke="#34d399" d="M608.05,-306.2C608.05,-306.2 333.95,-306.2 333.95,-306.2 327.95,-306.2 321.95,-300.2 321.95,-294.2 321.95,-294.2 321.95,-203 321.95,-203 321.95,-197 327.95,-191 333.95,-191 333.95,-191 608.05,-191 608.05,-191 614.05,-191 620.05,-197 620.05,-203 620.05,-203 620.05,-294.2 620.05,-294.2 620.05,-300.2 614.05,-306.2 608.05,-306.2"/>
+<text text-anchor="middle" x="471" y="-268.4" font-family="Inter,Helvetica,Arial" font-size="22.00">Output #1</text>
+<text text-anchor="middle" x="471" y="-242" font-family="Inter,Helvetica,Arial" font-size="22.00">Change: Alice</text>
+<text text-anchor="middle" x="471" y="-215.6" font-family="Inter,Helvetica,Arial" font-size="22.00">scriptPubKey (locks to Alice)</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M471,-342.76C471,-333.58 471,-324.2 471,-315.11"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="473.45,-315.16 471,-308.16 468.55,-315.16 473.45,-315.16"/>
+</g>
+
+<g id="node9" class="node">
+<path fill="#ecfdf5" stroke="#34d399" d="M518,-118C518,-118 294,-118 294,-118 288,-118 282,-112 282,-106 282,-106 282,-41.2 282,-41.2 282,-35.2 288,-29.2 294,-29.2 294,-29.2 518,-29.2 518,-29.2 524,-29.2 530,-35.2 530,-41.2 530,-41.2 530,-106 530,-106 530,-112 524,-118 518,-118"/>
+<text text-anchor="middle" x="406" y="-80.2" font-family="Inter,Helvetica,Arial" font-size="22.00">New UTXO: O#0</text>
+<text text-anchor="middle" x="406" y="-53.8" font-family="Inter,Helvetica,Arial" font-size="22.00">(controls value for Bob)</text>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M240.89,-190.71C271.88,-168.92 306.92,-144.28 336.72,-123.32"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="338.1,-125.34 342.42,-119.31 335.28,-121.34 338.1,-125.34"/>
+</g>
+
+<g id="node10" class="node">
+<path fill="#ecfdf5" stroke="#34d399" d="M809.81,-118C809.81,-118 560.19,-118 560.19,-118 554.19,-118 548.19,-112 548.19,-106 548.19,-106 548.19,-41.2 548.19,-41.2 548.19,-35.2 554.19,-29.2 560.19,-29.2 560.19,-29.2 809.81,-29.2 809.81,-29.2 815.81,-29.2 821.81,-35.2 821.81,-41.2 821.81,-41.2 821.81,-106 821.81,-106 821.81,-112 815.81,-118 809.81,-118"/>
+<text text-anchor="middle" x="685" y="-80.2" font-family="Inter,Helvetica,Arial" font-size="22.00">New UTXO: O#1</text>
+<text text-anchor="middle" x="685" y="-53.8" font-family="Inter,Helvetica,Arial" font-size="22.00">(controls change for Alice)</text>
+</g>
+
+<g id="edge10" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M541.37,-190.71C568.21,-169.02 598.55,-144.49 624.4,-123.59"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="625.68,-125.71 629.58,-119.4 622.6,-121.9 625.68,-125.71"/>
+</g>
+</g>
+</svg></figure>
+</div></section>
+<section class="slide" id="why-the-utxo-model"><h2 class="slide-title">Why the UTXO Model?</h2><div class="slide-body">
+<ul>
+<li>Bitcoin does not track one mutable account balance; every spendable balance is a collection of <strong>UTXOs</strong>.</li>
+<li>This makes validation simpler because each referenced output is either <strong>unspent</strong> or already <strong>spent</strong>.</li>
+<li>It also supports cleaner transaction accounting and more parallel verification than an <strong>account model</strong> like Ethereum’s.</li>
+</ul>
+</div></section>
+<section class="slide" id="example-transaction"><h2 class="slide-title">Example Transaction</h2><div class="slide-body">
+<div style="font-size: 0.88em; line-height: 1.14;">
+<ul>
+<li>Alice wants to pay Bob <strong>1 BTC</strong>.</li>
+<li>Alice controls UTXOs: 0.6 BTC + 0.7 BTC.</li>
+<li>Does the math add up?</li>
+<li>Why did the change go to a new address?</li>
+</ul>
+</div>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 718.67 279.48" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:959px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 275.48)">
+<g id="node1" class="node">
+<path fill="#fff9c4" stroke="#d4b106" stroke-width="1.2" d="M158.74,-271.48C158.74,-271.48 12,-271.48 12,-271.48 6,-271.48 0,-265.48 0,-259.48 0,-259.48 0,-187 0,-187 0,-181 6,-175 12,-175 12,-175 158.74,-175 158.74,-175 164.74,-175 170.74,-181 170.74,-187 170.74,-187 170.74,-259.48 170.74,-259.48 170.74,-265.48 164.74,-271.48 158.74,-271.48"/>
+<text text-anchor="middle" x="85.37" y="-239.44" font-family="Helvetica,sans-Serif" font-size="18.00">0.60 BTC UTXO</text>
+<text text-anchor="middle" x="85.37" y="-217.84" font-family="Helvetica,sans-Serif" font-size="18.00">(to Alice addr A1)</text>
+<text text-anchor="middle" x="85.37" y="-196.24" font-family="Helvetica,sans-Serif" font-size="18.00">from Tx alpha</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e3f2fd" stroke="#38bdf8" stroke-width="1.2" d="M402.73,-161.88C402.73,-161.88 301,-161.88 301,-161.88 295,-161.88 289,-155.88 289,-149.88 289,-149.88 289,-120.6 289,-120.6 289,-114.6 295,-108.6 301,-108.6 301,-108.6 402.73,-108.6 402.73,-108.6 408.73,-108.6 414.73,-114.6 414.73,-120.6 414.73,-120.6 414.73,-149.88 414.73,-149.88 414.73,-155.88 408.73,-161.88 402.73,-161.88"/>
+<text text-anchor="middle" x="351.86" y="-129.84" font-family="Helvetica,sans-Serif" font-size="18.00">Transaction</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M171.16,-218.24C249.06,-218.24 351.86,-218.24 351.86,-218.24 351.86,-218.24 351.86,-170.62 351.86,-170.62"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="354.31,-170.62 351.86,-163.62 349.41,-170.62 354.31,-170.62"/>
+<text text-anchor="middle" x="229.87" y="-227.14" font-family="Helvetica,sans-Serif" font-size="13.00">input #1</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#ffe0b2" stroke="#dd8a24" stroke-width="1.2" d="M158.74,-96.48C158.74,-96.48 12,-96.48 12,-96.48 6,-96.48 0,-90.48 0,-84.48 0,-84.48 0,-12 0,-12 0,-6 6,0 12,0 12,0 158.74,0 158.74,0 164.74,0 170.74,-6 170.74,-12 170.74,-12 170.74,-84.48 170.74,-84.48 170.74,-90.48 164.74,-96.48 158.74,-96.48"/>
+<text text-anchor="middle" x="85.37" y="-64.44" font-family="Helvetica,sans-Serif" font-size="18.00">0.70 BTC UTXO</text>
+<text text-anchor="middle" x="85.37" y="-42.84" font-family="Helvetica,sans-Serif" font-size="18.00">(to Alice addr A2)</text>
+<text text-anchor="middle" x="85.37" y="-21.24" font-family="Helvetica,sans-Serif" font-size="18.00">from Tx beta</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M171.16,-50.74C249.06,-50.74 351.86,-50.74 351.86,-50.74 351.86,-50.74 351.86,-99.84 351.86,-99.84"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="349.41,-99.84 351.86,-106.84 354.31,-99.84 349.41,-99.84"/>
+<text text-anchor="middle" x="229.87" y="-52.14" font-family="Helvetica,sans-Serif" font-size="13.00">input #2</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#e8f5e9" stroke="#34d399" stroke-width="1.2" d="M667.66,-255.68C667.66,-255.68 583.95,-255.68 583.95,-255.68 577.95,-255.68 571.95,-249.68 571.95,-243.68 571.95,-243.68 571.95,-192.8 571.95,-192.8 571.95,-186.8 577.95,-180.8 583.95,-180.8 583.95,-180.8 667.66,-180.8 667.66,-180.8 673.66,-180.8 679.66,-186.8 679.66,-192.8 679.66,-192.8 679.66,-243.68 679.66,-243.68 679.66,-249.68 673.66,-255.68 667.66,-255.68"/>
+<text text-anchor="middle" x="625.81" y="-223.64" font-family="Helvetica,sans-Serif" font-size="18.00">Bob</text>
+<text text-anchor="middle" x="625.81" y="-202.04" font-family="Helvetica,sans-Serif" font-size="18.00">1.00 BTC</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M415.06,-144.12C495.96,-144.12 625.81,-144.12 625.81,-144.12 625.81,-144.12 617.14,-144.12 617.14,-144.12"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="621.41,-172.46 625.42,-178.69 626.17,-171.31 621.41,-172.46"/>
+<text text-anchor="middle" x="477.83" y="-222.14" font-family="Helvetica,sans-Serif" font-size="13.00">output #1</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#d1c4e9" stroke="#8b5cf6" stroke-width="1.2" d="M698.67,-101.48C698.67,-101.48 552.94,-101.48 552.94,-101.48 546.94,-101.48 540.94,-95.48 540.94,-89.48 540.94,-89.48 540.94,-17 540.94,-17 540.94,-11 546.94,-5 552.94,-5 552.94,-5 698.67,-5 698.67,-5 704.67,-5 710.67,-11 710.67,-17 710.67,-17 710.67,-89.48 710.67,-89.48 710.67,-95.48 704.67,-101.48 698.67,-101.48"/>
+<text text-anchor="middle" x="625.81" y="-69.44" font-family="Helvetica,sans-Serif" font-size="18.00">Alice (change)</text>
+<text text-anchor="middle" x="625.81" y="-47.84" font-family="Helvetica,sans-Serif" font-size="18.00">0.29 BTC</text>
+<text text-anchor="middle" x="625.81" y="-26.24" font-family="Helvetica,sans-Serif" font-size="18.00">NEW address A3</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.1" d="M415.19,-126.36C475.28,-126.36 556.44,-126.36 556.44,-126.36 556.44,-126.36 556.44,-110.27 556.44,-110.27"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.1" points="558.89,-110.27 556.44,-103.27 553.99,-110.27 558.89,-110.27"/>
+<text text-anchor="middle" x="477.83" y="-57.14" font-family="Helvetica,sans-Serif" font-size="13.00">output #2</text>
+</g>
+</g>
+</svg></figure>
+</div></section>
+<section class="slide" id="change-addresses-and-fees"><h2 class="slide-title">Change Addresses and Fees</h2><div class="slide-body">
+<div style="font-size: 0.9em; line-height: 1.15;">
+<ul>
+<li>Because UTXOs must be spent in full, any leftover value returns to the sender as <strong>change</strong>.</li>
+<li>Wallets usually send that change to a <strong>new address</strong> they control, which helps reduce address reuse and improve privacy.</li>
+<li>The miner fee is <strong>not a separate field</strong> in the transaction body.</li>
+<li>The sender, usually through their wallet software, <strong>sets the fee</strong> by choosing how much value to leave unassigned to outputs.</li>
+<li>Instead, the fee is the arithmetic difference: <strong>Inputs - Outputs</strong>.</li>
+<li>In the previous example: <code>1.30 BTC in - 1.29 BTC out = 0.01 BTC fee</code>.</li>
+<li>A miner claims the fees from the block’s transactions by rolling them into that block’s <strong>coinbase transaction</strong>.</li>
+<li>Higher fees usually give a transaction better priority for inclusion in a block.</li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="where-does-a-transaction-go"><h2 class="slide-title">Where Does a Transaction Go?</h2><div class="slide-body">
+<ul>
+<li>Transaction -&gt; <strong>local wallet -&gt; node -&gt; mempool</strong>.</li>
+<li>Mempool = holding area of unconfirmed transactions.</li>
+<li>Miners choose which mempool transactions to include in a block.</li>
+<li>Incentive: prioritize higher-fee transactions.</li>
+</ul>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 552.76 55.52" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:737px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 51.52)">
+<g id="node1" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M63.93,-47.52C63.93,-47.52 12,-47.52 12,-47.52 6,-47.52 0,-41.52 0,-35.52 0,-35.52 0,-12 0,-12 0,-6 6,0 12,0 12,0 63.93,0 63.93,0 69.93,0 75.93,-6 75.93,-12 75.93,-12 75.93,-35.52 75.93,-35.52 75.93,-41.52 69.93,-47.52 63.93,-47.52"/>
+<text text-anchor="middle" x="37.96" y="-18.36" font-family="Helvetica,sans-Serif" font-size="18.00">Wallet</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M231.89,-47.52C231.89,-47.52 152.93,-47.52 152.93,-47.52 146.93,-47.52 140.93,-41.52 140.93,-35.52 140.93,-35.52 140.93,-12 140.93,-12 140.93,-6 146.93,0 152.93,0 152.93,0 231.89,0 231.89,0 237.89,0 243.89,-6 243.89,-12 243.89,-12 243.89,-35.52 243.89,-35.52 243.89,-41.52 237.89,-47.52 231.89,-47.52"/>
+<text text-anchor="middle" x="192.41" y="-18.36" font-family="Helvetica,sans-Serif" font-size="18.00">Full Node</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.2" d="M76.14,-23.76C76.14,-23.76 131.87,-23.76 131.87,-23.76"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.2" points="131.87,-26.21 138.87,-23.76 131.87,-21.31 131.87,-26.21"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M396.84,-47.52C396.84,-47.52 320.89,-47.52 320.89,-47.52 314.89,-47.52 308.89,-41.52 308.89,-35.52 308.89,-35.52 308.89,-12 308.89,-12 308.89,-6 314.89,0 320.89,0 320.89,0 396.84,0 396.84,0 402.84,0 408.84,-6 408.84,-12 408.84,-12 408.84,-35.52 408.84,-35.52 408.84,-41.52 402.84,-47.52 396.84,-47.52"/>
+<text text-anchor="middle" x="358.86" y="-18.36" font-family="Helvetica,sans-Serif" font-size="18.00">Mempool</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.2" d="M244.16,-23.76C244.16,-23.76 299.75,-23.76 299.75,-23.76"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.2" points="299.75,-26.21 306.75,-23.76 299.75,-21.31 299.75,-26.21"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M532.76,-47.52C532.76,-47.52 485.84,-47.52 485.84,-47.52 479.84,-47.52 473.84,-41.52 473.84,-35.52 473.84,-35.52 473.84,-12 473.84,-12 473.84,-6 479.84,0 485.84,0 485.84,0 532.76,0 532.76,0 538.76,0 544.76,-6 544.76,-12 544.76,-12 544.76,-35.52 544.76,-35.52 544.76,-41.52 538.76,-47.52 532.76,-47.52"/>
+<text text-anchor="middle" x="509.3" y="-18.36" font-family="Helvetica,sans-Serif" font-size="18.00">Miner</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.2" d="M408.96,-23.76C408.96,-23.76 464.87,-23.76 464.87,-23.76"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.2" points="464.87,-26.21 471.87,-23.76 464.87,-21.31 464.87,-26.21"/>
+</g>
+</g>
+</svg></figure>
+</div></section>
+<section class="slide" id="end-to-end-transaction-flow"><h2 class="slide-title">End-to-End Transaction Flow</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:10%;">
+
+</div><div class="column" style="width:80%;">
+<div style="font-size: 0.84em;">
+<figure class="diagram mermaid"><svg aria-roledescription="sequence" role="graphics-document document" viewBox="-50 -10 798.5 601" style="max-width: 798.5px;" xmlns="http://www.w3.org/2000/svg" width="100%" id="mmd0"><g><rect class="actor actor-bottom" ry="3" rx="3" name="M" height="65" width="150" stroke="#666" fill="#eaeaea" y="515" x="490"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="547.5" x="565"><tspan dy="0" x="565">Miner</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="N" height="65" width="150" stroke="#666" fill="#eaeaea" y="515" x="289"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="547.5" x="364"><tspan dy="0" x="364">Full Nodes</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="U" height="65" width="150" stroke="#666" fill="#eaeaea" y="515" x="0"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="547.5" x="75"><tspan dy="0" x="75">Users (Wallets)</tspan></text></g><g><line name="M" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="515" x2="565" y1="65" x1="565" id="actor2"></line><g id="root-2"><rect class="actor actor-top" ry="3" rx="3" name="M" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="490"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="565"><tspan dy="0" x="565">Miner</tspan></text></g></g><g><line name="N" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="515" x2="364" y1="65" x1="364" id="actor1"></line><g id="root-1"><rect class="actor actor-top" ry="3" rx="3" name="N" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="289"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="364"><tspan dy="0" x="364">Full Nodes</tspan></text></g></g><g><line name="U" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="515" x2="75" y1="65" x1="75" id="actor0"></line><g id="root-0"><rect class="actor actor-top" ry="3" rx="3" name="U" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="0"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="75"><tspan dy="0" x="75">Users (Wallets)</tspan></text></g></g><style>#mmd0{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;fill:#000000;}#mmd0 .error-icon{fill:#552222;}#mmd0 .error-text{fill:#552222;stroke:#552222;}#mmd0 .edge-thickness-normal{stroke-width:1px;}#mmd0 .edge-thickness-thick{stroke-width:3.5px;}#mmd0 .edge-pattern-solid{stroke-dasharray:0;}#mmd0 .edge-thickness-invisible{stroke-width:0;fill:none;}#mmd0 .edge-pattern-dashed{stroke-dasharray:3;}#mmd0 .edge-pattern-dotted{stroke-dasharray:2;}#mmd0 .marker{fill:#666;stroke:#666;}#mmd0 .marker.cross{stroke:#666;}#mmd0 svg{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;}#mmd0 p{margin:0;}#mmd0 .actor{stroke:hsl(0, 0%, 83%);fill:#eee;}#mmd0 text.actor&gt;tspan{fill:#333;stroke:none;}#mmd0 .actor-line{stroke:hsl(0, 0%, 83%);}#mmd0 .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:#333;}#mmd0 .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:#333;}#mmd0 #arrowhead path{fill:#333;stroke:#333;}#mmd0 .sequenceNumber{fill:white;}#mmd0 #sequencenumber{fill:#333;}#mmd0 #crosshead path{fill:#333;stroke:#333;}#mmd0 .messageText{fill:#333;stroke:none;}#mmd0 .labelBox{stroke:hsl(0, 0%, 83%);fill:#eee;}#mmd0 .labelText,#mmd0 .labelText&gt;tspan{fill:#333;stroke:none;}#mmd0 .loopText,#mmd0 .loopText&gt;tspan{fill:#333;stroke:none;}#mmd0 .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:hsl(0, 0%, 83%);fill:hsl(0, 0%, 83%);}#mmd0 .note{stroke:#999;fill:#666;}#mmd0 .noteText,#mmd0 .noteText&gt;tspan{fill:#fff;stroke:none;}#mmd0 .activation0{fill:#f4f4f4;stroke:#666;}#mmd0 .activation1{fill:#f4f4f4;stroke:#666;}#mmd0 .activation2{fill:#f4f4f4;stroke:#666;}#mmd0 .actorPopupMenu{position:absolute;}#mmd0 .actorPopupMenuPanel{position:absolute;fill:#eee;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#mmd0 .actor-man line{stroke:hsl(0, 0%, 83%);fill:#eee;}#mmd0 .actor-man circle,#mmd0 line{stroke:hsl(0, 0%, 83%);fill:#eee;stroke-width:2px;}#mmd0 :root{--mermaid-font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;}</style><g></g><defs><symbol height="24" width="24" id="computer"><path d="M2 2v13h20v-13h-20zm18 11h-16v-9h16v9zm-10.228 6l.466-1h3.524l.467 1h-4.457zm14.228 3h-24l2-6h2.104l-1.33 4h18.45l-1.297-4h2.073l2 6zm-5-10h-14v-7h14v7z" transform="scale(.5)"></path></symbol></defs><defs><symbol clip-rule="evenodd" fill-rule="evenodd" id="database"><path d="M12.258.001l.256.004.255.005.253.008.251.01.249.012.247.015.246.016.242.019.241.02.239.023.236.024.233.027.231.028.229.031.225.032.223.034.22.036.217.038.214.04.211.041.208.043.205.045.201.046.198.048.194.05.191.051.187.053.183.054.18.056.175.057.172.059.168.06.163.061.16.063.155.064.15.066.074.033.073.033.071.034.07.034.069.035.068.035.067.035.066.035.064.036.064.036.062.036.06.036.06.037.058.037.058.037.055.038.055.038.053.038.052.038.051.039.05.039.048.039.047.039.045.04.044.04.043.04.041.04.04.041.039.041.037.041.036.041.034.041.033.042.032.042.03.042.029.042.027.042.026.043.024.043.023.043.021.043.02.043.018.044.017.043.015.044.013.044.012.044.011.045.009.044.007.045.006.045.004.045.002.045.001.045v17l-.001.045-.002.045-.004.045-.006.045-.007.045-.009.044-.011.045-.012.044-.013.044-.015.044-.017.043-.018.044-.02.043-.021.043-.023.043-.024.043-.026.043-.027.042-.029.042-.03.042-.032.042-.033.042-.034.041-.036.041-.037.041-.039.041-.04.041-.041.04-.043.04-.044.04-.045.04-.047.039-.048.039-.05.039-.051.039-.052.038-.053.038-.055.038-.055.038-.058.037-.058.037-.06.037-.06.036-.062.036-.064.036-.064.036-.066.035-.067.035-.068.035-.069.035-.07.034-.071.034-.073.033-.074.033-.15.066-.155.064-.16.063-.163.061-.168.06-.172.059-.175.057-.18.056-.183.054-.187.053-.191.051-.194.05-.198.048-.201.046-.205.045-.208.043-.211.041-.214.04-.217.038-.22.036-.223.034-.225.032-.229.031-.231.028-.233.027-.236.024-.239.023-.241.02-.242.019-.246.016-.247.015-.249.012-.251.01-.253.008-.255.005-.256.004-.258.001-.258-.001-.256-.004-.255-.005-.253-.008-.251-.01-.249-.012-.247-.015-.245-.016-.243-.019-.241-.02-.238-.023-.236-.024-.234-.027-.231-.028-.228-.031-.226-.032-.223-.034-.22-.036-.217-.038-.214-.04-.211-.041-.208-.043-.204-.045-.201-.046-.198-.048-.195-.05-.19-.051-.187-.053-.184-.054-.179-.056-.176-.057-.172-.059-.167-.06-.164-.061-.159-.063-.155-.064-.151-.066-.074-.033-.072-.033-.072-.034-.07-.034-.069-.035-.068-.035-.067-.035-.066-.035-.064-.036-.063-.036-.062-.036-.061-.036-.06-.037-.058-.037-.057-.037-.056-.038-.055-.038-.053-.038-.052-.038-.051-.039-.049-.039-.049-.039-.046-.039-.046-.04-.044-.04-.043-.04-.041-.04-.04-.041-.039-.041-.037-.041-.036-.041-.034-.041-.033-.042-.032-.042-.03-.042-.029-.042-.027-.042-.026-.043-.024-.043-.023-.043-.021-.043-.02-.043-.018-.044-.017-.043-.015-.044-.013-.044-.012-.044-.011-.045-.009-.044-.007-.045-.006-.045-.004-.045-.002-.045-.001-.045v-17l.001-.045.002-.045.004-.045.006-.045.007-.045.009-.044.011-.045.012-.044.013-.044.015-.044.017-.043.018-.044.02-.043.021-.043.023-.043.024-.043.026-.043.027-.042.029-.042.03-.042.032-.042.033-.042.034-.041.036-.041.037-.041.039-.041.04-.041.041-.04.043-.04.044-.04.046-.04.046-.039.049-.039.049-.039.051-.039.052-.038.053-.038.055-.038.056-.038.057-.037.058-.037.06-.037.061-.036.062-.036.063-.036.064-.036.066-.035.067-.035.068-.035.069-.035.07-.034.072-.034.072-.033.074-.033.151-.066.155-.064.159-.063.164-.061.167-.06.172-.059.176-.057.179-.056.184-.054.187-.053.19-.051.195-.05.198-.048.201-.046.204-.045.208-.043.211-.041.214-.04.217-.038.22-.036.223-.034.226-.032.228-.031.231-.028.234-.027.236-.024.238-.023.241-.02.243-.019.245-.016.247-.015.249-.012.251-.01.253-.008.255-.005.256-.004.258-.001.258.001zm-9.258 20.499v.01l.001.021.003.021.004.022.005.021.006.022.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.023.018.024.019.024.021.024.022.025.023.024.024.025.052.049.056.05.061.051.066.051.07.051.075.051.079.052.084.052.088.052.092.052.097.052.102.051.105.052.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.048.144.049.147.047.152.047.155.047.16.045.163.045.167.043.171.043.176.041.178.041.183.039.187.039.19.037.194.035.197.035.202.033.204.031.209.03.212.029.216.027.219.025.222.024.226.021.23.02.233.018.236.016.24.015.243.012.246.01.249.008.253.005.256.004.259.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.021.224-.024.22-.026.216-.027.212-.028.21-.031.205-.031.202-.034.198-.034.194-.036.191-.037.187-.039.183-.04.179-.04.175-.042.172-.043.168-.044.163-.045.16-.046.155-.046.152-.047.148-.048.143-.049.139-.049.136-.05.131-.05.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.053.083-.051.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.05.023-.024.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.023.01-.022.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.127l-.077.055-.08.053-.083.054-.085.053-.087.052-.09.052-.093.051-.095.05-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.045-.118.044-.12.043-.122.042-.124.042-.126.041-.128.04-.13.04-.132.038-.134.038-.135.037-.138.037-.139.035-.142.035-.143.034-.144.033-.147.032-.148.031-.15.03-.151.03-.153.029-.154.027-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.01-.179.008-.179.008-.181.006-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.006-.179-.008-.179-.008-.178-.01-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.027-.153-.029-.151-.03-.15-.03-.148-.031-.146-.032-.145-.033-.143-.034-.141-.035-.14-.035-.137-.037-.136-.037-.134-.038-.132-.038-.13-.04-.128-.04-.126-.041-.124-.042-.122-.042-.12-.044-.117-.043-.116-.045-.113-.045-.112-.046-.109-.047-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.05-.093-.052-.09-.051-.087-.052-.085-.053-.083-.054-.08-.054-.077-.054v4.127zm0-5.654v.011l.001.021.003.021.004.021.005.022.006.022.007.022.009.022.01.022.011.023.012.023.013.023.015.024.016.023.017.024.018.024.019.024.021.024.022.024.023.025.024.024.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.052.11.051.114.051.119.052.123.05.127.051.131.05.135.049.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.044.171.042.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.022.23.02.233.018.236.016.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.012.241-.015.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.048.139-.05.136-.049.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.051.051-.049.023-.025.023-.024.021-.025.02-.024.019-.024.018-.024.017-.024.015-.023.014-.023.013-.024.012-.022.01-.023.01-.023.008-.022.006-.022.006-.022.004-.021.004-.022.001-.021.001-.021v-4.139l-.077.054-.08.054-.083.054-.085.052-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.044-.118.044-.12.044-.122.042-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.035-.143.033-.144.033-.147.033-.148.031-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.009-.179.009-.179.007-.181.007-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.007-.179-.007-.179-.009-.178-.009-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.031-.146-.033-.145-.033-.143-.033-.141-.035-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.04-.126-.041-.124-.042-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.051-.093-.051-.09-.051-.087-.053-.085-.052-.083-.054-.08-.054-.077-.054v4.139zm0-5.666v.011l.001.02.003.022.004.021.005.022.006.021.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.024.018.023.019.024.021.025.022.024.023.024.024.025.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.051.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.043.171.043.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.021.23.02.233.018.236.017.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.013.241-.014.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.049.139-.049.136-.049.131-.051.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.049.023-.025.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.022.01-.023.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.153l-.077.054-.08.054-.083.053-.085.053-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.048-.105.048-.106.048-.109.046-.111.046-.114.046-.115.044-.118.044-.12.043-.122.043-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.034-.143.034-.144.033-.147.032-.148.032-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.024-.161.024-.162.023-.163.023-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.01-.178.01-.179.009-.179.007-.181.006-.182.006-.182.004-.184.003-.184.001-.185.001-.185-.001-.184-.001-.184-.003-.182-.004-.182-.006-.181-.006-.179-.007-.179-.009-.178-.01-.176-.01-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.023-.162-.023-.161-.024-.159-.024-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.032-.146-.032-.145-.033-.143-.034-.141-.034-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.041-.126-.041-.124-.041-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.048-.105-.048-.102-.048-.1-.05-.097-.049-.095-.051-.093-.051-.09-.052-.087-.052-.085-.053-.083-.053-.08-.054-.077-.054v4.153zm8.74-8.179l-.257.004-.254.005-.25.008-.247.011-.244.012-.241.014-.237.016-.233.018-.231.021-.226.022-.224.023-.22.026-.216.027-.212.028-.21.031-.205.032-.202.033-.198.034-.194.036-.191.038-.187.038-.183.04-.179.041-.175.042-.172.043-.168.043-.163.045-.16.046-.155.046-.152.048-.148.048-.143.048-.139.049-.136.05-.131.05-.126.051-.123.051-.118.051-.114.052-.11.052-.106.052-.101.052-.096.052-.092.052-.088.052-.083.052-.079.052-.074.051-.07.052-.065.051-.06.05-.056.05-.051.05-.023.025-.023.024-.021.024-.02.025-.019.024-.018.024-.017.023-.015.024-.014.023-.013.023-.012.023-.01.023-.01.022-.008.022-.006.023-.006.021-.004.022-.004.021-.001.021-.001.021.001.021.001.021.004.021.004.022.006.021.006.023.008.022.01.022.01.023.012.023.013.023.014.023.015.024.017.023.018.024.019.024.02.025.021.024.023.024.023.025.051.05.056.05.06.05.065.051.07.052.074.051.079.052.083.052.088.052.092.052.096.052.101.052.106.052.11.052.114.052.118.051.123.051.126.051.131.05.136.05.139.049.143.048.148.048.152.048.155.046.16.046.163.045.168.043.172.043.175.042.179.041.183.04.187.038.191.038.194.036.198.034.202.033.205.032.21.031.212.028.216.027.22.026.224.023.226.022.231.021.233.018.237.016.241.014.244.012.247.011.25.008.254.005.257.004.26.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.022.224-.023.22-.026.216-.027.212-.028.21-.031.205-.032.202-.033.198-.034.194-.036.191-.038.187-.038.183-.04.179-.041.175-.042.172-.043.168-.043.163-.045.16-.046.155-.046.152-.048.148-.048.143-.048.139-.049.136-.05.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.05.051-.05.023-.025.023-.024.021-.024.02-.025.019-.024.018-.024.017-.023.015-.024.014-.023.013-.023.012-.023.01-.023.01-.022.008-.022.006-.023.006-.021.004-.022.004-.021.001-.021.001-.021-.001-.021-.001-.021-.004-.021-.004-.022-.006-.021-.006-.023-.008-.022-.01-.022-.01-.023-.012-.023-.013-.023-.014-.023-.015-.024-.017-.023-.018-.024-.019-.024-.02-.025-.021-.024-.023-.024-.023-.025-.051-.05-.056-.05-.06-.05-.065-.051-.07-.052-.074-.051-.079-.052-.083-.052-.088-.052-.092-.052-.096-.052-.101-.052-.106-.052-.11-.052-.114-.052-.118-.051-.123-.051-.126-.051-.131-.05-.136-.05-.139-.049-.143-.048-.148-.048-.152-.048-.155-.046-.16-.046-.163-.045-.168-.043-.172-.043-.175-.042-.179-.041-.183-.04-.187-.038-.191-.038-.194-.036-.198-.034-.202-.033-.205-.032-.21-.031-.212-.028-.216-.027-.22-.026-.224-.023-.226-.022-.231-.021-.233-.018-.237-.016-.241-.014-.244-.012-.247-.011-.25-.008-.254-.005-.257-.004-.26-.001-.26.001z" transform="scale(.5)"></path></symbol></defs><defs><symbol height="24" width="24" id="clock"><path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.848 12.459c.202.038.202.333.001.372-1.907.361-6.045 1.111-6.547 1.111-.719 0-1.301-.582-1.301-1.301 0-.512.77-5.447 1.125-7.445.034-.192.312-.181.343.014l.985 6.238 5.394 1.011z" transform="scale(.5)"></path></symbol></defs><defs><marker orient="auto-start-reverse" markerHeight="12" markerWidth="12" markerUnits="userSpaceOnUse" refY="5" refX="7.9" id="arrowhead"><path d="M -1 0 L 10 5 L 0 10 z"></path></marker></defs><defs><marker refY="4.5" refX="4" orient="auto" markerHeight="8" markerWidth="15" id="crosshead"><path style="stroke-dasharray: 0, 0;" d="M 1,2 L 6,7 M 6,2 L 1,7" stroke-width="1pt" stroke="#000000" fill="none"></path></marker></defs><defs><marker orient="auto" markerHeight="28" markerWidth="20" refY="7" refX="15.5" id="filled-head"><path d="M 18,7 L9,13 L14,7 L9,1 Z"></path></marker></defs><defs><marker orient="auto" markerHeight="40" markerWidth="60" refY="15" refX="15" id="sequencenumber"><circle r="6" cy="15" cx="15"></circle></marker></defs><text style="font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="80" x="218">Broadcast signed transaction</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="111" x2="360" y1="111" x1="76"></line><text style="font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="126" x="365">Gossip to peers (mempool)</text><path style="stroke-dasharray: 3, 3; fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine1" d="M 365,157 C 425,147 425,187 365,177"></path><text style="font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="202" x="566">Build candidate block from mempool</text><text style="font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="220" x="566">Find PoW solution (hash &lt; target)</text><path style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" d="M 566,251 C 626,241 626,281 566,271"></path><text style="font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="296" x="466">Broadcast new block</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="327" x2="368" y1="327" x1="564"></line><text style="font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="342" x="365">Validate block &amp; transactions</text><path style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" d="M 365,373 C 425,363 425,403 365,393"></path><text style="font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="418" x="463">Accept if valid</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="449" x2="561" y1="449" x1="365"></line><text style="font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="464" x="221">Confirmations increase over time</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="495" x2="79" y1="495" x1="363"></line></svg></figure>
+</div>
+</div><div class="column" style="width:10%;">
+
+</div>
+</div>
+</div></section>
+<section class="slide" id="when-is-a-transaction-complete"><h2 class="slide-title">When Is a Transaction Complete?</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:66%;">
+<div style="font-size: 0.98em; line-height: 1.16;">
+<ul>
+<li>Once mined into a block: <strong>1 confirmation</strong>.</li>
+<li>Mining a new block usually takes about <strong>10 minutes</strong> on average.</li>
+<li>More confirmations = more security.
+<ul>
+<li><strong>Chain reorganizations</strong> are possible in short windows. (Why?)</li>
+</ul></li>
+<li>Exchanges and merchants often require <strong>6 confirmations</strong> (about 1 hour).</li>
+<li>Finality in Bitcoin is <strong>probabilistic</strong>, not instant.</li>
+</ul>
+</div>
+</div><div class="column" style="width:34%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 344.40 629.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:459px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 625)">
+<g id="node1" class="node">
+<path fill="#ef4444" stroke="#b91c1c" stroke-width="1.1" d="M324.4,-621C324.4,-621 283.6,-621 283.6,-621 277.6,-621 271.6,-615 271.6,-609 271.6,-609 271.6,-593.4 271.6,-593.4 271.6,-587.4 277.6,-581.4 283.6,-581.4 283.6,-581.4 324.4,-581.4 324.4,-581.4 330.4,-581.4 336.4,-587.4 336.4,-593.4 336.4,-593.4 336.4,-609 336.4,-609 336.4,-615 330.4,-621 324.4,-621"/>
+<text text-anchor="middle" x="304" y="-597" font-family="Helvetica,sans-Serif" font-size="14.00">1</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f97316" stroke="#c2410c" stroke-width="1.1" d="M324.4,-556.4C324.4,-556.4 283.6,-556.4 283.6,-556.4 277.6,-556.4 271.6,-550.4 271.6,-544.4 271.6,-544.4 271.6,-528.8 271.6,-528.8 271.6,-522.8 277.6,-516.8 283.6,-516.8 283.6,-516.8 324.4,-516.8 324.4,-516.8 330.4,-516.8 336.4,-522.8 336.4,-528.8 336.4,-528.8 336.4,-544.4 336.4,-544.4 336.4,-550.4 330.4,-556.4 324.4,-556.4"/>
+<text text-anchor="middle" x="304" y="-532.4" font-family="Helvetica,sans-Serif" font-size="14.00">2</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.2" d="M304,-581.08C304,-575.62 304,-569.57 304,-563.77"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.2" points="305.93,-563.92 304,-558.42 302.08,-563.92 305.93,-563.92"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#f59e0b" stroke="#b45309" stroke-width="1.1" d="M324.4,-491.8C324.4,-491.8 283.6,-491.8 283.6,-491.8 277.6,-491.8 271.6,-485.8 271.6,-479.8 271.6,-479.8 271.6,-464.2 271.6,-464.2 271.6,-458.2 277.6,-452.2 283.6,-452.2 283.6,-452.2 324.4,-452.2 324.4,-452.2 330.4,-452.2 336.4,-458.2 336.4,-464.2 336.4,-464.2 336.4,-479.8 336.4,-479.8 336.4,-485.8 330.4,-491.8 324.4,-491.8"/>
+<text text-anchor="middle" x="304" y="-467.8" font-family="Helvetica,sans-Serif" font-size="14.00">3</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.2" d="M304,-516.48C304,-511.02 304,-504.97 304,-499.17"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.2" points="305.93,-499.32 304,-493.82 302.08,-499.32 305.93,-499.32"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#eab308" stroke="#a16207" stroke-width="1.1" d="M324.4,-427.2C324.4,-427.2 283.6,-427.2 283.6,-427.2 277.6,-427.2 271.6,-421.2 271.6,-415.2 271.6,-415.2 271.6,-399.6 271.6,-399.6 271.6,-393.6 277.6,-387.6 283.6,-387.6 283.6,-387.6 324.4,-387.6 324.4,-387.6 330.4,-387.6 336.4,-393.6 336.4,-399.6 336.4,-399.6 336.4,-415.2 336.4,-415.2 336.4,-421.2 330.4,-427.2 324.4,-427.2"/>
+<text text-anchor="middle" x="304" y="-403.2" font-family="Helvetica,sans-Serif" font-size="14.00">4</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.2" d="M304,-451.88C304,-446.42 304,-440.37 304,-434.57"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.2" points="305.93,-434.72 304,-429.22 302.08,-434.72 305.93,-434.72"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#84cc16" stroke="#4d7c0f" stroke-width="1.1" d="M324.4,-362.6C324.4,-362.6 283.6,-362.6 283.6,-362.6 277.6,-362.6 271.6,-356.6 271.6,-350.6 271.6,-350.6 271.6,-335 271.6,-335 271.6,-329 277.6,-323 283.6,-323 283.6,-323 324.4,-323 324.4,-323 330.4,-323 336.4,-329 336.4,-335 336.4,-335 336.4,-350.6 336.4,-350.6 336.4,-356.6 330.4,-362.6 324.4,-362.6"/>
+<text text-anchor="middle" x="304" y="-338.6" font-family="Helvetica,sans-Serif" font-size="14.00">5</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.2" d="M304,-387.28C304,-381.82 304,-375.77 304,-369.97"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.2" points="305.93,-370.12 304,-364.62 302.08,-370.12 305.93,-370.12"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#22c55e" stroke="#2563eb" stroke-width="2.8" d="M324.4,-298C324.4,-298 283.6,-298 283.6,-298 277.6,-298 271.6,-292 271.6,-286 271.6,-286 271.6,-270.4 271.6,-270.4 271.6,-264.4 277.6,-258.4 283.6,-258.4 283.6,-258.4 324.4,-258.4 324.4,-258.4 330.4,-258.4 336.4,-264.4 336.4,-270.4 336.4,-270.4 336.4,-286 336.4,-286 336.4,-292 330.4,-298 324.4,-298"/>
+<text text-anchor="start" x="300.11" y="-275" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">6</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.2" d="M304,-322.68C304,-317.32 304,-311.39 304,-305.69"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.2" points="305.93,-305.95 304,-300.45 302.08,-305.95 305.93,-305.95"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="#22c55e" stroke="#15803d" stroke-width="1.1" d="M324.4,-233.4C324.4,-233.4 283.6,-233.4 283.6,-233.4 277.6,-233.4 271.6,-227.4 271.6,-221.4 271.6,-221.4 271.6,-205.8 271.6,-205.8 271.6,-199.8 277.6,-193.8 283.6,-193.8 283.6,-193.8 324.4,-193.8 324.4,-193.8 330.4,-193.8 336.4,-199.8 336.4,-205.8 336.4,-205.8 336.4,-221.4 336.4,-221.4 336.4,-227.4 330.4,-233.4 324.4,-233.4"/>
+<text text-anchor="middle" x="304" y="-209.4" font-family="Helvetica,sans-Serif" font-size="14.00">7</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.2" d="M304,-257.74C304,-252.39 304,-246.49 304,-240.83"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.2" points="305.93,-241.15 304,-235.65 302.08,-241.15 305.93,-241.15"/>
+</g>
+
+<g id="node8" class="node">
+<path fill="#22c55e" stroke="#15803d" stroke-width="1.1" d="M324.4,-168.8C324.4,-168.8 283.6,-168.8 283.6,-168.8 277.6,-168.8 271.6,-162.8 271.6,-156.8 271.6,-156.8 271.6,-141.2 271.6,-141.2 271.6,-135.2 277.6,-129.2 283.6,-129.2 283.6,-129.2 324.4,-129.2 324.4,-129.2 330.4,-129.2 336.4,-135.2 336.4,-141.2 336.4,-141.2 336.4,-156.8 336.4,-156.8 336.4,-162.8 330.4,-168.8 324.4,-168.8"/>
+<text text-anchor="middle" x="304" y="-144.8" font-family="Helvetica,sans-Serif" font-size="14.00">8</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.2" d="M304,-193.48C304,-188.02 304,-181.97 304,-176.17"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.2" points="305.93,-176.32 304,-170.82 302.08,-176.32 305.93,-176.32"/>
+</g>
+
+<g id="node9" class="node">
+<path fill="#22c55e" stroke="#15803d" stroke-width="1.1" d="M324.4,-104.2C324.4,-104.2 283.6,-104.2 283.6,-104.2 277.6,-104.2 271.6,-98.2 271.6,-92.2 271.6,-92.2 271.6,-76.6 271.6,-76.6 271.6,-70.6 277.6,-64.6 283.6,-64.6 283.6,-64.6 324.4,-64.6 324.4,-64.6 330.4,-64.6 336.4,-70.6 336.4,-76.6 336.4,-76.6 336.4,-92.2 336.4,-92.2 336.4,-98.2 330.4,-104.2 324.4,-104.2"/>
+<text text-anchor="middle" x="304" y="-80.2" font-family="Helvetica,sans-Serif" font-size="14.00">9</text>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.2" d="M304,-128.88C304,-123.42 304,-117.37 304,-111.57"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.2" points="305.93,-111.72 304,-106.22 302.08,-111.72 305.93,-111.72"/>
+</g>
+
+<g id="node10" class="node">
+<path fill="#22c55e" stroke="#15803d" stroke-width="1.1" d="M324.4,-39.6C324.4,-39.6 283.6,-39.6 283.6,-39.6 277.6,-39.6 271.6,-33.6 271.6,-27.6 271.6,-27.6 271.6,-12 271.6,-12 271.6,-6 277.6,0 283.6,0 283.6,0 324.4,0 324.4,0 330.4,0 336.4,-6 336.4,-12 336.4,-12 336.4,-27.6 336.4,-27.6 336.4,-33.6 330.4,-39.6 324.4,-39.6"/>
+<text text-anchor="middle" x="304" y="-15.6" font-family="Helvetica,sans-Serif" font-size="14.00">10</text>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.2" d="M304,-64.28C304,-58.82 304,-52.77 304,-46.97"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.2" points="305.93,-47.12 304,-41.62 302.08,-47.12 305.93,-47.12"/>
+</g>
+
+<g id="node11" class="node">
+<text text-anchor="start" x="62.48" y="-598" font-family="Helvetica,sans-Serif" font-size="14.00"> </text>
+<text text-anchor="start" x="66.37" y="-598" font-family="Helvetica,sans-Serif" font-size="14.00">Newest block</text>
+<text text-anchor="start" x="149.63" y="-598" font-family="Helvetica,sans-Serif" font-size="14.00"> </text>
+</g>
+
+
+
+<g id="node12" class="node">
+<text text-anchor="start" x="65.59" y="-16.6" font-family="Helvetica,sans-Serif" font-size="14.00"> </text>
+<text text-anchor="start" x="69.48" y="-16.6" font-family="Helvetica,sans-Serif" font-size="14.00">Oldest block</text>
+<text text-anchor="start" x="146.52" y="-16.6" font-family="Helvetica,sans-Serif" font-size="14.00"> </text>
+</g>
+
+
+
+
+
+<g id="edge12" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="5,2" d="M253.8,-601.2C259.68,-601.2 265.56,-601.2 271.45,-601.2"/>
+</g>
+
+
+
+<g id="edge15" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="5,2" d="M253.8,-19.8C259.68,-19.8 265.56,-19.8 271.45,-19.8"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="transaction-challenges"><h2 class="slide-title">Transaction Challenges</h2><div class="slide-body">
+<div style="font-size: 0.92em; line-height: 1.15;">
+<ul>
+<li><strong>Slow confirmation</strong>: if fees are too low or the mempool is crowded, transactions may wait a long time before inclusion.</li>
+<li><strong>Probabilistic finality</strong>: merchants may not want to treat a payment as settled until several confirmations have passed.</li>
+<li><strong>Currency utility</strong>: that delay makes Bitcoin less convenient for instant, in-person payments than cash or cards.</li>
+<li><strong>Trade-off</strong>: Bitcoin gains global, decentralized security by accepting slower local settlement.</li>
+<li><strong>Price risk</strong>: if bitcoin’s price moves before finality, buyers and merchants face exchange-rate uncertainty during the wait.</li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="the-data-structure-of-a-block"><h2 class="slide-title">The Data Structure of a Block</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:54%;">
+<div style="font-size: 0.74em; line-height: 1.12;">
+<ul>
+<li><p>Each block contains a <strong>header</strong> (hash pointer to prior block, Merkle root, timestamp, nonce, etc.) and a <strong>list of transactions</strong>.</p></li>
+<li><p>Hashes link blocks; changing history breaks the chain (tamper‑evident).</p></li>
+<li><p>Merkle trees compress many transaction hashes into one for efficient verification.</p></li>
+<li><p>A block header is only <strong>80 bytes</strong>, but a full block can grow up to Bitcoin’s consensus limit of <strong>4 million weight units</strong> (roughly up to about <strong>4 MB</strong>, depending on transaction mix).</p></li>
+<li><p>Structure enables scalability of verification, not infinite throughput.</p></li>
+</ul>
+</div>
+</div><div class="column" style="width:42%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 272.00 490.40" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:363px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 486.4)">
+<g id="node1" class="node">
+<text text-anchor="start" x="107.49" y="-455.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="18.00">Block</text>
+<polygon fill="#e9eef7" stroke="none" points="32,-264 32,-428.8 229.25,-428.8 229.25,-264 32,-264"/>
+<polygon fill="none" stroke="#3f4854" points="32,-264 32,-428.8 229.25,-428.8 229.25,-264 32,-264"/>
+<text text-anchor="start" x="106.89" y="-404.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">Header</text>
+<polygon fill="#ffffff" stroke="none" points="49,-357 49,-391 129.02,-391 129.02,-357 49,-357"/>
+<polygon fill="none" stroke="#3f4854" points="49,-357 49,-391 129.02,-391 129.02,-357 49,-357"/>
+<text text-anchor="start" x="65.28" y="-374.4" font-family="Helvetica,sans-Serif" font-size="14.00">Version</text>
+<text text-anchor="start" x="72.89" y="-364" font-family="Helvetica,sans-Serif" font-size="10.00">4 bytes</text>
+<polygon fill="#ffffff" stroke="none" points="133.02,-357 133.02,-391 212.25,-391 212.25,-357 133.02,-357"/>
+<polygon fill="none" stroke="#3f4854" points="133.02,-357 133.02,-391 212.25,-391 212.25,-357 133.02,-357"/>
+<text text-anchor="start" x="146.18" y="-374.4" font-family="Helvetica,sans-Serif" font-size="14.00">Hash ptr</text>
+<text text-anchor="start" x="153.74" y="-364" font-family="Helvetica,sans-Serif" font-size="10.00">32 bytes</text>
+<polygon fill="#ffffff" stroke="none" points="49,-319 49,-353 129.02,-353 129.02,-319 49,-319"/>
+<polygon fill="none" stroke="#3f4854" points="49,-319 49,-353 129.02,-353 129.02,-319 49,-319"/>
+<text text-anchor="start" x="54" y="-336.4" font-family="Helvetica,sans-Serif" font-size="14.00">Merkle root</text>
+<text text-anchor="start" x="70.11" y="-326" font-family="Helvetica,sans-Serif" font-size="10.00">32 bytes</text>
+<polygon fill="#ffffff" stroke="none" points="133.02,-319 133.02,-353 212.25,-353 212.25,-319 133.02,-319"/>
+<polygon fill="none" stroke="#3f4854" points="133.02,-319 133.02,-353 212.25,-353 212.25,-319 133.02,-319"/>
+<text text-anchor="start" x="138.02" y="-336.4" font-family="Helvetica,sans-Serif" font-size="14.00">Timestamp</text>
+<text text-anchor="start" x="156.52" y="-326" font-family="Helvetica,sans-Serif" font-size="10.00">4 bytes</text>
+<polygon fill="#ffffff" stroke="none" points="49,-281 49,-315 129.02,-315 129.02,-281 49,-281"/>
+<polygon fill="none" stroke="#3f4854" points="49,-281 49,-315 129.02,-315 129.02,-281 49,-281"/>
+<text text-anchor="start" x="68.78" y="-298.4" font-family="Helvetica,sans-Serif" font-size="14.00">Target</text>
+<text text-anchor="start" x="72.89" y="-288" font-family="Helvetica,sans-Serif" font-size="10.00">4 bytes</text>
+<polygon fill="#ffffff" stroke="none" points="133.02,-281 133.02,-315 212.25,-315 212.25,-281 133.02,-281"/>
+<polygon fill="none" stroke="#3f4854" points="133.02,-281 133.02,-315 212.25,-315 212.25,-281 133.02,-281"/>
+<text text-anchor="start" x="152.4" y="-298.4" font-family="Helvetica,sans-Serif" font-size="14.00">Nonce</text>
+<text text-anchor="start" x="156.52" y="-288" font-family="Helvetica,sans-Serif" font-size="10.00">4 bytes</text>
+<text text-anchor="start" x="80.43" y="-204.4" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">Transactions</text>
+<polygon fill="#f7f9fc" stroke="none" points="32,-156.4 32,-191.2 216,-191.2 216,-156.4 32,-156.4"/>
+<polygon fill="none" stroke="#3f4854" points="32,-156.4 32,-191.2 216,-191.2 216,-156.4 32,-156.4"/>
+<text text-anchor="start" x="84.7" y="-169.6" font-family="Helvetica,sans-Serif" font-size="14.00">Coinbase Tx</text>
+<polygon fill="#f7f9fc" stroke="none" points="32,-121.6 32,-156.4 216,-156.4 216,-121.6 32,-121.6"/>
+<polygon fill="none" stroke="#3f4854" points="32,-121.6 32,-156.4 216,-156.4 216,-121.6 32,-121.6"/>
+<text text-anchor="start" x="116.22" y="-134.8" font-family="Helvetica,sans-Serif" font-size="14.00">Tx</text>
+<polygon fill="#f7f9fc" stroke="none" points="32,-86.8 32,-121.6 216,-121.6 216,-86.8 32,-86.8"/>
+<polygon fill="none" stroke="#3f4854" points="32,-86.8 32,-121.6 216,-121.6 216,-86.8 32,-86.8"/>
+<text text-anchor="start" x="116.22" y="-100" font-family="Helvetica,sans-Serif" font-size="14.00">Tx</text>
+<polygon fill="#f7f9fc" stroke="none" points="32,-52 32,-86.8 216,-86.8 216,-52 32,-52"/>
+<polygon fill="none" stroke="#3f4854" points="32,-52 32,-86.8 216,-86.8 216,-52 32,-52"/>
+<text text-anchor="start" x="116.22" y="-65.2" font-family="Helvetica,sans-Serif" font-size="14.00">Tx</text>
+<text text-anchor="start" x="115.67" y="-26" font-family="Helvetica,sans-Serif" font-size="20.00">...</text>
+<polygon fill="none" stroke="#3f4854" stroke-width="2" points="1,-1 1,-481.4 263,-481.4 263,-1 1,-1"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="transactions-in-a-block"><h2 class="slide-title">Transactions in a Block</h2><div class="slide-body">
+<ul>
+<li>Blocks can contain thousands of transactions.</li>
+<li>Each transaction contributes to the Merkle tree.</li>
+<li>Nodes validate every transaction before accepting the block.</li>
+</ul>
+<div style="margin-top: -2.5em;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 280.03 200.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:373px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 196)">
+<g id="node1" class="node">
+<path fill="#f5f7fb" stroke="black" d="M42.52,-36C42.52,-36 12.52,-36 12.52,-36 6.52,-36 0.52,-30 0.52,-24 0.52,-24 0.52,-12 0.52,-12 0.52,-6 6.52,0 12.52,0 12.52,0 42.52,0 42.52,0 48.52,0 54.52,-6 54.52,-12 54.52,-12 54.52,-24 54.52,-24 54.52,-30 48.52,-36 42.52,-36"/>
+<text text-anchor="middle" x="27.52" y="-15.3" font-family="Helvetica,sans-Serif" font-size="9.00">TX1</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#f5f7fb" stroke="black" d="M43.03,-88C43.03,-88 12,-88 12,-88 6,-88 0,-82 0,-76 0,-76 0,-64 0,-64 0,-58 6,-52 12,-52 12,-52 43.03,-52 43.03,-52 49.03,-52 55.03,-58 55.03,-64 55.03,-64 55.03,-76 55.03,-76 55.03,-82 49.03,-88 43.03,-88"/>
+<text text-anchor="middle" x="27.52" y="-67.3" font-family="Helvetica,sans-Serif" font-size="9.00">Hash(TX1)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" stroke-width="0.9" d="M27.52,-36.48C27.52,-36.48 27.52,-40.22 27.52,-40.22"/>
+<polygon fill="black" stroke="black" stroke-width="0.9" points="24.02,-40.22 27.52,-50.22 31.02,-40.22 24.02,-40.22"/>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f5f7fb" stroke="black" d="M113.52,-36C113.52,-36 83.52,-36 83.52,-36 77.52,-36 71.52,-30 71.52,-24 71.52,-24 71.52,-12 71.52,-12 71.52,-6 77.52,0 83.52,0 83.52,0 113.52,0 113.52,0 119.52,0 125.52,-6 125.52,-12 125.52,-12 125.52,-24 125.52,-24 125.52,-30 119.52,-36 113.52,-36"/>
+<text text-anchor="middle" x="98.52" y="-15.3" font-family="Helvetica,sans-Serif" font-size="9.00">TX2</text>
+</g>
+
+<g id="node6" class="node">
+<path fill="#f5f7fb" stroke="black" d="M114.03,-88C114.03,-88 83,-88 83,-88 77,-88 71,-82 71,-76 71,-76 71,-64 71,-64 71,-58 77,-52 83,-52 83,-52 114.03,-52 114.03,-52 120.03,-52 126.03,-58 126.03,-64 126.03,-64 126.03,-76 126.03,-76 126.03,-82 120.03,-88 114.03,-88"/>
+<text text-anchor="middle" x="98.52" y="-67.3" font-family="Helvetica,sans-Serif" font-size="9.00">Hash(TX2)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" stroke-width="0.9" d="M98.52,-36.48C98.52,-36.48 98.52,-40.22 98.52,-40.22"/>
+<polygon fill="black" stroke="black" stroke-width="0.9" points="95.02,-40.22 98.52,-50.22 102.02,-40.22 95.02,-40.22"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#f5f7fb" stroke="black" d="M188.52,-36C188.52,-36 158.52,-36 158.52,-36 152.52,-36 146.52,-30 146.52,-24 146.52,-24 146.52,-12 146.52,-12 146.52,-6 152.52,0 158.52,0 158.52,0 188.52,0 188.52,0 194.52,0 200.52,-6 200.52,-12 200.52,-12 200.52,-24 200.52,-24 200.52,-30 194.52,-36 188.52,-36"/>
+<text text-anchor="middle" x="173.52" y="-15.3" font-family="Helvetica,sans-Serif" font-size="9.00">TX3</text>
+</g>
+
+<g id="node7" class="node">
+<path fill="#f5f7fb" stroke="black" d="M189.03,-88C189.03,-88 158,-88 158,-88 152,-88 146,-82 146,-76 146,-76 146,-64 146,-64 146,-58 152,-52 158,-52 158,-52 189.03,-52 189.03,-52 195.03,-52 201.03,-58 201.03,-64 201.03,-64 201.03,-76 201.03,-76 201.03,-82 195.03,-88 189.03,-88"/>
+<text text-anchor="middle" x="173.52" y="-67.3" font-family="Helvetica,sans-Serif" font-size="9.00">Hash(TX3)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" stroke-width="0.9" d="M173.52,-36.48C173.52,-36.48 173.52,-40.22 173.52,-40.22"/>
+<polygon fill="black" stroke="black" stroke-width="0.9" points="170.02,-40.22 173.52,-50.22 177.02,-40.22 170.02,-40.22"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f5f7fb" stroke="black" d="M259.52,-36C259.52,-36 229.52,-36 229.52,-36 223.52,-36 217.52,-30 217.52,-24 217.52,-24 217.52,-12 217.52,-12 217.52,-6 223.52,0 229.52,0 229.52,0 259.52,0 259.52,0 265.52,0 271.52,-6 271.52,-12 271.52,-12 271.52,-24 271.52,-24 271.52,-30 265.52,-36 259.52,-36"/>
+<text text-anchor="middle" x="244.52" y="-15.3" font-family="Helvetica,sans-Serif" font-size="9.00">TX4</text>
+</g>
+
+<g id="node8" class="node">
+<path fill="#f5f7fb" stroke="black" d="M260.03,-88C260.03,-88 229,-88 229,-88 223,-88 217,-82 217,-76 217,-76 217,-64 217,-64 217,-58 223,-52 229,-52 229,-52 260.03,-52 260.03,-52 266.03,-52 272.03,-58 272.03,-64 272.03,-64 272.03,-76 272.03,-76 272.03,-82 266.03,-88 260.03,-88"/>
+<text text-anchor="middle" x="244.52" y="-67.3" font-family="Helvetica,sans-Serif" font-size="9.00">Hash(TX4)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" stroke-width="0.9" d="M244.52,-36.48C244.52,-36.48 244.52,-40.22 244.52,-40.22"/>
+<polygon fill="black" stroke="black" stroke-width="0.9" points="241.02,-40.22 244.52,-50.22 248.02,-40.22 241.02,-40.22"/>
+</g>
+
+<g id="node9" class="node">
+<path fill="#f5f7fb" stroke="black" d="M118.12,-140C118.12,-140 70.91,-140 70.91,-140 64.91,-140 58.91,-134 58.91,-128 58.91,-128 58.91,-116 58.91,-116 58.91,-110 64.91,-104 70.91,-104 70.91,-104 118.12,-104 118.12,-104 124.12,-104 130.12,-110 130.12,-116 130.12,-116 130.12,-128 130.12,-128 130.12,-134 124.12,-140 118.12,-140"/>
+<text text-anchor="middle" x="94.52" y="-119.3" font-family="Helvetica,sans-Serif" font-size="9.00">Hash(H1 || H2)</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" stroke-width="0.9" d="M55.51,-70C60.92,-70 64.95,-70 64.95,-70 64.95,-70 64.95,-92.16 64.95,-92.16"/>
+<polygon fill="black" stroke="black" stroke-width="0.9" points="61.45,-92.16 64.95,-102.16 68.45,-92.16 61.45,-92.16"/>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" stroke-width="0.9" d="M98.52,-88.48C98.52,-88.48 98.52,-92.22 98.52,-92.22"/>
+<polygon fill="black" stroke="black" stroke-width="0.9" points="95.02,-92.22 98.52,-102.22 102.02,-92.22 95.02,-92.22"/>
+</g>
+
+<g id="node10" class="node">
+<path fill="#f5f7fb" stroke="black" d="M205.12,-140C205.12,-140 157.91,-140 157.91,-140 151.91,-140 145.91,-134 145.91,-128 145.91,-128 145.91,-116 145.91,-116 145.91,-110 151.91,-104 157.91,-104 157.91,-104 205.12,-104 205.12,-104 211.12,-104 217.12,-110 217.12,-116 217.12,-116 217.12,-128 217.12,-128 217.12,-134 211.12,-140 205.12,-140"/>
+<text text-anchor="middle" x="181.52" y="-119.3" font-family="Helvetica,sans-Serif" font-size="9.00">Hash(H3 || H4)</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="black" stroke-width="0.9" d="M173.52,-88.48C173.52,-88.48 173.52,-92.22 173.52,-92.22"/>
+<polygon fill="black" stroke="black" stroke-width="0.9" points="170.02,-92.22 173.52,-102.22 177.02,-92.22 170.02,-92.22"/>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="black" stroke-width="0.9" d="M216.54,-70C212.14,-70 209.02,-70 209.02,-70 209.02,-70 209.02,-92.16 209.02,-92.16"/>
+<polygon fill="black" stroke="black" stroke-width="0.9" points="205.52,-92.16 209.02,-102.16 212.52,-92.16 205.52,-92.16"/>
+</g>
+
+<g id="node11" class="node">
+<ellipse fill="#e8f5e9" stroke="black" cx="137.52" cy="-174" rx="43.21" ry="18"/>
+<text text-anchor="middle" x="137.52" y="-171" font-family="Helvetica,sans-Serif" font-size="10.00">Merkle Root</text>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="black" stroke-width="0.9" d="M112.21,-140.48C112.21,-140.48 112.21,-147.64 112.21,-147.64"/>
+<polygon fill="black" stroke="black" stroke-width="0.9" points="108.71,-147.64 112.21,-157.64 115.71,-147.64 108.71,-147.64"/>
+</g>
+
+<g id="edge10" class="edge">
+<path fill="none" stroke="black" stroke-width="0.9" d="M163.32,-140.48C163.32,-140.48 163.32,-147.97 163.32,-147.97"/>
+<polygon fill="black" stroke="black" stroke-width="0.9" points="159.82,-147.97 163.32,-157.97 166.82,-147.97 159.82,-147.97"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide" id="mining-a-candidate-block"><h2 class="slide-title">Mining a Candidate Block</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:40%;">
+<div style="font-size: 0.8em; line-height: 1.1;">
+<ul>
+<li>Miners select valid pending transactions for a candidate block.</li>
+<li>They add a <strong>coinbase transaction</strong> to claim subsidy and fees.</li>
+<li>They hash the block header, mainly varying the <strong>nonce</strong> and related permitted fields.</li>
+<li>The goal is a header hash below the current <strong>difficulty target</strong>.</li>
+</ul>
+</div>
+</div><div class="column" style="width:60%;">
+<div style="font-size: 0.8em;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 221.59 545.12" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:296px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 541.12)">
+<g id="node1" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M182.25,-537.12C182.25,-537.12 31.34,-537.12 31.34,-537.12 25.34,-537.12 19.34,-531.12 19.34,-525.12 19.34,-525.12 19.34,-500.16 19.34,-500.16 19.34,-494.16 25.34,-488.16 31.34,-488.16 31.34,-488.16 182.25,-488.16 182.25,-488.16 188.25,-488.16 194.25,-494.16 194.25,-500.16 194.25,-500.16 194.25,-525.12 194.25,-525.12 194.25,-531.12 188.25,-537.12 182.25,-537.12"/>
+<text text-anchor="middle" x="106.79" y="-516.24" font-family="Helvetica,sans-Serif" font-size="12.00">Users &#45;&gt; Full Nodes</text>
+<text text-anchor="middle" x="106.79" y="-501.84" font-family="Helvetica,sans-Serif" font-size="12.00">Broadcast signed transaction</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#dbeafe" stroke="#2563eb" stroke-width="2" d="M177.24,-458.16C177.24,-458.16 36.35,-458.16 36.35,-458.16 30.35,-458.16 24.35,-452.16 24.35,-446.16 24.35,-446.16 24.35,-421.2 24.35,-421.2 24.35,-415.2 30.35,-409.2 36.35,-409.2 36.35,-409.2 177.24,-409.2 177.24,-409.2 183.24,-409.2 189.24,-415.2 189.24,-421.2 189.24,-421.2 189.24,-446.16 189.24,-446.16 189.24,-452.16 183.24,-458.16 177.24,-458.16"/>
+<text text-anchor="middle" x="106.79" y="-437.28" font-family="Helvetica,sans-Serif" font-size="12.00">Full Nodes</text>
+<text text-anchor="middle" x="106.79" y="-422.88" font-family="Helvetica,sans-Serif" font-size="12.00">Gossip to peers (mempool)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#2563eb" stroke-width="2" d="M106.79,-488.09C106.79,-488.09 106.79,-468.56 106.79,-468.56"/>
+<polygon fill="#2563eb" stroke="#2563eb" stroke-width="2" points="109.07,-468.56 106.79,-462.06 104.52,-468.56 109.07,-468.56"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#dbeafe" stroke="#2563eb" stroke-width="2" d="M201.59,-379.2C201.59,-379.2 12,-379.2 12,-379.2 6,-379.2 0,-373.2 0,-367.2 0,-367.2 0,-327.84 0,-327.84 0,-321.84 6,-315.84 12,-315.84 12,-315.84 201.59,-315.84 201.59,-315.84 207.59,-315.84 213.59,-321.84 213.59,-327.84 213.59,-327.84 213.59,-367.2 213.59,-367.2 213.59,-373.2 207.59,-379.2 201.59,-379.2"/>
+<text text-anchor="middle" x="106.79" y="-358.32" font-family="Helvetica,sans-Serif" font-size="12.00">Miner</text>
+<text text-anchor="middle" x="106.79" y="-343.92" font-family="Helvetica,sans-Serif" font-size="12.00">Build candidate block from mempool</text>
+<text text-anchor="middle" x="106.79" y="-329.52" font-family="Helvetica,sans-Serif" font-size="12.00">Find PoW solution (hash &lt; target)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#2563eb" stroke-width="2" d="M106.79,-408.3C106.79,-408.3 106.79,-389.61 106.79,-389.61"/>
+<polygon fill="#2563eb" stroke="#2563eb" stroke-width="2" points="109.07,-389.61 106.79,-383.11 104.52,-389.61 109.07,-389.61"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M160.24,-285.84C160.24,-285.84 53.35,-285.84 53.35,-285.84 47.35,-285.84 41.35,-279.84 41.35,-273.84 41.35,-273.84 41.35,-248.88 41.35,-248.88 41.35,-242.88 47.35,-236.88 53.35,-236.88 53.35,-236.88 160.24,-236.88 160.24,-236.88 166.24,-236.88 172.24,-242.88 172.24,-248.88 172.24,-248.88 172.24,-273.84 172.24,-273.84 172.24,-279.84 166.24,-285.84 160.24,-285.84"/>
+<text text-anchor="middle" x="106.79" y="-264.96" font-family="Helvetica,sans-Serif" font-size="12.00">Miner &#45;&gt; Full Nodes</text>
+<text text-anchor="middle" x="106.79" y="-250.56" font-family="Helvetica,sans-Serif" font-size="12.00">Broadcast new block</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.1" d="M106.79,-314.95C106.79,-314.95 106.79,-294.35 106.79,-294.35"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.1" points="109.07,-294.35 106.79,-287.85 104.52,-294.35 109.07,-294.35"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M181.92,-206.88C181.92,-206.88 31.67,-206.88 31.67,-206.88 25.67,-206.88 19.67,-200.88 19.67,-194.88 19.67,-194.88 19.67,-169.92 19.67,-169.92 19.67,-163.92 25.67,-157.92 31.67,-157.92 31.67,-157.92 181.92,-157.92 181.92,-157.92 187.92,-157.92 193.92,-163.92 193.92,-169.92 193.92,-169.92 193.92,-194.88 193.92,-194.88 193.92,-200.88 187.92,-206.88 181.92,-206.88"/>
+<text text-anchor="middle" x="106.79" y="-186" font-family="Helvetica,sans-Serif" font-size="12.00">Full Nodes</text>
+<text text-anchor="middle" x="106.79" y="-171.6" font-family="Helvetica,sans-Serif" font-size="12.00">Validate block &amp; transactions</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.1" d="M106.79,-236.81C106.79,-236.81 106.79,-215.37 106.79,-215.37"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.1" points="109.07,-215.37 106.79,-208.87 104.52,-215.37 109.07,-215.37"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M157.39,-127.92C157.39,-127.92 56.2,-127.92 56.2,-127.92 50.2,-127.92 44.2,-121.92 44.2,-115.92 44.2,-115.92 44.2,-90.96 44.2,-90.96 44.2,-84.96 50.2,-78.96 56.2,-78.96 56.2,-78.96 157.39,-78.96 157.39,-78.96 163.39,-78.96 169.39,-84.96 169.39,-90.96 169.39,-90.96 169.39,-115.92 169.39,-115.92 169.39,-121.92 163.39,-127.92 157.39,-127.92"/>
+<text text-anchor="middle" x="106.79" y="-107.04" font-family="Helvetica,sans-Serif" font-size="12.00">Full Nodes &#45;&gt; Miner</text>
+<text text-anchor="middle" x="106.79" y="-92.64" font-family="Helvetica,sans-Serif" font-size="12.00">Accept if valid</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.1" d="M106.79,-157.85C106.79,-157.85 106.79,-136.41 106.79,-136.41"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.1" points="109.07,-136.41 106.79,-129.91 104.52,-136.41 109.07,-136.41"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M192.58,-48.96C192.58,-48.96 21.01,-48.96 21.01,-48.96 15.01,-48.96 9.01,-42.96 9.01,-36.96 9.01,-36.96 9.01,-12 9.01,-12 9.01,-6 15.01,0 21.01,0 21.01,0 192.58,0 192.58,0 198.58,0 204.58,-6 204.58,-12 204.58,-12 204.58,-36.96 204.58,-36.96 204.58,-42.96 198.58,-48.96 192.58,-48.96"/>
+<text text-anchor="middle" x="106.79" y="-28.08" font-family="Helvetica,sans-Serif" font-size="12.00">Full Nodes &#45;&gt; Users</text>
+<text text-anchor="middle" x="106.79" y="-13.68" font-family="Helvetica,sans-Serif" font-size="12.00">Confirmations increase over time</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.1" d="M106.79,-78.89C106.79,-78.89 106.79,-57.45 106.79,-57.45"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.1" points="109.07,-57.45 106.79,-50.95 104.52,-57.45 109.07,-57.45"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="after-finding-a-valid-block"><h2 class="slide-title">After Finding a Valid Block</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:40%;">
+<ul>
+<li>Miner broadcasts block to peers.</li>
+<li>Peers validate:
+<ul>
+<li>Proof-of-Work meets difficulty.</li>
+<li>Transactions are valid and unspent.</li>
+<li>Block builds on current longest chain.</li>
+</ul></li>
+<li>Only then is the block relayed further.</li>
+</ul>
+</div><div class="column" style="width:60%;">
+<div style="font-size: 0.8em;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 221.59 545.12" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:296px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 541.12)">
+<g id="node1" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M182.25,-537.12C182.25,-537.12 31.34,-537.12 31.34,-537.12 25.34,-537.12 19.34,-531.12 19.34,-525.12 19.34,-525.12 19.34,-500.16 19.34,-500.16 19.34,-494.16 25.34,-488.16 31.34,-488.16 31.34,-488.16 182.25,-488.16 182.25,-488.16 188.25,-488.16 194.25,-494.16 194.25,-500.16 194.25,-500.16 194.25,-525.12 194.25,-525.12 194.25,-531.12 188.25,-537.12 182.25,-537.12"/>
+<text text-anchor="middle" x="106.79" y="-516.24" font-family="Helvetica,sans-Serif" font-size="12.00">Users &#45;&gt; Full Nodes</text>
+<text text-anchor="middle" x="106.79" y="-501.84" font-family="Helvetica,sans-Serif" font-size="12.00">Broadcast signed transaction</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M177.24,-458.16C177.24,-458.16 36.35,-458.16 36.35,-458.16 30.35,-458.16 24.35,-452.16 24.35,-446.16 24.35,-446.16 24.35,-421.2 24.35,-421.2 24.35,-415.2 30.35,-409.2 36.35,-409.2 36.35,-409.2 177.24,-409.2 177.24,-409.2 183.24,-409.2 189.24,-415.2 189.24,-421.2 189.24,-421.2 189.24,-446.16 189.24,-446.16 189.24,-452.16 183.24,-458.16 177.24,-458.16"/>
+<text text-anchor="middle" x="106.79" y="-437.28" font-family="Helvetica,sans-Serif" font-size="12.00">Full Nodes</text>
+<text text-anchor="middle" x="106.79" y="-422.88" font-family="Helvetica,sans-Serif" font-size="12.00">Gossip to peers (mempool)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.1" d="M106.79,-488.09C106.79,-488.09 106.79,-466.65 106.79,-466.65"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.1" points="109.07,-466.65 106.79,-460.15 104.52,-466.65 109.07,-466.65"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M201.59,-379.2C201.59,-379.2 12,-379.2 12,-379.2 6,-379.2 0,-373.2 0,-367.2 0,-367.2 0,-327.84 0,-327.84 0,-321.84 6,-315.84 12,-315.84 12,-315.84 201.59,-315.84 201.59,-315.84 207.59,-315.84 213.59,-321.84 213.59,-327.84 213.59,-327.84 213.59,-367.2 213.59,-367.2 213.59,-373.2 207.59,-379.2 201.59,-379.2"/>
+<text text-anchor="middle" x="106.79" y="-358.32" font-family="Helvetica,sans-Serif" font-size="12.00">Miner</text>
+<text text-anchor="middle" x="106.79" y="-343.92" font-family="Helvetica,sans-Serif" font-size="12.00">Build candidate block from mempool</text>
+<text text-anchor="middle" x="106.79" y="-329.52" font-family="Helvetica,sans-Serif" font-size="12.00">Find PoW solution (hash &lt; target)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.1" d="M106.79,-408.76C106.79,-408.76 106.79,-387.62 106.79,-387.62"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.1" points="109.07,-387.62 106.79,-381.12 104.52,-387.62 109.07,-387.62"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#dbeafe" stroke="#2563eb" stroke-width="2" d="M160.24,-285.84C160.24,-285.84 53.35,-285.84 53.35,-285.84 47.35,-285.84 41.35,-279.84 41.35,-273.84 41.35,-273.84 41.35,-248.88 41.35,-248.88 41.35,-242.88 47.35,-236.88 53.35,-236.88 53.35,-236.88 160.24,-236.88 160.24,-236.88 166.24,-236.88 172.24,-242.88 172.24,-248.88 172.24,-248.88 172.24,-273.84 172.24,-273.84 172.24,-279.84 166.24,-285.84 160.24,-285.84"/>
+<text text-anchor="middle" x="106.79" y="-264.96" font-family="Helvetica,sans-Serif" font-size="12.00">Miner &#45;&gt; Full Nodes</text>
+<text text-anchor="middle" x="106.79" y="-250.56" font-family="Helvetica,sans-Serif" font-size="12.00">Broadcast new block</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#2563eb" stroke-width="2" d="M106.79,-315.44C106.79,-315.44 106.79,-296.27 106.79,-296.27"/>
+<polygon fill="#2563eb" stroke="#2563eb" stroke-width="2" points="109.07,-296.27 106.79,-289.77 104.52,-296.27 109.07,-296.27"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#dbeafe" stroke="#2563eb" stroke-width="2" d="M181.92,-206.88C181.92,-206.88 31.67,-206.88 31.67,-206.88 25.67,-206.88 19.67,-200.88 19.67,-194.88 19.67,-194.88 19.67,-169.92 19.67,-169.92 19.67,-163.92 25.67,-157.92 31.67,-157.92 31.67,-157.92 181.92,-157.92 181.92,-157.92 187.92,-157.92 193.92,-163.92 193.92,-169.92 193.92,-169.92 193.92,-194.88 193.92,-194.88 193.92,-200.88 187.92,-206.88 181.92,-206.88"/>
+<text text-anchor="middle" x="106.79" y="-186" font-family="Helvetica,sans-Serif" font-size="12.00">Full Nodes</text>
+<text text-anchor="middle" x="106.79" y="-171.6" font-family="Helvetica,sans-Serif" font-size="12.00">Validate block &amp; transactions</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#2563eb" stroke-width="2" d="M106.79,-235.94C106.79,-235.94 106.79,-217.3 106.79,-217.3"/>
+<polygon fill="#2563eb" stroke="#2563eb" stroke-width="2" points="109.07,-217.3 106.79,-210.8 104.52,-217.3 109.07,-217.3"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M157.39,-127.92C157.39,-127.92 56.2,-127.92 56.2,-127.92 50.2,-127.92 44.2,-121.92 44.2,-115.92 44.2,-115.92 44.2,-90.96 44.2,-90.96 44.2,-84.96 50.2,-78.96 56.2,-78.96 56.2,-78.96 157.39,-78.96 157.39,-78.96 163.39,-78.96 169.39,-84.96 169.39,-90.96 169.39,-90.96 169.39,-115.92 169.39,-115.92 169.39,-121.92 163.39,-127.92 157.39,-127.92"/>
+<text text-anchor="middle" x="106.79" y="-107.04" font-family="Helvetica,sans-Serif" font-size="12.00">Full Nodes &#45;&gt; Miner</text>
+<text text-anchor="middle" x="106.79" y="-92.64" font-family="Helvetica,sans-Serif" font-size="12.00">Accept if valid</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.1" d="M106.79,-156.98C106.79,-156.98 106.79,-136.44 106.79,-136.44"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.1" points="109.07,-136.44 106.79,-129.94 104.52,-136.44 109.07,-136.44"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M192.58,-48.96C192.58,-48.96 21.01,-48.96 21.01,-48.96 15.01,-48.96 9.01,-42.96 9.01,-36.96 9.01,-36.96 9.01,-12 9.01,-12 9.01,-6 15.01,0 21.01,0 21.01,0 192.58,0 192.58,0 198.58,0 204.58,-6 204.58,-12 204.58,-12 204.58,-36.96 204.58,-36.96 204.58,-42.96 198.58,-48.96 192.58,-48.96"/>
+<text text-anchor="middle" x="106.79" y="-28.08" font-family="Helvetica,sans-Serif" font-size="12.00">Full Nodes &#45;&gt; Users</text>
+<text text-anchor="middle" x="106.79" y="-13.68" font-family="Helvetica,sans-Serif" font-size="12.00">Confirmations increase over time</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.1" d="M106.79,-78.89C106.79,-78.89 106.79,-57.45 106.79,-57.45"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.1" points="109.07,-57.45 106.79,-50.95 104.52,-57.45 109.07,-57.45"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="adding-to-the-chain"><h2 class="slide-title">Adding to the Chain</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:40%;">
+<ul>
+<li>If valid: the block is appended to a node’s local chain.</li>
+<li>Competing valid blocks can create temporary <strong>forks</strong>.</li>
+<li>The network converges on the chain with the most cumulative work.</li>
+<li>Transactions gain confirmations as more blocks are added on top.</li>
+</ul>
+</div><div class="column" style="width:60%;">
+<div style="font-size: 0.8em;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 221.59 545.12" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:296px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 541.12)">
+<g id="node1" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M182.25,-537.12C182.25,-537.12 31.34,-537.12 31.34,-537.12 25.34,-537.12 19.34,-531.12 19.34,-525.12 19.34,-525.12 19.34,-500.16 19.34,-500.16 19.34,-494.16 25.34,-488.16 31.34,-488.16 31.34,-488.16 182.25,-488.16 182.25,-488.16 188.25,-488.16 194.25,-494.16 194.25,-500.16 194.25,-500.16 194.25,-525.12 194.25,-525.12 194.25,-531.12 188.25,-537.12 182.25,-537.12"/>
+<text text-anchor="middle" x="106.79" y="-516.24" font-family="Helvetica,sans-Serif" font-size="12.00">Users &#45;&gt; Full Nodes</text>
+<text text-anchor="middle" x="106.79" y="-501.84" font-family="Helvetica,sans-Serif" font-size="12.00">Broadcast signed transaction</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M177.24,-458.16C177.24,-458.16 36.35,-458.16 36.35,-458.16 30.35,-458.16 24.35,-452.16 24.35,-446.16 24.35,-446.16 24.35,-421.2 24.35,-421.2 24.35,-415.2 30.35,-409.2 36.35,-409.2 36.35,-409.2 177.24,-409.2 177.24,-409.2 183.24,-409.2 189.24,-415.2 189.24,-421.2 189.24,-421.2 189.24,-446.16 189.24,-446.16 189.24,-452.16 183.24,-458.16 177.24,-458.16"/>
+<text text-anchor="middle" x="106.79" y="-437.28" font-family="Helvetica,sans-Serif" font-size="12.00">Full Nodes</text>
+<text text-anchor="middle" x="106.79" y="-422.88" font-family="Helvetica,sans-Serif" font-size="12.00">Gossip to peers (mempool)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.1" d="M106.79,-488.09C106.79,-488.09 106.79,-466.65 106.79,-466.65"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.1" points="109.07,-466.65 106.79,-460.15 104.52,-466.65 109.07,-466.65"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M201.59,-379.2C201.59,-379.2 12,-379.2 12,-379.2 6,-379.2 0,-373.2 0,-367.2 0,-367.2 0,-327.84 0,-327.84 0,-321.84 6,-315.84 12,-315.84 12,-315.84 201.59,-315.84 201.59,-315.84 207.59,-315.84 213.59,-321.84 213.59,-327.84 213.59,-327.84 213.59,-367.2 213.59,-367.2 213.59,-373.2 207.59,-379.2 201.59,-379.2"/>
+<text text-anchor="middle" x="106.79" y="-358.32" font-family="Helvetica,sans-Serif" font-size="12.00">Miner</text>
+<text text-anchor="middle" x="106.79" y="-343.92" font-family="Helvetica,sans-Serif" font-size="12.00">Build candidate block from mempool</text>
+<text text-anchor="middle" x="106.79" y="-329.52" font-family="Helvetica,sans-Serif" font-size="12.00">Find PoW solution (hash &lt; target)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.1" d="M106.79,-408.76C106.79,-408.76 106.79,-387.62 106.79,-387.62"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.1" points="109.07,-387.62 106.79,-381.12 104.52,-387.62 109.07,-387.62"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M160.24,-285.84C160.24,-285.84 53.35,-285.84 53.35,-285.84 47.35,-285.84 41.35,-279.84 41.35,-273.84 41.35,-273.84 41.35,-248.88 41.35,-248.88 41.35,-242.88 47.35,-236.88 53.35,-236.88 53.35,-236.88 160.24,-236.88 160.24,-236.88 166.24,-236.88 172.24,-242.88 172.24,-248.88 172.24,-248.88 172.24,-273.84 172.24,-273.84 172.24,-279.84 166.24,-285.84 160.24,-285.84"/>
+<text text-anchor="middle" x="106.79" y="-264.96" font-family="Helvetica,sans-Serif" font-size="12.00">Miner &#45;&gt; Full Nodes</text>
+<text text-anchor="middle" x="106.79" y="-250.56" font-family="Helvetica,sans-Serif" font-size="12.00">Broadcast new block</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.1" d="M106.79,-315.44C106.79,-315.44 106.79,-294.36 106.79,-294.36"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.1" points="109.07,-294.36 106.79,-287.86 104.52,-294.36 109.07,-294.36"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#f8fafc" stroke="#64748b" d="M181.92,-206.88C181.92,-206.88 31.67,-206.88 31.67,-206.88 25.67,-206.88 19.67,-200.88 19.67,-194.88 19.67,-194.88 19.67,-169.92 19.67,-169.92 19.67,-163.92 25.67,-157.92 31.67,-157.92 31.67,-157.92 181.92,-157.92 181.92,-157.92 187.92,-157.92 193.92,-163.92 193.92,-169.92 193.92,-169.92 193.92,-194.88 193.92,-194.88 193.92,-200.88 187.92,-206.88 181.92,-206.88"/>
+<text text-anchor="middle" x="106.79" y="-186" font-family="Helvetica,sans-Serif" font-size="12.00">Full Nodes</text>
+<text text-anchor="middle" x="106.79" y="-171.6" font-family="Helvetica,sans-Serif" font-size="12.00">Validate block &amp; transactions</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.1" d="M106.79,-236.81C106.79,-236.81 106.79,-215.37 106.79,-215.37"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.1" points="109.07,-215.37 106.79,-208.87 104.52,-215.37 109.07,-215.37"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#dbeafe" stroke="#2563eb" stroke-width="2" d="M157.39,-127.92C157.39,-127.92 56.2,-127.92 56.2,-127.92 50.2,-127.92 44.2,-121.92 44.2,-115.92 44.2,-115.92 44.2,-90.96 44.2,-90.96 44.2,-84.96 50.2,-78.96 56.2,-78.96 56.2,-78.96 157.39,-78.96 157.39,-78.96 163.39,-78.96 169.39,-84.96 169.39,-90.96 169.39,-90.96 169.39,-115.92 169.39,-115.92 169.39,-121.92 163.39,-127.92 157.39,-127.92"/>
+<text text-anchor="middle" x="106.79" y="-107.04" font-family="Helvetica,sans-Serif" font-size="12.00">Full Nodes &#45;&gt; Miner</text>
+<text text-anchor="middle" x="106.79" y="-92.64" font-family="Helvetica,sans-Serif" font-size="12.00">Accept if valid</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#2563eb" stroke-width="2" d="M106.79,-157.85C106.79,-157.85 106.79,-138.32 106.79,-138.32"/>
+<polygon fill="#2563eb" stroke="#2563eb" stroke-width="2" points="109.07,-138.32 106.79,-131.82 104.52,-138.32 109.07,-138.32"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="#dbeafe" stroke="#2563eb" stroke-width="2" d="M192.58,-48.96C192.58,-48.96 21.01,-48.96 21.01,-48.96 15.01,-48.96 9.01,-42.96 9.01,-36.96 9.01,-36.96 9.01,-12 9.01,-12 9.01,-6 15.01,0 21.01,0 21.01,0 192.58,0 192.58,0 198.58,0 204.58,-6 204.58,-12 204.58,-12 204.58,-36.96 204.58,-36.96 204.58,-42.96 198.58,-48.96 192.58,-48.96"/>
+<text text-anchor="middle" x="106.79" y="-28.08" font-family="Helvetica,sans-Serif" font-size="12.00">Full Nodes &#45;&gt; Users</text>
+<text text-anchor="middle" x="106.79" y="-13.68" font-family="Helvetica,sans-Serif" font-size="12.00">Confirmations increase over time</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#2563eb" stroke-width="2" d="M106.79,-78.02C106.79,-78.02 106.79,-59.38 106.79,-59.38"/>
+<polygon fill="#2563eb" stroke="#2563eb" stroke-width="2" points="109.07,-59.38 106.79,-52.88 104.52,-59.38 109.07,-59.38"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="linking-blocks-into-a-chain"><h2 class="slide-title">Linking Blocks into a Chain</h2><div class="slide-body">
+<ul>
+<li>Each block references the <strong>hash of the previous block header</strong>.</li>
+<li>Creates an <strong>immutable chain</strong> of history back to Genesis Block (2009).</li>
+</ul>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 267.65 249.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:357px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 245)">
+<g id="node1" class="node">
+<path fill="#f5f7fb" stroke="black" d="M26.22,-0.5C26.22,-0.5 233.43,-0.5 233.43,-0.5 239.43,-0.5 245.43,-6.5 245.43,-12.5 245.43,-12.5 245.43,-24.5 245.43,-24.5 245.43,-30.5 239.43,-36.5 233.43,-36.5 233.43,-36.5 26.22,-36.5 26.22,-36.5 20.22,-36.5 14.22,-30.5 14.22,-24.5 14.22,-24.5 14.22,-12.5 14.22,-12.5 14.22,-6.5 20.22,-0.5 26.22,-0.5"/>
+<text text-anchor="middle" x="66.97" y="-14.4" font-family="Helvetica,sans-Serif" font-size="14.00">Genesis Block</text>
+<polyline fill="none" stroke="black" points="119.71,-0.7 119.71,-36.5"/>
+<text text-anchor="middle" x="182.57" y="-14.4" font-family="Helvetica,sans-Serif" font-size="14.00">Header Hash: h₀</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f5f7fb" stroke="black" d="M12,-68.5C12,-68.5 247.65,-68.5 247.65,-68.5 253.65,-68.5 259.65,-74.5 259.65,-80.5 259.65,-80.5 259.65,-92.5 259.65,-92.5 259.65,-98.5 253.65,-104.5 247.65,-104.5 247.65,-104.5 12,-104.5 12,-104.5 6,-104.5 0,-98.5 0,-92.5 0,-92.5 0,-80.5 0,-80.5 0,-74.5 6,-68.5 12,-68.5"/>
+<text text-anchor="middle" x="30.96" y="-82.4" font-family="Helvetica,sans-Serif" font-size="14.00">Block 1</text>
+<polyline fill="none" stroke="black" points="61.91,-68.7 61.91,-104.5"/>
+<text text-anchor="middle" x="124.77" y="-82.4" font-family="Helvetica,sans-Serif" font-size="14.00">Header Hash: h₁</text>
+<polyline fill="none" stroke="black" points="187.63,-68.7 187.63,-104.5"/>
+<text text-anchor="middle" x="223.64" y="-82.4" font-family="Helvetica,sans-Serif" font-size="14.00">Prev: h₀</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M129.83,-68.28C129.83,-68.28 129.83,-48.29 129.83,-48.29"/>
+<polygon fill="black" stroke="black" points="133.33,-48.29 129.83,-38.29 126.33,-48.29 133.33,-48.29"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#f5f7fb" stroke="black" d="M12,-136.5C12,-136.5 247.65,-136.5 247.65,-136.5 253.65,-136.5 259.65,-142.5 259.65,-148.5 259.65,-148.5 259.65,-160.5 259.65,-160.5 259.65,-166.5 253.65,-172.5 247.65,-172.5 247.65,-172.5 12,-172.5 12,-172.5 6,-172.5 0,-166.5 0,-160.5 0,-160.5 0,-148.5 0,-148.5 0,-142.5 6,-136.5 12,-136.5"/>
+<text text-anchor="middle" x="30.96" y="-150.4" font-family="Helvetica,sans-Serif" font-size="14.00">Block 2</text>
+<polyline fill="none" stroke="black" points="61.91,-136.7 61.91,-172.5"/>
+<text text-anchor="middle" x="124.77" y="-150.4" font-family="Helvetica,sans-Serif" font-size="14.00">Header Hash: h₂</text>
+<polyline fill="none" stroke="black" points="187.63,-136.7 187.63,-172.5"/>
+<text text-anchor="middle" x="223.64" y="-150.4" font-family="Helvetica,sans-Serif" font-size="14.00">Prev: h₁</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M129.83,-136.28C129.83,-136.28 129.83,-116.29 129.83,-116.29"/>
+<polygon fill="black" stroke="black" points="133.33,-116.29 129.83,-106.29 126.33,-116.29 133.33,-116.29"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f5f7fb" stroke="black" d="M12,-204.5C12,-204.5 247.65,-204.5 247.65,-204.5 253.65,-204.5 259.65,-210.5 259.65,-216.5 259.65,-216.5 259.65,-228.5 259.65,-228.5 259.65,-234.5 253.65,-240.5 247.65,-240.5 247.65,-240.5 12,-240.5 12,-240.5 6,-240.5 0,-234.5 0,-228.5 0,-228.5 0,-216.5 0,-216.5 0,-210.5 6,-204.5 12,-204.5"/>
+<text text-anchor="middle" x="30.96" y="-218.4" font-family="Helvetica,sans-Serif" font-size="14.00">Block 3</text>
+<polyline fill="none" stroke="black" points="61.91,-204.7 61.91,-240.5"/>
+<text text-anchor="middle" x="124.77" y="-218.4" font-family="Helvetica,sans-Serif" font-size="14.00">Header Hash: h₃</text>
+<polyline fill="none" stroke="black" points="187.63,-204.7 187.63,-240.5"/>
+<text text-anchor="middle" x="223.64" y="-218.4" font-family="Helvetica,sans-Serif" font-size="14.00">Prev: h₂</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M129.83,-204.28C129.83,-204.28 129.83,-184.29 129.83,-184.29"/>
+<polygon fill="black" stroke="black" points="133.33,-184.29 129.83,-174.29 126.33,-184.29 133.33,-184.29"/>
+</g>
+</g>
+</svg></figure>
+</div></section>
+<section class="slide" id="transactions-and-mining-together"><h2 class="slide-title">Transactions and Mining Together</h2><div class="slide-body">
+<ul>
+<li>Transactions move value through the UTXO model.</li>
+<li>Mining packages those transactions into blocks and secures their ordering.</li>
+<li>Bitcoin works because spending, validation, incentives, and chain growth reinforce one another.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="evolution-of-mining-hardware"><h2 class="slide-title">Evolution of Mining Hardware</h2><div class="slide-body">
+<ul>
+<li>In Bitcoin’s early years, ordinary <strong>CPUs</strong> could mine blocks; miners soon shifted to <strong>GPUs</strong>, which performed SHA-256 hashing much faster through parallel computation.</li>
+<li>A brief <strong>FPGA</strong> phase followed, but by about <strong>2013</strong> specialized <strong>ASIC</strong> miners had become the practical standard because they were far faster and more energy efficient.</li>
+<li>Modern Bitcoin mining is therefore an industrial activity: profitability depends heavily on efficient ASICs, cheap electricity, and cooling.</li>
+<li>A block header nonce is only <strong>32 bits</strong>, so miners eventually exhaust that search space; mining software then updates the <strong>coinbase extra nonce</strong>, rebuilds the Merkle root, and may refresh the timestamp within allowed bounds before hashing again.</li>
+</ul>
+</div></section>
+<section class="slide" id="summary"><h2 class="slide-title">Summary</h2><div class="slide-body">
+<ul>
+<li>Wallets manage keys, addresses, and the authority to spend UTXOs.</li>
+<li>Bitcoin transactions consume old UTXOs, create new outputs, and move through nodes into the mempool.</li>
+<li>Miners assemble candidate blocks, search for valid proof-of-work, and broadcast winning blocks to the network.</li>
+<li>Full nodes validate those blocks, adopt the accepted chain, and confirmations increase as more blocks are added.</li>
+</ul>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-nakamoto_bitcoinpeertopeerelectronic_2008" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">S. Nakamoto, <span>“Bitcoin: <span class="nocase">A Peer-to-Peer Electronic Cash System</span>.”</span> Satoshi Nakamoto Institute, Oct. 31, 2008. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf">https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf</a></div>
+</div>
+<div id="ref-bitcoin.orgdevelopers_walletsdeveloperguide_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">Bitcoin.org Developers, <span>“Wallets (<span>Developer Guide</span>).”</span> 2024. Available: <a href="https://developer.bitcoin.org/devguide/wallets.html">https://developer.bitcoin.org/devguide/wallets.html</a></div>
+</div>
+<div id="ref-bitcoin.orgdevelopers_miningdeveloperguide_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">Bitcoin.org Developers, <span>“Mining (<span>Developer Guide</span>).”</span> 2024. Available: <a href="https://developer.bitcoin.org/devguide/mining.html">https://developer.bitcoin.org/devguide/mining.html</a></div>
+</div>
+<div id="ref-bitcoin.orgdevelopers_transactionsdeveloperguide_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">Bitcoin.org Developers, <span>“Transactions (<span>Developer Guide</span>).”</span> 2024. Available: <a href="https://developer.bitcoin.org/devguide/transactions.html">https://developer.bitcoin.org/devguide/transactions.html</a></div>
+</div>
+<div id="ref-financialactiontaskforce_updatedguidanceriskbased_2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">Financial Action Task Force, <span>“Updated <span>Guidance</span> for a <span>Risk-Based Approach</span> to <span>Virtual Assets</span> and <span>Virtual Asset Service Providers</span>.”</span> Accessed: Oct. 20, 2025. [Online]. Available: <a href="https://www.fatf-gafi.org/en/publications/Fatfrecommendations/Guidance-rba-virtual-assets-2021.html">https://www.fatf-gafi.org/en/publications/Fatfrecommendations/Guidance-rba-virtual-assets-2021.html</a></div>
+</div>
+<div id="ref-bitcoin.orgdevelopers_contractsbitcoindeveloper_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">Bitcoin.org Developers, <span>“Contracts (<span>Bitcoin Developer Guide</span>).”</span> 2024. Available: <a href="https://developer.bitcoin.org/devguide/contracts.html">https://developer.bitcoin.org/devguide/contracts.html</a></div>
+</div>
+<div id="ref-antonopoulos_masteringbitcoinprogramming_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">A. M. Antonopoulos, <em>Mastering <span>Bitcoin</span>: Programming the open blockchain</em>, Second edition. Sebastopol, CA: O’Reilly, 2017.</div>
+</div>
+<div id="ref-bitcoin.orgdevelopers_p2pnetworkdeveloper_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">Bitcoin.org Developers, <span>“<span>P2P Network</span> (<span>Developer Guide</span>).”</span> 2024. Available: <a href="https://developer.bitcoin.org/devguide/p2p_network.html">https://developer.bitcoin.org/devguide/p2p_network.html</a></div>
+</div>
+<div id="ref-bitcoin.orgdevelopers_blockchaindeveloper_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">Bitcoin.org Developers, <span>“Block <span>Chain</span> (<span>Developer Guide</span>).”</span> 2024. Available: <a href="https://developer.bitcoin.org/devguide/block_chain.html">https://developer.bitcoin.org/devguide/block_chain.html</a></div>
+</div>
+<div id="ref-neumueller_cambridgedigitalmining_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">A. Neumueller, G. C. Pieters, K. Mohaddes, V. Rousseau, and B. Z. Zhang, <span>“Cambridge <span>Digital Mining Industry Report</span>: <span>Global Operations</span>, <span>Sentiment</span>, and <span>Energy Use</span>.”</span> Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://www.ssrn.com/abstract=5236060">https://www.ssrn.com/abstract=5236060</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

@@ -4,7 +4,7 @@
 
    Identity: each student has a 12-word seed phrase and the Ethereum account it derives (kit/wallet.js).
    Submissions: the page signs an EIP-4361 "Sign-In with Ethereum" message covering the submission, seals the lot to
-   the class's public key (ECDH P-256 + HKDF-SHA256 + AES-256-GCM, Web Crypto), and posts it to the class inbox
+   the class's public key (ECDH on secp256k1 + HKDF-SHA256 + AES-256-GCM; see kit/wallet.js), and posts it to the class inbox
    in one click. The inbox token ships locked; the class code from the board unlocks it. With no inbox or no
    network, the same sealed code can be copied or downloaded. Answer keys never ship to students. */
 (function (root) {
@@ -15,7 +15,7 @@
   Kit.version = '0.22.0';
   /* Which course commit this site was cut from. tools/cut_delivery.py rewrites this line; 'dev' means an uncut working copy.
      Every record carries it, so a class can always be graded with the course repo as it was when the class was cut. */
-  Kit.build = { commit: '19f128b1bf96', date: '2026-11-21' };
+  Kit.build = { commit: '2e0e1e97d948', date: '2026-11-22', plan: 'standard' };
   /* A file of this site, named by build, so a page never pairs with another build's copy of it. */
   Kit.asset = function (path) { return path + (Kit.build.commit === 'dev' ? '' : '?v=' + Kit.build.commit); };
   /* Where this file was loaded from, so pages at any depth can link to shared pages such as setup.html. */
@@ -29,6 +29,12 @@
       get: function (k, d) { try { var v = root[kind].getItem(NS + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
       set: function (k, v) { try { root[kind].setItem(NS + k, JSON.stringify(v)); } catch (e) { /* ignore */ } },
       del: function (k) { try { root[kind].removeItem(NS + k); } catch (e) { /* ignore */ } },
+      /* The names of every stored key that starts with `prefix`. */
+      keys: function (prefix) {
+        var out = [];
+        try { for (var i = 0; i < root[kind].length; i++) { var k = root[kind].key(i); if (k.indexOf(NS + prefix) === 0) out.push(k.slice(NS.length)); } } catch (e) { /* ignore */ }
+        return out;
+      },
       /* Values of every stored key that starts with `prefix`. */
       all: function (prefix) {
         var out = [];
@@ -46,6 +52,7 @@
     get: function (k, d) { return Kit.store.get(scope() + k, d); },
     set: function (k, v) { Kit.store.set(scope() + k, v); },
     del: function (k) { Kit.store.del(scope() + k); },
+    keys: function (prefix) { var n = scope().length; return Kit.store.keys(scope() + prefix).map(function (k) { return k.slice(n); }); },
     all: function (prefix) { return Kit.store.all(scope() + prefix); }
   };
 
@@ -75,6 +82,23 @@
       return b;
     }
   };
+
+  /* JSON as bytes, padded with trailing spaces to a multiple of 256 bytes. Everything that is encrypted goes through
+     this, so the length of a sealed record says only roughly how much is inside: without it, one more wrong answer
+     made a student's sealed results exactly one byte longer. JSON.parse ignores the spaces, so every reader, old or
+     new, reads a padded record exactly as it reads an unpadded one. */
+  Kit.padJson = function (obj) {
+    var b = enc.encode(JSON.stringify(obj)), out = new Uint8Array(Math.max(1, Math.ceil(b.length / 256)) * 256);
+    for (var i = b.length; i < out.length; i++) out[i] = 32;
+    out.set(b);
+    return out;
+  };
+  /* A lookup table that holds only what was put in it. A plain {} also answers to "constructor", "__proto__" and
+     the rest of what every object inherits, so a record that names one of those as its item, quiz or handle would
+     find something that is not there. Used wherever the key comes out of a record. */
+  Kit.table = function () { return Object.create(null); };
+  Kit.has = function (obj, key) { return obj != null && Object.prototype.hasOwnProperty.call(obj, key); };
+  function isObj(x) { return !!x && typeof x === 'object' && !Array.isArray(x); }
 
   /* ---------- Hashing (Web Crypto: real SHA-256) ---------- */
   function subtle() {
@@ -127,7 +151,13 @@
     return idCache;
   };
   function saveIdentity(id) { idCache = id; meCache = null; Kit.session.set('id', id); }
-  Kit.signOut = function () { idCache = meCache = null; Kit.session.del('id'); };
+  /* Signing out also removes this account's quiz answers in progress from the computer: on a shared machine the
+     next person must not find them. (Once a quiz is handed in they are removed anyway: see kit/quiz.js.) */
+  Kit.signOut = function () {
+    var who = ''; try { who = Kit.who(); } catch (e) { /* no wallet on this page */ }
+    if (who) Kit.mine.keys('quiz:').forEach(function (k) { if (k.slice(-who.length - 1) === ':' + who) Kit.mine.del(k); });
+    idCache = meCache = null; Kit.session.del('id');
+  };
   /* The signed-in student's account: { address, handle, sign }. Needs kit/wallet.js on the page.
      handle is only a label this computer remembers (it is not secret); it is '' on a computer that has not seen it. */
   Kit.me = function () {
@@ -536,8 +566,117 @@
       return subtle().decrypt({ name: 'AES-GCM', iv: Kit.b64u.toBytes(locked.iv) }, k, Kit.b64u.toBytes(locked.ct));
     }).then(function (pt) { return dec.decode(pt); });
   };
+  /* ---------- GitLab ----------
+     On GitLab a class needs no token that can change anything:
+       - a student hands in by starting a pipeline with the class's pipeline trigger token. That token can only start
+         pipelines: it cannot read, edit or delete one. The record rides in the pipeline's variables, GitLab stamps the
+         time, and only the project's maintainers (the instructors) can read the variables.
+       - what the class publishes (which days are open, and each student's sealed results) is committed as files under
+         assets/class/ by the instructor dashboard, using the instructor's own token. GitLab Pages serves them, so
+         student pages read plain static files and never call the API.
+     Records keep exactly the same format as on GitHub: only how they travel changes. */
+  var GL_FILE = [[/^\[state\]/, 'assets/class/state.txt'], [/^\[results\] class$/, 'assets/class/results-class.txt'], [/^\[results\] part ([0-9a-f])$/, 'assets/class/results-$1.txt']];
+  function glFile(title) {
+    for (var i = 0; i < GL_FILE.length; i++) { var m = GL_FILE[i][0].exec(title); if (m) return GL_FILE[i][1].replace('$1', m[1] || ''); }
+    return null;
+  }
+  function glApi(inbox) { return 'https://' + (inbox.host || 'gitlab.com') + '/api/v4/projects/' + encodeURIComponent(inbox.repo); }
+  function glBranch(inbox) { return inbox.branch || 'main'; }
+  function isTrigger(token) { return /^glptt-/.test(token) || !/^gl/.test(token); }   // a personal or project token starts glpat-
+  function glFetch(inbox, url, opts) {
+    return root.fetch(url, opts).then(function (r) {
+      if (!r.ok) throw new Error((inbox.host || 'gitlab.com') + ' answered ' + r.status);
+      return r.status === 204 ? null : r.json().catch(function () { return null; });
+    });
+  }
+  function glHeaders(token) { return { 'Content-Type': 'application/json', 'PRIVATE-TOKEN': token }; }
+  /* A record as a pipeline. With the trigger token (students) or the instructor's own token (the dashboard, setup). */
+  function glPost(inbox, token, title, body, labels) {
+    var vars = { BC_TITLE: title, BC_LABEL: (labels || []).join(','), BC_BODY: body };
+    if (isTrigger(token)) {
+      var form = new URLSearchParams(); form.set('token', token); form.set('ref', glBranch(inbox));
+      Object.keys(vars).forEach(function (k) { form.set('variables[' + k + ']', vars[k]); });
+      // A form post is a "simple" request: no preflight, so it works from any page, including one opened from disk.
+      return glFetch(inbox, glApi(inbox) + '/trigger/pipeline', { method: 'POST', body: form }).then(function (j) { return { ref: '!' + j.id, time: j.created_at || null }; });
+    }
+    return glFetch(inbox, glApi(inbox) + '/pipeline', { method: 'POST', headers: glHeaders(token),
+      body: JSON.stringify({ ref: glBranch(inbox), variables: Object.keys(vars).map(function (k) { return { key: k, value: vars[k] }; }) }) })
+      .then(function (j) { return { ref: '!' + j.id, time: j.created_at || null }; });
+  }
+  /* A published file: create or replace it in one commit. */
+  function glCommit(inbox, token, path, body, title) {
+    function go(action) {
+      return glFetch(inbox, glApi(inbox) + '/repository/commits', { method: 'POST', headers: glHeaders(token),
+        body: JSON.stringify({ branch: glBranch(inbox), commit_message: title + ' (instructor dashboard)', actions: [{ action: action, file_path: path, content: body }] }) });
+    }
+    return go('update').catch(function (e) { if (!/ 400$/.test(e.message)) throw e; return go('create'); })
+      .then(function (j) { return { ref: 'f:' + path, time: (j && (j.committed_date || j.created_at)) || null }; });
+  }
+  function glRaw(inbox, token, path) {
+    return root.fetch(glApi(inbox) + '/repository/files/' + encodeURIComponent(path) + '/raw?ref=' + encodeURIComponent(glBranch(inbox)), { headers: { 'PRIVATE-TOKEN': token }, cache: 'no-store' })
+      .then(function (r) { if (r.status === 404) return null; if (!r.ok) throw new Error((inbox.host || 'gitlab.com') + ' answered ' + r.status); return r.text(); });
+  }
+  var FILE_TITLE = { 'assets/class/state.txt': '[state] days and quizzes', 'assets/class/results-class.txt': '[results] class' };
+  function fileItem(path, body) {
+    var d = /results-([0-9a-f])\.txt$/.exec(path), title = FILE_TITLE[path] || (d ? '[results] part ' + d[1] : path);
+    var labels = d ? ['r-' + d[1], 'results'] : path === 'assets/class/state.txt' ? ['class', 'state'] : ['class', 'results-class'];
+    return { ref: 'f:' + path, title: title, body: body, time: null, updated: null, labels: labels, file: true };
+  }
+  /* A pipeline never changes once made, so what is read about one is kept for the life of the page. */
+  var glVars = {};
+  function glPipeline(inbox, token, p) {
+    if (glVars[p.id]) return glVars[p.id];
+    return (glVars[p.id] = glFetch(inbox, glApi(inbox) + '/pipelines/' + p.id + '/variables', { headers: { 'PRIVATE-TOKEN': token } }).then(function (vars) {
+      var v = {}; (vars || []).forEach(function (x) { v[x.key] = x.value; });
+      if (v.BC_BODY == null) return null;
+      return { ref: '!' + p.id, title: v.BC_TITLE || '', body: v.BC_BODY, time: p.created_at, updated: p.created_at, labels: (v.BC_LABEL || '').split(',').filter(Boolean) };
+    }, function (e) { delete glVars[p.id]; throw e; }));
+  }
+  /* The instructor's view: every record, newest first, and (on the first page) the published files. */
+  function glList(inbox, token, opts) {
+    if (isTrigger(token)) return glPublished(opts);
+    var q = '?order_by=id&sort=desc&per_page=' + (opts.perPage || 100) + '&page=' + (opts.page || 1) + (opts.since ? '&updated_after=' + encodeURIComponent(opts.since) : '');
+    return glFetch(inbox, glApi(inbox) + '/pipelines' + q, { headers: { 'PRIVATE-TOKEN': token }, cache: 'no-cache' }).then(function (list) {
+      return Promise.all((list || []).filter(function (p) { return p.source === 'trigger' || p.source === 'api'; }).map(function (p) { return glPipeline(inbox, token, p); }));
+    }).then(function (items) {
+      items = items.filter(Boolean);
+      if ((opts.page || 1) > 1) return items;
+      var paths = ['assets/class/state.txt'];
+      if (!opts.since) paths = paths.concat(['assets/class/results-class.txt'], '0123456789abcdef'.split('').map(function (d) { return 'assets/class/results-' + d + '.txt'; }));
+      return Promise.all(paths.map(function (path) { return glRaw(inbox, token, path).then(function (b) { return b == null ? null : fileItem(path, b); }); }))
+        .then(function (files) { return files.filter(Boolean).concat(items); });
+    });
+  }
+  /* A student's view: only what the class publishes, read from the class site as static files. */
+  function glPublished(opts) {
+    var want = opts.labels === 'state' || opts.labels === 'class' ? ['assets/class/state.txt', 'assets/class/results-class.txt']
+      : /^r-[0-9a-f]$/.test(opts.labels || '') ? ['assets/class/results-' + opts.labels.slice(2) + '.txt'] : [];
+    return Promise.all(want.map(function (path) {
+      return root.fetch(Kit.base + '../../' + path + '?t=' + Date.now(), { cache: 'no-store' }).then(function (r) {
+        if (r.status === 404) return null;
+        if (!r.ok) throw new Error('The class site answered ' + r.status);
+        return r.text().then(function (b) { return fileItem(path, b); });
+      });
+    })).then(function (l) { return l.filter(Boolean); });
+  }
+  function glGet(inbox, token, ref) {
+    ref = String(ref);
+    if (ref.indexOf('f:') === 0) return glRaw(inbox, token, ref.slice(2)).then(function (b) { if (b == null) throw new Error((inbox.host || 'gitlab.com') + ' answered 404'); return fileItem(ref.slice(2), b); });
+    return glFetch(inbox, glApi(inbox) + '/pipelines/' + ref.replace('!', ''), { headers: { 'PRIVATE-TOKEN': token } }).then(function (p) { return glPipeline(inbox, token, p); });
+  }
+  Kit.gitlab = {
+    file: glFile,
+    /* For class setup, with the instructor's token: make the class's trigger token, and commit a file. */
+    newTrigger: function (inbox, token) {
+      return glFetch(inbox, glApi(inbox) + '/triggers', { method: 'POST', headers: glHeaders(token), body: JSON.stringify({ description: 'Class hand-ins (made by the class setup page)' }) })
+        .then(function (j) { return j.token; });
+    },
+    commit: function (inbox, token, path, body, title) { return glCommit(inbox, token, path, body, title); }
+  };
+
   /* File one issue in the class inbox. GitHub or GitLab, hosted or self-hosted. */
   Kit.postToInbox = function (inbox, token, title, body, labels) {
+    if (inbox.platform === 'gitlab') { var f = glFile(title); return f && !isTrigger(token) ? glCommit(inbox, token, f, body, title) : glPost(inbox, token, title, body, labels); }
     var gl = inbox.platform === 'gitlab', host = inbox.host || (gl ? 'gitlab.com' : 'github.com');
     var url = gl ? 'https://' + host + '/api/v4/projects/' + encodeURIComponent(inbox.repo) + '/issues'
       : (host === 'github.com' ? 'https://api.github.com' : 'https://' + host + '/api/v3') + '/repos/' + inbox.repo + '/issues';
@@ -554,6 +693,7 @@
   /* Replace the text of an existing record (ref is '#12'). Used for the two records that are kept up to date in place:
      the class state and the published results. The platform keeps the edit history. */
   Kit.updateInbox = function (inbox, token, ref, body, labels) {
+    if (inbox.platform === 'gitlab') { if (String(ref).indexOf('f:') === 0) return glCommit(inbox, token, String(ref).slice(2), body, 'Update ' + String(ref).slice(2).split('/').pop()); return Promise.reject(new Error('A pipeline cannot be changed')); }
     var gl = inbox.platform === 'gitlab', host = inbox.host || (gl ? 'gitlab.com' : 'github.com'), n = String(ref).replace('#', '');
     var url = gl ? 'https://' + host + '/api/v4/projects/' + encodeURIComponent(inbox.repo) + '/issues/' + n
       : (host === 'github.com' ? 'https://api.github.com' : 'https://' + host + '/api/v3') + '/repos/' + inbox.repo + '/issues/' + n;
@@ -566,6 +706,7 @@
   };
   /* Read one record by its number. Unlike a list, this is never behind: it shows the record as it is right now. */
   Kit.getInbox = function (inbox, token, ref) {
+    if (inbox.platform === 'gitlab') return glGet(inbox, token, ref);
     var gl = inbox.platform === 'gitlab', host = inbox.host || (gl ? 'gitlab.com' : 'github.com'), n = String(ref).replace('#', '');
     var url = gl ? 'https://' + host + '/api/v4/projects/' + encodeURIComponent(inbox.repo) + '/issues/' + n
       : (host === 'github.com' ? 'https://api.github.com' : 'https://' + host + '/api/v3') + '/repos/' + inbox.repo + '/issues/' + n;
@@ -575,9 +716,13 @@
       return r.json();
     }).then(function (it) { return { ref: '#' + n, title: it.title || '', body: (gl ? it.description : it.body) || '', time: it.created_at, updated: it.updated_at || it.created_at }; });
   };
-  /* Read records from the class inbox, newest first: [{ ref, title, body, time }]. opts: { labels, page, perPage }. */
+  /* Read records from the class inbox, newest first: [{ ref, title, body, time, updated, labels }].
+     opts: { labels, page, perPage, since }. `time` is when the platform made the issue and `updated` when it was last
+     changed: anyone holding the class token can change an issue, so a reader that cares when a record was made must
+     look at both. */
   Kit.listInbox = function (inbox, token, opts) {
     opts = opts || {};
+    if (inbox.platform === 'gitlab') return glList(inbox, token, opts);
     var gl = inbox.platform === 'gitlab', host = inbox.host || (gl ? 'gitlab.com' : 'github.com');
     var q = 'per_page=' + (opts.perPage || 100) + '&page=' + (opts.page || 1) + (opts.labels ? '&labels=' + encodeURIComponent(opts.labels) : '')
       + (opts.since ? (gl ? '&updated_after=' : '&since=') + encodeURIComponent(opts.since) : '');   // only records created or changed since then
@@ -592,8 +737,9 @@
       return r.json();
     }).then(function (list) {
       return list.filter(function (it) { return !it.pull_request; }).map(function (it) {
-        return gl ? { ref: '#' + it.iid, title: it.title || '', body: it.description || '', time: it.created_at, updated: it.updated_at || it.created_at }
-          : { ref: '#' + it.number, title: it.title || '', body: it.body || '', time: it.created_at, updated: it.updated_at || it.created_at };
+        var labels = (it.labels || []).map(function (l) { return typeof l === 'string' ? l : (l && l.name) || ''; });
+        return gl ? { ref: '#' + it.iid, title: it.title || '', body: it.description || '', time: it.created_at, updated: it.updated_at || it.created_at, labels: labels }
+          : { ref: '#' + it.number, title: it.title || '', body: it.body || '', time: it.created_at, updated: it.updated_at || it.created_at, labels: labels };
       });
     });
   };
@@ -620,7 +766,12 @@
   };
   Kit.openStaffRecord = function (env) {
     if (!Kit.wallet.signedBy(env.admin, env.sig, Kit.cls().classAddress)) return Promise.reject(new Error('forged instructor record (not signed with the class\'s instructor words)'));
-    return Promise.resolve(JSON.parse(env.admin));
+    /* The class account signs three kinds of text (instructor records, class state, results) and the signature does
+       not say which. So each reader checks the shape: something the class signed as one kind is never read as another. */
+    var rec;
+    try { rec = JSON.parse(env.admin); } catch (e) { rec = null; }
+    if (!isObj(rec) || typeof rec.action !== 'string') return Promise.reject(new Error('not an instructor record (it carries the class\'s signature, but it was signed as something else)'));
+    return Promise.resolve(rec);
   };
 
   /* ---------- Published results ----------
@@ -637,7 +788,10 @@
     if (!m) return Promise.resolve(null);
     try {
       var body = dec.decode(Kit.b64u.toBytes(m[1]));
-      return Promise.resolve(Kit.wallet.signedBy(body, m[2], Kit.cls().classAddress) ? JSON.parse(body) : null);
+      if (!Kit.wallet.signedBy(body, m[2], Kit.cls().classAddress)) return Promise.resolve(null);
+      var r = JSON.parse(body);
+      /* A results record and nothing else: see Kit.openStaffRecord. (v 1 is the older single record.) */
+      return Promise.resolve(isObj(r) && (r.v === 2 || r.v === 1) && typeof r.at === 'string' && (isObj(r.entries) || typeof r.shared === 'string') && !('open' in r) && !('closed' in r) && !('action' in r) ? r : null);
     } catch (e) { return Promise.resolve(null); }   // mangled: ignore it
   };
   /* ---------- Class state: which days are unlocked, which quizzes are closed ----------
@@ -650,7 +804,14 @@
   Kit.readState = function (text) {
     var m = STATE_RE.exec(String(text));
     if (!m) return null;
-    try { var body = dec.decode(Kit.b64u.toBytes(m[1])); return Kit.wallet.signedBy(body, m[2], Kit.cls().classAddress) ? JSON.parse(body) : null; } catch (e) { return null; }
+    try {
+      var body = dec.decode(Kit.b64u.toBytes(m[1]));
+      if (!Kit.wallet.signedBy(body, m[2], Kit.cls().classAddress)) return null;
+      var st = JSON.parse(body);
+      /* A class state and nothing else: see Kit.openStaffRecord. Without this, the public text of a results record
+         (signed by the same account, and usually newer) could be posted as a state with no day open and no quiz closed. */
+      return isObj(st) && st.v === 1 && typeof st.at === 'string' && isObj(st.open) && isObj(st.closed) && !('entries' in st) && !('shared' in st) && !('action' in st) ? st : null;
+    } catch (e) { return null; }
   };
   /* The class's current state as a student's page sees it. Resolves { open, closed, known }.
      A class with no inbox has no locks: everything is open. If the class cannot be asked, `known` is false. */
@@ -663,21 +824,26 @@
     if (!inbox) return Promise.resolve({ state: null, board: null, known: true });
     if (infoMemo && Date.now() - infoMemo.at < 5000) return infoMemo.p;
     var p = Kit.studentToken().then(function (token) {
+      var st = null, top = null, jobs = [];
+      /* Of every genuine record of a kind, the one the class signed last (its own `at`) is the one that counts, wherever
+         it sits in the list. An older one that someone has posted again in a newer issue changes nothing. */
+      function take(list) {
+        list.forEach(function (it) {
+          if (/^\[state\]/.test(it.title)) { var x = Kit.readState(it.body); if (x && x.classId === (c.classId || null) && (!st || x.at > st.at)) st = x; }
+          else if (/^\[results\] class$/.test(it.title)) jobs.push(Kit.readResults(it.body).then(function (r) { if (r && r.classId === (c.classId || null) && typeof r.shared === 'string' && (!top || r.at > top.at)) top = r; }));
+        });
+      }
       return Kit.listInbox(inbox, token, { labels: 'class', perPage: 20 }).then(function (list) {
-        var st = null, sealed = null, jobs = [];
-        list.forEach(function (it) {   // newest first: the first genuine one of each kind
-          if (/^\[state\]/.test(it.title)) { var x = st ? null : Kit.readState(it.body); if (x && x.classId === (c.classId || null)) st = x; }
-          else if (/^\[results\] class$/.test(it.title)) jobs.push(Kit.readResults(it.body).then(function (r) { if (!sealed && r && r.classId === (c.classId || null) && r.shared) sealed = r.shared; }));
+        take(list);
+        if (st) return null;
+        /* A class set up before these records shared a label keeps its state under `state`. And labels are only a
+           convenience that anyone holding the class token can remove: if neither finds a state, look by title. */
+        return Kit.listInbox(inbox, token, { labels: 'state', perPage: 5 }).then(function (old) {
+          take(old);
+          return st ? null : Kit.listInbox(inbox, token, { perPage: 100 }).then(take);
         });
-        return Promise.all(jobs).then(function () {
-          /* A class set up before these records shared a label keeps its state under `state`. */
-          return st ? st : Kit.listInbox(inbox, token, { labels: 'state', perPage: 5 }).then(function (old) {
-            for (var i = 0; i < old.length; i++) { var x = Kit.readState(old[i].body); if (x && x.classId === (c.classId || null)) return x; }
-            return null;
-          });
-        }).then(function (state) {
-          return (sealed ? Kit.classOpen(sealed, token).catch(function () { return null; }) : Promise.resolve(null)).then(function (board) { return { state: state, board: board, known: true }; });
-        });
+      }).then(function () { return Promise.all(jobs); }).then(function () {
+        return (top ? Kit.classOpen(top.shared, token).catch(function () { return null; }) : Promise.resolve(null)).then(function (board) { return { state: st, board: board, known: true }; });
       });
     }).catch(function () { infoMemo = null; return { state: null, board: null, known: false }; });
     infoMemo = { at: Date.now(), p: p };
@@ -709,29 +875,54 @@
   Kit.myLabel = function () { return 's-' + Kit.who().slice(2, 10); };
   /* Everything the signed-in student has handed in, read from the class itself, so it is right on any computer.
      Resolves { ok, n, handle, items: { '<item>:<part>': { time, ref, data } } }: `ok` is false if the class could not
-     be asked, `n` counts this account's records (registration included), `data` is what was handed in (null for a
-     record made before students' own copies were kept). The first hand-in of each item is the one that counts.
+     be asked, `n` counts this account's records (registration included), `data` is what was handed in. The first
+     hand-in of each item is the one that counts.
+     A record counts as this student's only if the copy sealed to their own account opens with their key and names
+     the same item and part as the title. Titles and labels alone prove nothing: anyone holding the class token can
+     write them, and a made-up "[submit] <quiz> · <your account>" would otherwise show a quiz as already handed in.
      Asked once per page; Kit.myRecords(true) asks again. */
   var recsMemo = null, OWN_RE = /BCS1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/;
   Kit.myRecords = function (fresh) {
     var inbox = Kit.inbox(), me = Kit.me();
     if (!inbox || !me) return Promise.resolve({ ok: false, n: 0, handle: '', items: {} });
     if (recsMemo && !fresh && recsMemo.who === me.address) return recsMemo.p;
-    var tag = Kit.short(me.address), out = { ok: true, n: 0, handle: '', items: {} }, jobs = [], have = {}, labelled = false;
+    var tag = Kit.short(me.address), out = { ok: true, n: 0, handle: '', items: Kit.table() }, jobs = [], have = Kit.table();
     function take(list) {
       list.forEach(function (it) {
         (String(it.body).match(Kit.TOKEN_RE) || []).forEach(function (t) { have[t] = 1; });
         var m = /^\[submit\] (\S+)(?: (\S+))? · (\S+)$/.exec(it.title);
         if (!m || m[3] !== tag) return;
-        out.n++;
         var own = OWN_RE.exec(it.body), k = m[1] + ':' + (m[2] || '');
         jobs.push((own ? me.open(own[0]).catch(function () { return null; }) : Promise.resolve(null)).then(function (o) {
-          if (m[1] === 'register') { if (o && o.data && o.data.handle && !out.handle) out.handle = Kit.normHandle(o.data.handle); return; }
-          var parts = o && o.data && o.data.flags ? Object.keys(o.data.flags) : null;
+          if (!o || typeof o !== 'object' || o.item !== m[1] || String(o.part || '') !== (m[2] || '')) return;   // not ours, whatever its title says
+          out.n++;
+          if (m[1] === 'register') { if (o.data && o.data.handle && !out.handle) out.handle = Kit.normHandle(o.data.handle); return; }
+          var parts = o.data && o.data.flags && typeof o.data.flags === 'object' ? Object.keys(o.data.flags) : null;
           if (parts) parts.forEach(function (f) { var kf = m[1] + ':' + f; if (!out.items[kf] || it.time < out.items[kf].time) out.items[kf] = { time: it.time, ref: it.ref, data: { rev: o.data.rev, flag: f, value: o.data.flags[f] } }; });
-          else if (!out.items[k] || it.time < out.items[k].time) out.items[k] = { time: it.time, ref: it.ref, data: o ? o.data : null };
+          else if (!out.items[k] || it.time < out.items[k].time) out.items[k] = { time: it.time, ref: it.ref, data: o.data };
         }));
       });
+    }
+    /* On GitLab a student's page cannot read what was handed in (only instructors can), so it is what this browser
+       itself handed in and the class confirmed receiving. Each is opened from the student's own sealed copy. */
+    if (inbox.platform === 'gitlab') {
+      var pg = Promise.all(entries().filter(function (e) { return e.ref; }).map(function (e) {
+        var own = OWN_RE.exec(String(e.body));
+        return own ? me.open(own[0]).then(function (o) { return { e: e, o: o }; }, function () { return null; }) : null;
+      })).then(function (list) {
+        list.forEach(function (x) {
+          if (!x || !x.o || typeof x.o !== 'object') return;
+          var o = x.o, k = o.item + ':' + (o.part || ''), t = new Date(x.e.sentAt || Date.now()).toISOString();
+          out.n++;
+          if (o.item === 'register') { if (o.data && o.data.handle && !out.handle) out.handle = Kit.normHandle(o.data.handle); return; }
+          var fl = o.data && o.data.flags && typeof o.data.flags === 'object' ? Object.keys(o.data.flags) : null;
+          if (fl) fl.forEach(function (f) { var kf = o.item + ':' + f; if (!out.items[kf] || t < out.items[kf].time) out.items[kf] = { time: t, ref: x.e.ref, data: { rev: o.data.rev, flag: f, value: o.data.flags[f] } }; });
+          else if (!out.items[k] || t < out.items[k].time) out.items[k] = { time: t, ref: x.e.ref, data: o.data };
+        });
+        return out;
+      });
+      recsMemo = { who: me.address, p: pg };
+      return pg;
     }
     var p = Kit.studentToken().then(function (token) {
       return (function page(n) {
@@ -739,13 +930,14 @@
           take(list);
           return list.length === 100 && n < 10 ? page(n + 1) : null;
         });
-      })(1).then(function () {
-        if (out.n) { labelled = true; return null; }
-        /* Nothing under our label: the platform may have dropped it. Look through the newest records by title instead. */
+      })(1).then(function () { return Promise.all(jobs); }).then(function () {
+        if (out.n) return null;
+        /* Nothing of ours under our label: the platform may have dropped it, or someone has removed it. Look through
+           the newest records by title instead. */
         return Kit.listInbox(inbox, token, { perPage: 100 }).then(take);
       });
     }).then(function () { return Promise.all(jobs); }).then(function () {
-      if (labelled) guardMine(have);   // only a complete list under our label can say that something is missing
+      guardMine(have);   // anything this browser handed in that the lists did not show is checked, one by one
       /* A computer that has never seen this student learns their handle here. */
       if (out.handle && !me.handle) { Kit.mine.set('name:' + me.address, out.handle); meCache = null; if (Kit._paintChip) Kit._paintChip(); }
       return out;
@@ -767,7 +959,7 @@
   }
   Kit.classSeal = function (obj, token) {
     var iv = root.crypto.getRandomValues(new Uint8Array(12));
-    return classKey(token).then(function (k) { return subtle().encrypt({ name: 'AES-GCM', iv: iv }, k, enc.encode(JSON.stringify(obj))); })
+    return classKey(token).then(function (k) { return subtle().encrypt({ name: 'AES-GCM', iv: iv }, k, Kit.padJson(obj)); })
       .then(function (ct) { return 'BCG1.' + Kit.b64u.from(iv) + '.' + Kit.b64u.from(ct); });
   };
   Kit.classOpen = function (text, token) {
@@ -787,16 +979,18 @@
   Kit.myResults = function () {
     var inbox = Kit.inbox(), c = Kit.cls(), me = Kit.me();
     if (!inbox || !me) return Promise.resolve(null);
-    function mine(list) {   // newest first: the first record that is genuine and has an entry for this account
-      return list.reduce(function (found, it) {
-        return found.then(function (hit) {
-          if (hit) return hit;
-          return Kit.readResults(it.body).then(function (r) {
-            var e = r && r.classId === (c.classId || null) && r.entries && r.entries[me.address.toLowerCase()];
-            return e ? me.open(e).then(function (o) { return { at: r.at, mine: o.mine, cls: o.cls || null }; }, function () { return null; }) : null;
-          }).catch(function () { return null; });
-        });
-      }, Promise.resolve(null));
+    /* Of every genuine record that has an entry for this account, the one the class signed last (its own `at`) wins,
+       wherever it sits in the list: an older one posted again in a newer issue changes nothing. */
+    function mine(list) {
+      var addr = me.address.toLowerCase();
+      return Promise.all(list.map(function (it) {
+        return Kit.readResults(it.body).then(function (r) { return r && r.classId === (c.classId || null) && Kit.has(r.entries, addr) && typeof r.entries[addr] === 'string' ? r : null; }, function () { return null; });
+      })).then(function (found) {
+        found = found.filter(Boolean).sort(function (a, b) { return a.at < b.at ? 1 : a.at > b.at ? -1 : 0; });
+        return found.reduce(function (got, r) {
+          return got.then(function (hit) { return hit || me.open(r.entries[addr]).then(function (o) { return o && o.mine ? { at: r.at, mine: o.mine, cls: o.cls || null } : null; }, function () { return null; }); });
+        }, Promise.resolve(null));
+      });
     }
     return Kit.studentToken().then(function (token) {
       var own = Kit.listInbox(inbox, token, { labels: 'r-' + Kit.resultsPart(me.address), perPage: 10 }).then(mine).then(function (hit) {
@@ -847,8 +1041,8 @@
   };
   Kit.statementFor = function (item, classId) { return 'Submit ' + item + ' to class ' + (classId || 'none') + '.'; };
 
-  /* Check an opened envelope: the signature, and that the signed message covers exactly this submission.
-     Resolves with { p, address, nonce }. Used by the instructor dashboard; needs no key. */
+  /* Check an opened envelope: the signature, that the signed message covers exactly this submission, and that it
+     was made for this class. Resolves with { p, address, nonce }. Used by the instructor dashboard; needs no key. */
   Kit.checkSubmission = function (env) {
     if (!env || env.v !== 2 || !env.siwe) return Promise.reject(new Error('old or unknown submission format'));
     var f, address;
@@ -858,8 +1052,10 @@
     return Kit.sha256(enc.encode(env.body)).then(function (digest) {
       if (f.resources.indexOf(Kit.wallet.siwe.niUri(digest)) < 0) throw new Error('the signed message does not cover this submission');
       var p = JSON.parse(env.body);
+      if (!isObj(p)) throw new Error('not a submission');
       if (f.statement !== Kit.statementFor(p.item, p.classId)) throw new Error('the signed statement names a different item or class');
       if (String(p.address).toLowerCase() !== address.toLowerCase()) throw new Error('the submission names a different account from the one that signed it');
+      if ((p.classId || null) !== (Kit.cls().classId || null)) throw new Error('made for a different class (' + String(p.classId || 'none').slice(0, 40) + ')');
       return { p: p, address: address, nonce: f.nonce, issuedAt: f.issuedAt };
     });
   };
@@ -881,15 +1077,39 @@
     Kit.mine.set(outboxKey(), list); paintOutbox();
   }
   Kit.outbox = function () { return entries().filter(function (e) { return !e.ref; }); };
-  /* `have`: every sealed record found in the class under this student's label. A hand-in the class confirmed more
-     than five minutes ago and no longer holds (deleted, or its text replaced) is sent again, a few times at most. */
+  /* `have`: every sealed record the lists of the class just showed. A hand-in the class confirmed more than five
+     minutes ago that was not among them is looked up by its own number, which needs no label and is never behind.
+     If the record there no longer holds what was handed in (its text was replaced, or it is gone), it is sent again,
+     a few times at most. So this works whenever this browser holds confirmed hand-ins, whatever has been done to the
+     labels and titles in the class. */
   function guardMine(have) {
-    var now = Date.now(), list = entries(), again = 0;
-    list.forEach(function (e) {
-      if (e.ref && !have[e.code] && now - (e.sentAt || 0) > 300000 && (e.resent || 0) < 3 && now - (e.resentAt || 0) > 3600000) { delete e.ref; e.resent = (e.resent || 0) + 1; e.resentAt = now; again++; }
-    });
-    if (again) { entriesSet(list); Kit.flushOutbox(); }
+    var now = Date.now(), inbox = Kit.inbox(), id = Kit.identity();
+    if ((Kit.inbox() || {}).platform === 'gitlab') return Promise.resolve(0);   // a pipeline cannot be changed or removed by anyone holding the class's token
+    var doubt = entries().filter(function (e) { return e.ref && !have[e.code] && now - (e.sentAt || 0) > 300000 && (e.resent || 0) < 3 && now - (e.resentAt || 0) > 3600000; }).slice(0, 20);
+    if (!doubt.length || !inbox || !id) return Promise.resolve(0);
+    return Kit.unlockToken(inbox.locked, id.code).then(function (token) {
+      return Promise.all(doubt.map(function (e) {
+        return Kit.getInbox(inbox, token, e.ref).then(function (it) { return it.body.indexOf(e.code) < 0; }, function (err) { return / (404|410)$/.test(err.message); })
+          .then(function (gone) { return gone ? e.id : null; });
+      }));
+    }).then(function (ids) {
+      ids = ids.filter(Boolean);
+      if (!ids.length) return 0;
+      var list = entries();
+      list.forEach(function (e) { if (e.ref && ids.indexOf(e.id) >= 0) { delete e.ref; e.resent = (e.resent || 0) + 1; e.resentAt = Date.now(); } });
+      entriesSet(list); Kit.flushOutbox();
+      return ids.length;
+    }).catch(function () { return 0; });
   }
+  /* What this browser itself handed in for an item, opened from its own sealed copy in the outbox (waiting or
+     received): the `data` of the hand-in, or null. It is how a quiz page shows the answers that were handed in when
+     the class cannot be asked, now that answers in progress are no longer kept once a quiz is handed in. */
+  Kit.ownCopy = function (item, part) {
+    var me = Kit.me(), found = entries().filter(function (e) { return e.item === item && (e.part || '') === (part || ''); })[0];
+    var own = found && OWN_RE.exec(String(found.body));
+    if (!me || !own) return Promise.resolve(null);
+    return me.open(own[0]).then(function (o) { return o && o.item === item ? o.data : null; }, function () { return null; });
+  };
   function delivered(e, res) {
     var when = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     (e.parts && e.parts.length ? e.parts : [e.part || '']).forEach(function (part) { Kit.mine.set('sent:' + e.item + ':' + part + ':' + Kit.who(), { ref: res.ref, at: when }); });
@@ -980,7 +1200,7 @@
            hand-ins from any computer. Neither is trusted for grading: that uses only what is sealed inside. */
         var e = { id: Kit.wallet.siwe.nonce(), item: payload.item, part: payload.part || '', parts: payload.parts || null, label: label, code: sub.code, at: new Date().toISOString(),
           title: '[submit] ' + payload.item + (payload.part ? ' ' + payload.part : '') + ' · ' + tag, labels: [Kit.myLabel()],
-          body: 'Course submission: ' + label + '\nAccount: ' + me.address + '\n\n```\n' + sub.code + '\n```\n\nThe student\'s own copy (only their seed phrase opens it):\n\n```\n' + own + '\n```\n' };
+          body: 'Course submission: ' + label + '\n\n```\n' + sub.code + '\n```\n\nThe student\'s own copy (only their seed phrase opens it):\n\n```\n' + own + '\n```\n' };
         entriesSet(entries().concat([e]));              // on this computer first, then to the class
         return new Promise(function (resolve) {
           function onSent(ev) {

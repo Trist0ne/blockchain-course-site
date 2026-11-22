@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Symmetric Encryption</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/primitives/03-CP-symmetric_encryption.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="cp-03" data-code="03-CP" data-src="26c003915a1553e2" data-slides="20">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section II: Cryptographic Primitives · Lesson 03-CP</p><h1>Symmetric Encryption</h1></div></section>
+<section class="slide smaller" id="the-shared-key"><h2 class="slide-title">The Shared Key</h2><div class="slide-body">
+<ul>
+<li>Imagine two field agents need to communicate. They share one identical key that locks and unlocks the same safe.<br />
+</li>
+<li>They exchange messages by visiting the safe and depositing and retrieving notes.</li>
+<li>This is the essence of <strong>symmetric cryptography</strong>: one shared secret for both encryption and decryption.</li>
+<li><strong>Contrast with hashing:</strong> Hashes are one-way commitments; symmetric ciphers are reversible with the key.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="exclusive-or-xor-logic"><h2 class="slide-title">Exclusive OR (XOR) Logic</h2><div class="slide-body">
+<ul>
+<li><strong>Definition:</strong> XOR outputs <code>1</code> if <strong>exactly one</strong> of its inputs is <code>1</code>; otherwise <code>0</code>.
+<ul>
+<li>Denoted by symbols: <code>⊕</code>, <code>^</code>, or sometimes <code>XOR</code>.<br />
+</li>
+<li>Common in cryptography, checksums, and parity bits.</li>
+</ul></li>
+</ul>
+<div class="columns">
+<div class="column" style="width:15%;">
+
+</div><div class="column" style="width:25%;">
+<p><strong>Truth Table:</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">A</th>
+<th style="text-align: center;">B</th>
+<th style="text-align: center;">A ⊕ B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">0</td>
+</tr>
+</tbody>
+</table>
+</div><div class="column" style="width:60%;">
+<p><strong>Properties:</strong></p>
+<ul>
+<li>Commutative: <code>A ⊕ B = B ⊕ A</code><br />
+</li>
+<li>Associative: <code>(A ⊕ B) ⊕ C = A ⊕ (B ⊕ C)</code><br />
+</li>
+<li>Identity: <code>A ⊕ 0 = A</code><br />
+</li>
+<li>Self-inverse: <code>A ⊕ A = 0</code></li>
+</ul>
+</div>
+</div>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Visualization:</strong> Think of a “difference detector” — it lights up when inputs differ.</p>
+</div>
+</div></section>
+<section class="slide" id="infinite-length-one-time-pad"><h2 class="slide-title">Infinite-length One Time Pad</h2><div class="slide-body">
+<ul>
+<li><p>Imagine you and a friend share a secret, infinite-length pad of random text</p></li>
+<li><p>Could establish perfect secrecy if you never reused the same offset into pad</p>
+<ul>
+<li>Encrypt: msg <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>⊕</mi><annotation encoding="application/x-tex">\oplus</annotation></semantics></math> pad-at-offset <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> ciphertext</li>
+<li>Decrypt: ciphertext <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>⊕</mi><annotation encoding="application/x-tex">\oplus</annotation></semantics></math> pad-at-offset <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> plaintext</li>
+<li>Share: (ciphertext, offset)</li>
+</ul></li>
+</ul>
+<p>Test XOR with a OTP here: <a href="/assets/labs/micro-xor/">XOR Pad Demo</a></p>
+</div></section>
+<section class="slide" id="pseudo-random-generators"><h2 class="slide-title">Pseudo-Random Generators</h2><div class="slide-body">
+<ul>
+<li>Infinite-length, pre-shared keys do not exist, but let’s assume PRGs do
+<ul>
+<li>A psuedo-random number generator generates a stream of text</li>
+<li>You preshare a random seed for the generator, and then follow same algorithm in previous slide</li>
+<li>Essentially a very primitive stream cipher</li>
+</ul></li>
+<li><strong>Weakness:</strong>
+<ul>
+<li>No error correction</li>
+<li>Must track offset</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="simple-pseudorandom-generator"><h2 class="slide-title">Simple Pseudorandom Generator</h2><div class="slide-body">
+<ul>
+<li><p>Let <strong><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math></strong> be a cryptographic hash function<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>:</mo><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">}</mo><mo>*</mo></msup><mo>→</mo><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">}</mo><mi>n</mi></msup></mrow><annotation encoding="application/x-tex">h : \{0,1\}^* \to \{0,1\}^n</annotation></semantics></math></p></li>
+<li><p>Let the initial <strong>seed</strong> be <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>s</mi><mn>0</mn></msub><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">}</mo><mi>n</mi></msup></mrow><annotation encoding="application/x-tex">s_0 \in \{0,1\}^n</annotation></semantics></math></p></li>
+<li><p>For each round <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">i = 1, 2, \dots, t</annotation></semantics></math>:</p>
+<ol type="1">
+<li>Compute <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>h</mi><mi>i</mi></msub><mo>=</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>s</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h_i = h(s_{i-1})</annotation></semantics></math><br />
+</li>
+<li>Output the <strong>last byte</strong> of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>h</mi><mi>i</mi></msub><annotation encoding="application/x-tex">h_i</annotation></semantics></math>:<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>=</mo><msub><mrow><mi mathvariant="normal">L</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">B</mi></mrow><mn>8</mn></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>h</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">y_i = \mathrm{LSB}_8(h_i)</annotation></semantics></math><br />
+</li>
+<li>Use the <strong>remaining bits</strong> of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>h</mi><mi>i</mi></msub><annotation encoding="application/x-tex">h_i</annotation></semantics></math> as the next seed:<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>s</mi><mi>i</mi></msub><mo>=</mo><msub><mi>h</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>:</mo><mi>n</mi><mo>−</mo><mn>8</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">s_i = h_i[0 : n - 8]</annotation></semantics></math></li>
+</ol></li>
+<li><p>Final output: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mn>1</mn></msub><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.167em"></mspace><msub><mi>y</mi><mn>2</mn></msub><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.167em"></mspace><mi>…</mi><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.167em"></mspace><msub><mi>y</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">y_1 \,\|\, y_2 \,\|\, \dots \,\|\, y_t</annotation></semantics></math></p></li>
+</ul>
+<p>Visualize this: <a href="/assets/labs/micro-prg/">PRG Demo</a></p>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Interpretation:</strong> Each iteration <em>hashes the current seed</em>, <em>emits one byte</em> as pseudorandom output, and <em>reuses the rest</em> as the next seed. However, this structure is not provably secure.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="counter-mode-pseudorandom-generator-prg"><h2 class="slide-title">Counter-Mode Pseudorandom Generator (PRG)</h2><div class="slide-body">
+<ul>
+<li>Let <strong><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math></strong> be a pseudorandom function (PRF) keyed by a secret key (e.g., <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>K</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mrow><mi mathvariant="normal">H</mi><mi mathvariant="normal">M</mi><mi mathvariant="normal">A</mi><mi mathvariant="normal">C</mi></mrow><mi>h</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>K</mi><mo>,</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">F_K(x)=\mathrm{HMAC}_h(K,x)</annotation></semantics></math>).</li>
+<li>Let the <strong>seed</strong> be the secret key <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">}</mo><mi>k</mi></msup></mrow><annotation encoding="application/x-tex">K \in \{0,1\}^k</annotation></semantics></math> and initialize a <strong>counter</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mi>t</mi><msub><mi>r</mi><mn>1</mn></msub><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">}</mo><mi>c</mi></msup></mrow><annotation encoding="application/x-tex">ctr_1 \in \{0,1\}^c</annotation></semantics></math>.
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mo>:</mo><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">}</mo><mi>k</mi></msup><mo>×</mo><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">}</mo><mi>c</mi></msup><mo>→</mo><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">}</mo><mi>n</mi></msup></mrow><annotation encoding="application/x-tex">F : \{0,1\}^k \times \{0,1\}^c \to \{0,1\}^n</annotation></semantics></math></li>
+</ul></li>
+<li>For each round <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">i = 1,2,\dots,t</annotation></semantics></math>:
+<ol type="1">
+<li>Compute a block with the PRF:<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>B</mi><mi>i</mi></msub><mspace width="0.278em"></mspace><mo>=</mo><mspace width="0.278em"></mspace><msub><mi>F</mi><mi>K</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>c</mi><mi>t</mi><msub><mi>r</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">B_i \;=\; F_K(ctr_i)</annotation></semantics></math></li>
+<li>Output (e.g., the last byte):<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub><mspace width="0.278em"></mspace><mo>=</mo><mspace width="0.278em"></mspace><msub><mrow><mi mathvariant="normal">L</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">B</mi></mrow><mn>8</mn></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>B</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">y_i \;=\; \mathrm{LSB}_8(B_i)</annotation></semantics></math></li>
+<li>Increment the counter:<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mi>t</mi><msub><mi>r</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub><mspace width="0.278em"></mspace><mo>=</mo><mspace width="0.278em"></mspace><mi>c</mi><mi>t</mi><msub><mi>r</mi><mi>i</mi></msub><mo>+</mo><mn>1</mn><mrow><mspace width="0.222em"></mspace><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">mod</mi><mo>&#8289;</mo></mrow><mspace width="0.222em"></mspace><msup><mn>2</mn><mi>c</mi></msup><mo stretchy="false" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">ctr_{i+1} \;=\; ctr_i + 1 \pmod{2^c}</annotation></semantics></math></li>
+</ol></li>
+<li>Final output: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mn>1</mn></msub><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.167em"></mspace><msub><mi>y</mi><mn>2</mn></msub><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.167em"></mspace><mi>…</mi><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.167em"></mspace><msub><mi>y</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">y_1 \,\|\, y_2 \,\|\, \dots \,\|\, y_t</annotation></semantics></math></li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Interpretation:</strong> Use a secret key <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> and a public counter to “seek” through a PRF. Each <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>B</mi><mi>i</mi></msub><annotation encoding="application/x-tex">B_i</annotation></semantics></math> is pseudorandom; selecting a byte (or more) per round yields a secure keystream.</p>
+</div>
+</div></section>
+<section class="slide" id="what-is-symmetric-cryptography"><h2 class="slide-title">What Is Symmetric Cryptography?</h2><div class="slide-body">
+<ul>
+<li><strong>Definition:</strong> Encryption and decryption using <em>the same secret key</em>.<br />
+</li>
+<li><strong>Mathematical form:</strong>
+<ul>
+<li>Encryption Eₖ(plaintext) = ciphertext<br />
+</li>
+<li>Decryption Dₖ(ciphertext) = plaintext<br />
+</li>
+<li>Where Dₖ(Eₖ(m)) = m<br />
+</li>
+</ul></li>
+<li>Examples: AES, ChaCha20, DES (legacy).<br />
+</li>
+<li>Fast and efficient—used for bulk data, VPNs, and storage encryption.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="shannons-principles-confusion-and-diffusion"><h2 class="slide-title">Shannon’s Principles: Confusion and Diffusion</h2><div class="slide-body">
+<table>
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 31%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>Principle</th>
+<th>Purpose</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Confusion</strong></td>
+<td>Obscure the relationship between key and ciphertext.</td>
+<td>Substitution tables (S-boxes)</td>
+</tr>
+<tr>
+<td><strong>Diffusion</strong></td>
+<td>Spread the influence of each plaintext bit across many ciphertext bits.</td>
+<td>Permutation layers (P-boxes)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Introduced by Claude Shannon (1949).<br />
+</li>
+<li>Together, they create complex, unpredictable ciphertext from simple transformations.</li>
+</ul>
+</div></section>
+<section class="slide" id="building-blocks-of-block-ciphers"><h2 class="slide-title">Building Blocks of Block Ciphers</h2><div class="slide-body">
+<ul>
+<li>Block ciphers process fixed-size chunks (e.g., 128 bits).<br />
+</li>
+<li>Built from repeated <strong>rounds</strong> combining:
+<ol type="1">
+<li><strong>Substitution (S-box):</strong> non-linear mapping for confusion.<br />
+</li>
+<li><strong>Permutation (P-box):</strong> bit re-ordering for diffusion.<br />
+</li>
+<li><strong>Key mixing:</strong> XOR with a round key derived from the main key.<br />
+</li>
+</ol></li>
+<li>Multiple rounds amplify security—small changes in plaintext or key cause large changes in ciphertext.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="block-vs-stream-ciphers"><h2 class="slide-title">Block vs Stream Ciphers</h2><div class="slide-body">
+<table>
+<colgroup>
+<col style="width: 24%" />
+<col style="width: 36%" />
+<col style="width: 39%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Block Cipher</th>
+<th>Stream Cipher</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unit of operation</td>
+<td>Fixed-size blocks (e.g., 128 bits)</td>
+<td>Single bits or bytes</td>
+</tr>
+<tr>
+<td>Key use</td>
+<td>Same key for many rounds</td>
+<td>Key generates continuous keystream</td>
+</tr>
+<tr>
+<td>Examples</td>
+<td>AES, DES</td>
+<td>ChaCha20, RC4</td>
+</tr>
+<tr>
+<td>Strength</td>
+<td>Strong diffusion and structure</td>
+<td>High speed and low latency</td>
+</tr>
+<tr>
+<td>Typical use</td>
+<td>Disk, file encryption</td>
+<td>Real-time communication, VPNs</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide" id="modes-of-operation-visual"><h2 class="slide-title">Modes of Operation Visual</h2><div class="slide-body">
+<p><img src="../img/blockciphermodes.svg" data-align="center" /></p>
+<div class="callout-note" data-appearance="simple">
+<p>Photo Credit: A.M. Rowsell and Epachamo, CC-BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:BlockCipherModesofOperation.svg">Wikipedia</a></p>
+</div>
+</div></section>
+<section class="slide smaller" id="modes-of-operation-overview"><h2 class="slide-title">Modes of Operation Overview</h2><div class="slide-body">
+<table style="width:100%;">
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 31%" />
+<col style="width: 26%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Description</th>
+<th>Strengths</th>
+<th>Weaknesses</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span style="color: green;"><strong>GCM</strong></span></td>
+<td>CTR-style encryption plus authentication tag.</td>
+<td>Best practice AEAD; parallelizable.</td>
+<td>Requires unique nonce.</td>
+</tr>
+<tr>
+<td><span style="color: green;"><strong>CBC</strong></span></td>
+<td>Chains each block to the previous via XOR with IV.</td>
+<td>Hides patterns, strong diffusion.</td>
+<td>Sequential; needs unpredictable IV and authentication.</td>
+</tr>
+<tr>
+<td><span style="color: green;"><strong>CTR</strong></span></td>
+<td>Encrypts counter values to generate keystream.</td>
+<td>Parallelizable, random access.</td>
+<td>Requires unique nonce and authentication.</td>
+</tr>
+<tr>
+<td><span style="color: red;"><strong>ECB</strong></span></td>
+<td>Encrypts each block independently.</td>
+<td>Simple, parallelizable.</td>
+<td>Reveals patterns (insecure).</td>
+</tr>
+<tr>
+<td><span style="color: red;"><strong>CFB</strong></span></td>
+<td>Turns block cipher into self-synchronizing stream.</td>
+<td>Handles short data streams.</td>
+<td>Legacy mode; bit errors propagate.</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide smaller" id="ecb-mode-pitfall"><h2 class="slide-title">ECB Mode Pitfall</h2><div class="slide-body">
+<ul>
+<li><strong>Electronic Codebook (ECB)</strong> encrypts each block independently.<br />
+</li>
+<li>Identical plaintext blocks → identical ciphertext blocks.<br />
+</li>
+<li>Leaks patterns in structured data (images, database fields).<br />
+</li>
+<li><strong>Never use ECB for real-world encryption.</strong></li>
+</ul>
+<p><img src="../img/tux-ecb.jpg" data-align="center" /></p>
+<div class="callout-note" data-appearance="simple">
+<p>Photo Credit: Larry Ewing. <a href="https://en.wikipedia.org/wiki/File:Tux.svg">Wikipedia</a></p>
+</div>
+</div></section>
+<section class="slide smaller" id="padding-and-initialization-vectors"><h2 class="slide-title">Padding and Initialization Vectors</h2><div class="slide-body">
+<ul>
+<li><strong>Padding:</strong> ensures plaintext fits exact block size (e.g., PKCS#7).
+<ul>
+<li>Example: “HELLO” → <code>HELLO\x03\x03\x03</code> for 8-byte block.<br />
+</li>
+</ul></li>
+<li><strong>Initialization Vector (IV):</strong> random, unique value prepended or sent alongside ciphertext.
+<ul>
+<li>Ensures identical plaintexts encrypt differently each time.<br />
+</li>
+</ul></li>
+<li>Padding adds length consistency; IVs add <em>semantic security</em> (freshness).<br />
+</li>
+<li>IVs are <em>not secret</em> but must be <em>unpredictable and never reused</em>.</li>
+</ul>
+</div></section>
+<section class="slide" id="from-confidentiality-to-authenticated-encryption-aead"><h2 class="slide-title">From Confidentiality to Authenticated Encryption (AEAD)</h2><div class="slide-body">
+<ul>
+<li><p>Confidentiality hides contents; integrity detects tampering; authenticity binds to a key holder.</p></li>
+<li><p>AEAD schemes provide both confidentiality and integrity in one API.</p>
+<ul>
+<li>Authenticated Encryption with Associated Data (AEAD)</li>
+</ul></li>
+<li><p>Associated Data (AAD): authenticated but unencrypted headers/metadata.</p></li>
+<li><p>Examples: AES-GCM, ChaCha20-Poly1305; older pattern: Encrypt-then-MAC with HMAC.</p></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="why-symmetric-crypto"><h2 class="slide-title">Why Symmetric Crypto</h2><div class="slide-body">
+<ul>
+<li><strong>Speed:</strong> Thousands of times faster than public-key/asymmetric encryption.<br />
+</li>
+<li><strong>Security:</strong> AES and ChaCha20 remain unbroken with proper key management.<br />
+</li>
+<li><strong>Ubiquity:</strong> Protects VPNs, Wi-Fi (WPA3), TLS session data, and encrypted drives.<br />
+</li>
+<li><strong>Limitation:</strong> Requires secure key distribution and rotation.</li>
+<li>Block Ciphers provide conceptual frame of reference block chaining.</li>
+<li>Blockchains are like CBC in that they computation cannot be parallelized.</li>
+</ul>
+</div></section>
+<section class="slide" id="symmetric-crypto-micro-lab"><h2 class="slide-title">Symmetric Crypto Micro Lab</h2><div class="slide-body">
+<p><a href="/assets/labs/symmetric_encryption/symmetric_encryption_lab.html">/assets/labs/symmetric_encryption/</a></p>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-shannon_communicationtheorysecrecy_1949" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">C. E. Shannon, <span>“Communication <span>Theory</span> of <span>Secrecy Systems</span>*,”</span> <em>Bell System Technical Journal</em>, vol. 28, no. 4, pp. 656–715, Oct. 1949, doi: <a href="https://doi.org/10.1002/j.1538-7305.1949.tb00928.x">10.1002/j.1538-7305.1949.tb00928.x</a>.</div>
+</div>
+<div id="ref-menezes_handbookappliedcryptography_2011" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">A. J. Menezes, P. C. van Oorschot, and S. A. Vanstone, <span>“Handbook of <span>Applied Cryptography</span>.”</span> CRC Press, Aug. 07, 2011. Accessed: Oct. 23, 2025. [Online]. Available: <a href="https://cacr.uwaterloo.ca/hac/">https://cacr.uwaterloo.ca/hac/</a></div>
+</div>
+<div id="ref-katz_introductionmoderncryptography_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">J. Katz and Y. Lindell, <em>Introduction to <span>Modern Cryptography</span></em>, 3rd ed. <span>Chapman and Hall/CRC</span>, 2020. doi: <a href="https://doi.org/10.1201/9781351133036">10.1201/9781351133036</a>.</div>
+</div>
+<div id="ref-boneh_hashfunctions_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">D. Boneh and V. Shoup, <span>“Hash <span>Functions</span>.”</span> 2020. Available: <a href="https://intensecrypto.org/public/lec_07_hash_functions.html">https://intensecrypto.org/public/lec_07_hash_functions.html</a></div>
+</div>
+<div id="ref-stinson_cryptographytheorypractice_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">D. R. Stinson and M. B. Paterson, <em>Cryptography: Theory and practice</em>, Fourth edition, first issued in paperback. Boca Raton, FL: Chapman &amp; Hall/CRC Press, 2022.</div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

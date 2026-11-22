@@ -14,4 +14,4 @@ and cut again.
 
 After that, this repo's issues are the class's records. They are encrypted: please don't edit or close them.
 
-Site build: course repo commit `19f128b1bf96`, cut 2026-11-21.
+Site build: course repo commit `2e0e1e97d948`, plan `standard` (Blockchain Technology: the two-week course), cut 2026-11-22.

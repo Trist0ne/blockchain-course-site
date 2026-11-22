@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blockchain in the Real World</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/conclusion/01-AS-blockchain_in_the_real_world.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="as-01" data-code="01-AS" data-src="813ccb527795e43b" data-slides="31">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section IX: Applications and Synthesis · Lesson 01-AS</p><h1>Blockchain in the Real World</h1></div></section>
+<section class="slide" id="from-theory-to-reality"><h2 class="slide-title">From Theory to Reality</h2><div class="slide-body">
+<p><strong>We’ve studied how blockchain works—and how it’s abused. But how do real people actually use it?</strong></p>
+<ul>
+<li>From diagrams → to real systems</li>
+<li>From cryptography → to applications</li>
+<li>From theory → to user experience</li>
+</ul>
+</div></section>
+<section class="slide" id="what-does-a-user-actually-interact-with"><h2 class="slide-title">What Does a User Actually Interact With?</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:55%;">
+<ul>
+<li>Users do <strong>not</strong> interact with blockchains directly</li>
+<li>They interact with:
+<ul>
+<li>Wallet applications</li>
+<li>Web interfaces (dApps)</li>
+<li>Exchanges and platforms</li>
+</ul></li>
+<li>Blockchain is <strong>abstracted away</strong></li>
+</ul>
+</div><div class="column" style="width:45%;">
+<p><img src="../img/exodus_wallet.jpg" style="width:60.0%" data-fig-alt="Exodus wallet interface example" /></p>
+<div style="font-size:0.62em; line-height:1.0; text-align:center;">
+<p><a href="https://www.exodus.com/eos-wallet">Wallet Interface Example (Exodus)</a></p>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide" id="walking-a-transaction-step-by-step"><h2 class="slide-title">Walking a Transaction Step-by-Step</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:70%;">
+<div style="font-size:0.78em; line-height:1.25;">
+<ul>
+<li>User initiates an action (send or swap)</li>
+<li>Wallet <strong>creates and signs</strong> the transaction</li>
+<li>RPC provider <strong>broadcasts</strong> it to the network
+<ul>
+<li>RPC = <strong>Remote Procedure Call</strong>, the network interface wallets and apps use to talk to blockchain nodes</li>
+</ul></li>
+<li>Node <strong>validates and propagates</strong></li>
+<li>Blockchain <strong>records</strong> the transaction</li>
+</ul>
+</div>
+</div><div class="column" style="width:30%;">
+<p><img src="../img/simple_blockchain.png" style="width:40.0%" data-fig-alt="Simplified blockchain transaction flow from user through wallet, RPC provider, node, and blockchain." /></p>
+</div>
+</div>
+</div></section>
+<section class="slide" id="wallets-the-control-layer"><h2 class="slide-title">Wallets: The Control Layer</h2><div class="slide-body">
+<ul>
+<li>Wallets manage <strong>private keys</strong>, which control assets</li>
+<li>They <strong>sign transactions</strong> on behalf of the user</li>
+<li>Wallets now come in many forms:
+<ul>
+<li>browser extensions, mobile apps, hardware devices</li>
+<li>exchange-linked wallets with extra services</li>
+</ul></li>
+</ul>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div style="text-align:center;">
+<img src="../img/metamask-fox.svg" alt="MetaMask fox logo" style="height:120px; max-width:100%;">
+<div>
+<strong>MetaMask</strong><br><small>Browser/mobile wallet focused on signing, swapping, and dApp access.</small>
+</div>
+</div>
+</div><div class="column" style="width:50%;">
+<div style="text-align:center;">
+<img src="../img/ledger-logo-long.svg" alt="Ledger logo" style="height:120px; max-width:100%;">
+<div>
+<strong>Ledger</strong><br><small>Hardware wallet focused on isolating keys from the internet-facing device.</small>
+</div>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide" id="custody-models"><h2 class="slide-title">Custody Models</h2><div class="slide-body">
+<div class="column" style="width:50%;">
+<ul>
+<li><strong>Custodial</strong>
+<ul>
+<li>Platform holds keys</li>
+<li>Easier to use</li>
+<li>Account recovery possible</li>
+</ul></li>
+<li>Examples:
+<ul>
+<li>Coinbase</li>
+<li>Kraken</li>
+<li>Robinhood</li>
+</ul></li>
+</ul>
+</div>
+<div class="column" style="width:50%;">
+<ul>
+<li><strong>Self-Custody</strong>
+<ul>
+<li>User holds keys</li>
+<li>Full control</li>
+<li>No recovery if lost</li>
+</ul></li>
+<li>Examples:
+<ul>
+<li>MetaMask</li>
+<li>Ledger</li>
+</ul></li>
+</ul>
+</div>
+<p><em>Self-Custody does not imply easier or safer control.</em></p>
+</div></section>
+<section class="slide" id="what-users-actually-do"><h2 class="slide-title">What Users Actually Do</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="callout-note" data-appearance="simple" style="background:#EAF2FF; border-left-color:#9BBCE0;">
+<p><strong>Send Funds</strong></p>
+<p>Initiate a wallet-to-wallet transfer of value.</p>
+</div>
+<div class="callout-note" data-appearance="simple" style="background:#EAF7EE; border-left-color:#98C7A5;">
+<p><strong>Mint or Trade NFTs</strong></p>
+<p>Create or exchange unique digital items.</p>
+</div>
+</div><div class="column" style="width:50%;">
+<div class="callout-note" data-appearance="simple" style="background:#F2EAFE; border-left-color:#B7A1DB;">
+<p><strong>Swap Assets</strong></p>
+<p>Trade tokens through smart contracts.</p>
+</div>
+<div class="callout-note" data-appearance="simple" style="background:#FFF4D6; border-left-color:#D8B45A;">
+<p><strong>Bridge Across Networks</strong></p>
+<p>Move assets between chains or execution layers.</p>
+</div>
+</div>
+</div>
+<ul>
+<li>Users see apps and wallets<br />
+</li>
+<li>But systems rely on <strong>hidden infrastructure</strong></li>
+<li>Multiple components work together behind the scenes</li>
+<li>Each adds functionality, dependencies, and tradeoffs</li>
+</ul>
+</div></section>
+<section class="slide" id="rpc-providers-the-access-layer"><h2 class="slide-title">RPC Providers: The Access Layer</h2><div class="slide-body">
+<ul>
+<li>Wallets and apps talk to nodes through <strong>JSON-RPC endpoints</strong></li>
+<li>Common requests: balances, blocks, logs, and transaction submission</li>
+<li>Providers include:
+<ul>
+<li><a href="https://www.infura.io/product/ethereum">Infura</a></li>
+<li><a href="https://www.alchemy.com/docs">Alchemy</a></li>
+</ul></li>
+<li>They abstract node access, but can become major infrastructure chokepoints</li>
+</ul>
+</div></section>
+<section class="slide" id="nodes-and-validators"><h2 class="slide-title">Nodes and Validators</h2><div class="slide-body">
+<ul>
+<li>Nodes maintain the ledger, mempool, and current network state</li>
+<li>Full nodes independently verify blocks and transactions</li>
+<li>Validators (or miners) order transactions and produce new blocks</li>
+<li>Consensus rules determine which chain becomes the accepted state</li>
+</ul>
+</div></section>
+<section class="slide" id="the-full-blockchain-system"><h2 class="slide-title">The Full Blockchain System</h2><div class="slide-body">
+<div style="text-align:center;">
+<p><img src="../img/blockchain_system_full.png" alt="Full blockchain ecosystem diagram showing the core transaction pipeline, read layer, and supporting external systems." style="width:55%; max-width:55%;"></p>
+</div>
+<div style="text-align:center; font-size:0.56em; line-height:0.95; margin-top:0.3rem;">
+<p>The diagram shows <em>system</em> relationships; <em>communication paths</em> differ by implementation.</p>
+</div>
+</div></section>
+<section class="slide" id="oracles-connecting-to-the-real-world"><h2 class="slide-title">Oracles: Connecting to the Real World</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:44%;">
+<div style="font-size:0.9em; line-height:1.1;">
+<ul>
+<li>Virtual machines are deterministic and cannot query the web directly</li>
+<li>Oracles publish <strong>external data</strong> on-chain for smart contracts to read</li>
+<li>Common inputs: prices, reserves, outcomes, and timestamps</li>
+<li>Oracle design determines <strong>who reports</strong>, <strong>how often</strong>, and <strong>how disputes are handled</strong></li>
+</ul>
+</div>
+</div><div class="column" style="width:56%;">
+<div class="callout-note" data-appearance="simple">
+<p><strong>Typical Oracle Flow</strong></p>
+<ol type="1">
+<li>Data is gathered from external APIs, exchanges, or reporters<br />
+</li>
+<li>Oracle nodes validate or aggregate the observations<br />
+</li>
+<li>A signed answer is posted on-chain<br />
+</li>
+<li>Smart contracts read that value during execution</li>
+</ol>
+</div>
+<div class="callout-warning" data-appearance="simple">
+<p><strong>Failure Modes</strong></p>
+<p>Bad data, delayed updates, or manipulated reporting can trigger incorrect contract behavior.</p>
+</div>
+<p>Example: <a href="https://chain.link/data-feeds">Chainlink Data Feeds</a></p>
+</div>
+</div>
+</div></section>
+<section class="slide" id="indexing-making-blockchain-usable"><h2 class="slide-title">Indexing: Making Blockchain Usable</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:48%;">
+<div style="font-size:0.9em; line-height:1.1;">
+<ul>
+<li>Raw blockchain state is optimized for verification, not rich queries</li>
+<li>Indexers scan blocks, transactions, logs, and contract events</li>
+<li>They build queryable databases for front ends, dashboards, and analytics</li>
+<li>Example outputs: wallet history, token balances, DEX trades, NFT activity</li>
+</ul>
+</div>
+</div><div class="column" style="width:52%;">
+<div class="callout-note" data-appearance="simple">
+<p><strong>Indexing Pipeline</strong></p>
+<ol type="1">
+<li>Watch new blocks and contract events<br />
+</li>
+<li>Parse the fields the app cares about<br />
+</li>
+<li>Store them in searchable tables or entities<br />
+</li>
+<li>Serve fast application queries</li>
+</ol>
+</div>
+<div class="callout-tip" data-appearance="simple">
+<p><strong>Why Apps Need It</strong></p>
+<p>Without indexing, an app would repeatedly scan raw chain data just to answer simple interface questions.</p>
+</div>
+<p>Example: <a href="https://thegraph.com/docs/en/">The Graph</a></p>
+</div>
+</div>
+</div></section>
+<section class="slide" id="bridges-linking-separate-chains"><h2 class="slide-title">Bridges: Linking Separate Chains</h2><div class="slide-body">
+<div style="font-size:0.9em; line-height:1.12;">
+<ul>
+<li>Blockchains do <strong>not natively share assets or state</strong></li>
+<li>Bridges move assets or messages between separate networks</li>
+<li>Often work by <strong>locking</strong> an asset on one chain and <strong>issuing</strong> a linked version on another</li>
+<li>Expand usability across ecosystems, but add major trust and security risks</li>
+<li>Example: <a href="https://wormhole.com">Wormhole</a></li>
+</ul>
+</div>
+<div class="callout-note" data-appearance="simple">
+<p><strong>A locking flow:</strong></p>
+<ol type="1">
+<li>Send the original token to a bridge contract on Chain A</li>
+<li>The bridge contract escrows it so it cannot be spent again there</li>
+<li>Bridge validators or relayers verify the lock event</li>
+<li>A wrapped or linked token is minted or released on Chain B</li>
+</ol>
+</div>
+</div></section>
+<section class="slide" id="scaling-and-interoperability"><h2 class="slide-title">Scaling and Interoperability</h2><div class="slide-body">
+<div style="font-size:0.94em; line-height:1.12;">
+<ul>
+<li>Layer 2 networks execute many user transactions away from the base layer
+<ul>
+<li>Example: <a href="https://docs.optimism.io/stack/explainer">Optimism</a>, <a href="https://arbitrum.io/rollup">Arbitrum</a></li>
+</ul></li>
+<li>They batch transactions together and post compressed data back to Layer 1</li>
+<li>Some designs use fraud proofs or validity proofs so Layer 1 can verify the result</li>
+<li>Interoperability expands what users can do across networks, but adds cross-system dependencies</li>
+</ul>
+</div>
+<div class="callout-note" data-appearance="simple">
+<p><strong>A typical Layer 2 flow</strong></p>
+<p>Users submit transactions to the Layer 2. A sequencer orders them, updates the Layer 2 state, and periodically posts a batch summary plus data or proofs to Layer 1, where final settlement or dispute resolution occurs.</p>
+</div>
+</div></section>
+<section class="slide" id="where-does-blockchain-show-up"><h2 class="slide-title">Where Does Blockchain Show Up?</h2><div class="slide-body">
+<ul>
+<li>We now understand the <strong>system architecture</strong></li>
+<li>The same components can support very different deployments</li>
+<li>Blockchain is often used to address <strong>one or more</strong> of these conditions:
+<ul>
+<li>Multiple parties must coordinate</li>
+<li>Auditability is required</li>
+<li>Trust is limited or no single operator should dominate</li>
+</ul></li>
+<li>Not every blockchain deployment emphasizes all three equally</li>
+</ul>
+</div></section>
+<section class="slide" id="finance-high-level-overview"><h2 class="slide-title">Finance (High-Level Overview)</h2><div class="slide-body">
+<ul>
+<li>Decentralized finance (DeFi)</li>
+<li>Stablecoin payments and settlement</li>
+<li>Tokenized assets (real-world and digital)</li>
+<li>Global, programmable transactions</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Market Churn and Complexity</strong></p>
+<p>CoinMarketCap’s <a href="https://coinmarketcap.com/charts/number-of-cryptocurrencies-tracked/">cryptocurrency count page</a> showed about <strong>46.86 million</strong> cryptocurrencies tracked on <strong>March 23, 2026</strong>. At that scale, discovery, due diligence, liquidity, and risk assessment become dramatically harder, and the market experiences constant churn as new tokens appear faster than most users can evaluate them.</p>
+</div>
+</div></section>
+<section class="slide" id="supply-chain-case"><h2 class="slide-title">Supply Chain Case</h2><div class="slide-body">
+<ul>
+<li>Multiple parties share a <strong>common ledger</strong></li>
+<li>Each step records product data (origin, handling, location)</li>
+<li>Data is visible across trusted organizations</li>
+<li>Shared records make it easier to trace where contamination or handling problems entered the chain</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Example: IBM Food Trust</strong></p>
+<p>IBM’s <a href="https://www.ibm.com/case-studies/colli-del-garda-blockchain">Colli del Garda case study</a> describes a food traceability deployment in which product history, handling events, and distribution records were surfaced to both staff and consumers through an IBM Food Trust-backed system.</p>
+</div>
+</div></section>
+<section class="slide" id="identity-case-verifiable-credentials"><h2 class="slide-title">Identity Case: Verifiable Credentials</h2><div class="slide-body">
+<ul>
+<li>Three roles:</li>
+<li><strong>Issuer</strong> (creates credential)
+<ul>
+<li><strong>Holder</strong> (stores it)</li>
+<li><strong>Verifier</strong> (checks it)</li>
+</ul></li>
+<li>Credentials are <strong>cryptographically signed</strong></li>
+<li>Validators are run by participating public institutions</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Example: EBSI Academic Credentials</strong></p>
+<p>The European Commission’s <a href="https://ec.europa.eu/digital-building-blocks/sites/spaces/EBSI/pages/575210496/Verifiable+Credentials+Success+Stories">EBSI verifiable-credentials success stories</a> describe a cross-border pilot launched in <strong>July 2021</strong> involving <strong>2 university alliances and 11 universities in 11 countries</strong>. Students can hold signed credentials in wallets and present them to verifiers without each institution manually re-checking records through a central database.</p>
+</div>
+</div></section>
+<section class="slide" id="prediction-markets-case-polymarket"><h2 class="slide-title">Prediction Markets Case: Polymarket</h2><div class="slide-body">
+<div style="font-size:0.9em; line-height:1.1;">
+<ul>
+<li>Users trade <strong>YES / NO shares</strong> on real-world events</li>
+<li>Markets use <strong>USDC, a dollar-pegged stablecoin, on Polygon</strong> for collateral and settlement</li>
+<li>Wallet signatures authorize trades, while smart contracts track positions and payouts</li>
+<li>Final resolution still depends on market rules, oracle inputs, and dispute handling</li>
+<li>The result is transparent and portable, but still exposed to speculation, regulation, and contested outcomes</li>
+</ul>
+</div>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Policy trouble still matters</strong></p>
+<p>Polymarket’s blockchain design does not remove legal oversight. The CFTC’s <strong>January 3, 2022</strong> enforcement order shows that even when markets run with wallets, smart contracts, and on-chain settlement, prediction products can still face regulatory action. <a href="https://www.cftc.gov/PressRoom/PressReleases/8478-22">CFTC Order</a></p>
+</div>
+</div></section>
+<section class="slide" id="infrastructure-as-a-use-case"><h2 class="slide-title">Infrastructure as a Use Case</h2><div class="slide-body">
+<ul>
+<li>Blockchain networks provide <strong>services</strong>, not just transactions, such as <strong>Chainlink</strong> for data and <strong>Filecoin / IPFS</strong> for storage</li>
+<li>Multiple independent providers coordinate through protocols</li>
+<li>These services reduce reliance on one company, but still depend on incentives, availability, and data quality</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Example: Chainlink Feeds in Lending</strong></p>
+<p>Chainlink’s <a href="https://chain.link/data-feeds">Data Feeds page</a> highlights lending protocols such as <strong>Aave</strong> as users of decentralized price feeds. In practice, the oracle network is the product: applications depend on it to price collateral, trigger liquidations, and reduce the risk of acting on stale or manipulated market data.</p>
+</div>
+</div></section>
+<section class="slide" id="complications-and-risks"><h2 class="slide-title">Complications and Risks</h2><div class="slide-body">
+<ul>
+<li><strong>Fraud:</strong> phishing, malicious contracts, and rug pulls</li>
+<li><strong>Regulation:</strong> unclear rules and different approaches across countries</li>
+<li><strong>Usability:</strong> key management and irreversible mistakes</li>
+<li><strong>Fragmentation:</strong> too many networks, standards, and wrapped versions of assets</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>What the reports show</strong></p>
+<p>A report on <a href="https://www.bis.org/publ/othp72.htm"><em>The crypto ecosystem: key elements and risks</em></a> argues that congestion, high fees, fragmentation, and de-facto centralization can undermine the system’s promised efficiency and resilience. The FBI’s <a href="https://www.fbi.gov/how-we-can-help-you/victim-services/national-crimes-and-victim-resources/operation-level-up">Operation Level Up</a> and the FTC’s <a href="https://consumer.ftc.gov/articles/what-know-about-cryptocurrency-scams">guidance on cryptocurrency scams</a> show the user-facing result: scams, theft, and costly mistakes remain common even when the technology itself is sophisticated.</p>
+</div>
+</div></section>
+<section class="slide" id="fraud-and-scams"><h2 class="slide-title">Fraud and Scams</h2><div class="slide-body">
+<ul>
+<li>Phishing attacks and fake websites</li>
+<li>Malicious smart contracts</li>
+<li>Rug pulls (developers drain liquidity after attracting buyers)</li>
+<li>Irreversible transactions increase impact</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Example: HAWK Memecoin Collapse</strong></p>
+<p>CoinDesk reported on <strong>December 10, 2024</strong> that Haliey Welch’s HAWK token had <a href="https://www.coindesk.com/business/2024/12/10/hailey-welch-goes-awol-after-failed-hawk-tuah-token-launch">lost more than 95% of its value</a> shortly after launch. After a rapid spike in market value, the token crashed within hours and left many buyers with steep losses.</p>
+</div>
+</div></section>
+<section class="slide" id="regulation-and-uncertainty"><h2 class="slide-title">Regulation and Uncertainty</h2><div class="slide-body">
+<ul>
+<li>Laws and regulations are still evolving</li>
+<li>Different countries take different approaches</li>
+<li>Unclear classification of assets (security, commodity, etc.)</li>
+<li>Regulatory actions can impact markets and platforms</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Example: Russia Sanctions and Account Disruption</strong></p>
+<p>CoinDesk reported on <strong>October 14, 2022</strong> that, after EU sanctions tightened in response to Russia’s invasion of Ukraine, <a href="https://www.coindesk.com/policy/2022/10/14/russian-journalists-activists-kicked-off-crypto-exchanges-due-to-eu-sanctions">LocalBitcoins, Crypto.com, and Blockchain.com began discontinuing services for Russian users</a>. Some users were told to withdraw funds before their accounts were closed, showing how fast-changing rules can abruptly cut off platform access and create real financial risk for holders.</p>
+</div>
+</div></section>
+<section class="slide" id="usability-challenges"><h2 class="slide-title">Usability Challenges</h2><div class="slide-body">
+<ul>
+<li>Managing private keys is difficult</li>
+<li>Interfaces can be complex and inconsistent</li>
+<li>Errors are often irreversible</li>
+<li>Requires technical understanding from users</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Example: Removing Seed-Phrase Friction</strong></p>
+<p>CoinDesk covered Coinbase’s <strong>February 29, 2024</strong> launch of <a href="https://www.coindesk.com/tech/2024/02/29/coinbase-adds-smart-wallet-feature-so-lengthy-seed-phrases-arent-needed">smart wallets that avoid traditional seed phrases</a>. The product pitch itself is revealing: one of the industry’s biggest onboarding efforts was explicitly framed around eliminating recovery-phrase complexity and reducing the burden placed on ordinary users.</p>
+</div>
+</div></section>
+<section class="slide" id="fragmentation-and-speculation"><h2 class="slide-title">Fragmentation and Speculation</h2><div class="slide-body">
+<ul>
+<li>Many separate blockchains and ecosystems</li>
+<li>Limited interoperability between systems</li>
+<li>Users must navigate <strong>multiple networks and standards</strong></li>
+<li>Market behavior often driven by <strong>speculation</strong></li>
+</ul>
+<div class="callout-note" data-appearance="minimal">
+<p><strong>Fragmentation Example</strong></p>
+<p>In 2023, fears around Multichain’s Fantom bridge caused bridged stablecoins such as <code>anyUSDC</code> to lose their dollar peg. <a href="https://www.coindesk.com/business/2023/06/01/as-multichain-wobbles-some-fantom-based-defi-projects-flee-bridged-tokens">CoinDesk reported</a> that some traders bought the token at roughly a <strong>30% discount</strong>, showing how fragmentation between “native” and bridge-issued versions of the same asset can directly hit holders.</p>
+</div>
+</div></section>
+<section class="slide" id="how-information-flows-in-crypto"><h2 class="slide-title">How Information Flows in Crypto</h2><div class="slide-body">
+<ul>
+<li>Multiple actors produce information:
+<ul>
+<li>Journalists</li>
+<li>Protocol teams</li>
+<li>Analysts and researchers</li>
+<li>Governments and regulators</li>
+</ul></li>
+<li>Each has <strong>different incentives</strong></li>
+<li>Information environment is <strong>fast-moving and competitive</strong></li>
+</ul>
+</div></section>
+<section class="slide" id="key-sources"><h2 class="slide-title">Key Sources</h2><div class="slide-body">
+<div style="font-size:0.78em; line-height:1.2;">
+<ul>
+<li><strong>Journalism</strong>
+<ul>
+<li><a href="https://www.coindesk.com">CoinDesk</a> - markets, companies, and protocol developments.</li>
+<li><a href="https://www.theblock.co">The Block</a> - industry news, policy coverage, and infrastructure.</li>
+</ul></li>
+<li><strong>Research and analytics</strong>
+<ul>
+<li><a href="https://messari.io/research">Messari Research</a> - market structure, protocol overviews, and sector reports.</li>
+<li><a href="https://www.chainalysis.com/reports/">Chainalysis</a> - crime trends, illicit-finance analysis, and on-chain investigations.</li>
+<li><a href="https://rekt.news">Rekt News</a> - exploit timelines and incident postmortems.</li>
+</ul></li>
+<li><strong>Policy and institutions</strong>
+<ul>
+<li><a href="https://www.bis.org">BIS</a> - payments, CBDC, and financial-stability analysis.</li>
+<li><a href="https://www.imf.org/en/Publications/fintech-notes">IMF</a> - digital-money policy, macroeconomic framing.</li>
+<li><a href="https://www.federalreserve.gov">Federal Reserve</a> - U.S. payments-system and central-bank perspectives.</li>
+</ul></li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="reading-critically"><h2 class="slide-title">Reading Critically</h2><div class="slide-body">
+<ul>
+<li>Ask: <strong>Who is the source?</strong></li>
+<li>What are their <strong>incentives or biases?</strong></li>
+<li>Is the claim supported by <strong>data or evidence?</strong></li>
+<li>Cross-check across <strong>multiple sources</strong></li>
+</ul>
+</div></section>
+<section class="slide" id="what-blockchain-looks-like-in-practice"><h2 class="slide-title">What Blockchain Looks Like in Practice</h2><div class="slide-body">
+<ul>
+<li>Users interact through <strong>wallets and applications</strong></li>
+<li>Systems rely on <strong>layered infrastructure</strong></li>
+<li>Tradeoffs reappear:
+<ul>
+<li>Convenience vs control</li>
+<li>Performance vs decentralization</li>
+</ul></li>
+<li>Blockchain is used <strong>selectively</strong>, not universally</li>
+</ul>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-yaga_blockchaintechnologyoverview_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">D. Yaga, P. Mell, N. Roby, and K. Scarfone, <span>“Blockchain technology overview,”</span> <span>National Institute of Standards and Technology</span>, Gaithersburg, MD, NIST IR 8202, Oct. 2018. doi: <a href="https://doi.org/10.6028/NIST.IR.8202">10.6028/NIST.IR.8202</a>.</div>
+</div>
+<div id="ref-buterin_ethereumnextgenerationsmart_2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">V. Buterin, <span>“Ethereum: <span>A Next-Generation Smart Contract</span> and <span>Decentralized Application Platform</span>.”</span> Ethereum.org, 2014. Available: <a href="https://ethereum.org/content/whitepaper/whitepaper-pdf/Ethereum_Whitepaper_-_Buterin_2014.pdf">https://ethereum.org/content/whitepaper/whitepaper-pdf/Ethereum_Whitepaper_-_Buterin_2014.pdf</a></div>
+</div>
+<div id="ref-antonopoulos_masteringethereum_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">A. M. Antonopoulos and G. Wood, <span>“Mastering <span>Ethereum</span>.”</span> 2018. Available: <a href="https://github.com/ethereumbook/ethereumbook">https://github.com/ethereumbook/ethereumbook</a></div>
+</div>
+<div id="ref-ethereumorg_transactions_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">Ethereum.org, <span>“Transactions.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://ethereum.org/en/developers/docs/transactions/">https://ethereum.org/en/developers/docs/transactions/</a></div>
+</div>
+<div id="ref-bitcoin.orgdevelopers_walletsdeveloperguide_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">Bitcoin.org Developers, <span>“Wallets (<span>Developer Guide</span>).”</span> 2024. Available: <a href="https://developer.bitcoin.org/devguide/wallets.html">https://developer.bitcoin.org/devguide/wallets.html</a></div>
+</div>
+<div id="ref-u.c.f.library_digitalwalletsoverview_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">U. C. F. Library, <span>“Digital <span>Wallets</span>: <span>An Overview</span>.”</span> 2022. Available: <a href="https://stars.library.ucf.edu/cgi/viewcontent.cgi">https://stars.library.ucf.edu/cgi/viewcontent.cgi</a></div>
+</div>
+<div id="ref-sec_sec_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">U.S. Securities and Exchange Commission, <span>“U.s. Securities and exchange commission.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.sec.gov">https://www.sec.gov</a></div>
+</div>
+<div id="ref-ethereumorg_guides_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">Ethereum.org, <span>“Ethereum guides.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://ethereum.org/en/guides/">https://ethereum.org/en/guides/</a></div>
+</div>
+<div id="ref-uniswaplabs_uniswapdocs_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">Uniswap Labs, <span>“Uniswap documentation.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://docs.uniswap.org">https://docs.uniswap.org</a></div>
+</div>
+<div id="ref-opensea_helpcenter_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">OpenSea, <span>“OpenSea help center.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://support.opensea.io">https://support.opensea.io</a></div>
+</div>
+<div id="ref-ethereumorg_jsonrpcapi_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">Ethereum.org, <span>“JSON-RPC API.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://ethereum.org/en/developers/docs/apis/json-rpc/">https://ethereum.org/en/developers/docs/apis/json-rpc/</a></div>
+</div>
+<div id="ref-l31_infura_ethereum_api_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">Infura, <span>“Ethereum API.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://www.infura.io/product/ethereum">https://www.infura.io/product/ethereum</a></div>
+</div>
+<div id="ref-l31_alchemy_docs_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">Alchemy, <span>“Alchemy documentation.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://www.alchemy.com/docs">https://www.alchemy.com/docs</a></div>
+</div>
+<div id="ref-antonopoulos_masteringbitcoinprogramming_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">A. M. Antonopoulos, <em>Mastering <span>Bitcoin</span>: Programming the open blockchain</em>, Second edition. Sebastopol, CA: O’Reilly, 2017.</div>
+</div>
+<div id="ref-ellis_chainlinkdecentralizedoracle_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline">S. Ellis, A. Juels, and S. Nazarov, <span>“<span>ChainLink</span>: <span>A Decentralized Oracle Network</span>.”</span> Apr. 09, 2017. Accessed: Oct. 21, 2025. [Online]. Available: <a href="https://research.chain.link/whitepaper-v1.pdf">https://research.chain.link/whitepaper-v1.pdf</a></div>
+</div>
+<div id="ref-croman_scalingdecentralizedblockchains_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[16] </div><div class="csl-right-inline">K. Croman <em>et al.</em>, <span>“On scaling decentralized blockchains - (a position paper),”</span> in <em>Financial cryptography workshops</em>, Feb. 2016. Available: <a href="http://diyhpl.us/~bryan/papers2/bitcoin/On%20scaling%20decentralized%20blockchains%20-%20A%20position%20paper.pdf">http://diyhpl.us/~bryan/papers2/bitcoin/On%20scaling%20decentralized%20blockchains%20-%20A%20position%20paper.pdf</a></div>
+</div>
+<div id="ref-l31_chainlink_data_feeds_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[17] </div><div class="csl-right-inline">Chainlink, <span>“Data feeds.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://chain.link/data-feeds">https://chain.link/data-feeds</a></div>
+</div>
+<div id="ref-thegraph_docs_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[18] </div><div class="csl-right-inline">The Graph, <span>“The graph documentation.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://thegraph.com/docs/en/">https://thegraph.com/docs/en/</a></div>
+</div>
+<div id="ref-l31_ethereumorg_blockchainbridges_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[19] </div><div class="csl-right-inline"><span class="nocase">ethereum.org</span>, <span>“Blockchain bridges.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://ethereum.org/bridges/">https://ethereum.org/bridges/</a></div>
+</div>
+<div id="ref-wormhole_wormholedocs_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[20] </div><div class="csl-right-inline">Wormhole, <span>“Wormhole documentation.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://wormhole.com">https://wormhole.com</a></div>
+</div>
+<div id="ref-l31_optimism_stack_explainer_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[21] </div><div class="csl-right-inline">Optimism, <span>“OP stack explainer.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://docs.optimism.io/stack/explainer">https://docs.optimism.io/stack/explainer</a></div>
+</div>
+<div id="ref-l31_arbitrum_rollup_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[22] </div><div class="csl-right-inline">Arbitrum, <span>“Arbitrum rollup protocol.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://arbitrum.io/rollup">https://arbitrum.io/rollup</a></div>
+</div>
+<div id="ref-bis_annualeconomicreport_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[23] </div><div class="csl-right-inline">BIS, <span>“Annual <span>Economic Report</span> 2022,”</span> Bank for International Settlements (BIS), Annual AR2022E, June 2022. Available: <a href="https://www.bis.org/publ/arpdf/ar2022e.pdf">https://www.bis.org/publ/arpdf/ar2022e.pdf</a></div>
+</div>
+<div id="ref-wang_soktokenizationblockchain_2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[24] </div><div class="csl-right-inline">G. Wang and M. Nixon, <span>“<span>SoK</span>: Tokenization on blockchain,”</span> in <em>Proceedings of the 14th <span>IEEE</span>/<span>ACM International Conference</span> on <span>Utility</span> and <span>Cloud Computing Companion</span></em>, Leicester United Kingdom: ACM, Dec. 2021, pp. 1–9. doi: <a href="https://doi.org/10.1145/3492323.3495577">10.1145/3492323.3495577</a>.</div>
+</div>
+<div id="ref-u.s.cftc_cftcorderstether_2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[25] </div><div class="csl-right-inline">U.S. CFTC, <span>“<span>CFTC Orders Tether</span> to <span>Pay</span> $41 <span>Million</span>.”</span> 2021. Available: <a href="https://www.cftc.gov/PressRoom/PressReleases/8450-21">https://www.cftc.gov/PressRoom/PressReleases/8450-21</a></div>
+</div>
+<div id="ref-labonte_keyissuesstablecoin_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[26] </div><div class="csl-right-inline">M. Labonte and P. Tierno, <span>“Key <span>Issues</span> in <span>Stablecoin Legislation</span> in the 119th <span>Congress</span>,”</span> Congressional Research Service, Washington, D.C., In Focus IF12984, Sept. 2025. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://www.congress.gov/crs_external_products/IF/PDF/IF12984/IF12984.3.pdf">https://www.congress.gov/crs_external_products/IF/PDF/IF12984/IF12984.3.pdf</a></div>
+</div>
+<div id="ref-l31_coinmarketcap_cryptocurrency_count_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[27] </div><div class="csl-right-inline">CoinMarketCap, <span>“Number of cryptocurrencies tracked.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://coinmarketcap.com/charts/number-of-cryptocurrencies-tracked/">https://coinmarketcap.com/charts/number-of-cryptocurrencies-tracked/</a></div>
+</div>
+<div id="ref-l31_ibm_colli_del_garda_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[28] </div><div class="csl-right-inline">IBM, <span>“Colli del garda case study.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://www.ibm.com/case-studies/colli-del-garda-blockchain">https://www.ibm.com/case-studies/colli-del-garda-blockchain</a></div>
+</div>
+<div id="ref-fda_foodtraceabilityrule_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[29] </div><div class="csl-right-inline">U.S. Food and Drug Administration, <span>“FSMA final rule on requirements for additional traceability records for certain foods.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.fda.gov/food/food-safety-modernization-act-fsma/fsma-final-rule-requirements-additional-traceability-records-certain-foods">https://www.fda.gov/food/food-safety-modernization-act-fsma/fsma-final-rule-requirements-additional-traceability-records-certain-foods</a></div>
+</div>
+<div id="ref-l31_ebsi_verifiable_credentials_success_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[30] </div><div class="csl-right-inline">European Commission, <span>“Verifiable credentials success stories.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://ec.europa.eu/digital-building-blocks/sites/spaces/EBSI/pages/575210496/Verifiable+Credentials+Success+Stories">https://ec.europa.eu/digital-building-blocks/sites/spaces/EBSI/pages/575210496/Verifiable+Credentials+Success+Stories</a></div>
+</div>
+<div id="ref-worldwidewebconsortium_verifiablecredentialsdata_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[31] </div><div class="csl-right-inline">World Wide Web Consortium, <span>“Verifiable <span>Credentials Data Model</span> v2.0.”</span> Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://www.w3.org/TR/vc-data-model-2.0/">https://www.w3.org/TR/vc-data-model-2.0/</a></div>
+</div>
+<div id="ref-temoshok_digitalidentityguidelines_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[32] </div><div class="csl-right-inline">D. Temoshok, <span>“Digital <span>Identity Guidelines</span>: <span>Authentication</span> and <span>Authenticator Management</span>,”</span> <span>National Institute of Standards and Technology</span>, Gaithersburg, MD, NIST SP 800-63B-4, 2025. doi: <a href="https://doi.org/10.6028/NIST.SP.800-63B-4">10.6028/NIST.SP.800-63B-4</a>.</div>
+</div>
+<div id="ref-polymarket_whatispolymarket_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[33] </div><div class="csl-right-inline">Polymarket, <span>“What is <span>Polymarket</span>.”</span> Accessed: Mar. 19, 2026. [Online]. Available: <a href="https://help.polymarket.com/en/articles/13364060-what-is-polymarket">https://help.polymarket.com/en/articles/13364060-what-is-polymarket</a></div>
+</div>
+<div id="ref-polymarket_whycrypto_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[34] </div><div class="csl-right-inline">Polymarket, <span>“Why crypto?”</span> Accessed: Mar. 19, 2026. [Online]. Available: <a href="https://help.polymarket.com/en/articles/13364268-why-crypto">https://help.polymarket.com/en/articles/13364268-why-crypto</a></div>
+</div>
+<div id="ref-polymarket_howarepredictionmarketsresolved_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[35] </div><div class="csl-right-inline">Polymarket, <span>“How are prediction markets resolved?”</span> Accessed: Mar. 19, 2026. [Online]. Available: <a href="https://help.polymarket.com/en/articles/13364518-how-are-prediction-markets-resolved">https://help.polymarket.com/en/articles/13364518-how-are-prediction-markets-resolved</a></div>
+</div>
+<div id="ref-cftc_cftcorderseventbased_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[36] </div><div class="csl-right-inline">Commodity Futures Trading Commission, <span>“<span>CFTC</span> orders event-based binary options markets operator to pay $1.4 million penalty.”</span> Accessed: Mar. 19, 2026. [Online]. Available: <a href="https://www.cftc.gov/PressRoom/PressReleases/8478-22">https://www.cftc.gov/PressRoom/PressReleases/8478-22</a></div>
+</div>
+<div id="ref-androulaki_hyperledgerfabricdistributed_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[37] </div><div class="csl-right-inline">E. Androulaki <em>et al.</em>, <span>“Hyperledger fabric: A distributed operating system for permissioned blockchains,”</span> in <em>Proceedings of the <span>Thirteenth EuroSys Conference</span></em>, Porto Portugal: ACM, Apr. 2018, pp. 1–15. doi: <a href="https://doi.org/10.1145/3190508.3190538">10.1145/3190508.3190538</a>.</div>
+</div>
+<div id="ref-filecoin_docs_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[38] </div><div class="csl-right-inline">Filecoin, <span>“Filecoin docs.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://docs.filecoin.io">https://docs.filecoin.io</a></div>
+</div>
+<div id="ref-ipfs_docs_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[39] </div><div class="csl-right-inline">IPFS, <span>“IPFS.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://ipfs.tech">https://ipfs.tech</a></div>
+</div>
+<div id="ref-chainalysis_reports_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[40] </div><div class="csl-right-inline">Chainalysis, <span>“Chainalysis reports.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.chainalysis.com/reports/">https://www.chainalysis.com/reports/</a></div>
+</div>
+<div id="ref-ftc_cryptocurrency_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[41] </div><div class="csl-right-inline">Federal Trade Commission, <span>“Cryptocurrency.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.ftc.gov">https://www.ftc.gov</a></div>
+</div>
+<div id="ref-l31_bis_crypto_ecosystem_risks_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[42] </div><div class="csl-right-inline">Bank for International Settlements, <span>“The crypto ecosystem: Key elements and risks.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://www.bis.org/publ/othp72.htm">https://www.bis.org/publ/othp72.htm</a></div>
+</div>
+<div id="ref-l31_fbi_operation_level_up_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[43] </div><div class="csl-right-inline">Federal Bureau of Investigation, <span>“Operation level up.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://www.fbi.gov/how-we-can-help-you/victim-services/national-crimes-and-victim-resources/operation-level-up">https://www.fbi.gov/how-we-can-help-you/victim-services/national-crimes-and-victim-resources/operation-level-up</a></div>
+</div>
+<div id="ref-l31_ftc_crypto_scams_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[44] </div><div class="csl-right-inline">Federal Trade Commission, <span>“What to know about cryptocurrency scams.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://consumer.ftc.gov/articles/what-know-about-cryptocurrency-scams">https://consumer.ftc.gov/articles/what-know-about-cryptocurrency-scams</a></div>
+</div>
+<div id="ref-fbi_ic3_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[45] </div><div class="csl-right-inline">Federal Bureau of Investigation, <span>“Internet crime complaint center (IC3).”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.ic3.gov">https://www.ic3.gov</a></div>
+</div>
+<div id="ref-l31_coindesk_hawk_token_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[46] </div><div class="csl-right-inline">CoinDesk, <span>“Hailey welch goes AWOL after failed hawk tuah token launch.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://www.coindesk.com/business/2024/12/10/hailey-welch-goes-awol-after-failed-hawk-tuah-token-launch">https://www.coindesk.com/business/2024/12/10/hailey-welch-goes-awol-after-failed-hawk-tuah-token-launch</a></div>
+</div>
+<div id="ref-crs_crsreports_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[47] </div><div class="csl-right-inline">Congressional Research Service, <span>“Congressional research service reports.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://crsreports.congress.gov">https://crsreports.congress.gov</a></div>
+</div>
+<div id="ref-l31_coindesk_russian_users_sanctions_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[48] </div><div class="csl-right-inline">CoinDesk, <span>“Russian journalists, activists kicked off crypto exchanges due to EU sanctions.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://www.coindesk.com/policy/2022/10/14/russian-journalists-activists-kicked-off-crypto-exchanges-due-to-eu-sanctions">https://www.coindesk.com/policy/2022/10/14/russian-journalists-activists-kicked-off-crypto-exchanges-due-to-eu-sanctions</a></div>
+</div>
+<div id="ref-toch_oncryptocurrencywallet_2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[49] </div><div class="csl-right-inline">E. Toch, M. Ben-Meir, M. Leiser, and A. Zohar, <span>“On cryptocurrency wallet design.”</span> 2021. Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://eprint.iacr.org/2021/1522">https://eprint.iacr.org/2021/1522</a></div>
+</div>
+<div id="ref-voskobojnikov_userperceptionbitcoin_2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[50] </div><div class="csl-right-inline">A. Voskobojnikov and J. Bonneau, <span>“User perception of bitcoin usability and security across novice users,”</span> <em>International Journal of Human-Computer Studies</em>, 2019, doi: <a href="https://doi.org/10.1016/j.ijhcs.2019.02.004">10.1016/j.ijhcs.2019.02.004</a>.</div>
+</div>
+<div id="ref-l31_coindesk_coinbase_smart_wallet_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[51] </div><div class="csl-right-inline">CoinDesk, <span>“Coinbase adds smart wallet feature so lengthy seed phrases aren’t needed.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://www.coindesk.com/tech/2024/02/29/coinbase-adds-smart-wallet-feature-so-lengthy-seed-phrases-arent-needed">https://www.coindesk.com/tech/2024/02/29/coinbase-adds-smart-wallet-feature-so-lengthy-seed-phrases-arent-needed</a></div>
+</div>
+<div id="ref-l2beat_l2beat_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[52] </div><div class="csl-right-inline">L2BEAT, <span>“L2BEAT.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://l2beat.com">https://l2beat.com</a></div>
+</div>
+<div id="ref-aramonte_defirisksdecentralisation_2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[53] </div><div class="csl-right-inline">S. Aramonte, W. Huang, and A. Schrimpf, <span>“DeFi risks and the decentralisation illusion,”</span> <em>BIS Quarterly Review</em>, Dec. 2021, Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.bis.org/publ/qtrpdf/r_qt2112b.htm">https://www.bis.org/publ/qtrpdf/r_qt2112b.htm</a></div>
+</div>
+<div id="ref-l31_coindesk_multichain_fantom_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[54] </div><div class="csl-right-inline">CoinDesk, <span>“As multichain wobbles, some fantom-based DeFi projects flee bridged tokens.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://www.coindesk.com/business/2023/06/01/as-multichain-wobbles-some-fantom-based-defi-projects-flee-bridged-tokens">https://www.coindesk.com/business/2023/06/01/as-multichain-wobbles-some-fantom-based-defi-projects-flee-bridged-tokens</a></div>
+</div>
+<div id="ref-imf_fintechnotes_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[55] </div><div class="csl-right-inline">International Monetary Fund, <span>“IMF fintech notes.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.imf.org/en/Publications/fintech-notes">https://www.imf.org/en/Publications/fintech-notes</a></div>
+</div>
+<div id="ref-coindesk_coindesk_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[56] </div><div class="csl-right-inline">CoinDesk, <span>“CoinDesk.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.coindesk.com">https://www.coindesk.com</a></div>
+</div>
+<div id="ref-theblock_theblock_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[57] </div><div class="csl-right-inline">The Block, <span>“The block.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.theblock.co">https://www.theblock.co</a></div>
+</div>
+<div id="ref-messari_research_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[58] </div><div class="csl-right-inline">Messari, <span>“Messari research.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://messari.io/research">https://messari.io/research</a></div>
+</div>
+<div id="ref-rekt_rektnews_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[59] </div><div class="csl-right-inline">Rekt, <span>“Rekt news.”</span> Accessed: Mar. 19, 2026. [Online]. Available: <a href="https://rekt.news">https://rekt.news</a></div>
+</div>
+<div id="ref-federalreserve_federalreserve_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[60] </div><div class="csl-right-inline">Federal Reserve, <span>“Board of governors of the federal reserve system.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.federalreserve.gov">https://www.federalreserve.gov</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

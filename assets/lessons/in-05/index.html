@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trust and Distributed Systems: Foundations for Blockchain</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/introduction/05-IN-trust_and_distributed_systems_foundations_for_blockchain.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="in-05" data-code="05-IN" data-src="852ffb0f43d307ff" data-slides="28">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section I: Introduction · Lesson 05-IN</p><h1>Trust and Distributed Systems: Foundations for Blockchain</h1></div></section>
+<section class="slide smaller" id="opening-exercise-the-insider"><h2 class="slide-title">Opening Exercise: The Insider</h2><div class="slide-body">
+<p><strong>Scenario:</strong> You are a group that shares a sensitive secret. However, an “Insider” has infiltrated your ranks. You must identify them before they figure out the secret.</p>
+<p><strong>The Rules:</strong></p>
+<ol type="1">
+<li><strong>The Secret:</strong> 6 of you will receive the exact same Secret Word. 1 of you will receive a blank card that says: <em>You are the Insider</em>.</li>
+<li><strong>The Broadcast:</strong> Go around the circle. Each person must say exactly <strong>one word</strong> related to the Secret Word to prove to the group that they are in on it.
+<ul>
+<li><em>Strategy:</em> Be specific enough to prove you know the secret, but vague enough that the Insider can’t guess it!</li>
+</ul></li>
+<li><strong>Consensus:</strong> After everyone has spoken, count to three and point at the person you believe is the Insider.</li>
+<li><strong>Resolution:</strong> If the group votes out the Insider, the group is safe! If the group votes out an honest member, or if the Insider successfully guesses the Secret Word, the Insider wins!</li>
+</ol>
+</div></section>
+<section class="slide" id="exercise-digital-version"><h2 class="slide-title">Exercise (Digital Version)</h2><div class="slide-body">
+<div data-align="center" style="text-align:center;">
+<p><a href="https://blockchain.training-as-code.com/exercises/insider/">blockchain.training-as-code.com/exercises/insider/</a></p>
+</div>
+</div></section>
+<section class="slide smaller" id="trust"><h2 class="slide-title">Trust</h2><div class="slide-body">
+<ul>
+<li><strong>Two‑party trust (A ↔︎ B):</strong> At human scale, trust is an expectation that the other party will behave as promised; in security engineering, this becomes an <em>assumption</em> the system relies on about an entity’s behavior under stated conditions.</li>
+<li><strong>Introducing a third party (A ↔︎ TTP ↔︎ B):</strong> A <em>trusted third party</em> (e.g., broker, auditor, or certification authority) vouches for identity/attributes so A and B don’t need direct verification</li>
+<li><strong>Trade‑offs:</strong> Third parties can reduce bilateral friction but create <strong>transitive trust</strong> and potential single points of failure; the path‑validation algorithm and trust‑anchor model formalize how that trust is established and verified.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="what-is-trust-in-digital-systems"><h2 class="slide-title">What is “trust” in digital systems?</h2><div class="slide-body">
+<ul>
+<li><p><em>Trust</em> is the <strong>set of explicit assumptions and dependencies</strong> about an entity that a system’s security properties rely on.</p></li>
+<li><p><strong>Where trust “lives” in practice:</strong></p>
+<ul>
+<li><strong>Centralized Trust:</strong> Concentrated in a one or more third-parties (e.g., a bank or Certificate Authority). The system’s security relies entirely on the trusted entities behaving correctly. If compromised, the entire system fails.</li>
+<li><strong>Distributed Trust:</strong> Spread across multiple participants and mechanisms. Instead of trusting one entity, trust is relocated to cryptography, consensus algorithms, and economic incentives, assuming that a majority of the network will act honestly.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="centralized-vs.-distributed-architectures"><h2 class="slide-title">Centralized vs. Distributed Architectures</h2><div class="slide-body">
+<div class="column" style="width:50%;">
+<ul>
+<li><strong>Centralized Architecture</strong>
+<ul>
+<li><strong>Control:</strong> A single authority dictates system state and coordinates all work.</li>
+<li><strong>Complexity:</strong> Simpler to design, update, monitor, and maintain.</li>
+<li><strong>Trust Model:</strong> Users must place implicit, complete trust in the central hub.</li>
+<li><strong>Vulnerability:</strong> Creates a single point of failure (both technical and administrative) that can compromise the entire service.</li>
+</ul></li>
+</ul>
+</div>
+<div class="column" style="width:50%;">
+<ul>
+<li><strong>Distributed Architecture</strong>
+<ul>
+<li><strong>Control:</strong> Shared responsibility among many peer nodes without a central hub.</li>
+<li><strong>Complexity:</strong> Highly complex to coordinate, synchronize state, and test under load.</li>
+<li><strong>Trust Model:</strong> Trust is shifted from a central hub to cryptographic proofs and consensus rules.</li>
+<li><strong>Vulnerability:</strong> Highly resilient to individual node failures, but susceptible to coordination breakdowns or network partitions.</li>
+</ul></li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="everyday-examples-of-distributed-systems"><h2 class="slide-title">Everyday Examples of Distributed Systems</h2><div class="slide-body">
+<ul>
+<li><strong>Helium (IoT Network):</strong>
+<ul>
+<li>A decentralized wireless network built by individuals deploying hotspots in their homes to provide connectivity over unlicensed radio frequencies (e.g., 915 MHz in the US).</li>
+</ul></li>
+<li><strong>InterPlanetary File System (IPFS):</strong>
+<ul>
+<li>A peer-to-peer network for storing and sharing data. Files are found by their cryptographic hash rather than a centralized server location.</li>
+</ul></li>
+<li><strong>Hivemapper:</strong>
+<ul>
+<li>A decentralized, community-owned mapping network where contributors use dashcams to collect imagery and update a global map.</li>
+</ul></li>
+<li><strong>The Fediverse (e.g., Mastodon):</strong>
+<ul>
+<li>An ensemble of federated social networks where independent servers communicate with each other, eliminating reliance on a single corporate platform.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="why-suspicion-matters"><h2 class="slide-title">Why Suspicion Matters</h2><div class="slide-body">
+<ul>
+<li><strong>The Reality of Distributed Trust:</strong> Unlike centralized systems with a single trusted referee, distributed systems span multiple participants where perfect trust cannot be guaranteed.</li>
+<li><strong>Accident vs. Adversary:</strong> A node might fail due to a benign hardware crash (accidental), or it might actively lie and attempt to subvert the network (malicious).</li>
+<li><strong>Mutual Suspicion:</strong> The core design principle that every participant must operate as if others may be faulty or hostile. The system must be engineered to coordinate and reach consensus <em>despite</em> this distrust.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="suspicion-in-practice"><h2 class="slide-title">Suspicion In Practice</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li><strong>Hardware &amp; Network Glitches:</strong> A faulty router might arbitrarily drop or misroute packets, creating inconsistent views of the network’s state.</li>
+<li><strong>Data Corruption:</strong> A degraded database replica might unknowingly serve different, conflicting answers to different clients querying the same record.</li>
+<li><strong>Malicious Insiders:</strong> A compromised node in a coalition system might deliberately alter intelligence data before forwarding it to allied peers.</li>
+<li><strong>The Takeaway:</strong> Mutual suspicion requires engineering systems that survive both benign accidents and deliberate attacks, often without needing to differentiate between the two.</li>
+</ul>
+</div><div class="column" style="width:40%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 282.79 238.09" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:377px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 234.09)">
+<g id="node1" class="node">
+<ellipse fill="#c1e1c1" stroke="black" cx="30.57" cy="-124.66" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="node2" class="node">
+<ellipse fill="#c1e1c1" stroke="black" cx="165.28" cy="-215.69" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#cccccc" d="M42.52,-132.74C68.02,-149.97 127.51,-190.17 153.16,-207.5"/>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="#c1e1c1" stroke="black" cx="93.67" cy="-25.33" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#cccccc" d="M38.31,-112.48C50.42,-93.42 73.72,-56.73 85.87,-37.61"/>
+</g>
+
+<g id="node4" class="node">
+<ellipse fill="#c1e1c1" stroke="black" cx="147.8" cy="-121.38" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#cccccc" d="M45.42,-124.25C67.97,-123.61 110.6,-122.42 133.08,-121.79"/>
+</g>
+
+<g id="node5" class="node">
+<ellipse fill="#c1e1c1" stroke="black" cx="257.75" cy="-42.68" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#cccccc" d="M172.23,-202.69C189.45,-170.46 233.94,-87.24 250.97,-55.36"/>
+</g>
+
+<g id="node6" class="node">
+<ellipse fill="#c1e1c1" stroke="black" cx="42.83" cy="-213.57" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#cccccc" d="M150.76,-215.44C127.32,-215.03 81.39,-214.24 57.72,-213.83"/>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#cccccc" d="M108.25,-28.37C124.72,-31.67 152.37,-36.81 176.43,-39.33 199.62,-41.76 226.7,-42.45 243.02,-42.63"/>
+</g>
+
+<g id="node7" class="node">
+<ellipse fill="#c1e1c1" stroke="black" cx="14.4" cy="-23.7" rx="14.4" ry="14.4"/>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#cccccc" d="M79.13,-25.03C64.92,-24.73 43.39,-24.29 29.12,-24"/>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="#cccccc" d="M136.96,-130.89C116.85,-148.56 73.96,-186.23 53.77,-203.97"/>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#cccccc" d="M245.99,-51.1C224.94,-66.17 181.05,-97.58 159.82,-112.77"/>
+</g>
+
+<g id="edge10" class="edge">
+<path fill="none" stroke="#cccccc" d="M36.63,-200.08C29.15,-182.97 17.03,-152.36 12.71,-124.66 7.95,-94.18 10.53,-57.89 12.61,-38.18"/>
+</g>
+
+<g id="edge11" class="edge">
+<path fill="none" stroke="#cccccc" d="M16.72,-38.16C19.79,-57.36 25.18,-91.04 28.26,-110.22"/>
+</g>
+
+<g id="node8" class="node">
+<ellipse fill="#f9d0c4" stroke="#e06666" stroke-width="2" cx="257.25" cy="-179.57" rx="17.54" ry="17.54"/>
+<text text-anchor="middle" x="257.25" y="-175.37" font-family="Helvetica,sans-Serif" font-size="14.00">!</text>
+</g>
+
+<g id="edge12" class="edge">
+<path fill="none" stroke="#cccccc" d="M240.38,-186.2C222.75,-193.12 195.42,-203.85 179.05,-210.28"/>
+</g>
+
+<g id="edge13" class="edge">
+<path fill="none" stroke="#cccccc" d="M257.32,-161.11C257.42,-133.67 257.61,-82.66 257.7,-57.5"/>
+</g>
+
+<g id="node9" class="node">
+<ellipse fill="#f9d0c4" stroke="#e06666" stroke-width="2" cx="176.43" cy="-17.54" rx="17.54" ry="17.54"/>
+<text text-anchor="middle" x="176.43" y="-13.34" font-family="Helvetica,sans-Serif" font-size="14.00">?</text>
+</g>
+
+<g id="edge16" class="edge">
+<path fill="none" stroke="#e06666" stroke-dasharray="5,2" d="M249.06,-163.14C233.57,-132.09 200.16,-65.1 184.65,-34.01"/>
+</g>
+
+<g id="edge14" class="edge">
+<path fill="none" stroke="#cccccc" d="M171.58,-35.15C165.99,-55.4 156.93,-88.26 151.76,-107.02"/>
+</g>
+
+<g id="edge15" class="edge">
+<path fill="none" stroke="#cccccc" d="M158.42,-13.65C141.7,-10.44 116.09,-6.56 93.67,-7.47 70.51,-8.4 44.28,-14.87 28.55,-19.36"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="crash-faults"><h2 class="slide-title">Crash Faults</h2><div class="slide-body">
+<ul>
+<li><strong>The Failure:</strong> A node suddenly and completely stops responding, going “dark” without sending any further messages.</li>
+<li><strong>Common Causes:</strong> Benign hardware failures (like a power supply death), software panics, or deliberate denial-of-service attacks.</li>
+<li><strong>Detection &amp; Recovery:</strong> Relatively easy to detect because silence is a clear indicator of failure. Systems recover using simple redundancy, such as failing over to a hot standby or routing traffic to another replica.</li>
+</ul>
+</div></section>
+<section class="slide" id="omission-faults"><h2 class="slide-title">Omission Faults</h2><div class="slide-body">
+<ul>
+<li><strong>The Failure:</strong> A node fails to send or receive some messages, but otherwise remains active and appears functional to the rest of the network.</li>
+<li><strong>Common Causes:</strong> Network congestion, dropped packets, flaky hardware connections, or an overloaded server quietly discarding requests.</li>
+<li><strong>Detection &amp; Recovery:</strong> Harder to diagnose than a complete crash because the failures are intermittent. Defended against using robust communication protocols that require acknowledgments and automatic retries (e.g., TCP).</li>
+</ul>
+</div></section>
+<section class="slide" id="timing-faults"><h2 class="slide-title">Timing Faults</h2><div class="slide-body">
+<ul>
+<li><strong>The Failure:</strong> A node responds with the correct data, but outside of the required time window (typically arriving too late to be useful).</li>
+<li><strong>Common Causes:</strong> Overloaded processors, heavy network latency, or clock drift across distributed machines.</li>
+<li><strong>Detection &amp; Recovery:</strong> Critical in real-time systems (like algorithmic trading or air traffic control) where a late response is practically equivalent to a wrong response. Managed through strict deadlines, timeouts, and logical sequencing.</li>
+</ul>
+</div></section>
+<section class="slide" id="commission-faults"><h2 class="slide-title">Commission Faults</h2><div class="slide-body">
+<ul>
+<li><strong>The Failure:</strong> A node actively processes a request but returns an incorrect or corrupted result to the network.</li>
+<li><strong>Common Causes:</strong> Undetected software bugs, memory corruption, misconfigurations, or unintentional logic errors.</li>
+<li><strong>Detection &amp; Recovery:</strong> Highly dangerous because the output initially appears structurally valid. Systems must use cross-checking, replication (asking multiple nodes and comparing answers), and error-correcting codes to spot the discrepancy.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="byzantine-faults"><h2 class="slide-title">Byzantine Faults</h2><div class="slide-body">
+<ul>
+<li><strong>The Failure:</strong> A node behaves arbitrarily and unpredictably, often with deliberate malicious intent to subvert the system.</li>
+<li><strong>The Behavior:</strong> The node doesn’t just crash; it actively lies, sends conflicting messages to different peers, or impersonates other nodes to break consensus.</li>
+<li><strong>The Challenge:</strong> This is the most dangerous and difficult fault to defend against, as the malicious node can dynamically adapt its behavior to exploit network rules.</li>
+<li><strong>Detection &amp; Recovery:</strong> Simple redundancy is useless here. Defense requires specialized Byzantine Fault Tolerant (BFT) consensus protocols that utilize strict multi-party verification and voting thresholds.</li>
+</ul>
+</div></section>
+<section class="slide smaller non-scrollable" id="byzantine-generals-problem"><h2 class="slide-title">Byzantine Generals Problem</h2><div class="slide-body">
+<p><strong>Question:</strong> How can loyal actors reach reliable agreement despite malicious behavior?</p>
+<div class="columns">
+<div class="column" style="width:50%;">
+<ul>
+<li><strong>Peer-to-Peer:</strong> Every node communicates directly with every other node</li>
+<li><strong>Independent Decisions:</strong> Each node broadcasts (“Attack” or “Retreat”)</li>
+<li><strong>Information Isolation:</strong> Nodes only see the messages sent directly to them</li>
+<li><strong>The Threat:</strong> A “traitor” node actively sends <em>conflicting</em> decisions</li>
+<li><strong>The Goal:</strong> All loyal nodes must arrive at the exact same correct conclusion</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 250.28 255.77" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:333px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 251.77)">
+<g id="edge1" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M192.02,-49.42C199.39,-64.72 211.49,-89.86 219.57,-106.64"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="218.21,-107.03 221.21,-110.03 220.73,-105.82 218.21,-107.03"/>
+<text text-anchor="middle" x="204.36" y="-81.99" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M171.29,-39.35C140.38,-46.41 67.34,-63.08 32.93,-70.93"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="32.87,-69.51 29.28,-71.76 33.49,-72.24 32.87,-69.51"/>
+<text text-anchor="middle" x="97.68" y="-49.32" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M174.1,-45.25C144.01,-69.25 62.95,-133.89 29.33,-160.7"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="28.69,-159.42 26.44,-163.01 30.44,-161.61 28.69,-159.42"/>
+<text text-anchor="middle" x="97.73" y="-98" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M179.22,-49.34C162.52,-84.01 117.53,-177.42 98.88,-216.16"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="97.75,-215.28 97.27,-219.49 100.27,-216.5 97.75,-215.28"/>
+<text text-anchor="middle" x="135.79" y="-128.36" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M185.6,-50.75C185.6,-82.47 185.6,-157.39 185.6,-192.67"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="184.2,-192.42 185.6,-196.42 187,-192.42 184.2,-192.42"/>
+<text text-anchor="middle" x="183.26" y="-117.57" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M171.17,-32.79C154.61,-29.01 127.41,-22.8 109.25,-18.66"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="109.79,-17.35 105.58,-17.82 109.17,-20.08 109.79,-17.35"/>
+<text text-anchor="middle" x="135.86" y="-27.37" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M221.46,-110.55C214.09,-95.25 201.98,-70.11 193.9,-53.33"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="195.27,-52.94 192.27,-49.94 192.74,-54.15 195.27,-52.94"/>
+<text text-anchor="middle" x="209.12" y="-82.18" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M213.54,-120.61C176.09,-112.06 75.35,-89.07 33.27,-79.47"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="33.63,-78.11 29.41,-78.59 33,-80.84 33.63,-78.11"/>
+<text text-anchor="middle" x="118.69" y="-101.6" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M213.54,-127.16C176.09,-135.7 75.35,-158.7 33.27,-168.3"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="33,-166.93 29.41,-169.18 33.63,-169.66 33,-166.93"/>
+<text text-anchor="middle" x="118.69" y="-150.37" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge10" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M216.64,-132.84C192.01,-152.49 133.22,-199.37 105.52,-221.46"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="104.83,-220.22 102.57,-223.81 106.57,-222.41 104.83,-220.22"/>
+<text text-anchor="middle" x="156.91" y="-172.32" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge11" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M221.46,-137.22C214.09,-152.52 201.98,-177.66 193.9,-194.44"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="192.74,-193.62 192.27,-197.83 195.27,-194.83 192.74,-193.62"/>
+<text text-anchor="middle" x="204.45" y="-161.39" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge12" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M216.64,-114.92C192.01,-95.28 133.22,-48.4 105.52,-26.3"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="106.57,-25.35 102.57,-23.96 104.83,-27.54 106.57,-25.35"/>
+<text text-anchor="middle" x="156.91" y="-71.25" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge13" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M28.7,-71.89C59.62,-64.84 132.66,-48.17 167.06,-40.31"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="167.13,-41.74 170.72,-39.48 166.51,-39.01 167.13,-41.74"/>
+<text text-anchor="middle" x="97.65" y="-57.73" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge14" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M28.74,-78.43C66.19,-86.98 166.93,-109.97 209.01,-119.58"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="208.65,-120.93 212.86,-120.46 209.28,-118.2 208.65,-120.93"/>
+<text text-anchor="middle" x="123.59" y="-101.65" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge15" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M14.4,-89.96C14.4,-106.94 14.4,-134.84 14.4,-153.47"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="13,-153.23 14.4,-157.23 15.8,-153.23 13,-153.23"/>
+<text text-anchor="middle" x="12.07" y="-125.88" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge16" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M20.76,-88.38C34.52,-116.95 67.03,-184.45 82.34,-216.24"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="80.97,-216.62 83.97,-219.62 83.49,-215.41 80.97,-216.62"/>
+<text text-anchor="middle" x="50.15" y="-156.35" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge17" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M25.9,-84.33C55.99,-108.33 137.04,-172.96 170.67,-199.78"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="169.56,-200.68 173.56,-202.08 171.3,-198.49 169.56,-200.68"/>
+<text text-anchor="middle" x="97.6" y="-145.47" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge18" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M25.97,-65.93C39.33,-55.28 61.32,-37.75 75.87,-26.13"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="76.56,-27.38 78.81,-23.79 74.81,-25.19 76.56,-27.38"/>
+<text text-anchor="middle" x="50.24" y="-38.41" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge19" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M25.9,-163.44C55.99,-139.44 137.04,-74.8 170.67,-47.99"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="171.3,-49.27 173.56,-45.69 169.56,-47.09 171.3,-49.27"/>
+<text text-anchor="middle" x="97.6" y="-106.5" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge20" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M28.74,-169.34C66.19,-160.79 166.93,-137.8 209.01,-128.19"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="209.28,-129.57 212.86,-127.31 208.65,-126.84 209.28,-129.57"/>
+<text text-anchor="middle" x="118.92" y="-141.92" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge21" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M14.4,-157.81C14.4,-140.83 14.4,-112.93 14.4,-94.3"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="15.8,-94.54 14.4,-90.54 13,-94.54 15.8,-94.54"/>
+<text text-anchor="middle" x="12.07" y="-117.69" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge22" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M25.97,-181.84C39.33,-192.49 61.32,-210.02 75.87,-221.63"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="74.81,-222.58 78.81,-223.98 76.56,-220.39 74.81,-222.58"/>
+<text text-anchor="middle" x="50.24" y="-205.16" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge23" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M28.7,-175.87C59.62,-182.93 132.66,-199.6 167.06,-207.45"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="166.51,-208.76 170.72,-208.29 167.13,-206.03 166.51,-208.76"/>
+<text text-anchor="middle" x="97.65" y="-194.24" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge24" class="edge">
+<path fill="none" stroke="#77af77" stroke-width="0.5" d="M20.76,-159.39C34.52,-130.82 67.03,-63.32 82.34,-31.53"/>
+<polygon fill="#77af77" stroke="#77af77" stroke-width="0.5" points="83.49,-32.36 83.97,-28.15 80.97,-31.15 83.49,-32.36"/>
+<text text-anchor="middle" x="50.15" y="-95.62" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#3b7a3b">A</text>
+</g>
+
+<g id="edge25" class="edge">
+<path fill="none" stroke="#e06666" stroke-width="0.5" stroke-dasharray="5,2" d="M96.97,-220.12C113.67,-185.44 158.65,-92.03 177.31,-53.29"/>
+<polygon fill="#e06666" stroke="#e06666" stroke-width="0.5" points="178.44,-54.17 178.91,-49.96 175.92,-52.96 178.44,-54.17"/>
+<text text-anchor="middle" x="135.53" y="-136.9" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#a33333">R</text>
+</g>
+
+<g id="edge28" class="edge">
+<path fill="none" stroke="#e06666" stroke-width="0.5" stroke-dasharray="5,2" d="M101.82,-224.41C126.46,-204.76 185.25,-157.88 212.95,-135.79"/>
+<polygon fill="#e06666" stroke="#e06666" stroke-width="0.5" points="213.64,-137.03 215.9,-133.44 211.9,-134.84 213.64,-137.03"/>
+<text text-anchor="middle" x="156.89" y="-180.73" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#a33333">A</text>
+</g>
+
+<g id="edge26" class="edge">
+<path fill="none" stroke="#e06666" stroke-width="0.5" stroke-dasharray="5,2" d="M84.22,-220.15C70.47,-191.58 37.96,-124.08 22.65,-92.29"/>
+<polygon fill="#e06666" stroke="#e06666" stroke-width="0.5" points="24.02,-91.91 21.02,-88.91 21.5,-93.12 24.02,-91.91"/>
+<text text-anchor="middle" x="55.03" y="-156.38" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#a33333">R</text>
+</g>
+
+<g id="edge29" class="edge">
+<path fill="none" stroke="#e06666" stroke-width="0.5" stroke-dasharray="5,2" d="M79.02,-224.14C65.66,-213.49 43.67,-195.95 29.11,-184.34"/>
+<polygon fill="#e06666" stroke="#e06666" stroke-width="0.5" points="30.18,-183.4 26.17,-182 28.43,-185.59 30.18,-183.4"/>
+<text text-anchor="middle" x="50.08" y="-196.62" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#a33333">A</text>
+</g>
+
+<g id="edge27" class="edge">
+<path fill="none" stroke="#e06666" stroke-width="0.5" stroke-dasharray="5,2" d="M105.02,-230.07C121.58,-226.3 148.78,-220.09 166.93,-215.94"/>
+<polygon fill="#e06666" stroke="#e06666" stroke-width="0.5" points="167.02,-217.36 170.6,-215.11 166.39,-214.63 167.02,-217.36"/>
+<text text-anchor="middle" x="135.46" y="-224.65" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#a33333">R</text>
+</g>
+
+<g id="edge30" class="edge">
+<path fill="none" stroke="#e06666" stroke-width="0.5" stroke-dasharray="5,2" d="M90.59,-218.66C90.59,-180.25 90.59,-76.92 90.59,-33.76"/>
+<polygon fill="#e06666" stroke="#e06666" stroke-width="0.5" points="91.99,-33.8 90.59,-29.8 89.19,-33.8 91.99,-33.8"/>
+<text text-anchor="middle" x="88.26" y="-125.87" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#a33333">A</text>
+</g>
+
+<g id="edge34" class="edge">
+<path fill="none" stroke="#e06666" stroke-width="0.5" stroke-dasharray="5,2" d="M185.6,-197.01C185.6,-165.3 185.6,-90.38 185.6,-55.09"/>
+<polygon fill="#e06666" stroke="#e06666" stroke-width="0.5" points="187,-55.35 185.6,-51.35 184.2,-55.35 187,-55.35"/>
+<text text-anchor="middle" x="183.26" y="-126" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#a33333">A</text>
+</g>
+
+<g id="edge31" class="edge">
+<path fill="none" stroke="#e06666" stroke-width="0.5" stroke-dasharray="5,2" d="M192.02,-198.35C199.39,-183.05 211.49,-157.91 219.57,-141.13"/>
+<polygon fill="#e06666" stroke="#e06666" stroke-width="0.5" points="220.73,-141.95 221.21,-137.74 218.21,-140.74 220.73,-141.95"/>
+<text text-anchor="middle" x="204.16" y="-169.98" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#a33333">R</text>
+</g>
+
+<g id="edge35" class="edge">
+<path fill="none" stroke="#e06666" stroke-width="0.5" stroke-dasharray="5,2" d="M174.1,-202.51C144.01,-178.52 62.95,-113.88 29.33,-87.07"/>
+<polygon fill="#e06666" stroke="#e06666" stroke-width="0.5" points="30.44,-86.16 26.44,-84.76 28.69,-88.35 30.44,-86.16"/>
+<text text-anchor="middle" x="102.39" y="-145.57" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#a33333">A</text>
+</g>
+
+<g id="edge32" class="edge">
+<path fill="none" stroke="#e06666" stroke-width="0.5" stroke-dasharray="5,2" d="M171.29,-208.42C140.38,-201.36 67.34,-184.69 32.93,-176.84"/>
+<polygon fill="#e06666" stroke="#e06666" stroke-width="0.5" points="33.49,-175.53 29.28,-176.01 32.87,-178.26 33.49,-175.53"/>
+<text text-anchor="middle" x="102.54" y="-194.25" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#a33333">R</text>
+</g>
+
+<g id="edge33" class="edge">
+<path fill="none" stroke="#e06666" stroke-width="0.5" stroke-dasharray="5,2" d="M171.17,-214.98C154.61,-218.76 127.41,-224.96 109.25,-229.11"/>
+<polygon fill="#e06666" stroke="#e06666" stroke-width="0.5" points="109.17,-227.69 105.58,-229.95 109.79,-230.42 109.17,-227.69"/>
+<text text-anchor="middle" x="135.67" y="-216.2" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#a33333">R</text>
+</g>
+
+<g id="edge36" class="edge">
+<path fill="none" stroke="#e06666" stroke-width="0.5" stroke-dasharray="5,2" d="M179.22,-198.43C162.52,-163.76 117.53,-70.35 98.88,-31.61"/>
+<polygon fill="#e06666" stroke="#e06666" stroke-width="0.5" points="100.27,-31.27 97.27,-28.27 97.75,-32.49 100.27,-31.27"/>
+<text text-anchor="middle" x="135.79" y="-115.21" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#a33333">A</text>
+</g>
+
+<g id="edge37" class="edge">
+<path fill="none" stroke="#e06666" stroke-width="0.5" stroke-dasharray="5,2" d="M105.02,-17.69C121.58,-21.47 148.78,-27.68 166.93,-31.82"/>
+<polygon fill="#e06666" stroke="#e06666" stroke-width="0.5" points="166.39,-33.14 170.6,-32.66 167.02,-30.41 166.39,-33.14"/>
+<text text-anchor="middle" x="135.46" y="-18.92" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#a33333">R</text>
+</g>
+
+<g id="edge38" class="edge">
+<path fill="none" stroke="#e06666" stroke-width="0.5" stroke-dasharray="5,2" d="M101.82,-23.36C126.46,-43.01 185.25,-89.89 212.95,-111.98"/>
+<polygon fill="#e06666" stroke="#e06666" stroke-width="0.5" points="211.9,-112.93 215.9,-114.33 213.64,-110.74 211.9,-112.93"/>
+<text text-anchor="middle" x="156.7" y="-62.84" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#a33333">R</text>
+</g>
+
+<g id="edge40" class="edge">
+<path fill="none" stroke="#e06666" stroke-width="0.5" stroke-dasharray="5,2" d="M79.02,-23.63C65.66,-34.28 43.67,-51.81 29.11,-63.42"/>
+<polygon fill="#e06666" stroke="#e06666" stroke-width="0.5" points="28.43,-62.18 26.17,-65.77 30.18,-64.37 28.43,-62.18"/>
+<text text-anchor="middle" x="50.08" y="-46.95" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#a33333">A</text>
+</g>
+
+<g id="edge41" class="edge">
+<path fill="none" stroke="#e06666" stroke-width="0.5" stroke-dasharray="5,2" d="M84.22,-27.62C70.47,-56.19 37.96,-123.69 22.65,-155.48"/>
+<polygon fill="#e06666" stroke="#e06666" stroke-width="0.5" points="21.5,-154.65 21.02,-158.86 24.02,-155.86 21.5,-154.65"/>
+<text text-anchor="middle" x="50.17" y="-87.19" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#a33333">A</text>
+</g>
+
+<g id="edge42" class="edge">
+<path fill="none" stroke="#e06666" stroke-width="0.5" stroke-dasharray="5,2" d="M90.59,-29.11C90.59,-67.52 90.59,-170.85 90.59,-214.01"/>
+<polygon fill="#e06666" stroke="#e06666" stroke-width="0.5" points="89.19,-213.97 90.59,-217.97 91.99,-213.97 89.19,-213.97"/>
+<text text-anchor="middle" x="92.92" y="-126.1" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#a33333">A</text>
+</g>
+
+<g id="edge39" class="edge">
+<path fill="none" stroke="#e06666" stroke-width="0.5" stroke-dasharray="5,2" d="M96.97,-27.65C113.67,-62.33 158.65,-155.73 177.31,-194.48"/>
+<polygon fill="#e06666" stroke="#e06666" stroke-width="0.5" points="175.92,-194.81 178.91,-197.81 178.44,-193.6 175.92,-194.81"/>
+<text text-anchor="middle" x="135.53" y="-106.67" font-family="Helvetica,sans-Serif" font-size="7.00" fill="#a33333">R</text>
+</g>
+
+<g id="node1" class="node">
+<ellipse fill="#c1e1c1" stroke="#77af77" cx="185.6" cy="-36.08" rx="14.4" ry="14.4"/>
+<text text-anchor="middle" x="185.6" y="-33.38" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">L1</text>
+</g>
+
+<g id="node2" class="node">
+<ellipse fill="#c1e1c1" stroke="#77af77" cx="227.88" cy="-123.88" rx="14.4" ry="14.4"/>
+<text text-anchor="middle" x="227.88" y="-121.18" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">L2</text>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="#c1e1c1" stroke="#77af77" cx="14.4" cy="-75.16" rx="14.4" ry="14.4"/>
+<text text-anchor="middle" x="14.4" y="-72.46" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">L3</text>
+</g>
+
+<g id="node4" class="node">
+<ellipse fill="#c1e1c1" stroke="#77af77" cx="14.4" cy="-172.61" rx="14.4" ry="14.4"/>
+<text text-anchor="middle" x="14.4" y="-169.91" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">L4</text>
+</g>
+
+<g id="node5" class="node">
+<ellipse fill="#f9d0c4" stroke="#e06666" cx="90.59" cy="-233.37" rx="14.4" ry="14.4"/>
+<text text-anchor="middle" x="90.59" y="-230.67" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">T1</text>
+</g>
+
+<g id="node6" class="node">
+<ellipse fill="#f9d0c4" stroke="#e06666" cx="185.6" cy="-211.68" rx="14.4" ry="14.4"/>
+<text text-anchor="middle" x="185.6" y="-208.98" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">T2</text>
+</g>
+
+<g id="node7" class="node">
+<ellipse fill="#f9d0c4" stroke="#e06666" cx="90.59" cy="-14.4" rx="14.4" ry="14.4"/>
+<text text-anchor="middle" x="90.59" y="-11.7" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="9.00">T3</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="fault-tolerance-spectrum"><h2 class="slide-title">Fault Tolerance Spectrum</h2><div class="slide-body">
+<ul>
+<li><strong>Crash Faults (Easy):</strong> The node simply stops. Mitigated relatively easily with basic redundancy and timeouts.</li>
+<li><strong>Omission Faults (Moderate):</strong> The node remains active but drops messages. Addressed through acknowledgments and retransmissions.</li>
+<li><strong>Timing Faults (Moderate):</strong> The response is correct but arrives too late. Managed via strict deadlines and logical clocks.</li>
+<li><strong>Commission Faults (Hard):</strong> The node actively sends incorrect data due to bugs. Requires cross-checking across multiple nodes.</li>
+<li><strong>Byzantine Faults (Extreme):</strong> A node acts maliciously or unpredictably to actively subvert the system. Requires specialized cryptographic consensus protocols.</li>
+</ul>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 608.19 46.40" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:811px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 42.4)">
+<g id="node1" class="node">
+<path fill="#c1e1c1" stroke="#77af77" stroke-width="2" d="M61.34,-38.4C61.34,-38.4 12,-38.4 12,-38.4 6,-38.4 0,-32.4 0,-26.4 0,-26.4 0,-12 0,-12 0,-6 6,0 12,0 12,0 61.34,0 61.34,0 67.34,0 73.34,-6 73.34,-12 73.34,-12 73.34,-26.4 73.34,-26.4 73.34,-32.4 67.34,-38.4 61.34,-38.4"/>
+<text text-anchor="middle" x="36.67" y="-15" font-family="Helvetica,sans-Serif" font-size="14.00">Crash</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#d9ead3" stroke="#93c47d" stroke-width="2" d="M191.69,-38.4C191.69,-38.4 121.34,-38.4 121.34,-38.4 115.34,-38.4 109.34,-32.4 109.34,-26.4 109.34,-26.4 109.34,-12 109.34,-12 109.34,-6 115.34,0 121.34,0 121.34,0 191.69,0 191.69,0 197.69,0 203.69,-6 203.69,-12 203.69,-12 203.69,-26.4 203.69,-26.4 203.69,-32.4 197.69,-38.4 191.69,-38.4"/>
+<text text-anchor="middle" x="156.52" y="-15" font-family="Helvetica,sans-Serif" font-size="14.00">Omission</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#666666" stroke-width="1.5" d="M74.31,-19.2C81.91,-19.2 90.1,-19.2 98.24,-19.2"/>
+<polygon fill="#666666" stroke="#666666" stroke-width="1.5" points="98.21,-22 106.21,-19.2 98.21,-16.4 98.21,-22"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fff2cc" stroke="#ffd966" stroke-width="2" d="M305.7,-38.4C305.7,-38.4 251.69,-38.4 251.69,-38.4 245.69,-38.4 239.69,-32.4 239.69,-26.4 239.69,-26.4 239.69,-12 239.69,-12 239.69,-6 245.69,0 251.69,0 251.69,0 305.7,0 305.7,0 311.7,0 317.7,-6 317.7,-12 317.7,-12 317.7,-26.4 317.7,-26.4 317.7,-32.4 311.7,-38.4 305.7,-38.4"/>
+<text text-anchor="middle" x="278.69" y="-15" font-family="Helvetica,sans-Serif" font-size="14.00">Timing</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#666666" stroke-width="1.5" d="M204.67,-19.2C212.53,-19.2 220.71,-19.2 228.62,-19.2"/>
+<polygon fill="#666666" stroke="#666666" stroke-width="1.5" points="228.55,-22 236.55,-19.2 228.55,-16.4 228.55,-22"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fce5cd" stroke="#f6b26b" stroke-width="2" d="M454.71,-38.4C454.71,-38.4 365.7,-38.4 365.7,-38.4 359.7,-38.4 353.7,-32.4 353.7,-26.4 353.7,-26.4 353.7,-12 353.7,-12 353.7,-6 359.7,0 365.7,0 365.7,0 454.71,0 454.71,0 460.71,0 466.71,-6 466.71,-12 466.71,-12 466.71,-26.4 466.71,-26.4 466.71,-32.4 460.71,-38.4 454.71,-38.4"/>
+<text text-anchor="middle" x="410.2" y="-15" font-family="Helvetica,sans-Serif" font-size="14.00">Commission</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#666666" stroke-width="1.5" d="M318.55,-19.2C326.28,-19.2 334.61,-19.2 342.96,-19.2"/>
+<polygon fill="#666666" stroke="#666666" stroke-width="1.5" points="342.87,-22 350.87,-19.2 342.87,-16.4 342.87,-22"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#f9d0c4" stroke="#e06666" stroke-width="2" d="M588.19,-38.4C588.19,-38.4 514.71,-38.4 514.71,-38.4 508.71,-38.4 502.71,-32.4 502.71,-26.4 502.71,-26.4 502.71,-12 502.71,-12 502.71,-6 508.71,0 514.71,0 514.71,0 588.19,0 588.19,0 594.19,0 600.19,-6 600.19,-12 600.19,-12 600.19,-26.4 600.19,-26.4 600.19,-32.4 594.19,-38.4 588.19,-38.4"/>
+<text text-anchor="middle" x="551.45" y="-15" font-family="Helvetica,sans-Serif" font-size="14.00">Byzantine</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#666666" stroke-width="1.5" d="M467.44,-19.2C475.51,-19.2 483.82,-19.2 491.93,-19.2"/>
+<polygon fill="#666666" stroke="#666666" stroke-width="1.5" points="491.79,-22 499.79,-19.2 491.79,-16.4 491.79,-22"/>
+</g>
+</g>
+</svg></figure>
+</div></section>
+<section class="slide smaller" id="why-failures-become-security-risks"><h2 class="slide-title">Why Failures Become Security Risks</h2><div class="slide-body">
+<ul>
+<li><strong>Ambiguity of Intent:</strong> In distributed systems, benign operational faults and deliberate malicious attacks often manifest identically.</li>
+<li><strong>Crash vs. Denial-of-Service:</strong> A node suddenly going dark could be a simple power failure, or a targeted DoS attack.</li>
+<li><strong>Omission vs. Censorship:</strong> Dropped messages might stem from standard network congestion, or an adversary intentionally filtering traffic.</li>
+<li><strong>Commission vs. Compromise:</strong> A node returning incorrect data could be suffering from a software bug, or it may have been actively hijacked.</li>
+<li><strong>The Engineering Reality:</strong> Because failures do not come with labels, reliability and security are inextricably linked. Systems must survive the <em>behavior</em>, regardless of the <em>intent</em>.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="adversarial-scenario-the-compromised-node"><h2 class="slide-title">Adversarial Scenario: The Compromised Node</h2><div class="slide-body">
+<ul>
+<li><strong>The 1990s Dinner Problem:</strong> You and five friends are coordinating dinner plans using only 1:1 landline phone calls. Everyone must agree on the same restaurant, or the night is ruined.</li>
+<li><strong>The “Alien Imposter”:</strong> Unbeknownst to you, one friend is compromised by a malicious imposter. To cause maximum chaos, the imposter tells half the group “we are getting pizza” and the other half “we are getting tacos.”</li>
+<li><strong>Spreading Confusion:</strong> Because everyone only communicates 1:1, honest friends start passing along conflicting information. A single bad actor creates disagreement where none existed.</li>
+<li><strong>The Defense:</strong> To survive this, the group needs a protocol (like everyone calling everyone else to cross-check answers) to identify the lie and reach a majority decision despite the imposter.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="strategies-for-handling-suspicion"><h2 class="slide-title">Strategies for Handling Suspicion</h2><div class="slide-body">
+<ul>
+<li><strong>Redundancy &amp; Replication:</strong> Instead of relying on a single server, multiple nodes maintain identical copies of the data and provide the same service, ensuring that no single hardware failure can destroy the information.</li>
+<li><strong>Majority Voting:</strong> The system relies on the collective decision of the group rather than trusting any individual node. The result agreed upon by the majority is accepted as truth.</li>
+<li><strong>Quorum Systems:</strong> Protocols require a strict minimum number of consistent responses (a quorum) before committing a transaction or making a system-wide decision, preventing a small malicious faction from hijacking the network.</li>
+<li><strong>Cryptographic Proofs:</strong> Data is mathematically verified (e.g., through digital signatures and cryptographic hashes) to ensure it has not been altered by a Byzantine node.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="consensus-as-the-core-goal"><h2 class="slide-title">Consensus as the Core Goal</h2><div class="slide-body">
+<ul>
+<li><strong>The Objective:</strong> In a distributed network, consensus is the mechanism by which all honest, non-faulty nodes agree on a single shared state or action.</li>
+<li><strong>Safety (Consistency):</strong> The guarantee that <em>the system never contradicts itself</em>. Once an agreement is reached, it is final, and no two honest nodes will ever decide on conflicting values.</li>
+<li><strong>Liveness (Availability):</strong> The guarantee that <em>the system always makes progress</em>. The system must continue to process transactions and cannot be permanently stalled by failures or malicious actors.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="classical-consensus-approaches"><h2 class="slide-title">Classical Consensus Approaches</h2><div class="slide-body">
+<ul>
+<li><strong>Simple Replication:</strong> Early systems merely copied data across multiple nodes and periodically checked for consistency, offering basic redundancy but poor conflict resolution.</li>
+<li><strong>Two-Phase Commit:</strong> A central coordinator asks all participants if they are ready to proceed. Only if <em>everyone</em> says yes does the coordinator issue a final commit command.</li>
+<li><strong>Paxos &amp; Raft:</strong> Formal, robust algorithms that use leader election and majority voting to achieve consensus safely, even if some nodes crash or messages are lost.</li>
+<li><strong>The Limitation:</strong> These classical models were designed for benign corporate environments. They expertly handle crash and omission faults but completely break down if a node turns Byzantine (malicious).</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="why-decentralization-is-harder"><h2 class="slide-title">Why Decentralization Is Harder</h2><div class="slide-body">
+<ul>
+<li><strong>No Central Referee:</strong> There is no single trusted authority to dictate the truth, resolve disputes, or coordinate actions. Every node must independently verify the state of the network.</li>
+<li><strong>Massive Scale:</strong> Reaching agreement requires coordination and communication across thousands of independent nodes, vastly increasing the computational overhead.</li>
+<li><strong>Network Latency:</strong> In a global, decentralized network, messages take time to travel across continents, leading to unavoidable delays and temporary inconsistencies.</li>
+<li><strong>Adversarial Environments:</strong> Because anyone can join an open network, systems must assume the presence of malicious participants actively attempting to subvert the consensus or feed the network bad data.</li>
+</ul>
+</div></section>
+<section class="slide smaller non-scrollable" id="the-byzantine-generals-problem-formal"><h2 class="slide-title">The Byzantine Generals Problem (formal)</h2><div class="slide-body">
+<ul>
+<li><p><strong>Problem Statement:</strong> A group of distributed actors (generals) must agree on a single plan (attack/retreat), but some actors (traitors) or communication channels may be faulty and actively malicious.</p></li>
+<li><p><strong>Goal (Interactive Consistency):</strong></p>
+<ol type="1">
+<li>All loyal actors must agree on the same plan.</li>
+</ol></li>
+<li><p><strong>The Impossibility Result:</strong> With oral (unauthenticated) messages, a solution is only possible if the total number of generals, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>, is strictly greater than three times the number of traitors, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>. <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>&gt;</mo><mn>3</mn><mi>m</mi><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> or </mtext><mspace width="0.333em"></mspace></mrow><mi>n</mi><mo>≥</mo><mn>3</mn><mi>m</mi><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">n &gt; 3m \text{ or } n \ge 3m + 1</annotation></semantics></math></p></li>
+</ul>
+<div class="callout-note" data-appearance="minimal">
+<p><em><strong>Note:</strong> this presentation slightly adapts the original 1982 formulation by removing the hierarchical Commander/Lieutenant dynamic to better reflect flat, peer-to-peer blockchain networks.</em></p>
+</div>
+</div></section>
+<section class="slide smaller" id="mini-activity-byzantine-agreement"><h2 class="slide-title">Mini-Activity: Byzantine Agreement</h2><div class="slide-body">
+<ul>
+<li><strong>Setup:</strong> Form groups of 6 or 7. The instructor will hand you a secret card defining your <strong>Role</strong> (Loyal or Traitor) and your <strong>Initial Value</strong> (“Attack” or “Retreat”).</li>
+<li><strong>Phase 1: Broadcast:</strong> You must send a direct, secret message (e.g., a slip of paper) to <em>every other person</em> in your group stating your value.
+<ul>
+<li><em>Loyal nodes:</em> Must accurately send their given Initial Value to everyone.</li>
+<li><em>Traitor nodes:</em> Can lie, and should actively send <em>conflicting</em> values to different peers to cause confusion.</li>
+</ul></li>
+<li><strong>Phase 2: Tally:</strong> Look at the messages you received. Combine them with your own Initial Value. What is the majority?</li>
+<li><strong>Phase 3: Reveal:</strong> On the count of three, point up for “Attack” or down for “Retreat.” Did the loyal nodes reach consensus?</li>
+</ul>
+</div></section>
+<section class="slide" id="mini-activity-digital-version"><h2 class="slide-title">Mini-Activity: Digital Version</h2><div class="slide-body">
+<div data-align="center" style="text-align:center;">
+<p><a href="https://blockchain.training-as-code.com/exercises/bgp/">blockchain.training-as-code.com/exercises/bgp/</a></p>
+</div>
+</div></section>
+<section class="slide smaller" id="recap-key-takeaways"><h2 class="slide-title">Recap &amp; Key Takeaways</h2><div class="slide-body">
+<ul>
+<li><p><strong>Trust is an Engineering Assumption:</strong> In secure systems, trust is not a feeling; it’s a documented dependency.</p></li>
+<li><p><strong>Centralized Trust</strong> requires delegated third-parties.</p></li>
+<li><p><strong>Decentralized Trust</strong> requires a mechanism for forming consensus.</p></li>
+<li><p><strong>The Byzantine Generals Problem</strong> is the foundational challenge of reaching agreement in the presence of malicious actors. The solution depends on the assumptions you can make (e.g., unforgeable signatures).</p></li>
+</ul>
+</div></section>
+<section class="slide unnumbered smaller" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-l35_helium_hotspot_app_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">Helium Documentation, <span>“Helium hotspot app.”</span> Accessed: Mar. 28, 2026. [Online]. Available: <a href="https://docs.helium.com/mine-hnt/helium-hotspot-app">https://docs.helium.com/mine-hnt/helium-hotspot-app</a></div>
+</div>
+<div id="ref-ipfs_docs_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">IPFS, <span>“IPFS.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://ipfs.tech">https://ipfs.tech</a></div>
+</div>
+<div id="ref-l35_hivemapper_map_products_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">Hivemapper, <span>“Hivemapper - build a decentralized global map.”</span> Accessed: Mar. 28, 2026. [Online]. Available: <a href="https://hivemapper.com/tos/map-products/">https://hivemapper.com/tos/map-products/</a></div>
+</div>
+<div id="ref-l35_mastodon_network_features_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">Mastodon Documentation, <span>“Using the network features.”</span> Accessed: Mar. 28, 2026. [Online]. Available: <a href="https://docs.joinmastodon.org/user/network/">https://docs.joinmastodon.org/user/network/</a></div>
+</div>
+<div id="ref-yaga_blockchaintechnologyoverview_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">D. Yaga, P. Mell, N. Roby, and K. Scarfone, <span>“Blockchain technology overview,”</span> <span>National Institute of Standards and Technology</span>, Gaithersburg, MD, NIST IR 8202, Oct. 2018. doi: <a href="https://doi.org/10.6028/NIST.IR.8202">10.6028/NIST.IR.8202</a>.</div>
+</div>
+<div id="ref-chaum_computersystemsestablished_1982" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">D. L. Chaum, <span>“Computer systems established, maintained and trusted by mutually suspicious groups,”</span> PhD thesis, 1982. Available: <a href="https://cdn.nakamotoinstitute.org/docs/computer-systems-by-mutually-suspicious-groups.pdf">https://cdn.nakamotoinstitute.org/docs/computer-systems-by-mutually-suspicious-groups.pdf</a></div>
+</div>
+<div id="ref-lamport_byzantinegeneralsproblem_1982" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">L. Lamport, R. Shostak, and M. Pease, <span>“The <span>Byzantine Generals Problem</span>,”</span> in <em><span>ACM Transactions</span> on <span>Programming Languages</span> and <span>Systems</span></em>, 1982, pp. 382–401. Available: <a href="https://nakamotoinstitute.org/static/docs/the-byzantine-generals-problem.pdf">https://nakamotoinstitute.org/static/docs/the-byzantine-generals-problem.pdf</a></div>
+</div>
+<div id="ref-lamport_timeclocksordering_1978" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">L. Lamport, <span>“Time, clocks, and the ordering of events in a distributed system,”</span> <em>Commun. ACM</em>, vol. 21, no. 7, pp. 558–565, July 1978, doi: <a href="https://doi.org/10.1145/359545.359563">10.1145/359545.359563</a>.</div>
+</div>
+<div id="ref-lamport_paxosmadesimple_2001" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">L. Lamport, <span>“Paxos made simple,”</span> <em>ACM SIGACT News (Distributed Computing Column) 32, 4 (Whole Number 121, December 2001)</em>, pp. 51–58, Dec. 2001, Available: <a href="https://lamport.azurewebsites.net/pubs/paxos-simple.pdf">https://lamport.azurewebsites.net/pubs/paxos-simple.pdf</a></div>
+</div>
+<div id="ref-ongaro_searchunderstandableconsensus_2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">D. Ongaro and J. Ousterhout, <span>“In <span>Search</span> of an <span>Understandable Consensus Algorithm</span>,”</span> in <em>2014 <span>USENIX Annual Technical Conference</span> (<span>USENIX ATC</span> 14)</em>, Philadelphia, PA: USENIX Association, June 2014, pp. 305–319. Available: <a href="https://www.usenix.org/conference/atc14/technical-sessions/presentation/ongaro">https://www.usenix.org/conference/atc14/technical-sessions/presentation/ongaro</a></div>
+</div>
+<div id="ref-castro_practicalbyzantinefault_1999" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">M. Castro and B. Liskov, <span>“Practical <span>Byzantine Fault Tolerance</span>,”</span> in <em>Proceedings of the <span>Third Symposium</span> on <span>Operating Systems Design</span> and <span>Implementation</span></em>, New Orleans, LA, USA, Feb. 1999, pp. 173–186. Available: <a href="http://pmg.csail.mit.edu/papers/osdi99.pdf">http://pmg.csail.mit.edu/papers/osdi99.pdf</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

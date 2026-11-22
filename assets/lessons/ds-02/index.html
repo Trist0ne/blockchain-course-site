@@ -1,0 +1,1537 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Peer-to-Peer Design</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/distributed_primitives/02-DS-p2p_design.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="ds-02" data-code="02-DS" data-src="09096a1b5a0fe600" data-slides="24">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section III: Distributed Systems Fundamentals · Lesson 02-DS</p><h1>Peer-to-Peer Design</h1></div></section>
+<section class="slide smaller" id="from-p2p-models-to-p2p-design"><h2 class="slide-title">From P2P Models to P2P Design</h2><div class="slide-body">
+<ul>
+<li><p>In our last lesson, we saw the high-level P2P architectures:</p>
+<ul>
+<li><strong>Hybrid</strong> (<em>Napster</em>): A central server for <em>finding</em> peers, but direct P2P for <em>transfer</em>.</li>
+<li><strong>Gossip</strong> (<em>Gnutella 0.4</em>): A chaotic “flooding” model that scaled poorly.</li>
+<li><strong>Supernode</strong> (<em>Gnutella 0.6</em>):
+<ul>
+<li>“Smart” gossip model where powerful <em>Full Nodes</em> serve weaker <em>Light clients</em>.</li>
+<li>Blockchains use this model.</li>
+</ul></li>
+</ul></li>
+<li><p>But this raises the <em>real</em> engineering questions:</p>
+<blockquote>
+<ul>
+<li>How does a peer <em>gossip</em>? How does it find other peers to talk to?</li>
+<li>How do you build an “address book” for a P2P network <em>without</em> a central server?</li>
+<li>What happens when peers constantly join and leave?</li>
+</ul>
+</blockquote></li>
+<li><p>In this lesson, we dive into the “plumbing” of P2P by exploring the two main types of <strong>overlay networks</strong> and the critical security problems they face.</p></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="what-is-an-overlay-network"><h2 class="slide-title">What is an “Overlay Network?”</h2><div class="slide-body">
+<dl>
+<dt><strong>Overlay Network</strong></dt>
+<dd>
+<p>A <em>logical</em> map built on top of the <em>physical</em> internet. It’s the “rules of the road” that peers use to find each other and share data, without a central server.</p>
+</dd>
+</dl>
+<figure>
+<img src="../img/overlay_example.png" alt="Physical topology is transparent to overlay nodes" />
+<figcaption aria-hidden="true">Physical topology is transparent to overlay nodes</figcaption>
+</figure>
+</div></section>
+<section class="slide smaller" id="unstructured-overlay-networks"><h2 class="slide-title">Unstructured Overlay Networks</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:48%;">
+<ul>
+<li><strong>What it is:</strong> A random mesh of peer connections.</li>
+<li><strong>Analogy:</strong> Shouting in a crowded room.</li>
+<li><strong>How it finds things:</strong> A peer floods a query to all neighbors, and each neighbor forwards it again.</li>
+<li><strong>Why it works:</strong> It is simple and resilient under churn.</li>
+<li><strong>Why it hurts:</strong> It creates duplicates, wasted traffic, and broadcast storms.</li>
+</ul>
+</div><div class="column" style="width:52%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 488.96 402.56" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:652px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 398.56)">
+<g id="edge1" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M49.21,-350.16C70.13,-355.39 101.94,-363.34 122.67,-368.53"/>
+</g>
+
+<g id="edge26" class="edge">
+<path fill="none" stroke="#2563eb" stroke-width="2.8" d="M49.21,-350.16C65.96,-354.35 89.7,-360.28 109.14,-365.14"/>
+<polygon fill="#2563eb" stroke="#2563eb" stroke-width="2.8" points="108.01,-368.47 118.56,-367.5 109.71,-361.68 108.01,-368.47"/>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M49.76,-342.85C93.89,-338.71 193.7,-329.35 237.36,-325.26"/>
+</g>
+
+<g id="edge27" class="edge">
+<path fill="none" stroke="#2563eb" stroke-width="2.8" d="M49.76,-342.85C89.67,-339.11 175.11,-331.1 223.38,-326.57"/>
+<polygon fill="#2563eb" stroke="#2563eb" stroke-width="2.8" points="223.51,-330.07 233.14,-325.66 222.86,-323.1 223.51,-330.07"/>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M38.91,-325.92C49.28,-307.78 64.81,-280.61 75.09,-262.61"/>
+</g>
+
+<g id="edge28" class="edge">
+<path fill="none" stroke="#2563eb" stroke-width="2.8" d="M38.91,-325.92C47.17,-311.47 58.71,-291.27 68.26,-274.56"/>
+<polygon fill="#2563eb" stroke="#2563eb" stroke-width="2.8" points="71.06,-276.71 72.99,-266.29 64.99,-273.24 71.06,-276.71"/>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M162.82,-365.13C184.13,-355.81 218.03,-340.98 239.23,-331.7"/>
+</g>
+
+<g id="edge29" class="edge">
+<path fill="none" stroke="#f59e0b" stroke-width="2.2" d="M162.82,-365.13C180.47,-357.41 206.75,-345.91 227.3,-336.92"/>
+<polygon fill="#f59e0b" stroke="#f59e0b" stroke-width="2.2" points="228.42,-340.25 236.18,-333.04 225.61,-333.84 228.42,-340.25"/>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M134.66,-354.28C123.8,-329.85 105.25,-288.11 94.36,-263.62"/>
+</g>
+
+<g id="edge30" class="edge">
+<path fill="none" stroke="#f59e0b" stroke-width="2.2" d="M134.66,-354.28C125.41,-333.47 110.59,-300.12 99.67,-275.55"/>
+<polygon fill="#f59e0b" stroke="#f59e0b" stroke-width="2.2" points="102.97,-274.37 95.71,-266.66 96.58,-277.22 102.97,-274.37"/>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M154.06,-355.36C167.71,-332.15 191.09,-292.41 204.66,-269.33"/>
+</g>
+
+<g id="edge31" class="edge">
+<path fill="none" stroke="#f59e0b" stroke-width="2.2" d="M154.06,-355.36C165.68,-335.59 184.36,-303.84 198.03,-280.6"/>
+<polygon fill="#f59e0b" stroke="#f59e0b" stroke-width="2.2" points="200.92,-282.59 202.97,-272.2 194.89,-279.05 200.92,-282.59"/>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M247.58,-305.11C240.98,-294.11 232.6,-280.14 226.03,-269.19"/>
+</g>
+
+<g id="edge32" class="edge">
+<path fill="none" stroke="#f59e0b" stroke-width="2.2" d="M247.58,-305.11C243.09,-297.64 237.79,-288.79 232.78,-280.45"/>
+<polygon fill="#f59e0b" stroke="#f59e0b" stroke-width="2.2" points="235.89,-278.82 227.74,-272.05 229.88,-282.42 235.89,-278.82"/>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M278.54,-329.97C297.94,-336.43 327.16,-346.17 346.53,-352.63"/>
+</g>
+
+<g id="edge33" class="edge">
+<path fill="none" stroke="#f59e0b" stroke-width="2.2" d="M278.54,-329.97C294.07,-335.14 315.91,-342.42 333.94,-348.43"/>
+<polygon fill="#f59e0b" stroke="#f59e0b" stroke-width="2.2" points="332.77,-351.73 343.37,-351.58 334.99,-345.09 332.77,-351.73"/>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M273.98,-308.69C297.53,-286.53 342.03,-244.64 365.5,-222.55"/>
+</g>
+
+<g id="edge34" class="edge">
+<path fill="none" stroke="#f59e0b" stroke-width="2.2" d="M273.98,-308.69C294.58,-289.3 331.24,-254.8 355.8,-231.69"/>
+<polygon fill="#f59e0b" stroke="#f59e0b" stroke-width="2.2" points="358.2,-234.24 363.08,-224.83 353.4,-229.14 358.2,-234.24"/>
+</g>
+
+<g id="edge10" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M106.79,-245.25C130.89,-246.59 170.08,-248.77 194.18,-250.11"/>
+</g>
+
+<g id="edge35" class="edge">
+<path fill="none" stroke="#f59e0b" stroke-width="2.2" d="M106.79,-245.25C126.84,-246.37 157.34,-248.06 180.9,-249.37"/>
+<polygon fill="#f59e0b" stroke="#f59e0b" stroke-width="2.2" points="180.67,-252.86 190.85,-249.92 181.06,-245.87 180.67,-252.86"/>
+</g>
+
+<g id="edge11" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M75.7,-225.22C63.48,-202.15 42.94,-163.34 30.77,-140.36"/>
+</g>
+
+<g id="edge36" class="edge">
+<path fill="none" stroke="#f59e0b" stroke-width="2.2" d="M75.7,-225.22C65.34,-205.67 49,-174.8 36.85,-151.85"/>
+<polygon fill="#f59e0b" stroke="#f59e0b" stroke-width="2.2" points="40.1,-150.5 32.33,-143.3 33.91,-153.78 40.1,-150.5"/>
+</g>
+
+<g id="edge12" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M99.01,-227.61C122.56,-198.53 171.23,-138.4 194.76,-109.33"/>
+</g>
+
+<g id="edge37" class="edge">
+<path fill="none" stroke="#f59e0b" stroke-width="2.2" d="M99.01,-227.61C120.07,-201.59 161.24,-150.74 186.54,-119.49"/>
+<polygon fill="#f59e0b" stroke="#f59e0b" stroke-width="2.2" points="189.1,-121.89 192.67,-111.92 183.66,-117.49 189.1,-121.89"/>
+</g>
+
+<g id="edge13" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M232.62,-263.67C261.79,-284.5 320.31,-326.3 349.34,-347.04"/>
+</g>
+
+<g id="edge38" class="edge">
+<path fill="none" stroke="#dc2626" stroke-width="2" d="M232.62,-263.67C258.6,-282.22 307.86,-317.41 338.83,-339.53"/>
+<polygon fill="#dc2626" stroke="#dc2626" stroke-width="2" points="336.7,-342.31 346.87,-345.28 340.77,-336.62 336.7,-342.31"/>
+</g>
+
+<g id="edge14" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M235.92,-245.9C267.74,-237.6 328.42,-221.76 360.24,-213.46"/>
+</g>
+
+<g id="edge39" class="edge">
+<path fill="none" stroke="#dc2626" stroke-width="2" d="M235.92,-245.9C264.01,-238.57 314.6,-225.37 347.96,-216.67"/>
+<polygon fill="#dc2626" stroke="#dc2626" stroke-width="2" points="348.52,-220.14 357.31,-214.23 346.75,-213.37 348.52,-220.14"/>
+</g>
+
+<g id="edge15" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M214.32,-230.25C212.95,-199.95 210.42,-144.35 209.04,-114"/>
+</g>
+
+<g id="edge40" class="edge">
+<path fill="none" stroke="#dc2626" stroke-width="2" d="M214.32,-230.25C213.12,-203.85 211.05,-158.26 209.63,-126.89"/>
+<polygon fill="#dc2626" stroke="#dc2626" stroke-width="2" points="213.13,-126.86 209.18,-117.03 206.14,-127.17 213.13,-126.86"/>
+</g>
+
+<g id="edge16" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M368.48,-338.26C371.23,-309.37 376.15,-257.72 378.89,-228.93"/>
+</g>
+
+<g id="edge41" class="edge">
+<path fill="none" stroke="#dc2626" stroke-width="2" d="M368.48,-338.26C370.87,-313.21 374.88,-271.04 377.7,-241.5"/>
+<polygon fill="#dc2626" stroke="#dc2626" stroke-width="2" points="381.14,-242.23 378.61,-231.94 374.18,-241.56 381.14,-242.23"/>
+</g>
+
+<g id="edge17" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M381.94,-345.01C399.28,-329 427.25,-303.19 444.6,-287.17"/>
+</g>
+
+<g id="edge42" class="edge">
+<path fill="none" stroke="#dc2626" stroke-width="2" d="M381.94,-345.01C396.43,-331.63 418.36,-311.39 435.3,-295.76"/>
+<polygon fill="#dc2626" stroke="#dc2626" stroke-width="2" points="437.4,-298.58 442.38,-289.22 432.65,-293.43 437.4,-298.58"/>
+</g>
+
+<g id="edge18" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M363.36,-196.4C330.24,-174.32 258.8,-126.69 225.65,-104.59"/>
+</g>
+
+<g id="edge43" class="edge">
+<path fill="none" stroke="#dc2626" stroke-width="2" d="M363.36,-196.4C333.47,-176.48 272.39,-135.75 236.38,-111.75"/>
+<polygon fill="#dc2626" stroke="#dc2626" stroke-width="2" points="238.43,-108.9 228.16,-106.27 234.54,-114.73 238.43,-108.9"/>
+</g>
+
+<g id="edge19" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M397.29,-221.51C410.88,-232.63 430.1,-248.35 443.69,-259.47"/>
+</g>
+
+<g id="edge44" class="edge">
+<path fill="none" stroke="#dc2626" stroke-width="2" d="M397.29,-221.51C407.8,-230.11 421.68,-241.46 433.72,-251.31"/>
+<polygon fill="#dc2626" stroke="#dc2626" stroke-width="2" points="431.39,-253.93 441.35,-257.55 435.82,-248.51 431.39,-253.93"/>
+</g>
+
+<g id="edge20" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M385.04,-187.26C388.87,-168.13 394.51,-139.94 398.33,-120.84"/>
+</g>
+
+<g id="edge45" class="edge">
+<path fill="none" stroke="#dc2626" stroke-width="2" d="M385.04,-187.26C388.09,-172.02 392.29,-151.02 395.81,-133.45"/>
+<polygon fill="#dc2626" stroke="#dc2626" stroke-width="2" points="399.21,-134.3 397.73,-123.81 392.34,-132.93 399.21,-134.3"/>
+</g>
+
+<g id="edge21" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M41.99,-118.43C78.04,-112.89 151.05,-101.65 187.05,-96.12"/>
+</g>
+
+<g id="edge46" class="edge">
+<path fill="none" stroke="#dc2626" stroke-width="2" d="M41.99,-118.43C74.17,-113.48 135.79,-104 174.26,-98.08"/>
+<polygon fill="#dc2626" stroke="#dc2626" stroke-width="2" points="174.7,-101.56 184.05,-96.58 173.64,-94.64 174.7,-101.56"/>
+</g>
+
+<g id="edge22" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M33.96,-105.03C48.63,-86.36 72.3,-56.24 86.98,-37.55"/>
+</g>
+
+<g id="edge47" class="edge">
+<path fill="none" stroke="#dc2626" stroke-width="2" d="M33.96,-105.03C46.23,-89.42 64.78,-65.81 79.11,-47.57"/>
+<polygon fill="#dc2626" stroke="#dc2626" stroke-width="2" points="81.69,-49.96 85.11,-39.93 76.18,-45.63 81.69,-49.96"/>
+</g>
+
+<g id="edge23" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M225.6,-104.56C258.72,-126.64 330.16,-174.27 363.31,-196.37"/>
+</g>
+
+<g id="edge48" class="edge">
+<path fill="none" stroke="#dc2626" stroke-width="2" d="M225.6,-104.56C255.49,-124.48 316.57,-165.21 352.58,-189.21"/>
+<polygon fill="#dc2626" stroke="#dc2626" stroke-width="2" points="350.53,-192.06 360.8,-194.69 354.42,-186.23 350.53,-192.06"/>
+</g>
+
+<g id="edge24" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M229.25,-93.66C266.65,-95.05 343.96,-97.91 381.33,-99.3"/>
+</g>
+
+<g id="edge49" class="edge">
+<path fill="none" stroke="#dc2626" stroke-width="2" d="M229.25,-93.66C262.78,-94.91 328.38,-97.34 368.53,-98.82"/>
+<polygon fill="#dc2626" stroke="#dc2626" stroke-width="2" points="368.18,-102.31 378.31,-99.18 368.44,-95.32 368.18,-102.31"/>
+</g>
+
+<g id="edge25" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.6" d="M190.73,-81.31C170.69,-67.96 137.92,-46.1 117.75,-32.66"/>
+</g>
+
+<g id="edge50" class="edge">
+<path fill="none" stroke="#dc2626" stroke-width="2" d="M190.73,-81.31C173.98,-70.15 148.33,-53.05 128.58,-39.88"/>
+<polygon fill="#dc2626" stroke="#dc2626" stroke-width="2" points="130.53,-36.97 120.27,-34.34 126.65,-42.8 130.53,-36.97"/>
+</g>
+
+<g id="node1" class="node">
+<ellipse fill="#dcfce7" stroke="#15803d" stroke-width="2.2" cx="28.08" cy="-344.88" rx="20.88" ry="20.88"/>
+<text text-anchor="middle" x="28.08" y="-341.88" font-family="Helvetica,sans-Serif" font-size="10.00">0</text>
+</g>
+
+<g id="node2" class="node">
+<ellipse fill="#dbeafe" stroke="#2563eb" cx="143.28" cy="-373.68" rx="20.88" ry="20.88"/>
+<text text-anchor="middle" x="143.28" y="-370.68" font-family="Helvetica,sans-Serif" font-size="10.00">1</text>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="#dbeafe" stroke="#2563eb" cx="258.48" cy="-323.28" rx="20.88" ry="20.88"/>
+<text text-anchor="middle" x="258.48" y="-320.28" font-family="Helvetica,sans-Serif" font-size="10.00">2</text>
+</g>
+
+<g id="node4" class="node">
+<ellipse fill="#dbeafe" stroke="#2563eb" cx="85.68" cy="-244.08" rx="20.88" ry="20.88"/>
+<text text-anchor="middle" x="85.68" y="-241.08" font-family="Helvetica,sans-Serif" font-size="10.00">2</text>
+</g>
+
+<g id="node5" class="node">
+<ellipse fill="#fef3c7" stroke="#d97706" cx="215.28" cy="-251.28" rx="20.88" ry="20.88"/>
+<text text-anchor="middle" x="215.28" y="-248.28" font-family="Helvetica,sans-Serif" font-size="10.00">3</text>
+</g>
+
+<g id="node6" class="node">
+<ellipse fill="#fef3c7" stroke="#d97706" cx="366.48" cy="-359.28" rx="20.88" ry="20.88"/>
+<text text-anchor="middle" x="366.48" y="-356.28" font-family="Helvetica,sans-Serif" font-size="10.00">2</text>
+</g>
+
+<g id="node7" class="node">
+<ellipse fill="#fecaca" stroke="#dc2626" cx="380.88" cy="-208.08" rx="20.88" ry="20.88"/>
+<text text-anchor="middle" x="380.88" y="-205.08" font-family="Helvetica,sans-Serif" font-size="10.00">4</text>
+</g>
+
+<g id="node8" class="node">
+<ellipse fill="#fef3c7" stroke="#d97706" cx="20.88" cy="-121.68" rx="20.88" ry="20.88"/>
+<text text-anchor="middle" x="20.88" y="-118.68" font-family="Helvetica,sans-Serif" font-size="10.00">1</text>
+</g>
+
+<g id="node9" class="node">
+<ellipse fill="#fecaca" stroke="#dc2626" cx="208.08" cy="-92.88" rx="20.88" ry="20.88"/>
+<text text-anchor="middle" x="208.08" y="-89.88" font-family="Helvetica,sans-Serif" font-size="10.00">4</text>
+</g>
+
+<g id="node10" class="node">
+<ellipse fill="#fee2e2" stroke="#dc2626" cx="460.08" cy="-272.88" rx="20.88" ry="20.88"/>
+<text text-anchor="middle" x="460.08" y="-269.88" font-family="Helvetica,sans-Serif" font-size="10.00">1</text>
+</g>
+
+<g id="node11" class="node">
+<ellipse fill="#fee2e2" stroke="#dc2626" cx="402.48" cy="-100.08" rx="20.88" ry="20.88"/>
+<text text-anchor="middle" x="402.48" y="-97.08" font-family="Helvetica,sans-Serif" font-size="10.00">2</text>
+</g>
+
+<g id="node12" class="node">
+<ellipse fill="#fee2e2" stroke="#dc2626" cx="100.08" cy="-20.88" rx="20.88" ry="20.88"/>
+<text text-anchor="middle" x="100.08" y="-17.88" font-family="Helvetica,sans-Serif" font-size="10.00">2</text>
+</g>
+</g>
+</svg></figure>
+<div class="callout-note" data-appearance="simple">
+<p>Numbers show how many copies each peer receives. Flooding keeps going until every peer that learns the message has forwarded it, so outer peers are effectively in a race to rebroadcast first.</p>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="structured-overlay-networks"><h2 class="slide-title">Structured Overlay Networks</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:45%;">
+<ul>
+<li><strong>What it is:</strong> A deliberately organized overlay for exact lookups.</li>
+<li><strong>Analogy:</strong> A postal system moving a letter toward the right ZIP code.</li>
+<li><strong>How it works in practice:</strong>
+<ul>
+<li>The sender knows an entry point, not the full route.</li>
+<li>The first office does not know the final street address, but it does know which regional hub gets the letter closer.</li>
+<li>Each step forwards to the best closer destination it knows</li>
+</ul></li>
+<li><strong>Why it works:</strong> The network does not flood. It narrows the search with each hop.</li>
+</ul>
+</div><div class="column" style="width:55%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 395.60 444.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:528px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 440)">
+<g id="node1" class="node">
+<path fill="#dcfce7" stroke="black" d="M289.99,-436C289.99,-436 233.16,-436 233.16,-436 227.16,-436 221.16,-430 221.16,-424 221.16,-424 221.16,-412 221.16,-412 221.16,-406 227.16,-400 233.16,-400 233.16,-400 289.99,-400 289.99,-400 295.99,-400 301.99,-406 301.99,-412 301.99,-412 301.99,-424 301.99,-424 301.99,-430 295.99,-436 289.99,-436"/>
+<text text-anchor="middle" x="261.57" y="-421.3" font-family="Helvetica,sans-Serif" font-size="11.00">Sender Node</text>
+<text text-anchor="middle" x="261.57" y="-408.1" font-family="Helvetica,sans-Serif" font-size="11.00">(zip 101xx)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#dbeafe" stroke="black" d="M299.15,-356C299.15,-356 224,-356 224,-356 218,-356 212,-350 212,-344 212,-344 212,-332 212,-332 212,-326 218,-320 224,-320 224,-320 299.15,-320 299.15,-320 305.15,-320 311.15,-326 311.15,-332 311.15,-332 311.15,-344 311.15,-344 311.15,-350 305.15,-356 299.15,-356"/>
+<text text-anchor="middle" x="261.57" y="-341.3" font-family="Helvetica,sans-Serif" font-size="11.00">Local Post Office</text>
+<text text-anchor="middle" x="261.57" y="-328.1" font-family="Helvetica,sans-Serif" font-size="11.00">near sender</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#475569" stroke-width="1.4" d="M261.57,-399.69C261.57,-389.59 261.57,-376.65 261.57,-365.31"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.4" points="264.03,-365.38 261.57,-358.38 259.13,-365.38 264.03,-365.38"/>
+<text text-anchor="middle" x="283.25" y="-375" font-family="Helvetica,sans-Serif" font-size="10.00">mail letter</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#bfdbfe" stroke="black" d="M242.28,-276C242.28,-276 132.87,-276 132.87,-276 126.87,-276 120.87,-270 120.87,-264 120.87,-264 120.87,-252 120.87,-252 120.87,-246 126.87,-240 132.87,-240 132.87,-240 242.28,-240 242.28,-240 248.28,-240 254.28,-246 254.28,-252 254.28,-252 254.28,-264 254.28,-264 254.28,-270 248.28,-276 242.28,-276"/>
+<text text-anchor="middle" x="187.57" y="-261.3" font-family="Helvetica,sans-Serif" font-size="11.00">Regional Sorting Center</text>
+<text text-anchor="middle" x="187.57" y="-248.1" font-family="Helvetica,sans-Serif" font-size="11.00">knows 1xxxx routes</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#475569" stroke-width="1.4" d="M239.31,-319.62C233.59,-314.79 227.6,-309.39 222.43,-304 216.4,-297.72 210.39,-290.43 205.1,-283.57"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.4" points="207.12,-282.18 200.96,-278.06 203.21,-285.12 207.12,-282.18"/>
+<text text-anchor="middle" x="268" y="-295" font-family="Helvetica,sans-Serif" font-size="10.00">closest known sorter</text>
+</g>
+
+<g id="node7" class="node">
+<polygon fill="#ffffff" stroke="black" points="381.6,-276 283.55,-276 283.55,-240 387.6,-240 387.6,-270 381.6,-276"/>
+<polyline fill="none" stroke="black" points="381.6,-276 381.6,-270"/>
+<polyline fill="none" stroke="black" points="387.6,-270 381.6,-270"/>
+<text text-anchor="middle" x="335.57" y="-261.3" font-family="Helvetica,sans-Serif" font-size="11.00">other known route</text>
+<text text-anchor="middle" x="335.57" y="-248.1" font-family="Helvetica,sans-Serif" font-size="11.00">for 4xxxx</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="5,2" d="M298.11,-319.56C304.85,-315.17 311.39,-309.97 316.57,-304 321.42,-298.42 325.17,-291.42 328.01,-284.61"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.4" points="330.25,-285.62 330.39,-278.21 325.65,-283.91 330.25,-285.62"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fde68a" stroke="black" d="M168.28,-196C168.28,-196 58.87,-196 58.87,-196 52.87,-196 46.87,-190 46.87,-184 46.87,-184 46.87,-172 46.87,-172 46.87,-166 52.87,-160 58.87,-160 58.87,-160 168.28,-160 168.28,-160 174.28,-160 180.28,-166 180.28,-172 180.28,-172 180.28,-184 180.28,-184 180.28,-190 174.28,-196 168.28,-196"/>
+<text text-anchor="middle" x="113.57" y="-181.3" font-family="Helvetica,sans-Serif" font-size="11.00">Regional Sorting Center</text>
+<text text-anchor="middle" x="113.57" y="-168.1" font-family="Helvetica,sans-Serif" font-size="11.00">knows 9xxxx routes</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#475569" stroke-width="1.4" d="M149.71,-239.61C142.91,-235.24 136.36,-230.03 131.2,-224 126.45,-218.44 122.89,-211.45 120.26,-204.64"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.4" points="122.66,-204.09 118.09,-198.25 118.02,-205.67 122.66,-204.09"/>
+<text text-anchor="middle" x="185.39" y="-215" font-family="Helvetica,sans-Serif" font-size="10.00">closest known ZIP prefix</text>
+</g>
+
+<g id="node8" class="node">
+<polygon fill="#ffffff" stroke="black" points="307.6,-196 209.55,-196 209.55,-160 313.6,-160 313.6,-190 307.6,-196"/>
+<polyline fill="none" stroke="black" points="307.6,-196 307.6,-190"/>
+<polyline fill="none" stroke="black" points="313.6,-190 307.6,-190"/>
+<text text-anchor="middle" x="261.57" y="-181.3" font-family="Helvetica,sans-Serif" font-size="11.00">other known route</text>
+<text text-anchor="middle" x="261.57" y="-168.1" font-family="Helvetica,sans-Serif" font-size="11.00">for 8xxxx</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="5,2" d="M224.11,-239.56C230.85,-235.17 237.39,-229.97 242.57,-224 247.42,-218.42 251.17,-211.42 254.01,-204.61"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.4" points="256.25,-205.62 256.39,-198.21 251.65,-203.91 256.25,-205.62"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#fef3c7" stroke="black" d="M87.15,-116C87.15,-116 12,-116 12,-116 6,-116 0,-110 0,-104 0,-104 0,-92 0,-92 0,-86 6,-80 12,-80 12,-80 87.15,-80 87.15,-80 93.15,-80 99.15,-86 99.15,-92 99.15,-92 99.15,-104 99.15,-104 99.15,-110 93.15,-116 87.15,-116"/>
+<text text-anchor="middle" x="49.57" y="-101.3" font-family="Helvetica,sans-Serif" font-size="11.00">Local Post Office</text>
+<text text-anchor="middle" x="49.57" y="-88.1" font-family="Helvetica,sans-Serif" font-size="11.00">near receiver</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#475569" stroke-width="1.4" d="M90.31,-159.8C84.73,-155.04 79.05,-149.63 74.43,-144 69.46,-137.95 64.98,-130.77 61.24,-123.93"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.4" points="63.58,-123.12 58.17,-118.04 59.23,-125.38 63.58,-123.12"/>
+<text text-anchor="middle" x="115" y="-135" font-family="Helvetica,sans-Serif" font-size="10.00">closest local office</text>
+</g>
+
+<g id="node9" class="node">
+<polygon fill="#ffffff" stroke="black" points="221.46,-116 127.69,-116 127.69,-80 227.46,-80 227.46,-110 221.46,-116"/>
+<polyline fill="none" stroke="black" points="221.46,-116 221.46,-110"/>
+<polyline fill="none" stroke="black" points="227.46,-110 221.46,-110"/>
+<text text-anchor="middle" x="177.57" y="-101.3" font-family="Helvetica,sans-Serif" font-size="11.00">other local option</text>
+<text text-anchor="middle" x="177.57" y="-88.1" font-family="Helvetica,sans-Serif" font-size="11.00">for 901xx</text>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="5,2" d="M142.26,-159.57C148.19,-155.03 154.01,-149.78 158.57,-144 163.09,-138.29 166.71,-131.36 169.53,-124.66"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.4" points="171.71,-125.8 171.92,-118.39 167.14,-124.05 171.71,-125.8"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#e9d5ff" stroke="black" d="M86.24,-36C86.24,-36 12.91,-36 12.91,-36 6.91,-36 0.91,-30 0.91,-24 0.91,-24 0.91,-12 0.91,-12 0.91,-6 6.91,0 12.91,0 12.91,0 86.24,0 86.24,0 92.24,0 98.24,-6 98.24,-12 98.24,-12 98.24,-24 98.24,-24 98.24,-30 92.24,-36 86.24,-36"/>
+<text text-anchor="middle" x="49.57" y="-21.3" font-family="Helvetica,sans-Serif" font-size="11.00">Destination Peer</text>
+<text text-anchor="middle" x="49.57" y="-8.1" font-family="Helvetica,sans-Serif" font-size="11.00">(zip 902xx)</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#475569" stroke-width="1.4" d="M49.57,-79.69C49.57,-69.59 49.57,-56.65 49.57,-45.31"/>
+<polygon fill="#475569" stroke="#475569" stroke-width="1.4" points="52.03,-45.38 49.57,-38.38 47.13,-45.38 52.03,-45.38"/>
+<text text-anchor="middle" x="77.37" y="-55" font-family="Helvetica,sans-Serif" font-size="10.00">final delivery</text>
+</g>
+</g>
+</svg></figure>
+<div class="callout-note" data-appearance="simple">
+<p>The sender does not know how to get to the final destination. Each intermediary just forwards the message to the closest next destination it knows.</p>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="when-to-use-which"><h2 class="slide-title">When to Use Which?</h2><div class="slide-body">
+<p>The two P2P designs (Unstructured and Structured) are tools for different jobs. Choosing the right one depends on what you need to do.</p>
+<div class="columns">
+<div class="column" style="width:50%;">
+<section id="unstructured-like-gossip" class="level4">
+<h4>Unstructured (like “Gossip”)</h4>
+<ul>
+<li><strong>Best For:</strong> Broadcasting <em>new</em> information to <em>everyone</em> as quickly as possible.</li>
+<li><strong>Trade-off:</strong> Very “noisy” and inefficient for finding <em>specific</em> data.</li>
+</ul>
+</section>
+</div><div class="column" style="width:50%;">
+<section id="structured-like-an-address-book" class="level4">
+<h4>Structured (like an “Address Book”)</h4>
+<ul>
+<li><strong>Best For:</strong> Efficiently finding <em>one specific piece</em> of data in a massive network.</li>
+<li><strong>Trade-off:</strong> More complex to build and maintain. Only good for “exact-match” searches (you need the hash/ID).</li>
+</ul>
+</section>
+</div><p><img src="../img/unstructured_vs_structured_overlay.png" class="onlytextwidth" data-align="center" /></p>
+</div>
+</div></section>
+<section class="slide smaller" id="scalability-challenges"><h2 class="slide-title">Scalability Challenges</h2><div class="slide-body">
+<p><strong>Why P2P Networks Get Clogged</strong></p>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><strong>Unstructured (Flooding)</strong></p>
+<ul>
+<li><strong>The Cost:</strong> When you “flood” a query, the number of messages grows with the size of the network.</li>
+<li><strong>The Math:</strong> The best-case cost is <strong><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mi>N</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(N)</annotation></semantics></math></strong> (linear cost). If the network (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>) doubles in size, query traffic doubles.</li>
+<li><strong>The Result:</strong> The network quickly gets overwhelmed by “broadcast storms” and grinds to a halt. This is what happened to Gnutella.</li>
+<li><strong>The Fix:</strong> Create a “Supernode” hierarchy. This concentrates the traffic on a backbone of powerful peers, which is what Gnutella 0.6 did.</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<p><strong>Structured (Distributed Hash Table)</strong></p>
+<ul>
+<li><strong>The Cost:</strong> When you route a query in a DHT, you “jump” across the network, halving the distance each time.</li>
+<li><strong>The Math:</strong> The cost is <strong><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>N</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(\log N)</annotation></semantics></math></strong> (logarithmic cost). If the network doubles, you only add <em>one extra hop</em>.</li>
+<li><strong>The Result:</strong> The network can grow to millions of peers, and you can <em>still</em> find any file in just a few (e.g., 20-30) hops.</li>
+<li><strong>The Catch:</strong> This amazing efficiency only works if the “address book” is maintained.</li>
+</ul>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="dht-example-chord"><h2 class="slide-title">DHT Example: <em>Chord</em></h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:43%;">
+<p><strong>1. The Big Idea: “The Clock”</strong></p>
+<ul>
+<li>All peers (nodes) and all files (data) get a unique ID from a hash function.</li>
+<li>These IDs are arranged in a circle, like the numbers on a clock.</li>
+<li><strong>The Rule:</strong> A piece of data (a key) is stored at its <strong>“successor”</strong>: the very next peer it encounters on the clock.</li>
+<li><strong>Example:</strong> A file with ID <code>50</code> would be stored on the first peer with an ID greater than 50 (e.g., <code>Node 55</code>).</li>
+</ul>
+</div><div class="column" style="width:57%;">
+<p><strong>2. The Problem: The Slow Walk</strong></p>
+<ul>
+<li>If you are <code>Node 1</code> and need file <code>50</code>, you could just “walk around the clock” asking every peer… but that would be incredibly slow on a network with millions of peers.</li>
+</ul>
+<p><strong>3. The Solution: “Shortcuts”</strong></p>
+<ul>
+<li><p>Chord gives each peer a “finger table,” which is just a list of <strong>shortcuts</strong> to peers on the <em>other side</em> of the clock.</p></li>
+<li><p>Instead of walking, you “jump” across the clock, getting closer with each hop.</p></li>
+<li><p>This “jump” method lets you find any peer in a massive network in just a few hops.</p></li>
+</ul>
+</div>
+</div>
+<div class="callout-note" data-appearance="simple">
+<p>The big idea is to organize the entire network into a logical <strong>ring</strong>, like a clock.</p>
+</div>
+</div></section>
+<section class="slide" id="chord---example"><h2 class="slide-title">Chord - Example</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:64%;">
+<div class="r-stack">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 581.84 515.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:776px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 511.6)">
+<g id="edge1" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M475.95,-455.25C481.24,-447.27 487.58,-437.7 492.81,-429.8"/>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M507.2,-395.21C510.03,-381.66 513.83,-363.45 516.65,-349.91"/>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M514.24,-313.28C500.98,-275.68 470.37,-188.91 457.08,-151.22"/>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M434.54,-123.18C405.44,-105.17 344.6,-67.51 315.58,-49.54"/>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M282.01,-47.51C240.28,-66.35 135.39,-113.72 93.75,-132.53"/>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M73.31,-159.35C66.52,-202.14 50.05,-305.87 43.29,-348.47"/>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M49.1,-384.13C58.35,-401.97 72.83,-429.9 82.04,-447.66"/>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M109.8,-464.77C173.88,-466 380.95,-469.98 445.63,-471.23"/>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.3" d="M543.42,-366.92C541.45,-363.84 539.37,-360.58 537.29,-357.35"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.3" points="540.26,-355.49 531.92,-348.95 534.36,-359.26 540.26,-355.49"/>
+</g>
+
+<g id="edge10" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.3" d="M177.33,-36.32C156.08,-58.23 120.53,-94.85 97.77,-118.3"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.3" points="95.27,-115.85 90.82,-125.46 100.29,-120.73 95.27,-115.85"/>
+</g>
+
+<g id="edge11" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.3" d="M82.2,-58.09C81.17,-72.54 79.71,-92.94 78.5,-109.81"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.3" points="75.04,-109.16 77.82,-119.38 82.02,-109.66 75.04,-109.16"/>
+</g>
+
+<g id="edge12" class="edge">
+<path fill="none" stroke="#16a34a" stroke-width="2" d="M37.64,-482.98C44.66,-480.52 52.82,-477.67 60.59,-474.94"/>
+<polygon fill="#16a34a" stroke="#16a34a" stroke-width="2" points="61.53,-478.32 69.82,-471.72 59.22,-471.72 61.53,-478.32"/>
+</g>
+
+<g id="node1" class="node">
+<ellipse fill="#dcfce7" stroke="#15803d" stroke-width="2" cx="465.12" cy="-471.6" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="465.12" y="-469.2" font-family="Helvetica,sans-Serif" font-size="8.00">8</text>
+</g>
+
+<g id="node2" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="503.28" cy="-414" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="503.28" y="-411.6" font-family="Helvetica,sans-Serif" font-size="8.00">12</text>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="520.56" cy="-331.2" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="520.56" y="-328.8" font-family="Helvetica,sans-Serif" font-size="8.00">17</text>
+</g>
+
+<g id="node4" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="450.72" cy="-133.2" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="450.72" y="-130.8" font-family="Helvetica,sans-Serif" font-size="8.00">24</text>
+</g>
+
+<g id="node5" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="299.52" cy="-39.6" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="299.52" y="-37.2" font-family="Helvetica,sans-Serif" font-size="8.00">31</text>
+</g>
+
+<g id="node6" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="76.32" cy="-140.4" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="76.32" y="-138" font-family="Helvetica,sans-Serif" font-size="8.00">42</text>
+</g>
+
+<g id="node7" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="40.32" cy="-367.2" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="40.32" y="-364.8" font-family="Helvetica,sans-Serif" font-size="8.00">51</text>
+</g>
+
+<g id="node8" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="90.72" cy="-464.4" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="90.72" y="-462" font-family="Helvetica,sans-Serif" font-size="8.00">56</text>
+</g>
+
+<g id="node9" class="node">
+<polygon fill="#fef08a" stroke="#ca8a04" points="567.84,-403.2 536.4,-403.2 536.4,-367.2 573.84,-367.2 573.84,-397.2 567.84,-403.2"/>
+<polyline fill="none" stroke="#ca8a04" points="567.84,-403.2 567.84,-397.2"/>
+<polyline fill="none" stroke="#ca8a04" points="573.84,-397.2 567.84,-397.2"/>
+<text text-anchor="middle" x="555.12" y="-382.8" font-family="Helvetica,sans-Serif" font-size="8.00">17</text>
+</g>
+
+<g id="node10" class="node">
+<polygon fill="#fef08a" stroke="#ca8a04" points="207.84,-36 176.4,-36 176.4,0 213.84,0 213.84,-30 207.84,-36"/>
+<polyline fill="none" stroke="#ca8a04" points="207.84,-36 207.84,-30"/>
+<polyline fill="none" stroke="#ca8a04" points="213.84,-30 207.84,-30"/>
+<text text-anchor="middle" x="195.12" y="-15.6" font-family="Helvetica,sans-Serif" font-size="8.00">33</text>
+</g>
+
+<g id="node11" class="node">
+<polygon fill="#fef08a" stroke="#ca8a04" points="96.24,-57.6 64.8,-57.6 64.8,-21.6 102.24,-21.6 102.24,-51.6 96.24,-57.6"/>
+<polyline fill="none" stroke="#ca8a04" points="96.24,-57.6 96.24,-51.6"/>
+<polyline fill="none" stroke="#ca8a04" points="102.24,-51.6 96.24,-51.6"/>
+<text text-anchor="middle" x="83.52" y="-37.2" font-family="Helvetica,sans-Serif" font-size="8.00">34</text>
+</g>
+
+<g id="node12" class="node">
+<polygon fill="#bbf7d0" stroke="#16a34a" points="31.44,-507.6 0,-507.6 0,-471.6 37.44,-471.6 37.44,-501.6 31.44,-507.6"/>
+<polyline fill="none" stroke="#16a34a" points="31.44,-507.6 31.44,-501.6"/>
+<polyline fill="none" stroke="#16a34a" points="37.44,-501.6 31.44,-501.6"/>
+<text text-anchor="middle" x="18.72" y="-487.2" font-family="Helvetica,sans-Serif" font-size="8.00">54</text>
+</g>
+</g>
+</svg></figure>
+<div class="fragment fade-in-then-out" data-fragment-index="1">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 581.84 515.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:776px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 511.6)">
+<g id="edge1" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M475.95,-455.25C481.24,-447.27 487.58,-437.7 492.81,-429.8"/>
+</g>
+
+<g id="edge13" class="edge">
+<path fill="none" stroke="#2563eb" stroke-width="2.4" d="M450.35,-459.02C391.77,-409.12 175.35,-224.76 101.33,-161.71"/>
+<polygon fill="#2563eb" stroke="#2563eb" stroke-width="2.4" points="103.75,-159.17 93.87,-155.35 99.21,-164.5 103.75,-159.17"/>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M507.2,-395.21C510.03,-381.66 513.83,-363.45 516.65,-349.91"/>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M514.24,-313.28C500.98,-275.68 470.37,-188.91 457.08,-151.22"/>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M434.54,-123.18C405.44,-105.17 344.6,-67.51 315.58,-49.54"/>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M282.01,-47.51C240.38,-66.31 135.91,-113.49 94.06,-132.39"/>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M73.25,-159.74C66.43,-202.69 50.09,-305.62 43.33,-348.23"/>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M49.1,-384.13C58.35,-401.97 72.83,-429.9 82.04,-447.66"/>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M109.8,-464.77C173.88,-466 380.95,-469.98 445.63,-471.23"/>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.3" d="M543.42,-366.92C541.45,-363.84 539.37,-360.58 537.29,-357.35"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.3" points="540.26,-355.49 531.92,-348.95 534.36,-359.26 540.26,-355.49"/>
+</g>
+
+<g id="edge10" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.3" d="M177.33,-36.32C156.1,-58.2 120.6,-94.78 97.84,-118.23"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.3" points="95.62,-115.49 91.16,-125.11 100.64,-120.37 95.62,-115.49"/>
+</g>
+
+<g id="edge11" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.3" d="M82.2,-58.09C81.17,-72.45 79.73,-92.68 78.53,-109.49"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.3" points="75.07,-108.81 77.85,-119.04 82.05,-109.31 75.07,-108.81"/>
+</g>
+
+<g id="edge12" class="edge">
+<path fill="none" stroke="#16a34a" stroke-width="2" d="M37.64,-482.98C44.66,-480.52 52.82,-477.67 60.59,-474.94"/>
+<polygon fill="#16a34a" stroke="#16a34a" stroke-width="2" points="61.53,-478.32 69.82,-471.72 59.22,-471.72 61.53,-478.32"/>
+</g>
+
+<g id="node1" class="node">
+<ellipse fill="#dcfce7" stroke="#15803d" stroke-width="2" cx="465.12" cy="-471.6" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="465.12" y="-469.2" font-family="Helvetica,sans-Serif" font-size="8.00">8</text>
+</g>
+
+<g id="node2" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="503.28" cy="-414" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="503.28" y="-411.6" font-family="Helvetica,sans-Serif" font-size="8.00">12</text>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="520.56" cy="-331.2" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="520.56" y="-328.8" font-family="Helvetica,sans-Serif" font-size="8.00">17</text>
+</g>
+
+<g id="node4" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="450.72" cy="-133.2" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="450.72" y="-130.8" font-family="Helvetica,sans-Serif" font-size="8.00">24</text>
+</g>
+
+<g id="node5" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="299.52" cy="-39.6" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="299.52" y="-37.2" font-family="Helvetica,sans-Serif" font-size="8.00">31</text>
+</g>
+
+<g id="node6" class="node">
+<ellipse fill="#dbeafe" stroke="#2563eb" stroke-width="2" cx="76.32" cy="-140.4" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="76.32" y="-138" font-family="Helvetica,sans-Serif" font-size="8.00">42</text>
+</g>
+
+<g id="node7" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="40.32" cy="-367.2" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="40.32" y="-364.8" font-family="Helvetica,sans-Serif" font-size="8.00">51</text>
+</g>
+
+<g id="node8" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="90.72" cy="-464.4" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="90.72" y="-462" font-family="Helvetica,sans-Serif" font-size="8.00">56</text>
+</g>
+
+<g id="node9" class="node">
+<polygon fill="#fef08a" stroke="#ca8a04" points="567.84,-403.2 536.4,-403.2 536.4,-367.2 573.84,-367.2 573.84,-397.2 567.84,-403.2"/>
+<polyline fill="none" stroke="#ca8a04" points="567.84,-403.2 567.84,-397.2"/>
+<polyline fill="none" stroke="#ca8a04" points="573.84,-397.2 567.84,-397.2"/>
+<text text-anchor="middle" x="555.12" y="-382.8" font-family="Helvetica,sans-Serif" font-size="8.00">17</text>
+</g>
+
+<g id="node10" class="node">
+<polygon fill="#fef08a" stroke="#ca8a04" points="207.84,-36 176.4,-36 176.4,0 213.84,0 213.84,-30 207.84,-36"/>
+<polyline fill="none" stroke="#ca8a04" points="207.84,-36 207.84,-30"/>
+<polyline fill="none" stroke="#ca8a04" points="213.84,-30 207.84,-30"/>
+<text text-anchor="middle" x="195.12" y="-15.6" font-family="Helvetica,sans-Serif" font-size="8.00">33</text>
+</g>
+
+<g id="node11" class="node">
+<polygon fill="#fef08a" stroke="#ca8a04" points="96.24,-57.6 64.8,-57.6 64.8,-21.6 102.24,-21.6 102.24,-51.6 96.24,-57.6"/>
+<polyline fill="none" stroke="#ca8a04" points="96.24,-57.6 96.24,-51.6"/>
+<polyline fill="none" stroke="#ca8a04" points="102.24,-51.6 96.24,-51.6"/>
+<text text-anchor="middle" x="83.52" y="-37.2" font-family="Helvetica,sans-Serif" font-size="8.00">34</text>
+</g>
+
+<g id="node12" class="node">
+<polygon fill="#bbf7d0" stroke="#16a34a" points="31.44,-507.6 0,-507.6 0,-471.6 37.44,-471.6 37.44,-501.6 31.44,-507.6"/>
+<polyline fill="none" stroke="#16a34a" points="31.44,-507.6 31.44,-501.6"/>
+<polyline fill="none" stroke="#16a34a" points="37.44,-501.6 31.44,-501.6"/>
+<text text-anchor="middle" x="18.72" y="-487.2" font-family="Helvetica,sans-Serif" font-size="8.00">54</text>
+</g>
+</g>
+</svg></figure>
+</div>
+<div class="fragment fade-in-then-out" data-fragment-index="2">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 581.84 515.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:776px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 511.6)">
+<g id="edge1" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M475.95,-455.25C481.24,-447.27 487.58,-437.7 492.81,-429.8"/>
+</g>
+
+<g id="edge13" class="edge">
+<path fill="none" stroke="#2563eb" stroke-width="2.4" d="M450.35,-459.02C391.77,-409.12 175.35,-224.76 101.33,-161.71"/>
+<polygon fill="#2563eb" stroke="#2563eb" stroke-width="2.4" points="103.75,-159.17 93.87,-155.35 99.21,-164.5 103.75,-159.17"/>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M507.2,-395.21C510.03,-381.66 513.83,-363.45 516.65,-349.91"/>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M514.24,-313.28C500.98,-275.68 470.37,-188.91 457.08,-151.22"/>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M434.54,-123.18C405.44,-105.17 344.6,-67.51 315.58,-49.54"/>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M282.01,-47.51C240.38,-66.31 135.91,-113.49 94.06,-132.39"/>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M73.25,-159.74C66.45,-202.59 50.18,-305.11 43.38,-347.91"/>
+</g>
+
+<g id="edge14" class="edge">
+<path fill="none" stroke="#2563eb" stroke-width="2.4" d="M73.25,-159.74C67.07,-198.65 53.08,-286.79 45.48,-334.71"/>
+<polygon fill="#2563eb" stroke="#2563eb" stroke-width="2.4" points="42.06,-333.9 43.95,-344.32 48.98,-335 42.06,-333.9"/>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M49.33,-384.58C58.56,-402.38 72.82,-429.87 81.96,-447.5"/>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M109.8,-464.77C173.88,-466 380.95,-469.98 445.63,-471.23"/>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.3" d="M543.42,-366.92C541.45,-363.84 539.37,-360.58 537.29,-357.35"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.3" points="540.26,-355.49 531.92,-348.95 534.36,-359.26 540.26,-355.49"/>
+</g>
+
+<g id="edge10" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.3" d="M177.33,-36.32C156.1,-58.2 120.6,-94.78 97.84,-118.23"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.3" points="95.62,-115.49 91.16,-125.11 100.64,-120.37 95.62,-115.49"/>
+</g>
+
+<g id="edge11" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.3" d="M82.2,-58.09C81.17,-72.45 79.73,-92.68 78.53,-109.49"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.3" points="75.07,-108.81 77.85,-119.04 82.05,-109.31 75.07,-108.81"/>
+</g>
+
+<g id="edge12" class="edge">
+<path fill="none" stroke="#16a34a" stroke-width="2" d="M37.64,-482.98C44.66,-480.52 52.82,-477.67 60.59,-474.94"/>
+<polygon fill="#16a34a" stroke="#16a34a" stroke-width="2" points="61.53,-478.32 69.82,-471.72 59.22,-471.72 61.53,-478.32"/>
+</g>
+
+<g id="node1" class="node">
+<ellipse fill="#dcfce7" stroke="#15803d" stroke-width="2" cx="465.12" cy="-471.6" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="465.12" y="-469.2" font-family="Helvetica,sans-Serif" font-size="8.00">8</text>
+</g>
+
+<g id="node2" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="503.28" cy="-414" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="503.28" y="-411.6" font-family="Helvetica,sans-Serif" font-size="8.00">12</text>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="520.56" cy="-331.2" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="520.56" y="-328.8" font-family="Helvetica,sans-Serif" font-size="8.00">17</text>
+</g>
+
+<g id="node4" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="450.72" cy="-133.2" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="450.72" y="-130.8" font-family="Helvetica,sans-Serif" font-size="8.00">24</text>
+</g>
+
+<g id="node5" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="299.52" cy="-39.6" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="299.52" y="-37.2" font-family="Helvetica,sans-Serif" font-size="8.00">31</text>
+</g>
+
+<g id="node6" class="node">
+<ellipse fill="#dbeafe" stroke="#2563eb" stroke-width="2" cx="76.32" cy="-140.4" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="76.32" y="-138" font-family="Helvetica,sans-Serif" font-size="8.00">42</text>
+</g>
+
+<g id="node7" class="node">
+<ellipse fill="#dbeafe" stroke="#2563eb" stroke-width="2" cx="40.32" cy="-367.2" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="40.32" y="-364.8" font-family="Helvetica,sans-Serif" font-size="8.00">51</text>
+</g>
+
+<g id="node8" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="90.72" cy="-464.4" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="90.72" y="-462" font-family="Helvetica,sans-Serif" font-size="8.00">56</text>
+</g>
+
+<g id="node9" class="node">
+<polygon fill="#fef08a" stroke="#ca8a04" points="567.84,-403.2 536.4,-403.2 536.4,-367.2 573.84,-367.2 573.84,-397.2 567.84,-403.2"/>
+<polyline fill="none" stroke="#ca8a04" points="567.84,-403.2 567.84,-397.2"/>
+<polyline fill="none" stroke="#ca8a04" points="573.84,-397.2 567.84,-397.2"/>
+<text text-anchor="middle" x="555.12" y="-382.8" font-family="Helvetica,sans-Serif" font-size="8.00">17</text>
+</g>
+
+<g id="node10" class="node">
+<polygon fill="#fef08a" stroke="#ca8a04" points="207.84,-36 176.4,-36 176.4,0 213.84,0 213.84,-30 207.84,-36"/>
+<polyline fill="none" stroke="#ca8a04" points="207.84,-36 207.84,-30"/>
+<polyline fill="none" stroke="#ca8a04" points="213.84,-30 207.84,-30"/>
+<text text-anchor="middle" x="195.12" y="-15.6" font-family="Helvetica,sans-Serif" font-size="8.00">33</text>
+</g>
+
+<g id="node11" class="node">
+<polygon fill="#fef08a" stroke="#ca8a04" points="96.24,-57.6 64.8,-57.6 64.8,-21.6 102.24,-21.6 102.24,-51.6 96.24,-57.6"/>
+<polyline fill="none" stroke="#ca8a04" points="96.24,-57.6 96.24,-51.6"/>
+<polyline fill="none" stroke="#ca8a04" points="102.24,-51.6 96.24,-51.6"/>
+<text text-anchor="middle" x="83.52" y="-37.2" font-family="Helvetica,sans-Serif" font-size="8.00">34</text>
+</g>
+
+<g id="node12" class="node">
+<polygon fill="#bbf7d0" stroke="#16a34a" points="31.44,-507.6 0,-507.6 0,-471.6 37.44,-471.6 37.44,-501.6 31.44,-507.6"/>
+<polyline fill="none" stroke="#16a34a" points="31.44,-507.6 31.44,-501.6"/>
+<polyline fill="none" stroke="#16a34a" points="37.44,-501.6 31.44,-501.6"/>
+<text text-anchor="middle" x="18.72" y="-487.2" font-family="Helvetica,sans-Serif" font-size="8.00">54</text>
+</g>
+</g>
+</svg></figure>
+</div>
+<div class="fragment fade-in" data-fragment-index="3">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 581.84 515.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:776px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 511.6)">
+<g id="edge1" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M475.95,-455.25C481.24,-447.27 487.58,-437.7 492.81,-429.8"/>
+</g>
+
+<g id="edge13" class="edge">
+<path fill="none" stroke="#2563eb" stroke-width="2.4" d="M450.35,-459.02C391.77,-409.12 175.35,-224.76 101.33,-161.71"/>
+<polygon fill="#2563eb" stroke="#2563eb" stroke-width="2.4" points="103.75,-159.17 93.87,-155.35 99.21,-164.5 103.75,-159.17"/>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M507.2,-395.21C510.03,-381.66 513.83,-363.45 516.65,-349.91"/>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M514.24,-313.28C500.98,-275.68 470.37,-188.91 457.08,-151.22"/>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M434.54,-123.18C405.44,-105.17 344.6,-67.51 315.58,-49.54"/>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M282.01,-47.51C240.38,-66.31 135.91,-113.49 94.06,-132.39"/>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M73.25,-159.74C66.45,-202.59 50.18,-305.11 43.38,-347.91"/>
+</g>
+
+<g id="edge14" class="edge">
+<path fill="none" stroke="#2563eb" stroke-width="2.4" d="M73.25,-159.74C67.07,-198.65 53.08,-286.79 45.48,-334.71"/>
+<polygon fill="#2563eb" stroke="#2563eb" stroke-width="2.4" points="42.06,-333.9 43.95,-344.32 48.98,-335 42.06,-333.9"/>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M49.33,-384.58C58.5,-402.27 72.64,-429.54 81.79,-447.17"/>
+</g>
+
+<g id="edge15" class="edge">
+<path fill="none" stroke="#16a34a" stroke-width="2.6" d="M49.33,-384.58C56.57,-398.54 66.9,-418.46 75.43,-434.91"/>
+<polygon fill="#16a34a" stroke="#16a34a" stroke-width="2.6" points="72.27,-436.41 79.98,-443.68 78.48,-433.19 72.27,-436.41"/>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#cbd5e1" stroke-width="1.3" d="M110.32,-464.78C175.02,-466.02 381.3,-469.99 445.71,-471.23"/>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.3" d="M543.42,-366.92C541.45,-363.84 539.37,-360.58 537.29,-357.35"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.3" points="540.26,-355.49 531.92,-348.95 534.36,-359.26 540.26,-355.49"/>
+</g>
+
+<g id="edge10" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.3" d="M177.33,-36.32C156.1,-58.2 120.6,-94.78 97.84,-118.23"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.3" points="95.62,-115.49 91.16,-125.11 100.64,-120.37 95.62,-115.49"/>
+</g>
+
+<g id="edge11" class="edge">
+<path fill="none" stroke="#94a3b8" stroke-width="1.3" d="M82.2,-58.09C81.17,-72.45 79.73,-92.68 78.53,-109.49"/>
+<polygon fill="#94a3b8" stroke="#94a3b8" stroke-width="1.3" points="75.07,-108.81 77.85,-119.04 82.05,-109.31 75.07,-108.81"/>
+</g>
+
+<g id="edge12" class="edge">
+<path fill="none" stroke="#16a34a" stroke-width="2" d="M37.64,-482.98C44.47,-480.59 52.37,-477.82 59.96,-475.17"/>
+<polygon fill="#16a34a" stroke="#16a34a" stroke-width="2" points="61.04,-478.5 69.32,-471.89 58.73,-471.89 61.04,-478.5"/>
+</g>
+
+<g id="node1" class="node">
+<ellipse fill="#dcfce7" stroke="#15803d" stroke-width="2" cx="465.12" cy="-471.6" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="465.12" y="-469.2" font-family="Helvetica,sans-Serif" font-size="8.00">8</text>
+</g>
+
+<g id="node2" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="503.28" cy="-414" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="503.28" y="-411.6" font-family="Helvetica,sans-Serif" font-size="8.00">12</text>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="520.56" cy="-331.2" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="520.56" y="-328.8" font-family="Helvetica,sans-Serif" font-size="8.00">17</text>
+</g>
+
+<g id="node4" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="450.72" cy="-133.2" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="450.72" y="-130.8" font-family="Helvetica,sans-Serif" font-size="8.00">24</text>
+</g>
+
+<g id="node5" class="node">
+<ellipse fill="#f8fafc" stroke="#64748b" cx="299.52" cy="-39.6" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="299.52" y="-37.2" font-family="Helvetica,sans-Serif" font-size="8.00">31</text>
+</g>
+
+<g id="node6" class="node">
+<ellipse fill="#dbeafe" stroke="#2563eb" stroke-width="2" cx="76.32" cy="-140.4" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="76.32" y="-138" font-family="Helvetica,sans-Serif" font-size="8.00">42</text>
+</g>
+
+<g id="node7" class="node">
+<ellipse fill="#dbeafe" stroke="#2563eb" stroke-width="2" cx="40.32" cy="-367.2" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="40.32" y="-364.8" font-family="Helvetica,sans-Serif" font-size="8.00">51</text>
+</g>
+
+<g id="node8" class="node">
+<ellipse fill="#bbf7d0" stroke="#16a34a" stroke-width="2" cx="90.72" cy="-464.4" rx="18.72" ry="18.72"/>
+<text text-anchor="middle" x="90.72" y="-462" font-family="Helvetica,sans-Serif" font-size="8.00">56</text>
+</g>
+
+<g id="node9" class="node">
+<polygon fill="#fef08a" stroke="#ca8a04" points="567.84,-403.2 536.4,-403.2 536.4,-367.2 573.84,-367.2 573.84,-397.2 567.84,-403.2"/>
+<polyline fill="none" stroke="#ca8a04" points="567.84,-403.2 567.84,-397.2"/>
+<polyline fill="none" stroke="#ca8a04" points="573.84,-397.2 567.84,-397.2"/>
+<text text-anchor="middle" x="555.12" y="-382.8" font-family="Helvetica,sans-Serif" font-size="8.00">17</text>
+</g>
+
+<g id="node10" class="node">
+<polygon fill="#fef08a" stroke="#ca8a04" points="207.84,-36 176.4,-36 176.4,0 213.84,0 213.84,-30 207.84,-36"/>
+<polyline fill="none" stroke="#ca8a04" points="207.84,-36 207.84,-30"/>
+<polyline fill="none" stroke="#ca8a04" points="213.84,-30 207.84,-30"/>
+<text text-anchor="middle" x="195.12" y="-15.6" font-family="Helvetica,sans-Serif" font-size="8.00">33</text>
+</g>
+
+<g id="node11" class="node">
+<polygon fill="#fef08a" stroke="#ca8a04" points="96.24,-57.6 64.8,-57.6 64.8,-21.6 102.24,-21.6 102.24,-51.6 96.24,-57.6"/>
+<polyline fill="none" stroke="#ca8a04" points="96.24,-57.6 96.24,-51.6"/>
+<polyline fill="none" stroke="#ca8a04" points="102.24,-51.6 96.24,-51.6"/>
+<text text-anchor="middle" x="83.52" y="-37.2" font-family="Helvetica,sans-Serif" font-size="8.00">34</text>
+</g>
+
+<g id="node12" class="node">
+<polygon fill="#bbf7d0" stroke="#16a34a" points="31.44,-507.6 0,-507.6 0,-471.6 37.44,-471.6 37.44,-501.6 31.44,-507.6"/>
+<polyline fill="none" stroke="#16a34a" points="31.44,-507.6 31.44,-501.6"/>
+<polyline fill="none" stroke="#16a34a" points="37.44,-501.6 31.44,-501.6"/>
+<text text-anchor="middle" x="18.72" y="-487.2" font-family="Helvetica,sans-Serif" font-size="8.00">54</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div><div class="column" style="width:36%;">
+<div class="r-stack">
+<div class="fragment fade-out" data-fragment-index="1">
+<div class="callout-note" data-appearance="simple">
+<p><strong>Node 8 Finger Table</strong></p>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>IP Address</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Node 12</code></td>
+<td><code>10.0.0.12</code></td>
+</tr>
+<tr>
+<td><code>Node 17</code></td>
+<td><code>10.0.0.17</code></td>
+</tr>
+<tr>
+<td><code>Node 24</code></td>
+<td><code>10.0.0.24</code></td>
+</tr>
+<tr>
+<td><code>Node 42</code></td>
+<td><code>10.0.0.42</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="fragment fade-in-then-out" data-fragment-index="1">
+<div class="callout-note" data-appearance="simple">
+<p><strong>Node 42 Finger Table</strong></p>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>IP Address</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Node 51</code></td>
+<td><code>10.0.0.51</code></td>
+</tr>
+<tr>
+<td><code>Node 51</code></td>
+<td><code>10.0.0.51</code></td>
+</tr>
+<tr>
+<td><code>Node 56</code></td>
+<td><code>10.0.0.56</code></td>
+</tr>
+<tr>
+<td><code>Node 8</code></td>
+<td><code>10.0.0.8</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="fragment fade-in-then-out" data-fragment-index="2">
+<div class="callout-note" data-appearance="simple">
+<p><strong>Node 51 Finger Table</strong></p>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>IP Address</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Node 56</code></td>
+<td><code>10.0.0.56</code></td>
+</tr>
+<tr>
+<td><code>Node 56</code></td>
+<td><code>10.0.0.56</code></td>
+</tr>
+<tr>
+<td><code>Node 8</code></td>
+<td><code>10.0.0.8</code></td>
+</tr>
+<tr>
+<td><code>Node 12</code></td>
+<td><code>10.0.0.12</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="fragment fade-in" data-fragment-index="3">
+<div class="callout-note" data-appearance="simple">
+<p>Lookup result: <code>File 54</code> is stored at successor <code>Node 56</code>.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="dht-example-can"><h2 class="slide-title">DHT Example: <em>CAN</em></h2><div class="slide-body">
+<p><strong>CAN (Content-Addressable Network)</strong> is another “structured overlay” design. Instead of a circle, it uses a logical <strong>map</strong> or <strong>grid</strong>.</p>
+<div class="columns">
+<div class="column" style="width:47%;">
+<ul>
+<li>The entire network is a “virtual coordinate space,” like a 2D map.</li>
+<li>Each grid square is a node-owned zone.</li>
+<li>First hex digit chooses the row: <code>0-7</code> or <code>8-F</code>.</li>
+<li>Second hex digit chooses the column: <code>0-3</code>, <code>4-7</code>, <code>8-B</code>, <code>C-F</code>.</li>
+</ul>
+<p><strong>The Routing: “Greedy Walk”</strong></p>
+<ul>
+<li>You forward the query to the neighboring zone that is geometrically closest to the target.</li>
+<li>Start at node <code>N1</code> and find file <code>D4</code></li>
+</ul>
+</div><div class="column" style="width:53%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 201.59 171.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:269px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 167.6)">
+<g id="node1" class="node">
+<polygon fill="#dbeafe" stroke="none" points="1,-115.8 1,-162.6 48.9,-162.6 48.9,-115.8 1,-115.8"/>
+<polygon fill="none" stroke="#94a3b8" points="1,-115.8 1,-162.6 48.9,-162.6 48.9,-115.8 1,-115.8"/>
+<text text-anchor="start" x="16" y="-136" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">N1</text>
+<polygon fill="#bfdbfe" stroke="none" points="48.9,-115.8 48.9,-162.6 96.79,-162.6 96.79,-115.8 48.9,-115.8"/>
+<polygon fill="none" stroke="#94a3b8" points="48.9,-115.8 48.9,-162.6 96.79,-162.6 96.79,-115.8 48.9,-115.8"/>
+<text text-anchor="start" x="63.9" y="-136" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">N2</text>
+<polygon fill="#fde68a" stroke="none" points="96.79,-115.8 96.79,-162.6 144.69,-162.6 144.69,-115.8 96.79,-115.8"/>
+<polygon fill="none" stroke="#94a3b8" points="96.79,-115.8 96.79,-162.6 144.69,-162.6 144.69,-115.8 96.79,-115.8"/>
+<text text-anchor="start" x="111.79" y="-136" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">N3</text>
+<polygon fill="#fef3c7" stroke="none" points="144.69,-115.8 144.69,-162.6 192.59,-162.6 192.59,-115.8 144.69,-115.8"/>
+<polygon fill="none" stroke="#94a3b8" points="144.69,-115.8 144.69,-162.6 192.59,-162.6 192.59,-115.8 144.69,-115.8"/>
+<text text-anchor="start" x="159.69" y="-136" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">N4</text>
+<polygon fill="#dcfce7" stroke="none" points="1,-69 1,-115.8 48.9,-115.8 48.9,-69 1,-69"/>
+<polygon fill="none" stroke="#94a3b8" points="1,-69 1,-115.8 48.9,-115.8 48.9,-69 1,-69"/>
+<text text-anchor="start" x="16" y="-89.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">N5</text>
+<polygon fill="#fecaca" stroke="none" points="48.9,-69 48.9,-115.8 96.79,-115.8 96.79,-69 48.9,-69"/>
+<polygon fill="none" stroke="#94a3b8" points="48.9,-69 48.9,-115.8 96.79,-115.8 96.79,-69 48.9,-69"/>
+<text text-anchor="start" x="63.9" y="-89.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">N6</text>
+<polygon fill="#e9d5ff" stroke="none" points="96.79,-69 96.79,-115.8 144.69,-115.8 144.69,-69 96.79,-69"/>
+<polygon fill="none" stroke="#94a3b8" points="96.79,-69 96.79,-115.8 144.69,-115.8 144.69,-69 96.79,-69"/>
+<text text-anchor="start" x="111.79" y="-89.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">N7</text>
+<polygon fill="#fbcfe8" stroke="none" points="144.69,-69 144.69,-115.8 192.59,-115.8 192.59,-69 144.69,-69"/>
+<polygon fill="none" stroke="#94a3b8" points="144.69,-69 144.69,-115.8 192.59,-115.8 192.59,-69 144.69,-69"/>
+<text text-anchor="start" x="159.69" y="-89.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">N8</text>
+<polygon fill="none" stroke="#94a3b8" points="0,-68 0,-163.6 193.59,-163.6 193.59,-68 0,-68"/>
+</g>
+
+<g id="node2" class="node">
+<ellipse fill="#fca5a5" stroke="black" cx="73.79" cy="-18" rx="27" ry="18"/>
+<text text-anchor="start" x="64.84" y="-14.8" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">D4</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#dc2626" stroke-width="2" d="M73.3,-36.23C73.16,-41.74 73.03,-48.07 72.94,-54.5"/>
+<polygon fill="#dc2626" stroke="#dc2626" stroke-width="2" points="68.76,-52.94 72.87,-64.97 77.16,-53 68.76,-52.94"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="dht-example-pastry"><h2 class="slide-title">DHT Example: <em>Pastry</em></h2><div class="slide-body">
+<p><strong>Pastry</strong> is a third “structured overlay” design. It routes queries by matching the target’s ID one digit at a time, like looking up a phone number.</p>
+<p><strong>The Big Idea: “The Phone Number”</strong></p>
+<ul>
+<li>Every peer and file gets a long, unique ID, like <code>1A2B</code>.</li>
+<li>Each peer maintains a “routing table” of peers that share a prefix of its <em>own</em> ID.
+<ul>
+<li>Row 1: Peers that start with <code>1...</code></li>
+<li>Row 2: Peers that start with <code>1A...</code></li>
+<li>Row 3: Peers that start with <code>1A2...</code></li>
+</ul></li>
+<li>It also keeps a “leaf set” of peers with the <em>numerically closest</em> IDs (its immediate neighbors).</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="pastry-lookup-example"><h2 class="slide-title">Pastry Lookup Example</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:52%;">
+<ul>
+<li>Target key: <code>1A2</code></li>
+<li>Start node: <code>16B</code></li>
+<li>The route improves the shared prefix one step at a time:
+<ul>
+<li><code>16B -&gt; 1C4</code> matches the first digit <code>1</code></li>
+<li><code>1C4 -&gt; 1A7</code> matches the prefix <code>1A</code></li>
+<li><code>1A7 -&gt; 1A2</code> reaches the responsible neighborhood</li>
+</ul></li>
+<li>The <strong>leaf set</strong> is what turns “close enough” into the exact final destination</li>
+</ul>
+</div><div class="column" style="width:48%;">
+<table>
+<thead>
+<tr>
+<th>Routing table at <code>16B</code></th>
+<th>next hop</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>prefix <code>1...</code></td>
+<td><code>1C4</code></td>
+</tr>
+<tr>
+<td>prefix <code>2...</code></td>
+<td><code>2F1</code></td>
+</tr>
+<tr>
+<td>prefix <code>A...</code></td>
+<td><code>A90</code></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Routing table at <code>1C4</code></th>
+<th>next hop</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>prefix <code>1A.</code></td>
+<td><code>1A7</code></td>
+</tr>
+<tr>
+<td>prefix <code>1B.</code></td>
+<td><code>1B9</code></td>
+</tr>
+<tr>
+<td>prefix <code>1F.</code></td>
+<td><code>1F2</code></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Leaf set at <code>1A7</code></th>
+<th>peers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lower IDs</td>
+<td><code>196</code>, <code>19F</code></td>
+</tr>
+<tr>
+<td>higher IDs</td>
+<td><code>1A2</code>, <code>1AD</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div></section>
+<section class="slide" id="the-blockchain-link-efficient-routing"><h2 class="slide-title">The Blockchain Link: Efficient Routing</h2><div class="slide-body">
+<ul>
+<li>Pastry (and its relatives like Tapestry and Kademlia) are widely used in decentralized systems that <em>support</em> blockchains.</li>
+<li><strong>Decentralized Storage (IPFS):</strong> The lookup system used by IPFS (which stores NFT data) is heavily inspired by Kademlia, which uses a similar prefix-matching logic.</li>
+<li><strong>Ethereum’s P2P Layer:</strong> The node discovery protocol in Ethereum (Discovery v5) is also based on Kademlia.</li>
+</ul>
+<p>This “prefix-matching” design is extremely fast and resilient, making it a popular choice for building the “address book” for decentralized applications.</p>
+</div></section>
+<section class="slide smaller" id="membership-and-churn"><h2 class="slide-title">Membership and “Churn”</h2><div class="slide-body">
+<p>All P2P networks face a “fundamental property”: peers are not reliable. They constantly join, leave, and crash. This is called <strong>churn</strong>.</p>
+<p><strong>The Problem of “Churn”</strong></p>
+<p>What does churn break?</p>
+<ul>
+<li><p><strong>In Unstructured Networks (Gossip):</strong></p>
+<ul>
+<li>Your neighbors disappear, potentially “partitioning” you from the main network.</li>
+<li>You need a way to find new, healthy peers.</li>
+</ul></li>
+<li><p><strong>In Structured Networks (DHTs):</strong></p>
+<ul>
+<li><strong>Lost Files:</strong> If <code>Node 55</code> (storing file <code>50</code>) suddenly leaves, file <code>50</code> is now gone.</li>
+<li><strong>Broken “Clock”:</strong> The link between <code>Node 45</code> and <code>Node 55</code> is broken.</li>
+<li><strong>Broken “Shortcuts”:</strong> Every peer’s “shortcut” pointing to <code>Node 55</code> is now pointing at an empty space.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="the-self-healing-solutions"><h2 class="slide-title">The “Self-Healing” Solutions</h2><div class="slide-body">
+<p>Peers are <em>constantly</em> running maintenance tasks in the background:</p>
+<ul>
+<li><strong>Join:</strong> A new peer contacts any known node, finds its correct spot on the “clock,” and “splices itself in.”</li>
+<li><strong>Stabilize:</strong> Peers constantly ping their immediate neighbors to find new peers or notice when one has left.</li>
+<li><strong>Fix Fingers:</strong> Peers periodically check their “shortcuts” to see if they’re still valid and update them if they’re broken.</li>
+<li><strong>Replicate:</strong> To prevent data loss, <code>File 50</code> isn’t just on <code>Node 55</code>; it’s also <em>copied</em> to the next few peers (e.g., <code>Node 60</code>, <code>Node 65</code>).</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="partitions-healing"><h2 class="slide-title">Partitions &amp; Healing</h2><div class="slide-body">
+<p>All P2P networks can break. A <strong>“network partition”</strong> is when the network splits into two or more “islands” that can’t talk to each other.</p>
+<p><strong>How Networks Break</strong></p>
+<ul>
+<li><strong>Massive Churn:</strong> So many peers leave at once (like a mass power outage) that the “self-healing” tasks can’t keep up.</li>
+<li><strong>Routing Bias:</strong> A flaw in the code that causes all peers in, say, Europe, to only connect to other European peers, “orphaning” them from North America.</li>
+<li><strong>Attack:</strong> An attacker could intentionally partition the network (this is a key part of an “Eclipse Attack,” which we’ll see next).</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="the-p2p-playbook-surviving-churn"><h2 class="slide-title">The P2P Playbook: Surviving Churn</h2><div class="slide-body">
+<p>To survive in the real world, P2P networks combine redundancy with maintenance, but they do it in different ways.</p>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><strong>Structured (DHT)</strong></p>
+<ul>
+<li><strong>Replication:</strong> Copy important data to successor neighbors so one departure does not erase the file immediately.</li>
+<li><strong>Constant checks:</strong> Run <code>stabilize()</code> and <code>fix_fingers()</code> to repair broken successor links and shortcuts.</li>
+<li><strong>Goal:</strong> Preserve the logical shape of the overlay so routing stays correct.</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<p><strong>Unstructured (Gossip)</strong></p>
+<ul>
+<li><strong>Redundancy:</strong> Keep several neighbors so one departure does not isolate a peer immediately.</li>
+<li><strong>Gossip membership:</strong> Exchange small peer-list samples to keep contacts fresh.</li>
+<li><strong>Goal:</strong> Stay well connected and well mixed, even though no precise shape is maintained.</li>
+</ul>
+</div>
+</div>
+</div></section>
+<section class="slide" id="micro-lab-flood-vs.-dht-routing"><h2 class="slide-title">Micro Lab: Flood vs. DHT Routing</h2><div class="slide-body">
+<p><a href="/assets/labs/p2p-routing/p2p_routing_lab.html">Open P2P Routing Lab</a></p>
+</div></section>
+<section class="slide smaller" id="the-blockchain-link"><h2 class="slide-title">The Blockchain Link</h2><div class="slide-body">
+<p><strong>Partitions are a “Code Red”</strong></p>
+<ul>
+<li>For a file-sharing network, a partition is an <em>inconvenience</em> (you can’t find some files).</li>
+<li>For a blockchain, a partition is a <strong>catastrophic security failure.</strong></li>
+<li>If the network splits into “USA” and “Europe,” each “island” will keep growing.</li>
+<li>This creates <strong>two different “true” blockchains</strong> (a “fork”).</li>
+<li>An attacker could spend money on the “USA” chain and then re-join the “Europe” chain to “erase” that transaction.</li>
+<li>This is why blockchain P2P protocols are <em>obsessed</em> with staying connected. They are designed to be “partition-resistant” above all else.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="the-great-p2p-weakness-sybil-eclipse-attacks"><h2 class="slide-title">The Great P2P Weakness: Sybil &amp; Eclipse Attacks</h2><div class="slide-body">
+<p>These P2P networks have a fatal security flaw. We’ve assumed peers are <em>honest</em>. What if they’re not?</p>
+<p><strong>The Sybil Attack</strong></p>
+<ul>
+<li><strong>The Attack:</strong> An attacker creates millions of fake peers (fake identities) on their one computer.</li>
+<li><strong>The Problem:</strong> In a P2P network, “identity is free”. There is no central authority to stop this.</li>
+<li><strong>The Impact:</strong>
+<ul>
+<li>The attacker can “out-vote” honest peers in a consensus system.</li>
+<li>They can surround a victim, leading to an Eclipse Attack.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="the-eclipse-attack"><h2 class="slide-title">The Eclipse Attack</h2><div class="slide-body">
+<ul>
+<li><strong>The Attack:</strong> An attacker uses their millions of Sybil peers to <em>surround</em> a victim.</li>
+<li><strong>The Problem:</strong> The victim’s “neighbor list” is filled <em>only</em> with the attacker’s fake nodes.</li>
+<li><strong>The Impact:</strong> The victim is “eclipsed” from the real network.
+<ul>
+<li>The attacker now controls <strong>everything the victim sees and hears.</strong></li>
+<li>They can feed the victim a <em>fake</em> blockchain.</li>
+<li>They can censor the victim’s transactions.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="check-on-learning-bridge-to-p2p-trust"><h2 class="slide-title">Check-on-Learning &amp; Bridge to P2P Trust</h2><div class="slide-body">
+<p>Let’s review the core P2P concepts before we move on.</p>
+<ol type="1">
+<li><strong>Q1:</strong> Why is a structured DHT (like Chord) faster for lookups than an unstructured “flood” (like Gnutella 0.4)?</li>
+</ol>
+<div class="fragment fade-in">
+<ul>
+<li><strong>A:</strong> A DHT provides efficient, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>N</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(\log N)</annotation></semantics></math> routing (like a card catalog). Flooding is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mi>N</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(N)</annotation></semantics></math> (checking every shelf in the library).</li>
+</ul>
+</div>
+<ol start="2" type="1">
+<li><strong>Q2:</strong> What is “churn,” and how do networks “heal” from it?</li>
+</ol>
+<div class="fragment fade-in">
+<ul>
+<li><strong>A:</strong> Churn is the constant joining and leaving of peers. Structured networks “heal” with constant maintenance (like <code>stabilize()</code>). Unstructured networks “heal” by gossiping peer lists (like <code>CYCLON</code>).</li>
+</ul>
+</div>
+<ol start="3" type="1">
+<li><strong>Q3:</strong> If identities are free, what stops an attacker from creating a million “Sybil” peers to surround and “Eclipse” a victim?</li>
+</ol>
+<div class="fragment fade-in">
+<ul>
+<li><strong>A:</strong> In a basic P2P network, <em>nothing</em>. This is the fundamental vulnerability. This is the problem that , famously, Proof-of-Work is designed to solve.</li>
+</ul>
+</div>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-kirk_gnutellaprotocolspecification_2004" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">P. Kirk, <span>“The <span>Gnutella Protocol Specification</span> v0.4.”</span> July 20, 2004. Accessed: Oct. 20, 2025. [Online]. Available: <a href="https://rfc-gnutella.sourceforge.net/developer/stable/index.html">https://rfc-gnutella.sourceforge.net/developer/stable/index.html</a></div>
+</div>
+<div id="ref-stoica_chordscalablepeertopeer_2001" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">I. Stoica, R. Morris, D. Karger, M. F. Kaashoek, and H. Balakrishnan, <span>“Chord: <span>A</span> scalable peer-to-peer lookup service for internet applications,”</span> <em>SIGCOMM Comput. Commun. Rev.</em>, vol. 31, no. 4, pp. 149–160, Oct. 2001, doi: <a href="https://doi.org/10.1145/964723.383071">10.1145/964723.383071</a>.</div>
+</div>
+<div id="ref-nakamoto_bitcoinpeertopeerelectronic_2008" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">S. Nakamoto, <span>“Bitcoin: <span class="nocase">A Peer-to-Peer Electronic Cash System</span>.”</span> Satoshi Nakamoto Institute, Oct. 31, 2008. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf">https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf</a></div>
+</div>
+<div id="ref-ratnasamy_scalablecontentaddressablenetwork_2001" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">S. Ratnasamy, P. Francis, M. Handley, R. Karp, and S. Shenker, <span>“A <span>Scalable Content-Addressable Network</span> (<span>CAN</span>),”</span> in <em><span>SIGCOMM</span> 2001</em>, 2001. doi: <a href="https://doi.org/10.1145/964723.383072">10.1145/964723.383072</a>.</div>
+</div>
+<div id="ref-saroiu_measurementstudypeertopeer_2002" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">S. Saroiu, P. K. Gummadi, and S. D. Gribble, <span>“A <span>Measurement Study</span> of <span class="nocase">Peer-to-Peer File Sharing Systems</span>,”</span> University of Washington, Seattle, WA, USA, Technical UW-CSE-01-06-02, June 2002. Available: <a href="https://pages.cs.wisc.edu/~suman/courses/740/papers/saroiu02mmcn.pdf">https://pages.cs.wisc.edu/~suman/courses/740/papers/saroiu02mmcn.pdf</a></div>
+</div>
+<div id="ref-stutzbach_understandingchurnpeertopeer_2006" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">D. Stutzbach and R. Rejaie, <span>“Understanding churn in peer-to-peer networks,”</span> in <em>Proceedings of the 6th <span>ACM SIGCOMM</span> conference on <span>Internet</span> measurement</em>, Rio de Janeriro Brazil: ACM, Oct. 2006, pp. 189–202. doi: <a href="https://doi.org/10.1145/1177080.1177105">10.1145/1177080.1177105</a>.</div>
+</div>
+<div id="ref-rowstron_pastryscalabledecentralized_2001" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">A. Rowstron and P. Druschel, <span>“Pastry: <span>Scalable</span>, <span>Decentralized Object Location</span>, and <span>Routing</span> for <span class="nocase">Large-Scale Peer-to-Peer Systems</span>,”</span> in <em>Middleware 2001</em>, vol. 2218, R. Guerraoui, Ed., Berlin, Heidelberg: Springer Berlin Heidelberg, 2001, pp. 329–350. doi: <a href="https://doi.org/10.1007/3-540-45518-3_18">10.1007/3-540-45518-3_18</a>.</div>
+</div>
+<div id="ref-bitcoin.orgdevelopers_p2pnetworkdeveloper_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">Bitcoin.org Developers, <span>“<span>P2P Network</span> (<span>Developer Guide</span>).”</span> 2024. Available: <a href="https://developer.bitcoin.org/devguide/p2p_network.html">https://developer.bitcoin.org/devguide/p2p_network.html</a></div>
+</div>
+<div id="ref-voulgaris_cycloninexpensivemembership_2005" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">S. Voulgaris, D. Gavidia, and M. Van Steen, <span>“<span>CYCLON</span>: <span>Inexpensive Membership Management</span> for <span>Unstructured P2P Overlays</span>,”</span> <em>J Netw Syst Manage</em>, vol. 13, no. 2, pp. 197–217, June 2005, doi: <a href="https://doi.org/10.1007/s10922-005-4441-x">10.1007/s10922-005-4441-x</a>.</div>
+</div>
+<div id="ref-douceur_sybilattack_2002" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">J. R. Douceur, <span>“The <span>Sybil Attack</span>,”</span> in <em><span>IPTPS</span> 2002</em>, 2002. doi: <a href="https://doi.org/10.1007/3-540-45748-8_24">10.1007/3-540-45748-8_24</a>.</div>
+</div>
+<div id="ref-singh_eclipseattacksoverlay_2006" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">A. Singh, T.-W. Ngan, P. Druschel, and D. S. Wallach, <span>“Eclipse <span>Attacks</span> on <span>Overlay Networks</span>: <span>Threats</span> and <span>Defenses</span>,”</span> in <em>Proceedings <span>IEEE INFOCOM</span> 2006. <span>25TH IEEE International Conference</span> on <span>Computer Communications</span></em>, Barcelona, Spain: IEEE, 2006, pp. 1–12. doi: <a href="https://doi.org/10.1109/INFOCOM.2006.231">10.1109/INFOCOM.2006.231</a>.</div>
+</div>
+<div id="ref-heilman_eclipseattacksbitcoins_2015" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">E. Heilman, A. Kendler, A. Zohar, and S. Goldberg, <span>“Eclipse <span>Attacks</span> on <span>Bitcoin</span>’s <span class="nocase">Peer-to-Peer Network</span>.”</span> Accessed: Oct. 21, 2025. [Online]. Available: <a href="https://eprint.iacr.org/2015/263">https://eprint.iacr.org/2015/263</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

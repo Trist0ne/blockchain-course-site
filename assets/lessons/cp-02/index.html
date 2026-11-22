@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hashing and Merkle Trees</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/primitives/02-CP-hashing_and_merkle_trees.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="cp-02" data-code="02-CP" data-src="5ddbc66a61f9f6cb" data-slides="32">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section II: Cryptographic Primitives · Lesson 02-CP</p><h1>Hashing and Merkle Trees</h1></div></section>
+<section class="slide" id="objectives-and-roadmap"><h2 class="slide-title">Objectives and Roadmap</h2><div class="slide-body">
+<ul>
+<li><p>Define a cryptographic hash function</p></li>
+<li><p>Explain key properties: preimage, second‑preimage, collision resistance, and avalanche.</p></li>
+<li><p>Build and verify Merkle tree commitments and inclusion proofs; discuss variants and pitfalls.</p></li>
+<li><p>Understand the relevance of hashing to commit information within blockchain technology.</p></li>
+</ul>
+</div></section>
+<section class="slide" id="what-is-a-cryptographic-hash-function"><h2 class="slide-title">What Is a Cryptographic Hash Function?</h2><div class="slide-body">
+<ul>
+<li><strong>Definition:</strong> A deterministic algorithm that maps input of any length → fixed-length digest.<br />
+</li>
+<li><strong>Formally:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>:</mo><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">}</mo><mo>*</mo></msup><mo>→</mo><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">}</mo><mi>n</mi></msup></mrow><annotation encoding="application/x-tex">h : \{0,1\}^* \rightarrow \{0,1\}^n</annotation></semantics></math></li>
+<li><strong>Key properties:</strong>
+<ul>
+<li>Deterministic: same input → same output.<br />
+</li>
+<li>Fast to compute.<br />
+</li>
+<li>Infeasible to invert (one-way).<br />
+</li>
+<li>Collision-resistant (no two distinct inputs share same hash).<br />
+</li>
+</ul></li>
+<li>Output length typically 256 or 512 bits (e.g., SHA-256).</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="hash-function-properties"><h2 class="slide-title">Hash Function Properties</h2><div class="slide-body">
+<table>
+<colgroup>
+<col style="width: 32%" />
+<col style="width: 29%" />
+<col style="width: 38%" />
+</colgroup>
+<thead>
+<tr>
+<th>Property</th>
+<th>Meaning</th>
+<th>Importance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Pre-image resistance</strong></td>
+<td>Hard to find input for given hash.</td>
+<td>Protects passwords and commitments.</td>
+</tr>
+<tr>
+<td><strong>Second pre-image resistance</strong></td>
+<td>Hard to find another input with same hash.</td>
+<td>Prevents forgery.</td>
+</tr>
+<tr>
+<td><strong>Collision resistance</strong></td>
+<td>Hard to find <em>any</em> two inputs with same hash.</td>
+<td>Ensures uniqueness and integrity.</td>
+</tr>
+<tr>
+<td><strong>Avalanche effect</strong></td>
+<td>Tiny input change → major output change.</td>
+<td>Detects even 1-bit alteration.</td>
+</tr>
+<tr>
+<td><strong>Uniform Distribution</strong></td>
+<td>Outputs should be uniformly distributed</td>
+<td>no structural shortcuts should exist.</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide smaller" id="pre-image-resistance"><h2 class="slide-title">Pre-Image Resistance</h2><div class="slide-body">
+<ul>
+<li><strong>Definition:</strong> Given a hash value <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>, it should be computationally infeasible to find any input <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math> such that <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>y</mi></mrow><annotation encoding="application/x-tex">h(x) = y</annotation></semantics></math>.<br />
+</li>
+<li><strong>Intuition:</strong> Hashing is a one-way street — easy to go forward, practically impossible to reverse.<br />
+</li>
+<li><strong>Example:</strong>
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">&quot;password123&quot;</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(\text{&quot;password123&quot;})</annotation></semantics></math> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> <code>ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f</code><br />
+</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">&quot;correcthorsebatterystaple&quot;</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(\text{&quot;correcthorsebatterystaple&quot;})</annotation></semantics></math> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> <code>cbe6beb26479b568e5f15b50217c6c83c0ee051dc4e522b9840d8e291d6aaf46</code></li>
+</ul></li>
+<li><strong>Use Cases:</strong>
+<ul>
+<li>Password storage<br />
+</li>
+<li>Commitment schemes<br />
+</li>
+<li>Blockchain mining puzzles</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="second-pre-image-resistance"><h2 class="slide-title">Second Pre-image Resistance</h2><div class="slide-body">
+<ul>
+<li><strong>Definition:</strong> Given one input <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mn>1</mn></msub><annotation encoding="application/x-tex">x_1</annotation></semantics></math>, it should be infeasible to find another distinct input <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mn>2</mn></msub><mo>≠</mo><msub><mi>x</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">x_2 \neq x_1</annotation></semantics></math> such that <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mn>1</mn></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mn>2</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(x_1) = h(x_2)</annotation></semantics></math>.<br />
+</li>
+<li><strong>Intuition:</strong> You can’t find a “different message” that produces the same hash.<br />
+</li>
+<li><strong>Example:</strong>
+<ul>
+<li>If <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">&quot;Alice pays Bob $10&quot;</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(\text{&quot;Alice pays Bob \$10&quot;})</annotation></semantics></math> is known,<br />
+an attacker shouldn’t be able to find another message like “Alice pays Mallory $100” with the same digest.</li>
+</ul></li>
+<li><strong>Use Case:</strong> Prevents document or transaction substitution attacks.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="collision-resistance"><h2 class="slide-title">Collision Resistance</h2><div class="slide-body">
+<ul>
+<li><strong>Definition:</strong> It should be infeasible to find <em>any</em> two distinct inputs <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mn>1</mn></msub><mo>,</mo><msub><mi>x</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">x_1, x_2</annotation></semantics></math> such that <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mn>1</mn></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mn>2</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(x_1) = h(x_2)</annotation></semantics></math>.<br />
+</li>
+<li><strong>Intuition:</strong> No two different messages share the same fingerprint.<br />
+</li>
+<li><strong>Example:</strong>
+<ul>
+<li>MD5 and SHA-1 are <strong>broken</strong> because practical collisions have been found.<br />
+</li>
+<li>SHA-256 and SHA-3 are currently <strong>collision resistant</strong>.<br />
+</li>
+</ul></li>
+<li><strong>Use Case:</strong>
+<ul>
+<li>Essential for digital signatures, certificates, and blockchains.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="avalanche-effect"><h2 class="slide-title">Avalanche Effect</h2><div class="slide-body">
+<ul>
+<li>A hallmark of good hash and cipher design.<br />
+</li>
+<li><strong>Definition:</strong> A small change in the input causes a large, unpredictable change in the output.<br />
+</li>
+<li>Ensures:
+<ul>
+<li>No visible correlation between input and output.<br />
+</li>
+<li>Robust diffusion — even minimal edits radically alter results.<br />
+</li>
+</ul></li>
+<li>Demonstration:
+<ul>
+<li>Hash(“HELLO”) → <code>3615f80c9d293ed7...</code><br />
+</li>
+<li>Hash(“HELLo”) → <code>c6f4b0a7af12e91b...</code></li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="uniform-distribution-of-output"><h2 class="slide-title">Uniform Distribution of Output</h2><div class="slide-body">
+<ul>
+<li><strong>Definition:</strong> Hash outputs should be uniformly distributed across the entire output space <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">}</mo><mi>n</mi></msup></mrow><annotation encoding="application/x-tex">\{0,1\}^n</annotation></semantics></math>.<br />
+</li>
+<li><strong>Intuition:</strong> Every possible digest value is equally likely — no patterns or biases.<br />
+</li>
+<li><strong>Consequences:</strong>
+<ul>
+<li>Prevents clustering that could reveal input structure.<br />
+</li>
+<li>Ensures fair random-like behavior in protocols (e.g., load balancing, mining).<br />
+</li>
+</ul></li>
+<li><strong>Verification:</strong>
+<ul>
+<li>Empirically tested with randomness and correlation tests.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="math-spotlight-birthday-paradox-and-work-factors"><h2 class="slide-title">Math Spotlight: Birthday Paradox and Work Factors</h2><div class="slide-body">
+<ul>
+<li><strong>Birthday paradox:</strong> Collisions become likely far sooner than intuition suggests — only after about <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mrow><mi>n</mi><mi>/</mi><mn>2</mn></mrow></msup><annotation encoding="application/x-tex">2^{n/2}</annotation></semantics></math> hashes for an <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>-bit output.
+<ul>
+<li>Analogy: only ~23 people are needed for a 50% chance two share a birthday, not 183!</li>
+</ul></li>
+<li><strong>Work factors:</strong>
+<ul>
+<li>Collision search ≈ <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mrow><mi>n</mi><mi>/</mi><mn>2</mn></mrow></msup><annotation encoding="application/x-tex">2^{n/2}</annotation></semantics></math><br />
+</li>
+<li>Pre-image / Second pre-image search ≈ <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mi>n</mi></msup><annotation encoding="application/x-tex">2^n</annotation></semantics></math></li>
+<li>Hence: 128-bit collision security ⇒ 256-bit hash output.</li>
+</ul></li>
+<li><strong>Expected collisions:</strong><br />
+For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>≪</mo><msup><mn>2</mn><mrow><mi>n</mi><mi>/</mi><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">k \ll 2^{n/2}</annotation></semantics></math> random hashes:<br />
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo stretchy="false" form="prefix">[</mo><mtext mathvariant="normal">collisions</mtext><mo stretchy="false" form="postfix">]</mo><mo>≈</mo><mfrac><msup><mi>k</mi><mn>2</mn></msup><msup><mn>2</mn><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msup></mfrac></mrow><annotation encoding="application/x-tex">\displaystyle E[\text{collisions}] \approx \frac{k^2}{2^{n+1}}</annotation></semantics></math></li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>Choose digest lengths ensuring <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mrow><mi>n</mi><mi>/</mi><mn>2</mn></mrow></msup><annotation encoding="application/x-tex">2^{n/2}</annotation></semantics></math> work is infeasible — e.g., <em>SHA-256</em> or <em>SHA-3</em>.</p>
+</div>
+</div></section>
+<section class="slide" id="micro-lab-hashing"><h2 class="slide-title">Micro lab: Hashing</h2><div class="slide-body">
+<p><a href="/assets/labs/micro-hashing/">Use the following microlab to demonstrate the principles of hashing using real algorithms</a></p>
+</div></section>
+<section class="slide smaller" id="sha-family-overview"><h2 class="slide-title">SHA Family Overview</h2><div class="slide-body">
+<table>
+<thead>
+<tr>
+<th>Algorithm</th>
+<th>Output (bits)</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>SHA-1</strong></td>
+<td>160</td>
+<td>Deprecated</td>
+<td>Collisions found</td>
+</tr>
+<tr>
+<td><strong>SHA-2</strong></td>
+<td>224–512</td>
+<td>Secure</td>
+<td>Bitcoin uses SHA-256</td>
+</tr>
+<tr>
+<td><strong>SHA-3</strong></td>
+<td>224–512</td>
+<td>Secure</td>
+<td>sponge construction</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>SHA-3 complements, not replaces, SHA-2.<br />
+</li>
+<li>Both widely deployed for integrity, digital signatures, and blockchain linking.<br />
+</li>
+<li>Continuous public evaluation ensures resistance to emerging attacks.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="merkledamgård-how-sha-256-is-built"><h2 class="slide-title">Merkle–Damgård: How SHA-256 is Built</h2><div class="slide-body">
+<p><strong>Core idea:</strong> compress each message block one at a time, chaining the output into the next round.</p>
+<div style="z-index:-1; position:relative; height:300px; top:-100px; ">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 723.56 206.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:965px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 202)">
+<g id="node1" class="node">
+<ellipse fill="#1565c0" stroke="black" cx="56.22" cy="-72" rx="27" ry="18"/>
+<text text-anchor="middle" x="56.22" y="-67.8" font-family="sans-serif" font-size="14.00" fill="white">IV</text>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="white" stroke="black" points="217.31,-117 148.43,-117 148.43,-81 217.31,-81 217.31,-117"/>
+<text text-anchor="middle" x="182.87" y="-94.8" font-family="sans-serif" font-size="14.00">compress</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M82.44,-77.46C98.11,-80.86 118.71,-85.32 137.08,-89.3"/>
+<polygon fill="black" stroke="black" points="136.18,-92.68 146.7,-91.38 137.66,-85.84 136.18,-92.68"/>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="white" stroke="black" points="86.19,-144 26.25,-144 26.25,-108 86.19,-108 86.19,-144"/>
+<text text-anchor="middle" x="56.22" y="-121.8" font-family="sans-serif" font-size="14.00">Block 1</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M86.44,-119.67C101.41,-116.43 119.97,-112.41 136.73,-108.78"/>
+<polygon fill="black" stroke="black" points="137.46,-112.2 146.5,-106.66 135.98,-105.36 137.46,-112.2"/>
+</g>
+
+<g id="node4" class="node">
+<ellipse fill="white" stroke="black" cx="280.31" cy="-99" rx="27" ry="18"/>
+<text text-anchor="middle" x="280.31" y="-94.8" font-family="sans-serif" font-size="14.00">h₁</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M217.79,-99C225.47,-99 233.68,-99 241.52,-99"/>
+<polygon fill="black" stroke="black" points="241.49,-102.5 251.49,-99 241.49,-95.5 241.49,-102.5"/>
+</g>
+
+<g id="node6" class="node">
+<polygon fill="white" stroke="black" points="412.19,-117 343.31,-117 343.31,-81 412.19,-81 412.19,-117"/>
+<text text-anchor="middle" x="377.75" y="-94.8" font-family="sans-serif" font-size="14.00">compress</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M307.64,-99C315.07,-99 323.36,-99 331.56,-99"/>
+<polygon fill="black" stroke="black" points="331.47,-102.5 341.47,-99 331.47,-95.5 331.47,-102.5"/>
+</g>
+
+<g id="node5" class="node">
+<polygon fill="white" stroke="black" points="86.19,-198 26.25,-198 26.25,-162 86.19,-162 86.19,-198"/>
+<text text-anchor="middle" x="56.22" y="-175.8" font-family="sans-serif" font-size="14.00">Block 2</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M86.48,-175.23C133.56,-167.22 228.82,-149.57 307.31,-126 315.49,-123.54 324.08,-120.56 332.31,-117.48"/>
+<polygon fill="black" stroke="black" points="333.38,-120.81 341.45,-113.96 330.86,-114.28 333.38,-120.81"/>
+</g>
+
+<g id="node7" class="node">
+<ellipse fill="white" stroke="black" cx="475.19" cy="-95" rx="27" ry="18"/>
+<text text-anchor="middle" x="475.19" y="-90.8" font-family="sans-serif" font-size="14.00">h₂</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M412.67,-97.58C420.35,-97.26 428.56,-96.91 436.39,-96.58"/>
+<polygon fill="black" stroke="black" points="436.52,-100.08 446.37,-96.17 436.23,-93.09 436.52,-100.08"/>
+</g>
+
+<g id="node9" class="node">
+<polygon fill="white" stroke="black" points="607.06,-63 538.19,-63 538.19,-27 607.06,-27 607.06,-63"/>
+<text text-anchor="middle" x="572.62" y="-40.8" font-family="sans-serif" font-size="14.00">compress</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="black" d="M496.9,-84.15C505.95,-79.41 516.94,-73.65 527.68,-68.02"/>
+<polygon fill="black" stroke="black" points="529.25,-71.15 536.48,-63.41 526,-64.95 529.25,-71.15"/>
+</g>
+
+<g id="node8" class="node">
+<polygon fill="white" stroke="black" points="112.43,-36 0,-36 0,0 112.43,0 112.43,-36"/>
+<text text-anchor="middle" x="56.22" y="-13.8" font-family="sans-serif" font-size="14.00">Block n ‖ length</text>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="black" d="M112.89,-18C157.81,-18 222.63,-18 279.31,-18 279.31,-18 279.31,-18 378.75,-18 429.88,-18 487.9,-27.42 526.83,-35.13"/>
+<polygon fill="black" stroke="black" points="526.05,-38.54 536.54,-37.11 527.44,-31.68 526.05,-38.54"/>
+</g>
+
+<g id="node10" class="node">
+<ellipse fill="#2e7d32" stroke="black" cx="679.31" cy="-45" rx="36.25" ry="18"/>
+<text text-anchor="middle" x="679.31" y="-40.8" font-family="sans-serif" font-size="14.00" fill="white">Digest</text>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="black" d="M607.32,-45C615.04,-45 623.38,-45 631.54,-45"/>
+<polygon fill="black" stroke="black" points="631.36,-48.5 641.36,-45 631.36,-41.5 631.36,-48.5"/>
+</g>
+</g>
+</svg></figure>
+</div>
+<ul>
+<li>Each block is fed into a fixed-size <strong>compression function</strong> along with the previous output; the final output is the hash.</li>
+<li>A <strong>length field</strong> is appended to the last block (Merkle–Damgård strengthening) to prevent trivial collisions.</li>
+<li>Used by SHA-1, SHA-224, SHA-256, SHA-384, SHA-512.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="aside-length-extension-attack"><h2 class="slide-title">Aside: Length-Extension Attack</h2><div class="slide-body">
+<p><strong>Root cause:</strong> in Merkle–Damgård, the digest <em>is</em> the final internal state — so it can be used as a starting point to keep hashing.</p>
+<ol type="1">
+<li>Attacker sees server broadcast <code>token</code> and <code>"amount=100"</code>, where <code>token = SHA256(secret ∥ "amount=100")</code> — they don’t know <code>secret</code>.</li>
+<li>They load <code>token</code> directly into SHA-256’s internal state (it’s just 8 words of 32 bits each).</li>
+<li>They feed in <code>pad ∥ "amount=1000000"</code> — continuing the hash as if they were the original signer.</li>
+<li>They produce <code>token2′ = SHA256(secret ∥ "amount=100" ∥ pad ∥ "amount=1000000")</code>.</li>
+<li>The server recomputes <code>SHA256(secret ∥ forged_body)</code> — and it matches <code>token2′</code>.</li>
+</ol>
+<div class="callout-warning" data-appearance="minimal">
+<p>Any scheme of the form <code>H(secret ∥ data)</code> used as a MAC is broken against length extension. This affected Flickr’s API (2009), several Amazon S3 auth schemes, and many custom-rolled API signatures.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="aside-hmac"><h2 class="slide-title">Aside: HMAC</h2><div class="slide-body">
+<p><strong>Mitigation: Hash-based Message Authentication Code (HMAC)</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">HMAC</mtext><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo>,</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>H</mi><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mi>k</mi><mo>⊕</mo><mtext mathvariant="normal">opad</mtext><mspace width="0.278em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.278em"></mspace><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo>⊕</mo><mtext mathvariant="normal">ipad</mtext><mspace width="0.278em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.278em"></mspace><mi>m</mi><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{HMAC}(k, m) = H\bigl(k \oplus \text{opad} \;\|\; H(k \oplus \text{ipad} \;\|\; m)\bigr)</annotation></semantics></math></p>
+<p>The outer hash takes the result of the inner hash as input — an attacker extending the inner computation gets a value that is immediately re-hashed with the key, producing garbage.</p>
+</div></section>
+<section class="slide smaller" id="sponge-construction-how-sha-3-is-built"><h2 class="slide-title">Sponge Construction: How SHA-3 is Built</h2><div class="slide-body">
+<p><strong>Core idea:</strong> absorb message blocks into a large state, then squeeze output out — the hidden interior is never exposed.</p>
+<div style="z-index:-1; position:relative; height:200px; top:-150px; ">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 798.35 98.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1064px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 94)">
+<g id="node1" class="node">
+<polygon fill="white" stroke="black" points="54,-90 0,-90 0,-54 54,-54 54,-90"/>
+<text text-anchor="middle" x="27" y="-67.8" font-family="sans-serif" font-size="14.00">M₁</text>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="white" stroke="black" points="165.71,-89 91,-89 91,-53 165.71,-53 165.71,-89"/>
+<text text-anchor="middle" x="128.35" y="-66.8" font-family="sans-serif" font-size="14.00">⊕ rate bits</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M54.36,-71.73C62.12,-71.66 70.85,-71.57 79.51,-71.48"/>
+<polygon fill="black" stroke="black" points="79.29,-74.98 89.25,-71.38 79.22,-67.98 79.29,-74.98"/>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="white" stroke="black" points="282.06,-83 202.71,-83 202.71,-47 282.06,-47 282.06,-83"/>
+<text text-anchor="middle" x="242.38" y="-60.8" font-family="sans-serif" font-size="14.00">permute (f)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M166.04,-69.04C174.02,-68.61 182.6,-68.15 191.01,-67.7"/>
+<polygon fill="black" stroke="black" points="191,-71.2 200.79,-67.17 190.62,-64.21 191,-71.2"/>
+</g>
+
+<g id="node5" class="node">
+<polygon fill="white" stroke="black" points="418.42,-52 343.72,-52 343.72,-16 418.42,-16 418.42,-52"/>
+<text text-anchor="middle" x="381.07" y="-29.8" font-family="sans-serif" font-size="14.00">⊕ rate bits</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M282.55,-56.12C298.06,-52.6 316.04,-48.52 332.31,-44.83"/>
+<polygon fill="black" stroke="black" points="332.79,-48.31 341.77,-42.69 331.24,-41.49 332.79,-48.31"/>
+<text text-anchor="middle" x="312.89" y="-55.56" font-family="sans-serif" font-size="14.00">state</text>
+</g>
+
+<g id="node4" class="node">
+<polygon fill="white" stroke="black" points="54,-36 0,-36 0,0 54,0 54,-36"/>
+<text text-anchor="middle" x="27" y="-13.8" font-family="sans-serif" font-size="14.00">M₂</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M54.46,-19.2C113.44,-21.88 256.37,-28.38 331.73,-31.8"/>
+<polygon fill="black" stroke="black" points="331.56,-35.3 341.71,-32.26 331.88,-28.31 331.56,-35.3"/>
+</g>
+
+<g id="node6" class="node">
+<polygon fill="white" stroke="black" points="534.78,-52 455.42,-52 455.42,-16 534.78,-16 534.78,-52"/>
+<text text-anchor="middle" x="495.1" y="-29.8" font-family="sans-serif" font-size="14.00">permute (f)</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M418.75,-34C426.74,-34 435.32,-34 443.73,-34"/>
+<polygon fill="black" stroke="black" points="443.51,-37.5 453.51,-34 443.51,-30.5 443.51,-37.5"/>
+</g>
+
+<g id="node7" class="node">
+<polygon fill="white" stroke="black" points="680.86,-54.8 620.15,-54.8 620.15,-13.2 680.86,-13.2 680.86,-54.8"/>
+<text text-anchor="middle" x="650.5" y="-38.2" font-family="sans-serif" font-size="14.00">extract</text>
+<text text-anchor="middle" x="650.5" y="-21.4" font-family="sans-serif" font-size="14.00">rate bits</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M535.21,-34C557.58,-34 585.63,-34 608.34,-34"/>
+<polygon fill="black" stroke="black" points="608.16,-37.5 618.16,-34 608.16,-30.5 608.16,-37.5"/>
+<text text-anchor="middle" x="577.46" y="-38.2" font-family="sans-serif" font-size="14.00">rate only</text>
+</g>
+
+<g id="node8" class="node">
+<ellipse fill="#2e7d32" stroke="black" cx="754.11" cy="-34" rx="36.25" ry="18"/>
+<text text-anchor="middle" x="754.11" y="-29.8" font-family="sans-serif" font-size="14.00" fill="white">Digest</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="black" d="M681.16,-34C688.98,-34 697.6,-34 706.08,-34"/>
+<polygon fill="black" stroke="black" points="705.96,-37.5 715.96,-34 705.96,-30.5 705.96,-37.5"/>
+</g>
+</g>
+</svg></figure>
+</div>
+<ul>
+<li>State = <strong>rate</strong> (r) + <strong>capacity</strong> (c). Each round XORs a message block into the rate portion only, then permutes the full state.</li>
+<li>The <strong>capacity</strong> bits are <em>never</em> output — they are the security margin. Target: c = 2 × desired security level.</li>
+<li>Used by SHA-3/Keccak. Ethereum uses <strong>Keccak-256</strong> (pre-standardization padding — not identical to SHA3-256).</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="merkledamgård-vs.-sponge-construction"><h2 class="slide-title">Merkle–Damgård vs. Sponge Construction</h2><div class="slide-body">
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Merkle–Damgård (SHA-256)</th>
+<th>Sponge (SHA-3)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Structure</td>
+<td>Iterated compression</td>
+<td>Absorb → permute → squeeze</td>
+</tr>
+<tr>
+<td>Digest = internal state?</td>
+<td><strong>Yes</strong></td>
+<td>No — capacity is hidden</td>
+</tr>
+<tr>
+<td>Length-extension vulnerable?</td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+</tr>
+<tr>
+<td>Used in Bitcoin / Ethereum</td>
+<td>SHA-256 / Keccak-256</td>
+<td>Keccak-256</td>
+</tr>
+</tbody>
+</table>
+<div class="callout-note" data-appearance="simple">
+<p>The sponge’s hidden capacity makes length-extension impossible by design — you can’t reconstruct the full internal state from the digest alone.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="aside-hash-salting"><h2 class="slide-title">Aside: Hash Salting</h2><div class="slide-body">
+<ul>
+<li><strong>Definition:</strong> A <em>salt</em> is a random, unique value added to each input before hashing.
+<ul>
+<li>Formally: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>=</mo><mtext mathvariant="normal">Hash</mtext><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">salt</mtext><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.167em"></mspace><mtext mathvariant="normal">password</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h = \text{Hash}(\text{salt} \,\|\, \text{password})</annotation></semantics></math></li>
+<li>Salt is stored <em>in cleartext</em> alongside the hash.</li>
+</ul></li>
+<li><strong>Purpose:</strong>
+<ul>
+<li>Defeats precomputed <strong>rainbow table</strong> attacks.<br />
+</li>
+<li>Ensures identical inputs produce <strong>different hashes</strong>.<br />
+</li>
+<li>Forces attackers to recompute hashes for each user.</li>
+</ul></li>
+<li><strong>Properties:</strong>
+<ul>
+<li>Each salt should be <strong>unique</strong> (ideally random 128 bits).<br />
+</li>
+<li>Salts <strong>don’t need to be secret</strong> — just unpredictable.<br />
+</li>
+<li>Common in password databases, key derivation, and digital commitments.</li>
+</ul></li>
+<li><strong>Example:</strong>
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>h</mi><mn>1</mn></msub><mo>=</mo><mtext mathvariant="normal">SHA256</mtext><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">&quot;A9F2&quot;</mtext><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.167em"></mspace><mtext mathvariant="normal">&quot;password&quot;</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h_1 = \text{SHA256}(\text{&quot;A9F2&quot;} \,\|\, \text{&quot;password&quot;})</annotation></semantics></math><br />
+</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>h</mi><mn>2</mn></msub><mo>=</mo><mtext mathvariant="normal">SHA256</mtext><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">&quot;B1C4&quot;</mtext><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.167em"></mspace><mtext mathvariant="normal">&quot;password&quot;</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h_2 = \text{SHA256}(\text{&quot;B1C4&quot;} \,\|\, \text{&quot;password&quot;})</annotation></semantics></math> → different result.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="hashing-as-commitment"><h2 class="slide-title">Hashing as Commitment</h2><div class="slide-body">
+<ul>
+<li>A document can be represented by its hash.</li>
+<li>The hash is unique to its contents.</li>
+<li>Example:
+<ul>
+<li>You want to prove ownership of intellectual property (document, book, etc).</li>
+<li>You publicly reveal the hash of the document (ie, tweet it out)</li>
+<li>At a later date, you can prove the document existed by showing the hash matches your tweet.</li>
+</ul></li>
+<li>Publishing the hash “commits” you to the document without revealing it.</li>
+</ul>
+</div></section>
+<section class="slide" id="merkle-trees-motivation"><h2 class="slide-title">Merkle Trees: Motivation</h2><div class="slide-body">
+<ul>
+<li><strong>Problem:</strong> How can we represent and verify a <em>large collection</em> of items with a single short value?</li>
+<li><strong>Goal:</strong> Detect any tampering and prove membership of an item <strong>without</strong> revealing or re‑sending everything.</li>
+<li><strong>Key idea:</strong> Build a tree of hashes so that one small value (the <strong>root hash</strong>) commits to <em>all</em> leaves.</li>
+<li><strong>Payoff:</strong>
+<ul>
+<li><strong>Fast verification</strong>: proofs size grows like <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>n</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(\log n)</annotation></semantics></math>.</li>
+<li><strong>Tamper‑evident</strong>: any change propagates up to the root.</li>
+<li><strong>Storage‑friendly</strong>: keep one root instead of all items.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="what-is-a-merkle-tree"><h2 class="slide-title">What Is a Merkle Tree?</h2><div class="slide-body">
+<ul>
+<li>A <strong>Merkle tree</strong> is a <strong>hash tree</strong>:
+<ul>
+<li><strong>Leaves:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ℓ</mi><mi>i</mi></msub><mo>=</mo><mi>H</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\ell_i = H(x_i)</annotation></semantics></math> where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mi>i</mi></msub><annotation encoding="application/x-tex">x_i</annotation></semantics></math> is the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>‑th data block.</li>
+<li><strong>Internal node:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>=</mo><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">left</mtext><mo>∥</mo><mtext mathvariant="normal">right</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h = H(\text{left} \parallel \text{right})</annotation></semantics></math>.</li>
+<li><strong>Root:</strong> the top hash commits to <em>all</em> leaves below.</li>
+</ul></li>
+<li><strong>Concatenation</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>∥</mo><annotation encoding="application/x-tex">\parallel</annotation></semantics></math> is order‑sensitive: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo>∥</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo><mo>≠</mo><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mi>b</mi><mo>∥</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">H(a\parallel b) \ne H(b\parallel a)</annotation></semantics></math> in general.</li>
+<li>The <strong>root hash</strong> is a <em>commitment</em> to the whole dataset.</li>
+</ul>
+<div style="z-index:-1; position:relative; height:300px; top:-50px; ">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 219.99 81.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:293px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 77.6)">
+<g id="node1" class="node">
+<path fill="#e0f2fe" stroke="#0369a1" d="M134.93,-73.6C134.93,-73.6 75.78,-73.6 75.78,-73.6 72.58,-73.6 69.38,-70.4 69.38,-67.2 69.38,-67.2 69.38,-60.8 69.38,-60.8 69.38,-57.6 72.58,-54.4 75.78,-54.4 75.78,-54.4 134.93,-54.4 134.93,-54.4 138.13,-54.4 141.33,-57.6 141.33,-60.8 141.33,-60.8 141.33,-67.2 141.33,-67.2 141.33,-70.4 138.13,-73.6 134.93,-73.6"/>
+<text text-anchor="middle" x="105.35" y="-61" font-family="Helvetica,sans-Serif" font-size="10.00">r = H(p1 ‖ p2)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e0f2fe" stroke="#0369a1" d="M96.26,-46.4C96.26,-46.4 40.45,-46.4 40.45,-46.4 37.25,-46.4 34.05,-43.2 34.05,-40 34.05,-40 34.05,-33.6 34.05,-33.6 34.05,-30.4 37.25,-27.2 40.45,-27.2 40.45,-27.2 96.26,-27.2 96.26,-27.2 99.46,-27.2 102.66,-30.4 102.66,-33.6 102.66,-33.6 102.66,-40 102.66,-40 102.66,-43.2 99.46,-46.4 96.26,-46.4"/>
+<text text-anchor="middle" x="68.35" y="-33.8" font-family="Helvetica,sans-Serif" font-size="10.00">p1 = H(a ‖ b)</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M81.71,-46.9C82.15,-47.19 82.59,-47.49 83.03,-47.79"/>
+<polygon fill="black" stroke="black" points="80.9,-50.58 91.14,-53.32 84.84,-44.79 80.9,-50.58"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e0f2fe" stroke="#0369a1" d="M170.98,-46.4C170.98,-46.4 115.73,-46.4 115.73,-46.4 112.53,-46.4 109.33,-43.2 109.33,-40 109.33,-40 109.33,-33.6 109.33,-33.6 109.33,-30.4 112.53,-27.2 115.73,-27.2 115.73,-27.2 170.98,-27.2 170.98,-27.2 174.18,-27.2 177.38,-30.4 177.38,-33.6 177.38,-33.6 177.38,-40 177.38,-40 177.38,-43.2 174.18,-46.4 170.98,-46.4"/>
+<text text-anchor="middle" x="143.35" y="-33.8" font-family="Helvetica,sans-Serif" font-size="10.00">p2 = H(c ‖ d)</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M129.64,-46.9C129.2,-47.19 128.76,-47.48 128.32,-47.77"/>
+<polygon fill="black" stroke="black" points="126.59,-44.72 120.19,-53.16 130.46,-50.55 126.59,-44.72"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f3f4f6" stroke="#9ca3af" d="M38.31,-19.2C38.31,-19.2 6.4,-19.2 6.4,-19.2 3.2,-19.2 0,-16 0,-12.8 0,-12.8 0,-6.4 0,-6.4 0,-3.2 3.2,0 6.4,0 6.4,0 38.31,0 38.31,0 41.51,0 44.71,-3.2 44.71,-6.4 44.71,-6.4 44.71,-12.8 44.71,-12.8 44.71,-16 41.51,-19.2 38.31,-19.2"/>
+<text text-anchor="middle" x="22.35" y="-6.6" font-family="Helvetica,sans-Serif" font-size="10.00">a = H(A)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M38.96,-19.7C40.02,-20.28 41.09,-20.86 42.18,-21.46"/>
+<polygon fill="black" stroke="black" points="40.15,-24.34 50.6,-26.07 43.51,-18.2 40.15,-24.34"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#f3f4f6" stroke="#9ca3af" d="M90.31,-19.2C90.31,-19.2 58.4,-19.2 58.4,-19.2 55.2,-19.2 52,-16 52,-12.8 52,-12.8 52,-6.4 52,-6.4 52,-3.2 55.2,0 58.4,0 58.4,0 90.31,0 90.31,0 93.51,0 96.71,-3.2 96.71,-6.4 96.71,-6.4 96.71,-12.8 96.71,-12.8 96.71,-16 93.51,-19.2 90.31,-19.2"/>
+<text text-anchor="middle" x="74.35" y="-6.6" font-family="Helvetica,sans-Serif" font-size="10.00">b = H(B)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M72.19,-19.7C72.15,-19.85 72.12,-19.99 72.08,-20.14"/>
+<polygon fill="black" stroke="black" points="69.72,-14.96 70.81,-25.5 76.53,-16.58 69.72,-14.96"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#f3f4f6" stroke="#9ca3af" d="M153.3,-19.2C153.3,-19.2 121.4,-19.2 121.4,-19.2 118.2,-19.2 115,-16 115,-12.8 115,-12.8 115,-6.4 115,-6.4 115,-3.2 118.2,0 121.4,0 121.4,0 153.3,0 153.3,0 156.5,0 159.7,-3.2 159.7,-6.4 159.7,-6.4 159.7,-12.8 159.7,-12.8 159.7,-16 156.5,-19.2 153.3,-19.2"/>
+<text text-anchor="middle" x="137.35" y="-6.6" font-family="Helvetica,sans-Serif" font-size="10.00">c = H(C)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M139.52,-19.7C139.56,-19.85 139.59,-19.99 139.63,-20.14"/>
+<polygon fill="black" stroke="black" points="135.18,-16.58 140.9,-25.5 141.99,-14.96 135.18,-16.58"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="#f3f4f6" stroke="#9ca3af" d="M205.59,-19.2C205.59,-19.2 173.12,-19.2 173.12,-19.2 169.92,-19.2 166.72,-16 166.72,-12.8 166.72,-12.8 166.72,-6.4 166.72,-6.4 166.72,-3.2 169.92,0 173.12,0 173.12,0 205.59,0 205.59,0 208.79,0 211.99,-3.2 211.99,-6.4 211.99,-6.4 211.99,-12.8 211.99,-12.8 211.99,-16 208.79,-19.2 205.59,-19.2"/>
+<text text-anchor="middle" x="189.35" y="-6.6" font-family="Helvetica,sans-Serif" font-size="10.00">d = H(D)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M172.75,-19.7C171.69,-20.28 170.62,-20.86 169.53,-21.46"/>
+<polygon fill="black" stroke="black" points="168.2,-18.2 161.11,-26.07 171.56,-24.34 168.2,-18.2"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide smaller" id="building-a-merkle-tree"><h2 class="slide-title">Building a Merkle Tree</h2><div class="slide-body">
+<ol type="1">
+<li>Split your dataset into items <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mn>1</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>x</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">x_1,\ldots,x_n</annotation></semantics></math>.</li>
+<li>Compute leaf hashes: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ℓ</mi><mi>i</mi></msub><mo>=</mo><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">LeafTag</mtext><mo>∥</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\ell_i = H(\text{LeafTag}\parallel x_i)</annotation></semantics></math>.</li>
+<li>Pair adjacent hashes and compute parents: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mi>j</mi></msub><mo>=</mo><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">NodeTag</mtext><mo>∥</mo><msub><mi>ℓ</mi><mrow><mn>2</mn><mi>j</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>∥</mo><msub><mi>ℓ</mi><mrow><mn>2</mn><mi>j</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p_j = H(\text{NodeTag}\parallel \ell_{2j-1} \parallel \ell_{2j})</annotation></semantics></math>.</li>
+<li>Repeat step 3 until a single <strong>root</strong> remains.</li>
+<li>If <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> is odd, define a rule (e.g., <strong>duplicate</strong> the last hash or <strong>carry it up</strong>) and apply it consistently.</li>
+</ol>
+<ul>
+<li><strong>Tags</strong> (a.k.a. <em>domain separation</em>): include a short constant like <code>LeafTag</code> vs <code>NodeTag</code> to avoid ambiguity.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="worked-example-4-items"><h2 class="slide-title">Worked Example (4 Items)</h2><div class="slide-body">
+<ul>
+<li>Let items be <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>,</mo><mi>B</mi><mo>,</mo><mi>C</mi><mo>,</mo><mi>D</mi></mrow><annotation encoding="application/x-tex">A,B,C,D</annotation></semantics></math>.</li>
+<li>Leaves: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">Leaf</mtext><mo>∥</mo><mi>A</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">a=H(\text{Leaf}\parallel A)</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mo>=</mo><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">Leaf</mtext><mo>∥</mo><mi>B</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">b=H(\text{Leaf}\parallel B)</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mo>=</mo><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">Leaf</mtext><mo>∥</mo><mi>C</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">c=H(\text{Leaf}\parallel C)</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo>=</mo><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">Leaf</mtext><mo>∥</mo><mi>D</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">d=H(\text{Leaf}\parallel D)</annotation></semantics></math>.</li>
+<li>Parents: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mn>1</mn></msub><mo>=</mo><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">Node</mtext><mo>∥</mo><mi>a</mi><mo>∥</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p_1=H(\text{Node}\parallel a\parallel b)</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mn>2</mn></msub><mo>=</mo><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">Node</mtext><mo>∥</mo><mi>c</mi><mo>∥</mo><mi>d</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p_2=H(\text{Node}\parallel c\parallel d)</annotation></semantics></math>.</li>
+<li><strong>Root:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi><mo>=</mo><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">Node</mtext><mo>∥</mo><msub><mi>p</mi><mn>1</mn></msub><mo>∥</mo><msub><mi>p</mi><mn>2</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">r=H(\text{Node}\parallel p_1\parallel p_2)</annotation></semantics></math>.</li>
+</ul>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 376.34 93.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:501px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 89.6)">
+<g id="node1" class="node">
+<path fill="#e0f2fe" stroke="#0369a1" d="M232.5,-85.6C232.5,-85.6 135.56,-85.6 135.56,-85.6 132.36,-85.6 129.16,-82.4 129.16,-79.2 129.16,-79.2 129.16,-72.8 129.16,-72.8 129.16,-69.6 132.36,-66.4 135.56,-66.4 135.56,-66.4 232.5,-66.4 232.5,-66.4 235.7,-66.4 238.9,-69.6 238.9,-72.8 238.9,-72.8 238.9,-79.2 238.9,-79.2 238.9,-82.4 235.7,-85.6 232.5,-85.6"/>
+<text text-anchor="middle" x="184.03" y="-73" font-family="Helvetica,sans-Serif" font-size="10.00">r = H(Node ‖ p1 ‖ p2)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e0f2fe" stroke="#0369a1" d="M170.84,-52.4C170.84,-52.4 77.23,-52.4 77.23,-52.4 74.03,-52.4 70.83,-49.2 70.83,-46 70.83,-46 70.83,-39.6 70.83,-39.6 70.83,-36.4 74.03,-33.2 77.23,-33.2 77.23,-33.2 170.84,-33.2 170.84,-33.2 174.04,-33.2 177.24,-36.4 177.24,-39.6 177.24,-39.6 177.24,-46 177.24,-46 177.24,-49.2 174.04,-52.4 170.84,-52.4"/>
+<text text-anchor="middle" x="124.03" y="-39.8" font-family="Helvetica,sans-Serif" font-size="10.00">p1 = H(Node ‖ a ‖ b)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" d="M156.77,-60.82C151.45,-58.06 146.01,-55.23 141.14,-52.7"/>
+<polygon fill="#64748b" stroke="#64748b" points="154.85,-63.77 165.33,-65.28 158.08,-57.56 154.85,-63.77"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e0f2fe" stroke="#0369a1" d="M290.56,-52.4C290.56,-52.4 197.51,-52.4 197.51,-52.4 194.31,-52.4 191.11,-49.2 191.11,-46 191.11,-46 191.11,-39.6 191.11,-39.6 191.11,-36.4 194.31,-33.2 197.51,-33.2 197.51,-33.2 290.56,-33.2 290.56,-33.2 293.76,-33.2 296.96,-36.4 296.96,-39.6 296.96,-39.6 296.96,-46 296.96,-46 296.96,-49.2 293.76,-52.4 290.56,-52.4"/>
+<text text-anchor="middle" x="244.03" y="-39.8" font-family="Helvetica,sans-Serif" font-size="10.00">p2 = H(Node ‖ c ‖ d)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" d="M211.3,-60.82C216.61,-58.06 222.05,-55.23 226.92,-52.7"/>
+<polygon fill="#64748b" stroke="#64748b" points="209.99,-57.56 202.73,-65.28 213.22,-63.77 209.99,-57.56"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f3f4f6" stroke="#9ca3af" d="M71.66,-19.2C71.66,-19.2 6.4,-19.2 6.4,-19.2 3.2,-19.2 0,-16 0,-12.8 0,-12.8 0,-6.4 0,-6.4 0,-3.2 3.2,0 6.4,0 6.4,0 71.66,0 71.66,0 74.86,0 78.06,-3.2 78.06,-6.4 78.06,-6.4 78.06,-12.8 78.06,-12.8 78.06,-16 74.86,-19.2 71.66,-19.2"/>
+<text text-anchor="middle" x="39.03" y="-6.6" font-family="Helvetica,sans-Serif" font-size="10.00">a = H(Leaf ‖ A)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" d="M88.68,-28.82C80.23,-25.72 71.4,-22.48 63.56,-19.6"/>
+<polygon fill="#64748b" stroke="#64748b" points="87.43,-32.09 98.03,-32.25 89.84,-25.52 87.43,-32.09"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#f3f4f6" stroke="#9ca3af" d="M163.66,-19.2C163.66,-19.2 98.4,-19.2 98.4,-19.2 95.2,-19.2 92,-16 92,-12.8 92,-12.8 92,-6.4 92,-6.4 92,-3.2 95.2,0 98.4,0 98.4,0 163.66,0 163.66,0 166.86,0 170.06,-3.2 170.06,-6.4 170.06,-6.4 170.06,-12.8 170.06,-12.8 170.06,-16 166.86,-19.2 163.66,-19.2"/>
+<text text-anchor="middle" x="131.03" y="-6.6" font-family="Helvetica,sans-Serif" font-size="10.00">b = H(Leaf ‖ B)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" d="M128.47,-22.02C128.66,-21.19 128.84,-20.37 129.02,-19.59"/>
+<polygon fill="#64748b" stroke="#64748b" points="125.12,-20.94 126.35,-31.47 131.96,-22.47 125.12,-20.94"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#f3f4f6" stroke="#9ca3af" d="M269.66,-19.2C269.66,-19.2 204.4,-19.2 204.4,-19.2 201.2,-19.2 198,-16 198,-12.8 198,-12.8 198,-6.4 198,-6.4 198,-3.2 201.2,0 204.4,0 204.4,0 269.66,0 269.66,0 272.86,0 276.06,-3.2 276.06,-6.4 276.06,-6.4 276.06,-12.8 276.06,-12.8 276.06,-16 272.86,-19.2 269.66,-19.2"/>
+<text text-anchor="middle" x="237.03" y="-6.6" font-family="Helvetica,sans-Serif" font-size="10.00">c = H(Leaf ‖ C)</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#64748b" d="M239.59,-22.02C239.41,-21.19 239.23,-20.37 239.05,-19.59"/>
+<polygon fill="#64748b" stroke="#64748b" points="236.11,-22.47 241.71,-31.47 242.94,-20.94 236.11,-22.47"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="#f3f4f6" stroke="#9ca3af" d="M361.94,-19.2C361.94,-19.2 296.12,-19.2 296.12,-19.2 292.92,-19.2 289.72,-16 289.72,-12.8 289.72,-12.8 289.72,-6.4 289.72,-6.4 289.72,-3.2 292.92,0 296.12,0 296.12,0 361.94,0 361.94,0 365.14,0 368.34,-3.2 368.34,-6.4 368.34,-6.4 368.34,-12.8 368.34,-12.8 368.34,-16 365.14,-19.2 361.94,-19.2"/>
+<text text-anchor="middle" x="329.03" y="-6.6" font-family="Helvetica,sans-Serif" font-size="10.00">d = H(Leaf ‖ D)</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#64748b" d="M279.38,-28.82C287.83,-25.72 296.67,-22.48 304.5,-19.6"/>
+<polygon fill="#64748b" stroke="#64748b" points="278.22,-25.52 270.04,-32.25 280.63,-32.09 278.22,-25.52"/>
+</g>
+</g>
+</svg></figure>
+</div></section>
+<section class="slide" id="merkle-proofs-membership"><h2 class="slide-title">Merkle Proofs (Membership)</h2><div class="slide-body">
+<ul>
+<li>To prove an item <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math> is in the tree with root <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math>:
+<ol type="1">
+<li>Provide <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math> and its <strong>authentication path</strong>: the list of <strong>sibling hashes</strong> from the leaf up.</li>
+<li>The verifier recomputes: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">Leaf</mtext><mo>∥</mo><mi>A</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">a=H(\text{Leaf}\parallel A)</annotation></semantics></math>, then combines with each sibling in the correct left/right order to reconstruct <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math>.</li>
+</ol></li>
+<li>If the recomputed root equals the claimed <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math>, membership is verified.</li>
+<li><strong>Proof size:</strong> about <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">⌈</mo><msub><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mn>2</mn></msub><mi>n</mi><mo stretchy="false" form="postfix">⌉</mo></mrow><annotation encoding="application/x-tex">\lceil \log_2 n \rceil</annotation></semantics></math> hashes.</li>
+</ul>
+</div></section>
+<section class="slide" id="why-proofs-are-efficient"><h2 class="slide-title">Why Proofs Are Efficient</h2><div class="slide-body">
+<ul>
+<li>For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> leaves, depth is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo><msub><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mn>2</mn></msub><mi>n</mi></mrow><annotation encoding="application/x-tex">\approx \log_2 n</annotation></semantics></math> (binary tree).</li>
+<li><strong>Proof length:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">⌈</mo><msub><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mn>2</mn></msub><mi>n</mi><mo stretchy="false" form="postfix">⌉</mo></mrow><annotation encoding="application/x-tex">\lceil \log_2 n \rceil</annotation></semantics></math> hashes; e.g.,
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>000</mn></mrow><annotation encoding="application/x-tex">n=1{,}000</annotation></semantics></math> → about 10 hashes.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>000</mn><mo>,</mo><mn>000</mn></mrow><annotation encoding="application/x-tex">n=1{,}000{,}000</annotation></semantics></math> → about 20 hashes.</li>
+</ul></li>
+<li><strong>Verification time:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>n</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(\log n)</annotation></semantics></math> hash calls.</li>
+<li><strong>Storage:</strong> You may store only the <strong>root</strong> (and a policy that defines how the tree is built).</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="tamper-evidence-security-assumptions"><h2 class="slide-title">Tamper Evidence &amp; Security Assumptions</h2><div class="slide-body">
+<ul>
+<li>Security relies on properties of the hash function <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>H</mi><annotation encoding="application/x-tex">H</annotation></semantics></math>:
+<ul>
+<li><strong>Collision resistance:</strong> infeasible to find <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>≠</mo><msup><mi>x</mi><mo>′</mo></msup></mrow><annotation encoding="application/x-tex">x\ne x&#39;</annotation></semantics></math> with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>H</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>x</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">H(x)=H(x&#39;)</annotation></semantics></math>.</li>
+<li><strong>Second‑preimage resistance:</strong> given <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>, hard to find <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>x</mi><mo>′</mo></msup><mo>≠</mo><mi>x</mi></mrow><annotation encoding="application/x-tex">x&#39;\ne x</annotation></semantics></math> with same hash.</li>
+</ul></li>
+<li><strong>Ordering matters:</strong> use left/right labels and explicit concatenation.</li>
+<li><strong>Domain separation:</strong> tag leaves vs internal nodes (e.g., <code>0x00</code> for leaves, <code>0x01</code> for nodes).</li>
+</ul>
+</div></section>
+<section class="slide" id="design-choices-variants"><h2 class="slide-title">Design Choices &amp; Variants</h2><div class="slide-body">
+<ul>
+<li><strong>Branching factor:</strong> binary vs <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>‑ary (trades depth for node size).</li>
+<li><strong>Sorted vs original order:</strong> some systems sort leaves for determinism; others preserve insertion order.</li>
+<li><strong>Odd number of leaves:</strong> duplicate last leaf, or promote it—pick one rule and publish it.</li>
+<li><strong>Sparse trees:</strong> massive key spaces with mostly empty leaves (useful when indices matter: concatenate node value with index or node tag prior to hashing).</li>
+</ul>
+</div></section>
+<section class="slide" id="where-youll-see-them-nonexhaustive"><h2 class="slide-title">Where You’ll See Them (Non‑Exhaustive)</h2><div class="slide-body">
+<ul>
+<li><strong>Content‑addressed data systems:</strong> version control stores (e.g., commit graphs as hash‑linked structures).</li>
+<li><strong>Transparency logs:</strong> public, append‑only logs use Merkle roots to audit inclusion and history.</li>
+<li><strong>Package &amp; software updates:</strong> metadata signed via Merkle roots to ensure integrity.</li>
+<li><strong>Filesystems &amp; databases:</strong> integrity trees over blocks/pages for fast corruption detection.</li>
+<li><strong>Blockchain:</strong> Block headers include a Merkle root committing to all transactions in the block.</li>
+</ul>
+</div></section>
+<section class="slide" id="practice-micro-labs"><h2 class="slide-title">Practice: Micro Labs</h2><div class="slide-body">
+<p>Review the following interactive labs:</p>
+<ul>
+<li><p>First: <a href="/assets/labs/merkle-trees/">Merkle-trees Lab</a></p></li>
+<li><p>Second: <a href="/assets/labs/hashing_merkle/hashing_merkle_lab.html">Hashing Merkle Lab</a></p></li>
+</ul>
+</div></section>
+<section class="slide" id="summary"><h2 class="slide-title">Summary</h2><div class="slide-body">
+<ul>
+<li>A cryptographic hash provides binding commitments with strong one‑way and collision resistance.</li>
+<li>A Merkle tree is a <strong>hash‑based commitment</strong> to a whole dataset.</li>
+<li><strong>Membership proofs</strong> use sibling hashes along a path to rebuild the root.</li>
+<li><strong>Efficiency:</strong> verification cost and proof size grow logarithmically.</li>
+<li><strong>Security:</strong> depends on a good hash function and unambiguous formatting rules.</li>
+</ul>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-katz_introductionmoderncryptography_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">J. Katz and Y. Lindell, <em>Introduction to <span>Modern Cryptography</span></em>, 3rd ed. <span>Chapman and Hall/CRC</span>, 2020. doi: <a href="https://doi.org/10.1201/9781351133036">10.1201/9781351133036</a>.</div>
+</div>
+<div id="ref-menezes_handbookappliedcryptography_2011" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">A. J. Menezes, P. C. van Oorschot, and S. A. Vanstone, <span>“Handbook of <span>Applied Cryptography</span>.”</span> CRC Press, Aug. 07, 2011. Accessed: Oct. 23, 2025. [Online]. Available: <a href="https://cacr.uwaterloo.ca/hac/">https://cacr.uwaterloo.ca/hac/</a></div>
+</div>
+<div id="ref-nationalinstituteofstandardsandtechnologyus_securehashstandard_2015" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">National Institute of Standards and Technology (US), <span>“Secure hash standard,”</span> <span>National Institute of Standards and Technology (U.S.)</span>, Washington, D.C., NIST FIPS 180-4, 2015. doi: <a href="https://doi.org/10.6028/NIST.FIPS.180-4">10.6028/NIST.FIPS.180-4</a>.</div>
+</div>
+<div id="ref-boneh_hashfunctions_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">D. Boneh and V. Shoup, <span>“Hash <span>Functions</span>.”</span> 2020. Available: <a href="https://intensecrypto.org/public/lec_07_hash_functions.html">https://intensecrypto.org/public/lec_07_hash_functions.html</a></div>
+</div>
+<div id="ref-stevens_firstcollisionfull_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">M. Stevens, E. Bursztein, P. Karpman, A. Albertini, and Y. Markov, <span>“The first collision for full <span>SHA-1</span>.”</span> Accessed: Oct. 30, 2025. [Online]. Available: <a href="https://eprint.iacr.org/2017/190">https://eprint.iacr.org/2017/190</a></div>
+</div>
+<div id="ref-stinson_cryptographytheorypractice_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">D. R. Stinson and M. B. Paterson, <em>Cryptography: Theory and practice</em>, Fourth edition, first issued in paperback. Boca Raton, FL: Chapman &amp; Hall/CRC Press, 2022.</div>
+</div>
+<div id="ref-leurent_sha1shambles_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">G. Leurent and T. Peyrin, <span>“<span>SHA-1</span> is a <span>Shambles</span>.”</span> Accessed: Oct. 30, 2025. [Online]. Available: <a href="https://sha-mbles.github.io/">https://sha-mbles.github.io/</a></div>
+</div>
+<div id="ref-cwiamsterdam_shattered_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">CWI Amsterdam and Google Research, <span>“<span>SHAttered</span>.”</span> Accessed: Oct. 30, 2025. [Online]. Available: <a href="https://shattered.io/">https://shattered.io/</a></div>
+</div>
+<div id="ref-bertoni_keccakreferenceversion_2011" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">G. Bertoni, J. Daemen, M. Peeters, and G. Van Assche, <span>“The <span>Keccak Reference</span> version 3.0.”</span> Team Keccak, Jan. 14, 2011. Accessed: Oct. 30, 2025. [Online]. Available: <a href="https://keccak.team/files/Keccak-reference-3.0.pdf">https://keccak.team/files/Keccak-reference-3.0.pdf</a></div>
+</div>
+<div id="ref-temoshok_digitalidentityguidelines_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">D. Temoshok, <span>“Digital <span>Identity Guidelines</span>: <span>Authentication</span> and <span>Authenticator Management</span>,”</span> <span>National Institute of Standards and Technology</span>, Gaithersburg, MD, NIST SP 800-63B-4, 2025. doi: <a href="https://doi.org/10.6028/NIST.SP.800-63B-4">10.6028/NIST.SP.800-63B-4</a>.</div>
+</div>
+<div id="ref-bonneau_reliablestorage56bit_2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">J. Bonneau and S. E. Schechter, <span>“Towards reliable storage of 56-bit secrets in human memory,”</span> in <em><span>USENIX Security Symposiym</span></em>, Aug. 2014. Accessed: Oct. 30, 2025. [Online]. Available: <a href="https://users.umiacs.umd.edu/~tudor/courses/ENEE757/Fall15/papers/Bonneau14.pdf">https://users.umiacs.umd.edu/~tudor/courses/ENEE757/Fall15/papers/Bonneau14.pdf</a></div>
+</div>
+<div id="ref-haber_howtimestampdigital_1991" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">S. Haber and W. S. Stornetta, <span>“How to time-stamp a digital document,”</span> <em>J. Cryptology</em>, vol. 3, no. 2, pp. 99–111, Jan. 1991, doi: <a href="https://doi.org/10.1007/BF00196791">10.1007/BF00196791</a>.</div>
+</div>
+<div id="ref-dang_recommendationapplicationsusing_2012" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">Q. H. Dang, <span>“Recommendation for applications using approved hash algorithms,”</span> <span>National Institute of Standards and Technology</span>, Gaithersburg, MD, NIST SP 800-107r1, 2012. doi: <a href="https://doi.org/10.6028/NIST.SP.800-107r1">10.6028/NIST.SP.800-107r1</a>.</div>
+</div>
+<div id="ref-bayer_improvingefficiencyreliability_1993" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">D. Bayer, S. Haber, and W. S. Stornetta, <span>“Improving the <span>Efficiency</span> and <span>Reliability</span> of <span>Digital Time-Stamping</span>,”</span> in <em>Sequences <span>II</span></em>, R. Capocelli, A. De Santis, and U. Vaccaro, Eds., New York, NY: Springer New York, 1993, pp. 329–334. doi: <a href="https://doi.org/10.1007/978-1-4613-9323-8_24">10.1007/978-1-4613-9323-8_24</a>.</div>
+</div>
+<div id="ref-massias_designsecuretimestamping_1999" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline">H. Massias, X. S. Avila, and J.-J. Quisquater, <span>“Design of a <span>Secure Timestamping Service</span> with <span>Minimal Trust Requirements</span>,”</span> in <em>20th <span>Symposium</span> on <span>Information Theory</span> in the <span>Benelux</span></em>, Haasrode, Belgium, May 1999. Available: <a href="https://cdn.nakamotoinstitute.org/docs/secure-timestamping-service.pdf">https://cdn.nakamotoinstitute.org/docs/secure-timestamping-service.pdf</a></div>
+</div>
+<div id="ref-nakamoto_bitcoinpeertopeerelectronic_2008" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[16] </div><div class="csl-right-inline">S. Nakamoto, <span>“Bitcoin: <span class="nocase">A Peer-to-Peer Electronic Cash System</span>.”</span> Satoshi Nakamoto Institute, Oct. 31, 2008. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf">https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf</a></div>
+</div>
+<div id="ref-nakamotoinstitute_bitcoinlibraryprimary_2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[17] </div><div class="csl-right-inline">Nakamoto Institute, <span>“Bitcoin <span>Library</span> (<span>Primary Sources</span>).”</span> 2014. Available: <a href="https://nakamotoinstitute.org/library/bitcoin/">https://nakamotoinstitute.org/library/bitcoin/</a></div>
+</div>
+<div id="ref-narayanan_bitcoincryptocurrencytechnologies_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[18] </div><div class="csl-right-inline">A. Narayanan, J. Bonneau, E. Felten, A. Miller, and S. Goldfeder, <em>Bitcoin and <span>Cryptocurrency Technologies</span></em>. Princeton University Press, 2016.</div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

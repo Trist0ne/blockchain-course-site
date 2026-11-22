@@ -91,7 +91,7 @@
     var pubBytes = typeof pub === 'string' ? Kit.hex.toBytes(pub) : pub;
     var eph = L.secp256k1.keygen(), iv = root.crypto.getRandomValues(new Uint8Array(12));
     return sealKey(L.secp256k1.getSharedSecret(eph.secretKey, pubBytes), eph.publicKey).then(function (k) {
-      return root.crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, k, enc.encode(JSON.stringify(obj)));
+      return root.crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, k, Kit.padJson(obj));   // padded: the length must not give the contents away
     }).then(function (ct) { return [prefix || 'BCS1', Kit.b64u.from(eph.publicKey), Kit.b64u.from(iv), Kit.b64u.from(ct)].join('.'); });
   }
   function openSealed(token, priv) {

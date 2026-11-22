@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Cypherpunk Ethos and Decentralized Trust</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/introduction/03-IN-cypherpunk_ethos_and_decentralized_trust.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="in-03" data-code="03-IN" data-src="367300ab452e2a0d" data-slides="20">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section I: Introduction · Lesson 03-IN</p><h1>The Cypherpunk Ethos and Decentralized Trust</h1></div></section>
+<section class="slide" id="framing"><h2 class="slide-title">Framing</h2><div class="slide-body">
+<ul>
+<li><p><strong>Lesson Goal:</strong> Understand the <em>‘why’</em> behind blockchain.</p></li>
+<li><p>We’ll explore the history, ideas, and frustrations that led to the creation of Bitcoin.</p></li>
+<li><p>This isn’t just about technology; it’s about trust, privacy, and control in a digital world.</p></li>
+</ul>
+<figure class="diagram mermaid"><svg aria-roledescription="timeline" role="graphics-document document" viewBox="0 -61 1790 479" style="max-width: 1790px;" xmlns="http://www.w3.org/2000/svg" width="100%" id="mmd6"><style>#mmd6{font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:16px;fill:#000000;}#mmd6 .error-icon{fill:#552222;}#mmd6 .error-text{fill:#552222;stroke:#552222;}#mmd6 .edge-thickness-normal{stroke-width:1px;}#mmd6 .edge-thickness-thick{stroke-width:3.5px;}#mmd6 .edge-pattern-solid{stroke-dasharray:0;}#mmd6 .edge-thickness-invisible{stroke-width:0;fill:none;}#mmd6 .edge-pattern-dashed{stroke-dasharray:3;}#mmd6 .edge-pattern-dotted{stroke-dasharray:2;}#mmd6 .marker{fill:#666;stroke:#666;}#mmd6 .marker.cross{stroke:#666;}#mmd6 svg{font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:16px;}#mmd6 p{margin:0;}#mmd6 .edge{stroke-width:3;}#mmd6 .section--1 rect,#mmd6 .section--1 path,#mmd6 .section--1 circle,#mmd6 .section--1 path{fill:#555;}#mmd6 .section--1 text{fill:#F4F4F4;}#mmd6 .node-icon--1{font-size:40px;color:#F4F4F4;}#mmd6 .section-edge--1{stroke:#555;}#mmd6 .edge-depth--1{stroke-width:17;}#mmd6 .section--1 line{stroke:#aaaaaa;stroke-width:3;}#mmd6 .lineWrapper line{stroke:#F4F4F4;}#mmd6 .disabled,#mmd6 .disabled circle,#mmd6 .disabled text{fill:lightgray;}#mmd6 .disabled text{fill:#efefef;}#mmd6 .section-0 rect,#mmd6 .section-0 path,#mmd6 .section-0 circle,#mmd6 .section-0 path{fill:#F4F4F4;}#mmd6 .section-0 text{fill:#333;}#mmd6 .node-icon-0{font-size:40px;color:#333;}#mmd6 .section-edge-0{stroke:#F4F4F4;}#mmd6 .edge-depth-0{stroke-width:14;}#mmd6 .section-0 line{stroke:#0b0b0b;stroke-width:3;}#mmd6 .lineWrapper line{stroke:#333;}#mmd6 .disabled,#mmd6 .disabled circle,#mmd6 .disabled text{fill:lightgray;}#mmd6 .disabled text{fill:#efefef;}#mmd6 .section-1 rect,#mmd6 .section-1 path,#mmd6 .section-1 circle,#mmd6 .section-1 path{fill:#555;}#mmd6 .section-1 text{fill:#F4F4F4;}#mmd6 .node-icon-1{font-size:40px;color:#F4F4F4;}#mmd6 .section-edge-1{stroke:#555;}#mmd6 .edge-depth-1{stroke-width:11;}#mmd6 .section-1 line{stroke:#aaaaaa;stroke-width:3;}#mmd6 .lineWrapper line{stroke:#F4F4F4;}#mmd6 .disabled,#mmd6 .disabled circle,#mmd6 .disabled text{fill:lightgray;}#mmd6 .disabled text{fill:#efefef;}#mmd6 .section-2 rect,#mmd6 .section-2 path,#mmd6 .section-2 circle,#mmd6 .section-2 path{fill:#BBB;}#mmd6 .section-2 text{fill:#333;}#mmd6 .node-icon-2{font-size:40px;color:#333;}#mmd6 .section-edge-2{stroke:#BBB;}#mmd6 .edge-depth-2{stroke-width:8;}#mmd6 .section-2 line{stroke:#444444;stroke-width:3;}#mmd6 .lineWrapper line{stroke:#333;}#mmd6 .disabled,#mmd6 .disabled circle,#mmd6 .disabled text{fill:lightgray;}#mmd6 .disabled text{fill:#efefef;}#mmd6 .section-3 rect,#mmd6 .section-3 path,#mmd6 .section-3 circle,#mmd6 .section-3 path{fill:#777;}#mmd6 .section-3 text{fill:#333;}#mmd6 .node-icon-3{font-size:40px;color:#333;}#mmd6 .section-edge-3{stroke:#777;}#mmd6 .edge-depth-3{stroke-width:5;}#mmd6 .section-3 line{stroke:#888888;stroke-width:3;}#mmd6 .lineWrapper line{stroke:#333;}#mmd6 .disabled,#mmd6 .disabled circle,#mmd6 .disabled text{fill:lightgray;}#mmd6 .disabled text{fill:#efefef;}#mmd6 .section-4 rect,#mmd6 .section-4 path,#mmd6 .section-4 circle,#mmd6 .section-4 path{fill:#999;}#mmd6 .section-4 text{fill:#333;}#mmd6 .node-icon-4{font-size:40px;color:#333;}#mmd6 .section-edge-4{stroke:#999;}#mmd6 .edge-depth-4{stroke-width:2;}#mmd6 .section-4 line{stroke:#666666;stroke-width:3;}#mmd6 .lineWrapper line{stroke:#333;}#mmd6 .disabled,#mmd6 .disabled circle,#mmd6 .disabled text{fill:lightgray;}#mmd6 .disabled text{fill:#efefef;}#mmd6 .section-5 rect,#mmd6 .section-5 path,#mmd6 .section-5 circle,#mmd6 .section-5 path{fill:#DDD;}#mmd6 .section-5 text{fill:#333;}#mmd6 .node-icon-5{font-size:40px;color:#333;}#mmd6 .section-edge-5{stroke:#DDD;}#mmd6 .edge-depth-5{stroke-width:-1;}#mmd6 .section-5 line{stroke:#222222;stroke-width:3;}#mmd6 .lineWrapper line{stroke:#333;}#mmd6 .disabled,#mmd6 .disabled circle,#mmd6 .disabled text{fill:lightgray;}#mmd6 .disabled text{fill:#efefef;}#mmd6 .section-6 rect,#mmd6 .section-6 path,#mmd6 .section-6 circle,#mmd6 .section-6 path{fill:#FFF;}#mmd6 .section-6 text{fill:#333;}#mmd6 .node-icon-6{font-size:40px;color:#333;}#mmd6 .section-edge-6{stroke:#FFF;}#mmd6 .edge-depth-6{stroke-width:-4;}#mmd6 .section-6 line{stroke:#000000;stroke-width:3;}#mmd6 .lineWrapper line{stroke:#333;}#mmd6 .disabled,#mmd6 .disabled circle,#mmd6 .disabled text{fill:lightgray;}#mmd6 .disabled text{fill:#efefef;}#mmd6 .section-7 rect,#mmd6 .section-7 path,#mmd6 .section-7 circle,#mmd6 .section-7 path{fill:#DDD;}#mmd6 .section-7 text{fill:#333;}#mmd6 .node-icon-7{font-size:40px;color:#333;}#mmd6 .section-edge-7{stroke:#DDD;}#mmd6 .edge-depth-7{stroke-width:-7;}#mmd6 .section-7 line{stroke:#222222;stroke-width:3;}#mmd6 .lineWrapper line{stroke:#333;}#mmd6 .disabled,#mmd6 .disabled circle,#mmd6 .disabled text{fill:lightgray;}#mmd6 .disabled text{fill:#efefef;}#mmd6 .section-8 rect,#mmd6 .section-8 path,#mmd6 .section-8 circle,#mmd6 .section-8 path{fill:#BBB;}#mmd6 .section-8 text{fill:#333;}#mmd6 .node-icon-8{font-size:40px;color:#333;}#mmd6 .section-edge-8{stroke:#BBB;}#mmd6 .edge-depth-8{stroke-width:-10;}#mmd6 .section-8 line{stroke:#444444;stroke-width:3;}#mmd6 .lineWrapper line{stroke:#333;}#mmd6 .disabled,#mmd6 .disabled circle,#mmd6 .disabled text{fill:lightgray;}#mmd6 .disabled text{fill:#efefef;}#mmd6 .section-9 rect,#mmd6 .section-9 path,#mmd6 .section-9 circle,#mmd6 .section-9 path{fill:#999;}#mmd6 .section-9 text{fill:#333;}#mmd6 .node-icon-9{font-size:40px;color:#333;}#mmd6 .section-edge-9{stroke:#999;}#mmd6 .edge-depth-9{stroke-width:-13;}#mmd6 .section-9 line{stroke:#666666;stroke-width:3;}#mmd6 .lineWrapper line{stroke:#333;}#mmd6 .disabled,#mmd6 .disabled circle,#mmd6 .disabled text{fill:lightgray;}#mmd6 .disabled text{fill:#efefef;}#mmd6 .section-10 rect,#mmd6 .section-10 path,#mmd6 .section-10 circle,#mmd6 .section-10 path{fill:#777;}#mmd6 .section-10 text{fill:#333;}#mmd6 .node-icon-10{font-size:40px;color:#333;}#mmd6 .section-edge-10{stroke:#777;}#mmd6 .edge-depth-10{stroke-width:-16;}#mmd6 .section-10 line{stroke:#888888;stroke-width:3;}#mmd6 .lineWrapper line{stroke:#333;}#mmd6 .disabled,#mmd6 .disabled circle,#mmd6 .disabled text{fill:lightgray;}#mmd6 .disabled text{fill:#efefef;}#mmd6 .section-root rect,#mmd6 .section-root path,#mmd6 .section-root circle{fill:hsl(0, 0%, 70.6862745098%);}#mmd6 .section-root text{fill:#333;}#mmd6 .icon-container{height:100%;display:flex;justify-content:center;align-items:center;}#mmd6 .edge{fill:none;}#mmd6 .eventWrapper{filter:brightness(120%);}#mmd6 :root{--mermaid-font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;}</style><g></g><g></g><defs><marker orient="auto" markerHeight="4" markerWidth="6" refY="2" refX="5" id="arrowhead"><path d="M 0,0 V 4 L6,2 Z"></path></marker></defs><g transform="translate(100, 50)" class="taskWrapper"><g class="timeline-node section--1"><g><path d="M0 61.8 v-56.8 q0,-5 5,-5 h180 q5,0 5,5 v61.8 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.8" x2="190" y1="66.8" x1="0" class="node-line--1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">1983</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="367.99999847412107" x2="195" y1="116.8" x1="195"></line></g><g transform="translate(100, 250)" class="eventWrapper"><g class="timeline-node section--1"><g><path d="M0 59.39999847412109 v-54.39999847412109 q0,-5 5,-5 h180 q5,0 5,5 v59.39999847412109 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="64.39999847412109" x2="190" y1="64.39999847412109" x1="0" class="node-line--1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Blind   Signatures</tspan><tspan dy="1.1em" x="0">(Chaum)</tspan></text></g></g></g><g transform="translate(300, 50)" class="taskWrapper"><g class="timeline-node section-0"><g><path d="M0 61.8 v-56.8 q0,-5 5,-5 h180 q5,0 5,5 v61.8 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.8" x2="190" y1="66.8" x1="0" class="node-line-0"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">1991</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="367.99999847412107" x2="395" y1="116.8" x1="395"></line></g><g transform="translate(300, 250)" class="eventWrapper"><g class="timeline-node section-0"><g><path d="M0 59.39999847412109 v-54.39999847412109 q0,-5 5,-5 h180 q5,0 5,5 v59.39999847412109 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="64.39999847412109" x2="190" y1="64.39999847412109" x1="0" class="node-line-0"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">PGP   Crypto</tspan><tspan dy="1.1em" x="0">(Zimmermann)</tspan></text></g></g></g><g transform="translate(500, 50)" class="taskWrapper"><g class="timeline-node section-1"><g><path d="M0 61.8 v-56.8 q0,-5 5,-5 h180 q5,0 5,5 v61.8 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.8" x2="190" y1="66.8" x1="0" class="node-line-1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">1993</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="367.99999847412107" x2="595" y1="116.8" x1="595"></line></g><g transform="translate(500, 250)" class="eventWrapper"><g class="timeline-node section-1"><g><path d="M0 59.39999847412109 v-54.39999847412109 q0,-5 5,-5 h180 q5,0 5,5 v59.39999847412109 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="64.39999847412109" x2="190" y1="64.39999847412109" x1="0" class="node-line-1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">"A   Cypherpunk's</tspan><tspan dy="1.1em" x="0">Manifesto"</tspan></text></g></g></g><g transform="translate(700, 50)" class="taskWrapper"><g class="timeline-node section-2"><g><path d="M0 61.8 v-56.8 q0,-5 5,-5 h180 q5,0 5,5 v61.8 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.8" x2="190" y1="66.8" x1="0" class="node-line-2"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">1997</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="367.99999847412107" x2="795" y1="116.8" x1="795"></line></g><g transform="translate(700, 250)" class="eventWrapper"><g class="timeline-node section-2"><g><path d="M0 59.39999847412109 v-54.39999847412109 q0,-5 5,-5 h180 q5,0 5,5 v59.39999847412109 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="64.39999847412109" x2="190" y1="64.39999847412109" x1="0" class="node-line-2"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Hashcash   (Adam</tspan><tspan dy="1.1em" x="0">Back)</tspan></text></g></g></g><g transform="translate(900, 50)" class="taskWrapper"><g class="timeline-node section-3"><g><path d="M0 61.8 v-56.8 q0,-5 5,-5 h180 q5,0 5,5 v61.8 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.8" x2="190" y1="66.8" x1="0" class="node-line-3"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">1999</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="367.99999847412107" x2="995" y1="116.8" x1="995"></line></g><g transform="translate(900, 250)" class="eventWrapper"><g class="timeline-node section-3"><g><path d="M0 45 v-40 q0,-5 5,-5 h180 q5,0 5,5 v45 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="50" x2="190" y1="50" x1="0" class="node-line-3"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Napster   (P2P)</tspan></text></g></g></g><g transform="translate(1100, 50)" class="taskWrapper"><g class="timeline-node section-4"><g><path d="M0 61.8 v-56.8 q0,-5 5,-5 h180 q5,0 5,5 v61.8 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.8" x2="190" y1="66.8" x1="0" class="node-line-4"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">2001</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="367.99999847412107" x2="1195" y1="116.8" x1="1195"></line></g><g transform="translate(1100, 250)" class="eventWrapper"><g class="timeline-node section-4"><g><path d="M0 45 v-40 q0,-5 5,-5 h180 q5,0 5,5 v45 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="50" x2="190" y1="50" x1="0" class="node-line-4"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">BitTorrent   (P2P)</tspan></text></g></g></g><g transform="translate(1300, 50)" class="taskWrapper"><g class="timeline-node section-5"><g><path d="M0 61.8 v-56.8 q0,-5 5,-5 h180 q5,0 5,5 v61.8 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.8" x2="190" y1="66.8" x1="0" class="node-line-5"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">2008</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="367.99999847412107" x2="1395" y1="116.8" x1="1395"></line></g><g transform="translate(1300, 250)" class="eventWrapper"><g class="timeline-node section-5"><g><path d="M0 45 v-40 q0,-5 5,-5 h180 q5,0 5,5 v45 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="50" x2="190" y1="50" x1="0" class="node-line-5"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">2008   Financial   Crisis</tspan></text></g></g></g><g transform="translate(1500, 50)" class="taskWrapper"><g class="timeline-node section-6"><g><path d="M0 61.8 v-56.8 q0,-5 5,-5 h180 q5,0 5,5 v61.8 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.8" x2="190" y1="66.8" x1="0" class="node-line-6"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">2008</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="367.99999847412107" x2="1595" y1="116.8" x1="1595"></line></g><g transform="translate(1500, 250)" class="eventWrapper"><g class="timeline-node section-6"><g><path d="M0 45 v-40 q0,-5 5,-5 h180 q5,0 5,5 v45 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="50" x2="190" y1="50" x1="0" class="node-line-6"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Bitcoin   Whitepaper</tspan></text></g></g></g><text y="20" font-weight="bold" font-size="4ex" x="745">Key Milestones (1983–2008)</text><g class="lineWrapper"><line marker-end="url(#arrowhead)" stroke="black" stroke-width="4" y2="166.8" x2="1740" y1="166.8" x1="50"></line></g></svg></figure>
+</div></section>
+<section class="slide" id="todays-agenda"><h2 class="slide-title">Today’s Agenda</h2><div class="slide-body">
+<ul>
+<li><strong>Digital Trust:</strong> What did it mean before blockchain?</li>
+<li><strong>The Cypherpunk Ethos:</strong> A movement for privacy through cryptography.</li>
+<li><strong>The Crypto Wars:</strong> The fight to make strong encryption public.</li>
+<li><strong>Early Failures:</strong> Lessons from the first attempts at digital money.</li>
+<li><strong>Peer-to-Peer (P2P):</strong> How systems like Napster changed the game.</li>
+<li><strong>The Spark:</strong> How these ideas converged to create Bitcoin.</li>
+</ul>
+</div></section>
+<section class="slide" id="exercise"><h2 class="slide-title">Exercise</h2><div class="slide-body">
+<ul>
+<li><p>Mini-poll: <em>Would you email your SSN unencrypted?</em> Why not?</p></li>
+<li><p><em>If two strangers transact online with no bank, what must be true to make it safe?</em></p></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="digital-trust-the-centralized-model"><h2 class="slide-title">Digital Trust: The Centralized Model</h2><div class="slide-body">
+<div class="column" style="width:65%;">
+<p><strong>How It Works:</strong></p>
+<ul>
+<li><strong>Intermediaries:</strong> Banks, credit card companies, and governments act as trusted third parties.</li>
+<li><strong>Verification:</strong> They verify identities, keep records, and enforce rules.</li>
+<li><strong>Reversibility:</strong> They can reverse fraudulent transactions.</li>
+</ul>
+<p><strong>The Trade-Offs:</strong></p>
+<ul>
+<li><strong>Cost:</strong> Intermediaries charge fees.</li>
+<li><strong>Censorship:</strong> They can block payments or freeze accounts.</li>
+<li><strong>Security:</strong> They are single points of failure and massive targets for hackers.</li>
+</ul>
+</div>
+<div class="column" style="width:35%;">
+<figure>
+<img src="../img/Client-server-model.svg" alt="The client-server model concentrates data and control." />
+<figcaption aria-hidden="true">The client-server model concentrates data and control.</figcaption>
+</figure>
+</div>
+</div></section>
+<section class="slide section-title" id="a-crisis-of-trust-2008"><h2 class="slide-title">A Crisis of Trust: 2008</h2><div class="slide-body">
+<div class="r-stack">
+<figure>
+<img src="../img/djcrash2008.svg" class="fragment fade-in" width="900" alt="DJIA 2008" />
+<figcaption aria-hidden="true">DJIA 2008</figcaption>
+</figure>
+<div class="fragment fade-in-then-out" style="background-color: rgba(0, 0, 0, 0.7); color: white; padding: 20px;">
+<p>On October 31, 2008, in the depths of the financial crisis, the Bitcoin whitepaper was published.</p>
+</div>
+<div class="fragment" style="background-color: rgba(0, 0, 0, 0.7); color: white; padding: 20px;">
+<p>It proposed a financial system that didn’t require trust in banks.</p>
+</div>
+</div>
+</div></section>
+<section class="slide" id="section"><div class="slide-body">
+<ul>
+<li><strong>Systemic trust shock:</strong> failure cascades, opaque leverage, and liquidity freezes undermined confidence.</li>
+<li><strong>Policy response:</strong> extraordinary interventions and subsequent regulations.</li>
+<li><strong>Context for Bitcoin (Oct 2008 whitepaper):</strong> a design that minimizes dependence on trusted third parties.</li>
+</ul>
+</div></section>
+<section class="slide section-title" id="the-cypherpunk-movement"><h2 class="slide-title">The Cypherpunk Movement</h2><div class="slide-body">
+<blockquote>
+<p>“Privacy is necessary for an open society in the electronic age… We cannot expect governments, corporations, or other large, faceless organizations to grant us privacy… We must defend our own privacy if we expect to have any. We must come together and create the systems which allow anonymous transactions to take place.”</p>
+<p>— Eric Hughes, <em>A Cypherpunk’s Manifesto</em> (1993)</p>
+</blockquote>
+</div></section>
+<section class="slide" id="section-1"><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li>Activists, computer scientists, and cryptographers in the early 1990s.</li>
+<li>Believed strong cryptography was a tool for social and political change.</li>
+<li><strong>Core idea:</strong> Don’t ask for privacy. Build it. Use code to create a world where privacy is the default.</li>
+</ul>
+</div><div class="column" style="width:40%;">
+<figure>
+<img src="../img/cipherpunks-wired.jpg" alt="The WIRED magazine cover that introduced the world to the Cypherpunks." />
+<figcaption aria-hidden="true">The WIRED magazine cover that introduced the world to the Cypherpunks.</figcaption>
+</figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="privacy-as-a-prerequisite-for-open-society"><h2 class="slide-title">Privacy as a Prerequisite for Open Society</h2><div class="slide-body">
+<ul>
+<li><strong>Selective disclosure:</strong> anonymity/pseudonymity for transactions when identity isn’t necessary.</li>
+<li><strong>Cryptography Export Controls:</strong> code publication tied to First Amendment debates. (See: PGP, next slides)</li>
+<li><strong>Goal:</strong> empower individuals to reveal identity <em>only when desired</em>.</li>
+</ul>
+</div></section>
+<section class="slide section-title" id="the-crypto-wars-u.s.-gov-position-1990s"><h2 class="slide-title">The Crypto Wars: U.S. Gov Position (1990s)</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:55%;">
+<ul>
+<li>Strong cryptography was classified as a <strong>munition</strong>.</li>
+<li>Exporting it was illegal, like selling a missile.</li>
+<li>The goal was to ensure intelligence agencies could break any code.</li>
+</ul>
+</div><div class="column" style="width:45%;">
+<figure>
+<img src="../img/shirt-munition-upscaled.jpg" alt="Photo by Adam Back" />
+<figcaption aria-hidden="true">Photo by Adam Back</figcaption>
+</figure>
+</div>
+</div>
+<hr />
+</div></section>
+<section class="slide smaller non-scrollable" id="the-crypto-wars-cypherpunk-response"><h2 class="slide-title">The Crypto Wars: Cypherpunk Response</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:55%;">
+<ul>
+<li><strong>PGP (Pretty Good Privacy):</strong> Phil Zimmermann released his strong encryption software for free in 1991, leading to a multi-year federal investigation.</li>
+<li><strong>Code as Speech:</strong> To bypass export laws, the PGP source code was printed in a book. It was legal to export a book, which contained protected First Amendment speech.</li>
+</ul>
+</div><div class="column" style="width:45%;">
+<figure>
+<img src="../img/pgp-book.jpg" alt="PGP source code printed to book" />
+<figcaption aria-hidden="true">PGP source code printed to book</figcaption>
+</figure>
+<p><em>PGP’s source code, printed as a book to legally export it.</em></p>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="early-attempts-at-digital-money"><h2 class="slide-title">Early Attempts at Digital Money</h2><div class="slide-body">
+<p><strong>DigiCash (1989-1998)</strong></p>
+<ul>
+<li>Created by famed cryptographer David Chaum.</li>
+<li>Used <strong>blind signatures</strong> to provide truly anonymous, untraceable payments.</li>
+<li><strong>The Flaw:</strong> It was a centralized company. It needed to partner with a bank to issue money. When the company went bankrupt, the system died.</li>
+</ul>
+<p><strong>e-gold (1996-2009)</strong></p>
+<ul>
+<li>A centralized service that allowed users to transfer ownership of grams of gold.</li>
+<li>Became a hub for illicit activity due to its lax identity verification.</li>
+<li><strong>The Flaw:</strong> As a central entity, it was shut down by law enforcement for operating as an unlicensed money transmitter.</li>
+</ul>
+<p><strong>Lesson:</strong> strong privacy tech ≠ decentralized control; bank trust still required.</p>
+</div></section>
+<section class="slide smaller" id="p2p-normalizes-decentralization"><h2 class="slide-title">P2P Normalizes Decentralization</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><strong>Napster (1999)</strong></p>
+<ul>
+<li>P2P file sharing, but used a <strong>central server</strong> to index files.</li>
+<li>This central server was its legal Achilles’ heel, leading to its shutdown.</li>
+</ul>
+<p><img src="../img/napster.png" /></p>
+</div><div class="column" style="width:50%;">
+<p><strong>Gnutella &amp; BitTorrent (2000s)</strong></p>
+<ul>
+<li><strong>Truly decentralized.</strong> No central server to shut down.</li>
+<li>Nodes connect directly to each other to find and share files.</li>
+<li>BitTorrent introduced <strong>incentives</strong> to encourage sharing.</li>
+</ul>
+<p><img src="../img/gnutella.png" /></p>
+</div>
+</div>
+<p><strong>The Lesson:</strong> These systems proved that large-scale, resilient, decentralized coordination was possible without a central authority.</p>
+</div></section>
+<section class="slide smaller" id="the-synthesis-bitcoin"><h2 class="slide-title">The Synthesis: Bitcoin</h2><div class="slide-body">
+<p>Bitcoin combined these decades of ideas into one elegant solution.</p>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 249.20 317.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:332px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 313)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="8,-8 8,-301 155.18,-301 155.18,-8 8,-8"/>
+<text text-anchor="middle" x="81.59" y="-284.4" font-family="Helvetica,sans-Serif" font-size="14.00">Ingredients</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="none" stroke="black" d="M119.61,-52C119.61,-52 43.57,-52 43.57,-52 37.57,-52 31.57,-46 31.57,-40 31.57,-40 31.57,-28 31.57,-28 31.57,-22 37.57,-16 43.57,-16 43.57,-16 119.61,-16 119.61,-16 125.61,-16 131.61,-22 131.61,-28 131.61,-28 131.61,-40 131.61,-40 131.61,-46 125.61,-52 119.61,-52"/>
+<text text-anchor="middle" x="81.59" y="-29.8" font-family="Helvetica,sans-Serif" font-size="14.00">Cryptography</text>
+</g>
+
+<g id="node6" class="node">
+<path fill="lightgrey" stroke="black" d="M229.2,-160C229.2,-160 195.18,-160 195.18,-160 189.18,-160 183.18,-154 183.18,-148 183.18,-148 183.18,-136 183.18,-136 183.18,-130 189.18,-124 195.18,-124 195.18,-124 229.2,-124 229.2,-124 235.2,-124 241.2,-130 241.2,-136 241.2,-136 241.2,-148 241.2,-148 241.2,-154 235.2,-160 229.2,-160"/>
+<text text-anchor="middle" x="212.19" y="-137.8" font-family="Helvetica,sans-Serif" font-size="14.00">Bitcoin</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M131.99,-47.7C140.2,-51.25 148.28,-55.63 155.18,-61 173.17,-74.99 187.62,-96.38 197.33,-113.67"/>
+<polygon fill="black" stroke="black" points="194.23,-115.3 202.04,-122.46 200.4,-111.99 194.23,-115.3"/>
+</g>
+
+<g id="node2" class="node">
+<path fill="none" stroke="black" d="M135.18,-106C135.18,-106 28,-106 28,-106 22,-106 16,-100 16,-94 16,-94 16,-82 16,-82 16,-76 22,-70 28,-70 28,-70 135.18,-70 135.18,-70 141.18,-70 147.18,-76 147.18,-82 147.18,-82 147.18,-94 147.18,-94 147.18,-100 141.18,-106 135.18,-106"/>
+<text text-anchor="middle" x="81.59" y="-83.8" font-family="Helvetica,sans-Serif" font-size="14.00">Cypherpunk Ethos</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M133.98,-106.44C141.14,-109.2 148.37,-112.1 155.18,-115 160.89,-117.43 166.86,-120.13 172.69,-122.86"/>
+<polygon fill="black" stroke="black" points="171.03,-125.95 181.56,-127.09 174.04,-119.63 171.03,-125.95"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="none" stroke="black" d="M103.66,-160C103.66,-160 59.52,-160 59.52,-160 53.52,-160 47.52,-154 47.52,-148 47.52,-148 47.52,-136 47.52,-136 47.52,-130 53.52,-124 59.52,-124 59.52,-124 103.66,-124 103.66,-124 109.66,-124 115.66,-130 115.66,-136 115.66,-136 115.66,-148 115.66,-148 115.66,-154 109.66,-160 103.66,-160"/>
+<text text-anchor="middle" x="81.59" y="-137.8" font-family="Helvetica,sans-Serif" font-size="14.00">P2P Net</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M116.04,-142C132.93,-142 153.54,-142 171.26,-142"/>
+<polygon fill="black" stroke="black" points="171.18,-145.5 181.18,-142 171.18,-138.5 171.18,-145.5"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="none" stroke="black" d="M118.44,-214C118.44,-214 44.74,-214 44.74,-214 38.74,-214 32.74,-208 32.74,-202 32.74,-202 32.74,-190 32.74,-190 32.74,-184 38.74,-178 44.74,-178 44.74,-178 118.44,-178 118.44,-178 124.44,-178 130.44,-184 130.44,-190 130.44,-190 130.44,-202 130.44,-202 130.44,-208 124.44,-214 118.44,-214"/>
+<text text-anchor="middle" x="81.59" y="-191.8" font-family="Helvetica,sans-Serif" font-size="14.00">Past Failures</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M130.87,-178.76C139.03,-175.64 147.39,-172.32 155.18,-169 160.89,-166.57 166.86,-163.87 172.69,-161.14"/>
+<polygon fill="black" stroke="black" points="174.04,-164.37 181.56,-156.91 171.03,-158.05 174.04,-164.37"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="none" stroke="black" d="M121.15,-268C121.15,-268 42.03,-268 42.03,-268 36.03,-268 30.03,-262 30.03,-256 30.03,-256 30.03,-244 30.03,-244 30.03,-238 36.03,-232 42.03,-232 42.03,-232 121.15,-232 121.15,-232 127.15,-232 133.15,-238 133.15,-244 133.15,-244 133.15,-256 133.15,-256 133.15,-262 127.15,-268 121.15,-268"/>
+<text text-anchor="middle" x="81.59" y="-245.8" font-family="Helvetica,sans-Serif" font-size="14.00">Proof&#45;of&#45;Work</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M133.51,-235.63C141.19,-232.2 148.7,-228.03 155.18,-223 173.17,-209.01 187.62,-187.62 197.33,-170.33"/>
+<polygon fill="black" stroke="black" points="200.4,-172.01 202.04,-161.54 194.23,-168.7 200.4,-172.01"/>
+</g>
+</g>
+</svg></figure>
+<p><strong>The key breakthrough:</strong> Using Proof-of-Work (mining) to allow a decentralized P2P network to agree on a single, shared history of transactions without a trusted leader.</p>
+</div></section>
+<section class="slide smaller" id="promises-vs.-reality"><h2 class="slide-title">Promises vs. Reality</h2><div class="slide-body">
+<table data-tbl-colwidths="[30,70]">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Promise</th>
+<th>What Actually Happened</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Eliminate Intermediaries</strong></td>
+<td>New intermediaries (exchanges, wallet providers) emerged. Most users interact with Bitcoin through a centralized company.</td>
+</tr>
+<tr>
+<td><strong>Censorship Resistance</strong></td>
+<td>The core protocol remains very censorship-resistant. It’s difficult to stop a transaction from being broadcast and mined.</td>
+</tr>
+<tr>
+<td><strong>Low-Cost Payments</strong></td>
+<td>Transaction fees can become very high during periods of network congestion, making small payments impractical.</td>
+</tr>
+<tr>
+<td><strong>Privacy</strong></td>
+<td>Bitcoin is <strong>pseudonymous</strong>, not anonymous. All transactions are public, and advanced forensics can often link addresses to real-world identities.</td>
+</tr>
+<tr>
+<td><strong>‘Bank the Unbanked’</strong></td>
+<td>Volatility, high fees, and technical complexity have been major barriers to adoption as a daily currency in developing nations.</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide smaller" id="why-this-history-matters"><h2 class="slide-title">Why This History Matters</h2><div class="slide-body">
+<p>Understanding the <em>‘why’</em> helps you analyze the <em>‘how’</em> and the <em>‘what now’</em>.</p>
+<ul>
+<li><p><strong>Threat Modeling:</strong> Decentralized systems have different weaknesses. Instead of hacking a server, an attacker might try to control the consensus mechanism (a 51% attack) or exploit the economic incentives.</p></li>
+<li><p><strong>Policy Literacy:</strong> Today’s debates about crypto regulation, privacy coins, and central bank digital currencies are echoes of the Crypto Wars. The history helps you understand the stakes.</p></li>
+<li><p><strong>Critical Evaluation:</strong> Knowing the original goals of the technology allows you to cut through the hype and assess whether a new blockchain project is a genuine innovation or just a solution in search of a problem.</p></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="summary"><h2 class="slide-title">Summary</h2><div class="slide-body">
+<ul>
+<li><p>Blockchain was not created in a vacuum; it was a response to decades of debate about <strong>trust, privacy, and centralization</strong>.</p></li>
+<li><p>The <strong>Cypherpunk</strong> movement provided the ideological drive, advocating for privacy through strong cryptography.</p></li>
+<li><p>The failure of <strong>centralized</strong> digital currencies like DigiCash and e-gold proved that a resilient system needed to be decentralized.</p></li>
+<li><p><strong>P2P networks</strong> like BitTorrent demonstrated that large-scale decentralized coordination was possible.</p></li>
+<li><p><strong>Bitcoin’s key innovation</strong> was combining these ideas with Proof-of-Work to solve the double-spending problem without a central authority.</p></li>
+</ul>
+</div></section>
+<section class="slide unnumbered smaller" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-chaum_blindsignaturesuntraceable_1983" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">D. Chaum, <span>“Blind <span>Signatures</span> for <span>Untraceable Payments</span>,”</span> in <em>Advances in <span>Cryptology</span></em>, D. Chaum, R. L. Rivest, and A. T. Sherman, Eds., Boston, MA: Springer US, 1983, pp. 199–203. doi: <a href="https://doi.org/10.1007/978-1-4757-0602-4_18">10.1007/978-1-4757-0602-4_18</a>.</div>
+</div>
+<div id="ref-zimmerman_whywrotepgp_1991" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">P. Zimmerman, <span>“Why <span>I</span> wrote <span>PGP</span>.”</span> [Online]. Available: <a href="https://www.philzimmermann.com/EN/essays/WhyIW rotePGP.html">https://www.philzimmermann.com/EN/essays/WhyIW rotePGP.html</a></div>
+</div>
+<div id="ref-hughes_cypherpunksmanifesto_1993" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">E. Hughes, <span>“A <span>Cypherpunk</span>’s <span>Manifesto</span>.”</span> 1993. Available: <a href="https://www.activism.net/cypherpunk/manifesto.html">https://www.activism.net/cypherpunk/manifesto.html</a></div>
+</div>
+<div id="ref-back_hashcashdenialservice_2002" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">A. Back, <span>“Hashcash - <span>A Denial</span> of <span>Service Counter-Measure</span>,”</span> Jan. 2002, Available: <a href="http://www.hashcash.org/papers/hashcash.pdf">http://www.hashcash.org/papers/hashcash.pdf</a></div>
+</div>
+<div id="ref-nakamoto_bitcoinpeertopeerelectronic_2008" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">S. Nakamoto, <span>“Bitcoin: <span class="nocase">A Peer-to-Peer Electronic Cash System</span>.”</span> Satoshi Nakamoto Institute, Oct. 31, 2008. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf">https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf</a></div>
+</div>
+<div id="ref-patel_bernsteinusdept_1996" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">M. H. Patel, <em>Bernstein v. <span>US Dept</span>. Of <span>State</span></em>, vol. 945. N.D. Cal. 1996, 1996, p. 1279. Available: <a href="https://law.justia.com/cases/federal/district-courts/FSupp/945/1279/1457799/">https://law.justia.com/cases/federal/district-courts/FSupp/945/1279/1457799/</a></div>
+</div>
+<div id="ref-unitedstatescongress_banksecrecyact_1970" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">United States Congress, <em>The <span>Bank Secrecy Act</span></em>. 1970. Accessed: Oct. 31, 2025. [Online]. Available: <a href="https://www.fincen.gov/resources/statutes-and-regulations/bank-secrecy-act">https://www.fincen.gov/resources/statutes-and-regulations/bank-secrecy-act</a></div>
+</div>
+<div id="ref-financialcrisisinquirycommission_financialcrisisinquiry_2011" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">Financial Crisis Inquiry Commission, <span>“The <span>Financial Crisis Inquiry Report</span>: <span>Final Report</span> of the <span>National Commission</span> on the <span>Causes</span> of the <span>Financial</span> and <span>Economic Crisis</span> in the <span>United States</span>,”</span> U.S. Government Printing Office, Government, Feb. 2011. Available: <a href="https://www.govinfo.gov/content/pkg/GPO-FCIC/pdf/GPO-FCIC.pdf">https://www.govinfo.gov/content/pkg/GPO-FCIC/pdf/GPO-FCIC.pdf</a></div>
+</div>
+<div id="ref-levy_cryptorebels_1993" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">S. Levy, <span>“Crypto <span>Rebels</span>,”</span> <em>Wired Magazine</em>, vol. 1, no. 2, Jan. 02, 1993. Available: <a href="https://www.wired.com/1993/02/crypto-rebels/">https://www.wired.com/1993/02/crypto-rebels/</a></div>
+</div>
+<div id="ref-levy_cryptohowcode_2002" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">S. Levy, <em>Crypto: How the code rebels beat the government, saving privacy in the digital age</em>. Harmondsworth: Penguin Books, 2002.</div>
+</div>
+<div id="ref-l35_wired_emoney_1994" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">Wired, <span>“E-money (that’s what i want).”</span> Accessed: Mar. 28, 2026. [Online]. Available: <a href="https://www.wired.com/1994/12/emoney/">https://www.wired.com/1994/12/emoney/</a></div>
+</div>
+<div id="ref-departmentofjustice_digitalcurrencybusiness_2007" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">Department of Justice, <span>“Digital <span>Currency Business E-Gold Indicted</span> for <span>Money Laundering</span> and <span>Illegal Money Transmitting</span>,”</span> United States Government, Washington, DC, USA, Government 07–301, Apr. 2007.</div>
+</div>
+<div id="ref-kozinski_amrecordsinc_2001" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">A. Kozinski, <em>A&amp;<span>M Records</span>, <span>Inc</span>. V. <span>Napster</span>, <span>Inc</span>.</em>, vol. 239. United States Court of Appeals (9th Cir. 2001), 2001, p. 1004. Available: <a href="https://law.justia.com/cases/federal/appellate-courts/F3/239/1004/636120/">https://law.justia.com/cases/federal/appellate-courts/F3/239/1004/636120/</a></div>
+</div>
+<div id="ref-cohen_incentivesbuildrobustness_2003" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">B. Cohen, <span>“Incentives <span>Build Robustness</span> in <span>BitTorrent</span>,”</span> in <em>Workshop on <span>Economics</span> of <span class="nocase">Peer-to-Peer</span> systems</em>, Berkeley, California, USA, May 2003. Available: <a href="https://www.bittorrent.org/bittorrentecon.pdf">https://www.bittorrent.org/bittorrentecon.pdf</a></div>
+</div>
+<div id="ref-narayanan_bitcoincryptocurrencytechnologies_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline">A. Narayanan, J. Bonneau, E. Felten, A. Miller, and S. Goldfeder, <em>Bitcoin and <span>Cryptocurrency Technologies</span></em>. Princeton University Press, 2016.</div>
+</div>
+<div id="ref-meiklejohn_fistfulbitcoinscharacterizing_2013" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[16] </div><div class="csl-right-inline">S. Meiklejohn <em>et al.</em>, <span>“A fistful of bitcoins: Characterizing payments among men with no names,”</span> in <em>Proceedings of the 2013 conference on <span>Internet</span> measurement conference</em>, Barcelona Spain: ACM, Oct. 2013, pp. 127–140. doi: <a href="https://doi.org/10.1145/2504730.2504747">10.1145/2504730.2504747</a>.</div>
+</div>
+<div id="ref-voskobojnikov_userperceptionbitcoin_2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[17] </div><div class="csl-right-inline">A. Voskobojnikov and J. Bonneau, <span>“User perception of bitcoin usability and security across novice users,”</span> <em>International Journal of Human-Computer Studies</em>, 2019, doi: <a href="https://doi.org/10.1016/j.ijhcs.2019.02.004">10.1016/j.ijhcs.2019.02.004</a>.</div>
+</div>
+<div id="ref-departmentofjustice_digitalcurrencybusiness_2008" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[18] </div><div class="csl-right-inline">Department of Justice, <span>“Digital <span>Currency Business E-Gold Pleads Guilty</span> to <span>Money Laundering</span> and <span>Illegal Money Transmitting Charges</span>,”</span> United States Government, Washington, DC, USA, Government 08–635, July 2008. Available: <a href="https://www.justice.gov/archive/opa/pr/2008/July/08-crm-635.html">https://www.justice.gov/archive/opa/pr/2008/July/08-crm-635.html</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

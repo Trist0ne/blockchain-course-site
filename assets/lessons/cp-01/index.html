@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cryptography Introduction</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/primitives/01-CP-cryptography_intro.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="cp-01" data-code="01-CP" data-src="fa107ceb1a510231" data-slides="23">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section II: Cryptographic Primitives · Lesson 01-CP</p><h1>Cryptography Introduction</h1></div></section>
+<section class="slide smaller" id="cryptography-from-obscurity-to-mathematical-security"><h2 class="slide-title">Cryptography: From Obscurity to Mathematical Security</h2><div class="slide-body">
+<figure class="diagram mermaid"><svg aria-roledescription="timeline" role="graphics-document document" viewBox="0 0 1790 453.24688720703125" style="max-width: 1790px;" xmlns="http://www.w3.org/2000/svg" width="100%" id="mmd10"><style>#mmd10{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;fill:#000000;}#mmd10 .error-icon{fill:#552222;}#mmd10 .error-text{fill:#552222;stroke:#552222;}#mmd10 .edge-thickness-normal{stroke-width:1px;}#mmd10 .edge-thickness-thick{stroke-width:3.5px;}#mmd10 .edge-pattern-solid{stroke-dasharray:0;}#mmd10 .edge-thickness-invisible{stroke-width:0;fill:none;}#mmd10 .edge-pattern-dashed{stroke-dasharray:3;}#mmd10 .edge-pattern-dotted{stroke-dasharray:2;}#mmd10 .marker{fill:#666;stroke:#666;}#mmd10 .marker.cross{stroke:#666;}#mmd10 svg{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;}#mmd10 p{margin:0;}#mmd10 .edge{stroke-width:3;}#mmd10 .section--1 rect,#mmd10 .section--1 path,#mmd10 .section--1 circle,#mmd10 .section--1 path{fill:#555;}#mmd10 .section--1 text{fill:#F4F4F4;}#mmd10 .node-icon--1{font-size:40px;color:#F4F4F4;}#mmd10 .section-edge--1{stroke:#555;}#mmd10 .edge-depth--1{stroke-width:17;}#mmd10 .section--1 line{stroke:#aaaaaa;stroke-width:3;}#mmd10 .lineWrapper line{stroke:#F4F4F4;}#mmd10 .disabled,#mmd10 .disabled circle,#mmd10 .disabled text{fill:lightgray;}#mmd10 .disabled text{fill:#efefef;}#mmd10 .section-0 rect,#mmd10 .section-0 path,#mmd10 .section-0 circle,#mmd10 .section-0 path{fill:#F4F4F4;}#mmd10 .section-0 text{fill:#333;}#mmd10 .node-icon-0{font-size:40px;color:#333;}#mmd10 .section-edge-0{stroke:#F4F4F4;}#mmd10 .edge-depth-0{stroke-width:14;}#mmd10 .section-0 line{stroke:#0b0b0b;stroke-width:3;}#mmd10 .lineWrapper line{stroke:#333;}#mmd10 .disabled,#mmd10 .disabled circle,#mmd10 .disabled text{fill:lightgray;}#mmd10 .disabled text{fill:#efefef;}#mmd10 .section-1 rect,#mmd10 .section-1 path,#mmd10 .section-1 circle,#mmd10 .section-1 path{fill:#555;}#mmd10 .section-1 text{fill:#F4F4F4;}#mmd10 .node-icon-1{font-size:40px;color:#F4F4F4;}#mmd10 .section-edge-1{stroke:#555;}#mmd10 .edge-depth-1{stroke-width:11;}#mmd10 .section-1 line{stroke:#aaaaaa;stroke-width:3;}#mmd10 .lineWrapper line{stroke:#F4F4F4;}#mmd10 .disabled,#mmd10 .disabled circle,#mmd10 .disabled text{fill:lightgray;}#mmd10 .disabled text{fill:#efefef;}#mmd10 .section-2 rect,#mmd10 .section-2 path,#mmd10 .section-2 circle,#mmd10 .section-2 path{fill:#BBB;}#mmd10 .section-2 text{fill:#333;}#mmd10 .node-icon-2{font-size:40px;color:#333;}#mmd10 .section-edge-2{stroke:#BBB;}#mmd10 .edge-depth-2{stroke-width:8;}#mmd10 .section-2 line{stroke:#444444;stroke-width:3;}#mmd10 .lineWrapper line{stroke:#333;}#mmd10 .disabled,#mmd10 .disabled circle,#mmd10 .disabled text{fill:lightgray;}#mmd10 .disabled text{fill:#efefef;}#mmd10 .section-3 rect,#mmd10 .section-3 path,#mmd10 .section-3 circle,#mmd10 .section-3 path{fill:#777;}#mmd10 .section-3 text{fill:#333;}#mmd10 .node-icon-3{font-size:40px;color:#333;}#mmd10 .section-edge-3{stroke:#777;}#mmd10 .edge-depth-3{stroke-width:5;}#mmd10 .section-3 line{stroke:#888888;stroke-width:3;}#mmd10 .lineWrapper line{stroke:#333;}#mmd10 .disabled,#mmd10 .disabled circle,#mmd10 .disabled text{fill:lightgray;}#mmd10 .disabled text{fill:#efefef;}#mmd10 .section-4 rect,#mmd10 .section-4 path,#mmd10 .section-4 circle,#mmd10 .section-4 path{fill:#999;}#mmd10 .section-4 text{fill:#333;}#mmd10 .node-icon-4{font-size:40px;color:#333;}#mmd10 .section-edge-4{stroke:#999;}#mmd10 .edge-depth-4{stroke-width:2;}#mmd10 .section-4 line{stroke:#666666;stroke-width:3;}#mmd10 .lineWrapper line{stroke:#333;}#mmd10 .disabled,#mmd10 .disabled circle,#mmd10 .disabled text{fill:lightgray;}#mmd10 .disabled text{fill:#efefef;}#mmd10 .section-5 rect,#mmd10 .section-5 path,#mmd10 .section-5 circle,#mmd10 .section-5 path{fill:#DDD;}#mmd10 .section-5 text{fill:#333;}#mmd10 .node-icon-5{font-size:40px;color:#333;}#mmd10 .section-edge-5{stroke:#DDD;}#mmd10 .edge-depth-5{stroke-width:-1;}#mmd10 .section-5 line{stroke:#222222;stroke-width:3;}#mmd10 .lineWrapper line{stroke:#333;}#mmd10 .disabled,#mmd10 .disabled circle,#mmd10 .disabled text{fill:lightgray;}#mmd10 .disabled text{fill:#efefef;}#mmd10 .section-6 rect,#mmd10 .section-6 path,#mmd10 .section-6 circle,#mmd10 .section-6 path{fill:#FFF;}#mmd10 .section-6 text{fill:#333;}#mmd10 .node-icon-6{font-size:40px;color:#333;}#mmd10 .section-edge-6{stroke:#FFF;}#mmd10 .edge-depth-6{stroke-width:-4;}#mmd10 .section-6 line{stroke:#000000;stroke-width:3;}#mmd10 .lineWrapper line{stroke:#333;}#mmd10 .disabled,#mmd10 .disabled circle,#mmd10 .disabled text{fill:lightgray;}#mmd10 .disabled text{fill:#efefef;}#mmd10 .section-7 rect,#mmd10 .section-7 path,#mmd10 .section-7 circle,#mmd10 .section-7 path{fill:#DDD;}#mmd10 .section-7 text{fill:#333;}#mmd10 .node-icon-7{font-size:40px;color:#333;}#mmd10 .section-edge-7{stroke:#DDD;}#mmd10 .edge-depth-7{stroke-width:-7;}#mmd10 .section-7 line{stroke:#222222;stroke-width:3;}#mmd10 .lineWrapper line{stroke:#333;}#mmd10 .disabled,#mmd10 .disabled circle,#mmd10 .disabled text{fill:lightgray;}#mmd10 .disabled text{fill:#efefef;}#mmd10 .section-8 rect,#mmd10 .section-8 path,#mmd10 .section-8 circle,#mmd10 .section-8 path{fill:#BBB;}#mmd10 .section-8 text{fill:#333;}#mmd10 .node-icon-8{font-size:40px;color:#333;}#mmd10 .section-edge-8{stroke:#BBB;}#mmd10 .edge-depth-8{stroke-width:-10;}#mmd10 .section-8 line{stroke:#444444;stroke-width:3;}#mmd10 .lineWrapper line{stroke:#333;}#mmd10 .disabled,#mmd10 .disabled circle,#mmd10 .disabled text{fill:lightgray;}#mmd10 .disabled text{fill:#efefef;}#mmd10 .section-9 rect,#mmd10 .section-9 path,#mmd10 .section-9 circle,#mmd10 .section-9 path{fill:#999;}#mmd10 .section-9 text{fill:#333;}#mmd10 .node-icon-9{font-size:40px;color:#333;}#mmd10 .section-edge-9{stroke:#999;}#mmd10 .edge-depth-9{stroke-width:-13;}#mmd10 .section-9 line{stroke:#666666;stroke-width:3;}#mmd10 .lineWrapper line{stroke:#333;}#mmd10 .disabled,#mmd10 .disabled circle,#mmd10 .disabled text{fill:lightgray;}#mmd10 .disabled text{fill:#efefef;}#mmd10 .section-10 rect,#mmd10 .section-10 path,#mmd10 .section-10 circle,#mmd10 .section-10 path{fill:#777;}#mmd10 .section-10 text{fill:#333;}#mmd10 .node-icon-10{font-size:40px;color:#333;}#mmd10 .section-edge-10{stroke:#777;}#mmd10 .edge-depth-10{stroke-width:-16;}#mmd10 .section-10 line{stroke:#888888;stroke-width:3;}#mmd10 .lineWrapper line{stroke:#333;}#mmd10 .disabled,#mmd10 .disabled circle,#mmd10 .disabled text{fill:lightgray;}#mmd10 .disabled text{fill:#efefef;}#mmd10 .section-root rect,#mmd10 .section-root path,#mmd10 .section-root circle{fill:hsl(0, 0%, 70.6862745098%);}#mmd10 .section-root text{fill:#333;}#mmd10 .icon-container{height:100%;display:flex;justify-content:center;align-items:center;}#mmd10 .edge{fill:none;}#mmd10 .eventWrapper{filter:brightness(120%);}#mmd10 :root{--mermaid-font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;}</style><g></g><g></g><defs><marker orient="auto" markerHeight="4" markerWidth="6" refY="2" refX="5" id="arrowhead"><path d="M 0,0 V 4 L6,2 Z"></path></marker></defs><g transform="translate(100, 50)" class="taskWrapper"><g class="timeline-node section--1"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line--1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">1900   BC</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="403.24687042236326" x2="195" y1="116.815625" x1="195"></line></g><g transform="translate(100, 250)" class="eventWrapper"><g class="timeline-node section--1"><g><path d="M0 77.01562194824218 v-72.01562194824218 q0,-5 5,-5 h180 q5,0 5,5 v77.01562194824218 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="82.01562194824218" x2="190" y1="82.01562194824218" x1="0" class="node-line--1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Hidden   methods   in</tspan><tspan dy="1.1em" x="0">Egyptian   and   early</tspan><tspan dy="1.1em" x="0">ciphers</tspan></text></g></g></g><g transform="translate(300, 50)" class="taskWrapper"><g class="timeline-node section-0"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line-0"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">100   BC</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="403.24687042236326" x2="395" y1="116.815625" x1="395"></line></g><g transform="translate(300, 250)" class="eventWrapper"><g class="timeline-node section-0"><g><path d="M0 59.41562347412109 v-54.41562347412109 q0,-5 5,-5 h180 q5,0 5,5 v59.41562347412109 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="64.41562347412109" x2="190" y1="64.41562347412109" x1="0" class="node-line-0"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Caesar   shift   cipher</tspan><tspan dy="1.1em" x="0">used   in   Rome</tspan></text></g></g></g><g transform="translate(500, 50)" class="taskWrapper"><g class="timeline-node section-1"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line-1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">9th   c.</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="403.24687042236326" x2="595" y1="116.815625" x1="595"></line></g><g transform="translate(500, 250)" class="eventWrapper"><g class="timeline-node section-1"><g><path d="M0 59.41562347412109 v-54.41562347412109 q0,-5 5,-5 h180 q5,0 5,5 v59.41562347412109 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="64.41562347412109" x2="190" y1="64.41562347412109" x1="0" class="node-line-1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Al-Kindi   invents</tspan><tspan dy="1.1em" x="0">frequency   analysis</tspan></text></g></g></g><g transform="translate(700, 50)" class="taskWrapper"><g class="timeline-node section-2"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line-2"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">15th–16th   c.</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="403.24687042236326" x2="795" y1="116.815625" x1="795"></line></g><g transform="translate(700, 250)" class="eventWrapper"><g class="timeline-node section-2"><g><path d="M0 77.01562194824218 v-72.01562194824218 q0,-5 5,-5 h180 q5,0 5,5 v77.01562194824218 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="82.01562194824218" x2="190" y1="82.01562194824218" x1="0" class="node-line-2"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Polyalphabetic</tspan><tspan dy="1.1em" x="0">ciphers   by   Alberti</tspan><tspan dy="1.1em" x="0">and   Vigenère</tspan></text></g></g></g><g transform="translate(900, 50)" class="taskWrapper"><g class="timeline-node section-3"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line-3"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">1883</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="403.24687042236326" x2="995" y1="116.815625" x1="995"></line></g><g transform="translate(900, 250)" class="eventWrapper"><g class="timeline-node section-3"><g><path d="M0 59.41562347412109 v-54.41562347412109 q0,-5 5,-5 h180 q5,0 5,5 v59.41562347412109 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="64.41562347412109" x2="190" y1="64.41562347412109" x1="0" class="node-line-3"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Kerckhoffs   defines</tspan><tspan dy="1.1em" x="0">key-based   security</tspan></text></g></g></g><g transform="translate(1100, 50)" class="taskWrapper"><g class="timeline-node section-4"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line-4"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">1940s</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="403.24687042236326" x2="1195" y1="116.815625" x1="1195"></line></g><g transform="translate(1100, 250)" class="eventWrapper"><g class="timeline-node section-4"><g><path d="M0 77.01562194824218 v-72.01562194824218 q0,-5 5,-5 h180 q5,0 5,5 v77.01562194824218 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="82.01562194824218" x2="190" y1="82.01562194824218" x1="0" class="node-line-4"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Enigma</tspan><tspan dy="1.1em" x="0">broken—math</tspan><tspan dy="1.1em" x="0">defeats   secrecy</tspan></text></g></g></g><g transform="translate(1300, 50)" class="taskWrapper"><g class="timeline-node section-5"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line-5"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">1949</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="403.24687042236326" x2="1395" y1="116.815625" x1="1395"></line></g><g transform="translate(1300, 250)" class="eventWrapper"><g class="timeline-node section-5"><g><path d="M0 77.01562194824218 v-72.01562194824218 q0,-5 5,-5 h180 q5,0 5,5 v77.01562194824218 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="82.01562194824218" x2="190" y1="82.01562194824218" x1="0" class="node-line-5"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Shannon   formalizes</tspan><tspan dy="1.1em" x="0">cryptographic</tspan><tspan dy="1.1em" x="0">theory</tspan></text></g></g></g><g transform="translate(1500, 50)" class="taskWrapper"><g class="timeline-node section-6"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line-6"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">1970s–2020s</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="403.24687042236326" x2="1595" y1="116.815625" x1="1595"></line></g><g transform="translate(1500, 250)" class="eventWrapper"><g class="timeline-node section-6"><g><path d="M0 94.61562042236328 v-89.61562042236328 q0,-5 5,-5 h180 q5,0 5,5 v94.61562042236328 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="99.61562042236328" x2="190" y1="99.61562042236328" x1="0" class="node-line-6"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Public-key   and</tspan><tspan dy="1.1em" x="0">quantum-safe</tspan><tspan dy="1.1em" x="0">cryptography</tspan><tspan dy="1.1em" x="0">emerge</tspan></text></g></g></g><g class="lineWrapper"><line marker-end="url(#arrowhead)" stroke="black" stroke-width="4" y2="166.815625" x2="1740" y1="166.815625" x1="50"></line></g></svg></figure>
+<div class="callout-note" data-appearance="simple">
+<p>Cryptography shift from secrecy through obscurity to <strong>security through mathematics</strong></p>
+</div>
+</div></section>
+<section class="slide" id="what-is-cryptography"><h2 class="slide-title">What Is Cryptography?</h2><div class="slide-body">
+<p><strong>Definition:</strong></p>
+<blockquote>
+<p>The study of mathematical techniques for securing information and proving authenticity in the presence of adversaries.</p>
+</blockquote>
+<ul>
+<li>Protects <strong>confidentiality</strong>, <strong>integrity</strong>, and <strong>authenticity</strong>.</li>
+<li>Provides <strong>non-repudiation</strong>.<br />
+</li>
+<li>Operates at the heart of secure communication, digital signatures, and blockchain protocols.<br />
+</li>
+<li>Enables <em>trust in people</em> to extend over untrusted channels through mathematics.</li>
+</ul>
+</div></section>
+<section class="slide" id="why-cryptography-matters-today"><h2 class="slide-title">Why Cryptography Matters Today</h2><div class="slide-body">
+<ul>
+<li>Our world depends on digital trust: banking, identity, communication, defense.<br />
+</li>
+<li>Without cryptography, data could be altered, impersonated, or replayed at will.<br />
+</li>
+<li>Cryptography enables <strong>trustless coordination</strong>—people can agree without knowing each other.</li>
+<li>The foundation of blockchain technology is cryptography.</li>
+</ul>
+</div></section>
+<section class="slide" id="from-secrecy-to-integrity"><h2 class="slide-title">From Secrecy to Integrity</h2><div class="slide-body">
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Early Goal</th>
+<th>Modern Goal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Only confidentiality</td>
+<td><strong>Add</strong> message authenticity &amp; integrity</td>
+</tr>
+<tr>
+<td>Rely on secret methods</td>
+<td>Rely on public algorithms + secret keys</td>
+</tr>
+<tr>
+<td>Breakable by clever humans</td>
+<td>Protected by computational infeasibility</td>
+</tr>
+<tr>
+<td>Used for espionage &amp; war</td>
+<td>Used daily for commerce, identity, and confidentiality</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide smaller" id="mathematics-the-language-of-trust"><h2 class="slide-title">Mathematics — The Language of Trust</h2><div class="slide-body">
+<ul>
+<li>Cryptography relies on <strong>formal logic</strong> and <strong>set theory</strong> to define security precisely.<br />
+</li>
+<li><strong>Symbols</strong> such as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>∈</mo><annotation encoding="application/x-tex">\in</annotation></semantics></math> (“in”), <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>⊆</mo><annotation encoding="application/x-tex">\subseteq</annotation></semantics></math> (“subset”), <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>⇒</mo><annotation encoding="application/x-tex">\Rightarrow</annotation></semantics></math> (“implies”) express relationships among secrets, keys, and messages.
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>∩</mi><annotation encoding="application/x-tex">\cap</annotation></semantics></math> denotes <strong>intersection</strong> and indicates elements that are common between two sets.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>∪</mi><annotation encoding="application/x-tex">\cup</annotation></semantics></math> denotes <strong>union</strong> and indicates the result of combining two sets together.</li>
+</ul></li>
+<li>A <strong>set</strong> is a collection of distinct elements.
+<ul>
+<li>Example: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> = {all possible keys}, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math> = {all possible messages}.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="sets-and-functions"><h2 class="slide-title">Sets and Functions</h2><div class="slide-body">
+<ul>
+<li><strong>Functions</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>:</mo><mi>X</mi><mo>→</mo><mi>Y</mi></mrow><annotation encoding="application/x-tex">f : X \to Y</annotation></semantics></math> map inputs to outputs (e.g., hash functions).<br />
+</li>
+<li>A <strong>function</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>:</mo><mi>X</mi><mo>→</mo><mi>Y</mi></mrow><annotation encoding="application/x-tex">f : X → Y</annotation></semantics></math> maps each input to one output.<br />
+</li>
+<li>A function is <strong>one-way</strong> if it’s easy to compute but hard to invert.<br />
+</li>
+<li>Functions form the basis of hash algorithms, pseudo-random generators (PRG), and digital signatures.</li>
+</ul>
+</div></section>
+<section class="slide" id="proofs-and-reasoning"><h2 class="slide-title">Proofs and Reasoning</h2><div class="slide-body">
+<ul>
+<li>Modern cryptography is based on <strong>proofs</strong>.<br />
+</li>
+<li>Security properties are formal statements applying deductive reasoning to an initial premise.</li>
+<li>Proofs show that breaking a system would solve an already <strong>hard mathematical problem</strong> (e.g., factoring large primes).<br />
+</li>
+<li>If the underlying problem is computationally prohibitive with modern computers, the scheme inherits security from that intractability.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>Note that we say, “if.” These are assumptions, but quantum computers may prove these assumptions wrong.</p>
+</div>
+</div></section>
+<section class="slide" id="probability-refresher-events-and-outcomes"><h2 class="slide-title">Probability Refresher: Events and Outcomes</h2><div class="slide-body">
+<ul>
+<li>Cryptography models uncertainty using <strong>probability spaces</strong>.
+<ul>
+<li>Flip a fair coin → sample space <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Ω</mi><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mi>H</mi><mo>,</mo><mi>T</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\Omega = \{H, T\}</annotation></semantics></math>.<br />
+</li>
+<li>Event <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mi>H</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">E = \{H\}</annotation></semantics></math>; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mi>r</mi><mo stretchy="false" form="prefix">(</mo><mi>E</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></mrow><annotation encoding="application/x-tex">Pr(E) = \frac{1}{2}</annotation></semantics></math>.<br />
+</li>
+</ul></li>
+<li>Randomness ensures unpredictability in keys and nonces.<br />
+</li>
+<li>Security is often stated in terms of an adversary’s <strong>success probability</strong>.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>More formally, proofs establish that no efficient adversary can gain advantage <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϵ</mi><mo>&gt;</mo></mrow><annotation encoding="application/x-tex">\epsilon &gt;</annotation></semantics></math> <em>negligible</em> over random guessing. The goal is that a ciphertext is indistinguishable from random noise.</p>
+</div>
+</div></section>
+<section class="slide" id="probability-refresher-independence-random-variables"><h2 class="slide-title">Probability Refresher: Independence &amp; Random Variables</h2><div class="slide-body">
+<ul>
+<li><strong>Independence:</strong> Two events <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math> are <em>independent</em> if <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mi>r</mi><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>∩</mo><mi>B</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>P</mi><mi>r</mi><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo stretchy="false" form="postfix">)</mo><mo>×</mo><mi>P</mi><mi>r</mi><mo stretchy="false" form="prefix">(</mo><mi>B</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">Pr(A \cap B) = Pr(A) × Pr(B)</annotation></semantics></math>.
+<ul>
+<li>The outcome of one event does not impact the outcome of another: 2 coin flips.</li>
+</ul></li>
+<li><strong>Random variable:</strong> a numeric outcome of a random process (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math> = result of a coin flip).<br />
+</li>
+<li>Used to measure <strong>entropy</strong> (average unpredictability).<br />
+</li>
+<li>Unpredictability, or randomness, is a crucial component to initialize modern crytopgraphic algorithms</li>
+</ul>
+</div></section>
+<section class="slide" id="what-is-randomness"><h2 class="slide-title">What Is Randomness?</h2><div class="slide-body">
+<ul>
+<li>True randomness: unpredictability with no discernible pattern.<br />
+</li>
+<li>Deterministic systems (computers) can only simulate it.<br />
+</li>
+<li>Randomness is essential for:
+<ul>
+<li>Key generation<br />
+</li>
+<li>Nonce and salt creation<br />
+</li>
+<li>Proof-of-Work puzzles<br />
+</li>
+</ul></li>
+<li>Weak randomness ⇒ predictable keys ⇒ broken security.</li>
+</ul>
+</div></section>
+<section class="slide non-scrollable" id="aside-human-randomness"><h2 class="slide-title">Aside: Human Randomness</h2><div class="slide-body">
+<p>Let’s try an exercise: choose a number between 1 and 100.</p>
+<div class="r-stack">
+<p><img src="../img/human-randomness.png" class="fragment fade-in" width="800" /></p>
+<div class="fragment fade-in-then-out" style="background-color: rgba(0, 0, 0, 0.7); color: white; padding: 20px;">
+<ul>
+<li>
+Choosing more odd numbers than even numbers.
+</li>
+<li>
+Picking prime numbers more frequently.
+</li>
+<li>
+Avoiding multiples of 10, because they feel less “random.”
+</li>
+<li>
+Rarely choosing numbers like 1 and 100.
+</li>
+</ul>
+</div>
+</div>
+<div class="smaller">
+<p>Source: <a href="https://giftedworld.org/why-youre-terrible-at-being-random-and-dont-even-know-it/">giftedworld.org/why-youre-terrible-at-being-random-and-dont-even-know-it/</a></p>
+</div>
+</div></section>
+<section class="slide" id="sources-of-randomness"><h2 class="slide-title">Sources of Randomness</h2><div class="slide-body">
+<ul>
+<li><strong>Physical entropy:</strong> radioactive decay, thermal noise, user input, network jitter.<br />
+</li>
+<li><strong>Algorithmic entropy:</strong> pseudorandom number generators (PRNGs) seeded by physical sources.<br />
+</li>
+<li><strong>Hybrid systems:</strong> hardware RNG → seed → software PRG.<br />
+</li>
+<li>Security depends on <strong>entropy quality</strong> — if attackers predict the seed, all outputs are compromised.<br />
+</li>
+<li>Blockchain systems rely on secure randomness for mining, validator selection, and nonce generation.</li>
+</ul>
+</div></section>
+<section class="slide" id="pseudorandom-generators-prgs"><h2 class="slide-title">Pseudorandom Generators (PRGs)</h2><div class="slide-body">
+<ul>
+<li>A <strong>pseudorandom generator (PRG)</strong> stretches a short, truly random <strong>seed</strong> into a long sequence that <em>appears random</em>.<br />
+</li>
+<li>Formally: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>:</mo><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">}</mo><mi>n</mi></msup><mo>→</mo><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">}</mo><mi>m</mi></msup></mrow><annotation encoding="application/x-tex">G : \{0,1\}^{n} \to \{0,1\}^{m}</annotation></semantics></math>, where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mo>≫</mo><mi>n</mi></mrow><annotation encoding="application/x-tex">m \gg n</annotation></semantics></math>.<br />
+</li>
+<li>The output is computationally indistinguishable from true randomness.<br />
+</li>
+<li>Enables practical cryptography without needing infinite entropy sources.</li>
+</ul>
+</div></section>
+<section class="slide" id="desirable-properties-of-prgs"><h2 class="slide-title">Desirable Properties of PRGs</h2><div class="slide-body">
+<ol type="1">
+<li><strong>Efficiency:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math> must run in polynomial time (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>n</mi><mn>2</mn></msup><annotation encoding="application/x-tex">n^2</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>n</mi><mn>3</mn></msup><annotation encoding="application/x-tex">n^3</annotation></semantics></math>) - vs. exponential time (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mi>n</mi></msup><annotation encoding="application/x-tex">2^n</annotation></semantics></math>).</li>
+<li><strong>Expansion:</strong> Output length <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> must be significantly larger than seed length <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>.<br />
+</li>
+<li><strong>Unpredictability:</strong> Given the output <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>1</mn><mi>.</mi><mi>.</mi><mi>k</mi><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[1..k]</annotation></semantics></math> of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">G(s)</annotation></semantics></math>, it should be infeasible to predict <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mi>k</mi><mo>+</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[k+1]</annotation></semantics></math>.<br />
+</li>
+<li><strong>Indistinguishability:</strong> No efficient algorithm can distinguish PRG output from true randomness.<br />
+</li>
+<li><strong>Reproducibility:</strong> The same seed always generates the same sequence (important for testing and simulation).</li>
+</ol>
+</div></section>
+<section class="slide" id="when-random-goes-wrong"><h2 class="slide-title">When Random Goes Wrong</h2><div class="slide-body">
+<ul>
+<li>Weak or repeated randomness has broken real systems:
+<ul>
+<li><strong>Android Bitcoin Wallet (2013):</strong> repeated nonces allowed key recovery.<br />
+</li>
+<li><strong>Debian OpenSSL Bug (2008):</strong> flawed entropy reduced key space to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mn>15</mn></msup><annotation encoding="application/x-tex">2^{15}</annotation></semantics></math> possibilities.</li>
+<li><strong>Sony PlayStation 3 (2010):</strong> reused signature nonces exposed private keys.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="computational-hardness"><h2 class="slide-title">Computational Hardness</h2><div class="slide-body">
+<ul>
+<li>Cryptographic security depends on <strong>computational hardness</strong> — problems so difficult that no efficient algorithm can solve them.
+<ul>
+<li><strong>Factoring:</strong> given <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mi>p</mi><mo>×</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">N = p × q</annotation></semantics></math>, find <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>.<br />
+</li>
+</ul></li>
+<li>In practice, “hard” means <em>no known algorithm can solve it in polynomial time.</em></li>
+</ul>
+</div></section>
+<section class="slide" id="cryptography-and-trustless-systems"><h2 class="slide-title">Cryptography and Trustless Systems</h2><div class="slide-body">
+<ul>
+<li>Traditional trust model: rely on central authority (bank, government)</li>
+<li>Trustless model: replaces central authority with <em>mathematical proof</em>.<br />
+</li>
+<li>Result: security and agreement without mutual trust.</li>
+<li>Trustless model is foundation for blockchain technology.</li>
+</ul>
+</div></section>
+<section class="slide" id="how-blockchain-uses-cryptography"><h2 class="slide-title">How Blockchain Uses Cryptography</h2><div class="slide-body">
+<ul>
+<li><strong>Hash functions</strong> ensure data integrity — every block depends on the hash of the previous one.<br />
+</li>
+<li><strong>Pseudorandomness</strong> introduces fairness and unpredictability (e.g., mining puzzles, validator selection).<br />
+</li>
+<li><strong>Digital signatures</strong> verify transaction authenticity.<br />
+</li>
+<li><strong>Consensus protocols</strong> use cryptographic proofs to coordinate nodes without trust.<br />
+</li>
+<li>Together, they enable a tamper-evident, decentralized ledger.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="example-the-double-spend-problem"><h2 class="slide-title">Example: The Double-Spend Problem</h2><div class="slide-body">
+<ul>
+<li>One key challenge for digital money: <strong>prevent one coin from being spent twice.</strong><br />
+</li>
+<li>Without a central ledger, how do you ensure all copies of data stay consistent?<br />
+</li>
+<li>Blockchain solves this using:
+<ul>
+<li><strong>Cryptographic hashing</strong> to link blocks.<br />
+</li>
+<li><strong>Timestamped consensus</strong> to order transactions.<br />
+</li>
+<li><strong>Proof-of-Work / Proof-of-Stake</strong> to make rewriting history infeasible.<br />
+</li>
+</ul></li>
+<li>Cryptography ensures tamper-evidence and global agreement.</li>
+</ul>
+</div></section>
+<section class="slide" id="summary"><h2 class="slide-title">Summary</h2><div class="slide-body">
+<ul>
+<li>Cryptography evolved from secret writing to mathematical assurance.<br />
+</li>
+<li>Randomness and pseudorandomness underpin all digital security.<br />
+</li>
+<li>Computational hardness makes attacks infeasible.<br />
+</li>
+<li>Blockchain depends on these principles to replace trust with verification.</li>
+</ul>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-katz_introductionmoderncryptography_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">J. Katz and Y. Lindell, <em>Introduction to <span>Modern Cryptography</span></em>, 3rd ed. <span>Chapman and Hall/CRC</span>, 2020. doi: <a href="https://doi.org/10.1201/9781351133036">10.1201/9781351133036</a>.</div>
+</div>
+<div id="ref-goldreich_foundationscryptography_2004" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">O. Goldreich, <span>“The <span>Foundations</span> of <span>Cryptography</span>.”</span> May 2004. Accessed: Oct. 23, 2025. [Online]. Available: <a href="https://www.wisdom.weizmann.ac.il/~oded/foc-book.html">https://www.wisdom.weizmann.ac.il/~oded/foc-book.html</a></div>
+</div>
+<div id="ref-eastlake_rfc4086randomness_2005" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">D. Eastlake, J. Schiller, and S. Crocker, <em><span>RFC</span> 4086: <span>Randomness Requirements</span> for <span>Security</span></em>. The Internet Society, 2005. Accessed: Oct. 23, 2025. [Online]. Available: <a href="https://datatracker.ietf.org/doc/html/rfc4086">https://datatracker.ietf.org/doc/html/rfc4086</a></div>
+</div>
+<div id="ref-barker_recommendationrandomnumber_2012" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">E. B. Barker and J. M. Kelsey, <span>“Recommendation for random number generation using deterministic random bit generators,”</span> <span>National Institute of Standards and Technology</span>, Gaithersburg, MD, NIST SP 800-90a, 2012. doi: <a href="https://doi.org/10.6028/NIST.SP.800-90a">10.6028/NIST.SP.800-90a</a>.</div>
+</div>
+<div id="ref-bonneau_bitcoinpublicrandomness_2015" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">J. Bonneau, J. Clark, and S. Goldfeder, <span>“On <span>Bitcoin</span> as a public randomness source.”</span> Cryptology ePrint Archive, Paper 2015/1015, 2015. Available: <a href="https://eprint.iacr.org/2015/1015">https://eprint.iacr.org/2015/1015</a></div>
+</div>
+<div id="ref-blum_howgeneratecryptographically_1984" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">M. Blum and S. Micali, <span>“How to <span>Generate Cryptographically Strong Sequences</span> of <span>Pseudorandom Bits</span>,”</span> <em>SIAM J. Comput.</em>, vol. 13, no. 4, pp. 850–864, Nov. 1984, doi: <a href="https://doi.org/10.1137/0213053">10.1137/0213053</a>.</div>
+</div>
+<div id="ref-bellare_introductionmoderncryptography_2005" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">M. Bellare and P. Rogaway, <span>“Introduction to <span>Modern Cryptography</span>.”</span> Nov. 05, 2005. Available: <a href="https://web.cs.ucdavis.edu/~rogaway/classes/227/spring05/book/main.pdf">https://web.cs.ucdavis.edu/~rogaway/classes/227/spring05/book/main.pdf</a></div>
+</div>
+<div id="ref-weimer_securitydsa15711_2008" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">F. Weimer, <span>“[<span>SECURITY</span>] [<span>DSA</span> 1571-1] <span>New</span> openssl packages fix predictable random number generator.”</span> [Online]. Available: <a href="https://lists.debian.org/debian-security-announce/2008/msg00152.html">https://lists.debian.org/debian-security-announce/2008/msg00152.html</a></div>
+</div>
+<div id="ref-heninger_miningyourps_2012" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">N. Heninger, Z. Durumeric, E. Wustrow, and J. A. Halderman, <span>“Mining your ps and qs: <span>Detection</span> of widespread weak keys in network devices,”</span> in <em>21st <span>USENIX</span> security symposium (<span>USENIX</span> security 12)</em>, Bellevue, WA: USENIX Association, Aug. 2012, pp. 205–220. Available: <a href="https://www.usenix.org/conference/usenixsecurity12/technical-sessions/presentation/heninger">https://www.usenix.org/conference/usenixsecurity12/technical-sessions/presentation/heninger</a></div>
+</div>
+<div id="ref-diffie_newdirectionscryptography_1976" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">W. Diffie and M. Hellman, <span>“New <span>Directions</span> in <span>Cryptography</span>,”</span> in <em><span>IEEE Transactions</span> on <span>Information Theory</span></em>, 1976, pp. 644–654. doi: <a href="https://doi.org/10.1109/TIT.1976.1055638">10.1109/TIT.1976.1055638</a>.</div>
+</div>
+<div id="ref-rivest_methodobtainingdigital_1978" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">R. L. Rivest, A. Shamir, and L. Adleman, <span>“A method for obtaining digital signatures and public-key cryptosystems,”</span> <em>Commun. ACM</em>, vol. 21, no. 2, pp. 120–126, Feb. 1978, doi: <a href="https://doi.org/10.1145/359340.359342">10.1145/359340.359342</a>.</div>
+</div>
+<div id="ref-nakamoto_bitcoinpeertopeerelectronic_2008" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">S. Nakamoto, <span>“Bitcoin: <span class="nocase">A Peer-to-Peer Electronic Cash System</span>.”</span> Satoshi Nakamoto Institute, Oct. 31, 2008. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf">https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf</a></div>
+</div>
+<div id="ref-narayanan_bitcoincryptocurrencytechnologies_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">A. Narayanan, J. Bonneau, E. Felten, A. Miller, and S. Goldfeder, <em>Bitcoin and <span>Cryptocurrency Technologies</span></em>. Princeton University Press, 2016.</div>
+</div>
+<div id="ref-bonneau_sokresearchperspectives_2015" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">J. Bonneau, A. Miller, J. Clark, A. Narayanan, J. A. Kroll, and E. W. Felten, <span>“<span>SoK</span>: <span>Research Perspectives</span> and <span>Challenges</span> for <span>Bitcoin</span> and <span>Cryptocurrencies</span>,”</span> in <em>2015 <span>IEEE Symposium</span> on <span>Security</span> and <span>Privacy</span></em>, 2015, pp. 104–121. doi: <a href="https://doi.org/10.1109/SP.2015.14">10.1109/SP.2015.14</a>.</div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

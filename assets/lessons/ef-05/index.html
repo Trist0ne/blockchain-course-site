@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Digital Assets, Tokenization, and NFTs</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/ethereum/05-EF-digital_assets_tokenization_and_nfts.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="ef-05" data-code="05-EF" data-src="2c1d1276be28c94f" data-slides="24">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section VII: Ethereum Framework · Lesson 05-EF</p><h1>Digital Assets, Tokenization, and NFTs</h1></div></section>
+<section class="slide" id="digital-assets-tokenization-and-nfts"><h2 class="slide-title">Digital Assets, Tokenization, and NFTs</h2><div class="slide-body">
+<ul>
+<li><strong>Digital assets</strong> are items of value or rights expressed in digital form.
+<ul>
+<li>Some exist within centralized platforms (game items, licenses, domain names).<br />
+</li>
+<li>Today’s focus is on assets <em>cryptographically controlled</em> on blockchains.<br />
+</li>
+</ul></li>
+<li><strong>Tokenization</strong> represents digital or real-world claims as on-chain tokens.</li>
+</ul>
+</div></section>
+<section class="slide" id="a-taxonomy-of-digital-assets"><h2 class="slide-title">A Taxonomy of Digital Assets</h2><div class="slide-body">
+<div style="font-size: .85em;">
+<ul>
+<li><p><strong>Native coins (e.g., ETH):</strong> secure the chain; pay for computation and data.</p></li>
+<li><p><strong>Fungible tokens (ERC‑20 class):</strong> interchangeable units (stablecoins, governance).</p></li>
+<li><p><strong>Non‑fungible tokens (ERC‑721/1155 class):</strong> unique identifiers with metadata.</p></li>
+<li><p><strong>Asset‑backed and reference tokens:</strong> real-world assets (RWAs), wrapped assets, receipts.</p></li>
+</ul>
+<p>The key distinction is <strong>what the token references and who enforces it.</strong> Purely on-chain assets are defined by code and consensus. Asset-backed tokens are only as trustworthy as the custodian or legal structure behind them.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="coin-or-token-start-with-the-balance-record"><h2 class="slide-title">Coin or Token? Start With the Balance Record</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:50%;">
+<div style="font-size: .76em; line-height: 1.13;">
+<p><strong>Native coin</strong></p>
+<ul>
+<li>Built into the chain’s base ledger.</li>
+<li>Pays network fees; may support staking or mining incentives.</li>
+<li>Exists before any app-specific token contract.</li>
+<li>Examples: <code>ETH</code>, <code>SOL</code>, <code>ADA</code>, <code>TRX</code>.</li>
+</ul>
+</div>
+</div><div class="column" style="width:50%;">
+<div style="font-size: .76em; line-height: 1.13;">
+<p><strong>Token on a chain</strong></p>
+<ul>
+<li>Balance is tracked by a smart contract or token program.</li>
+<li>Uses the chain’s native coin to pay transaction fees.</li>
+<li>Token rules may include minting, freezing, upgrades, or governance.</li>
+<li>Examples: <code>USDT</code>, <code>USDC</code>, <code>DAI</code>.</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="callout-note" data-appearance="simple">
+<p><strong>First question:</strong> is this the chain’s own asset, or a token record maintained by code on top of the chain?</p>
+</div>
+</div></section>
+<section class="slide smaller" id="same-token-standard-different-promise"><h2 class="slide-title">Same Token Standard, Different Promise</h2><div class="slide-body">
+<div style="font-size: .70em; line-height: 1.12;">
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Token type</th>
+<th>What the holder depends on</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stablecoin token</td>
+<td>Issuer reserves and redemption, or collateral and governance.</td>
+<td><code>USDT</code>, <code>USDC</code>, <code>DAI</code></td>
+</tr>
+<tr>
+<td>Protocol or oracle token</td>
+<td>Protocol demand, token permissions, admin design, and market expectations.</td>
+<td><code>LINK</code>, <code>UNI</code>-style tokens</td>
+</tr>
+<tr>
+<td>Community or meme token</td>
+<td>Attention, liquidity, distribution, and project behavior.</td>
+<td><code>PEPE</code>-style tokens</td>
+</tr>
+<tr>
+<td>Wrapped or bridged token</td>
+<td>Custody, bridge contracts, validators, or lock-and-mint accounting.</td>
+<td><code>WBTC</code>, bridged stablecoins</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Key idea:</strong> two tokens can move through the same wallet and transfer function while depending on completely different promises.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="why-investigators-and-users-care"><h2 class="slide-title">Why Investigators and Users Care</h2><div class="slide-body">
+<div style="font-size: .76em; line-height: 1.14;">
+<ul>
+<li><strong>User experience:</strong> wallets and exchanges may show coins and tokens together, but a token transfer still needs the chain’s native coin for fees.</li>
+<li><strong>Rug pulls:</strong> look for project-controlled token contracts, liquidity pools, admin keys, and misleading supply or ownership claims.</li>
+<li><strong>Stablecoin risk:</strong> ask who controls minting, reserves, redemption, freezes, blacklists, collateral, and governance.</li>
+<li><strong>Forensic tracing:</strong> distinguish native coin transfers, token-transfer events, bridge movements, and app-internal balances.</li>
+</ul>
+</div>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Practical takeaway:</strong> before asking whether value is safe or traceable, identify what kind of record moved.</p>
+</div>
+</div></section>
+<section class="slide" id="why-tokenize-problems-and-promises"><h2 class="slide-title">Why Tokenize? Problems and Promises</h2><div class="slide-body">
+<ul>
+<li><p><strong>The problem:</strong> traditional asset systems rely on siloed ledgers, manual settlement, and intermediaries that add cost, delay, and opacity.</p></li>
+<li><p><strong>Programmability:</strong> assets as APIs, enabling automation and composability.</p></li>
+<li><p><strong>Provenance:</strong> append‑only ownership history and verifiable scarcity.</p></li>
+<li><p><strong>Market access:</strong> fractionalization and 24/7 settlement across borders.</p></li>
+<li><p><strong>Risks:</strong> custody &amp; keys, market manipulation, off‑chain dependencies, regulation.</p></li>
+</ul>
+</div></section>
+<section class="slide" id="tokenization-history-early-experiments"><h2 class="slide-title">Tokenization History — Early Experiments</h2><div class="slide-body">
+<div style="font-size: .55em;">
+<ul>
+<li><p><strong>Colored Coins (2012):</strong> proposed tagging Bitcoin outputs to represent non-BTC assets; relied on off-chain agreement to interpret the tags.</p></li>
+<li><p><strong>Mastercoin / Omni (2013):</strong> layered token issuance on Bitcoin via OP_RETURN; added simple logic but hit script and metadata limits.</p></li>
+<li><p><strong>Counterparty (2014):</strong> enabled user-defined assets and early collectibles on Bitcoin; demonstrated interest in richer on-chain representations.</p></li>
+<li><p><strong>Lesson learned:</strong> these projects showed that <em>some</em> builders wanted richer asset primitives, but adoption remained narrow. The friction — limited scripts, inconsistent off-chain indexers, and minimal composability — revealed that the substrate itself needed to support stateful logic natively.</p></li>
+</ul>
+<div style="margin-top: -3em;">
+<figure class="diagram mermaid"><svg aria-roledescription="timeline" role="graphics-document document" viewBox="0 0 990 435.64691162109375" style="max-width: 990px;" xmlns="http://www.w3.org/2000/svg" width="100%" id="mmd4"><style>#mmd4{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;fill:#000000;}#mmd4 .error-icon{fill:#552222;}#mmd4 .error-text{fill:#552222;stroke:#552222;}#mmd4 .edge-thickness-normal{stroke-width:1px;}#mmd4 .edge-thickness-thick{stroke-width:3.5px;}#mmd4 .edge-pattern-solid{stroke-dasharray:0;}#mmd4 .edge-thickness-invisible{stroke-width:0;fill:none;}#mmd4 .edge-pattern-dashed{stroke-dasharray:3;}#mmd4 .edge-pattern-dotted{stroke-dasharray:2;}#mmd4 .marker{fill:#666;stroke:#666;}#mmd4 .marker.cross{stroke:#666;}#mmd4 svg{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;}#mmd4 p{margin:0;}#mmd4 .edge{stroke-width:3;}#mmd4 .section--1 rect,#mmd4 .section--1 path,#mmd4 .section--1 circle,#mmd4 .section--1 path{fill:#555;}#mmd4 .section--1 text{fill:#F4F4F4;}#mmd4 .node-icon--1{font-size:40px;color:#F4F4F4;}#mmd4 .section-edge--1{stroke:#555;}#mmd4 .edge-depth--1{stroke-width:17;}#mmd4 .section--1 line{stroke:#aaaaaa;stroke-width:3;}#mmd4 .lineWrapper line{stroke:#F4F4F4;}#mmd4 .disabled,#mmd4 .disabled circle,#mmd4 .disabled text{fill:lightgray;}#mmd4 .disabled text{fill:#efefef;}#mmd4 .section-0 rect,#mmd4 .section-0 path,#mmd4 .section-0 circle,#mmd4 .section-0 path{fill:#F4F4F4;}#mmd4 .section-0 text{fill:#333;}#mmd4 .node-icon-0{font-size:40px;color:#333;}#mmd4 .section-edge-0{stroke:#F4F4F4;}#mmd4 .edge-depth-0{stroke-width:14;}#mmd4 .section-0 line{stroke:#0b0b0b;stroke-width:3;}#mmd4 .lineWrapper line{stroke:#333;}#mmd4 .disabled,#mmd4 .disabled circle,#mmd4 .disabled text{fill:lightgray;}#mmd4 .disabled text{fill:#efefef;}#mmd4 .section-1 rect,#mmd4 .section-1 path,#mmd4 .section-1 circle,#mmd4 .section-1 path{fill:#555;}#mmd4 .section-1 text{fill:#F4F4F4;}#mmd4 .node-icon-1{font-size:40px;color:#F4F4F4;}#mmd4 .section-edge-1{stroke:#555;}#mmd4 .edge-depth-1{stroke-width:11;}#mmd4 .section-1 line{stroke:#aaaaaa;stroke-width:3;}#mmd4 .lineWrapper line{stroke:#F4F4F4;}#mmd4 .disabled,#mmd4 .disabled circle,#mmd4 .disabled text{fill:lightgray;}#mmd4 .disabled text{fill:#efefef;}#mmd4 .section-2 rect,#mmd4 .section-2 path,#mmd4 .section-2 circle,#mmd4 .section-2 path{fill:#BBB;}#mmd4 .section-2 text{fill:#333;}#mmd4 .node-icon-2{font-size:40px;color:#333;}#mmd4 .section-edge-2{stroke:#BBB;}#mmd4 .edge-depth-2{stroke-width:8;}#mmd4 .section-2 line{stroke:#444444;stroke-width:3;}#mmd4 .lineWrapper line{stroke:#333;}#mmd4 .disabled,#mmd4 .disabled circle,#mmd4 .disabled text{fill:lightgray;}#mmd4 .disabled text{fill:#efefef;}#mmd4 .section-3 rect,#mmd4 .section-3 path,#mmd4 .section-3 circle,#mmd4 .section-3 path{fill:#777;}#mmd4 .section-3 text{fill:#333;}#mmd4 .node-icon-3{font-size:40px;color:#333;}#mmd4 .section-edge-3{stroke:#777;}#mmd4 .edge-depth-3{stroke-width:5;}#mmd4 .section-3 line{stroke:#888888;stroke-width:3;}#mmd4 .lineWrapper line{stroke:#333;}#mmd4 .disabled,#mmd4 .disabled circle,#mmd4 .disabled text{fill:lightgray;}#mmd4 .disabled text{fill:#efefef;}#mmd4 .section-4 rect,#mmd4 .section-4 path,#mmd4 .section-4 circle,#mmd4 .section-4 path{fill:#999;}#mmd4 .section-4 text{fill:#333;}#mmd4 .node-icon-4{font-size:40px;color:#333;}#mmd4 .section-edge-4{stroke:#999;}#mmd4 .edge-depth-4{stroke-width:2;}#mmd4 .section-4 line{stroke:#666666;stroke-width:3;}#mmd4 .lineWrapper line{stroke:#333;}#mmd4 .disabled,#mmd4 .disabled circle,#mmd4 .disabled text{fill:lightgray;}#mmd4 .disabled text{fill:#efefef;}#mmd4 .section-5 rect,#mmd4 .section-5 path,#mmd4 .section-5 circle,#mmd4 .section-5 path{fill:#DDD;}#mmd4 .section-5 text{fill:#333;}#mmd4 .node-icon-5{font-size:40px;color:#333;}#mmd4 .section-edge-5{stroke:#DDD;}#mmd4 .edge-depth-5{stroke-width:-1;}#mmd4 .section-5 line{stroke:#222222;stroke-width:3;}#mmd4 .lineWrapper line{stroke:#333;}#mmd4 .disabled,#mmd4 .disabled circle,#mmd4 .disabled text{fill:lightgray;}#mmd4 .disabled text{fill:#efefef;}#mmd4 .section-6 rect,#mmd4 .section-6 path,#mmd4 .section-6 circle,#mmd4 .section-6 path{fill:#FFF;}#mmd4 .section-6 text{fill:#333;}#mmd4 .node-icon-6{font-size:40px;color:#333;}#mmd4 .section-edge-6{stroke:#FFF;}#mmd4 .edge-depth-6{stroke-width:-4;}#mmd4 .section-6 line{stroke:#000000;stroke-width:3;}#mmd4 .lineWrapper line{stroke:#333;}#mmd4 .disabled,#mmd4 .disabled circle,#mmd4 .disabled text{fill:lightgray;}#mmd4 .disabled text{fill:#efefef;}#mmd4 .section-7 rect,#mmd4 .section-7 path,#mmd4 .section-7 circle,#mmd4 .section-7 path{fill:#DDD;}#mmd4 .section-7 text{fill:#333;}#mmd4 .node-icon-7{font-size:40px;color:#333;}#mmd4 .section-edge-7{stroke:#DDD;}#mmd4 .edge-depth-7{stroke-width:-7;}#mmd4 .section-7 line{stroke:#222222;stroke-width:3;}#mmd4 .lineWrapper line{stroke:#333;}#mmd4 .disabled,#mmd4 .disabled circle,#mmd4 .disabled text{fill:lightgray;}#mmd4 .disabled text{fill:#efefef;}#mmd4 .section-8 rect,#mmd4 .section-8 path,#mmd4 .section-8 circle,#mmd4 .section-8 path{fill:#BBB;}#mmd4 .section-8 text{fill:#333;}#mmd4 .node-icon-8{font-size:40px;color:#333;}#mmd4 .section-edge-8{stroke:#BBB;}#mmd4 .edge-depth-8{stroke-width:-10;}#mmd4 .section-8 line{stroke:#444444;stroke-width:3;}#mmd4 .lineWrapper line{stroke:#333;}#mmd4 .disabled,#mmd4 .disabled circle,#mmd4 .disabled text{fill:lightgray;}#mmd4 .disabled text{fill:#efefef;}#mmd4 .section-9 rect,#mmd4 .section-9 path,#mmd4 .section-9 circle,#mmd4 .section-9 path{fill:#999;}#mmd4 .section-9 text{fill:#333;}#mmd4 .node-icon-9{font-size:40px;color:#333;}#mmd4 .section-edge-9{stroke:#999;}#mmd4 .edge-depth-9{stroke-width:-13;}#mmd4 .section-9 line{stroke:#666666;stroke-width:3;}#mmd4 .lineWrapper line{stroke:#333;}#mmd4 .disabled,#mmd4 .disabled circle,#mmd4 .disabled text{fill:lightgray;}#mmd4 .disabled text{fill:#efefef;}#mmd4 .section-10 rect,#mmd4 .section-10 path,#mmd4 .section-10 circle,#mmd4 .section-10 path{fill:#777;}#mmd4 .section-10 text{fill:#333;}#mmd4 .node-icon-10{font-size:40px;color:#333;}#mmd4 .section-edge-10{stroke:#777;}#mmd4 .edge-depth-10{stroke-width:-16;}#mmd4 .section-10 line{stroke:#888888;stroke-width:3;}#mmd4 .lineWrapper line{stroke:#333;}#mmd4 .disabled,#mmd4 .disabled circle,#mmd4 .disabled text{fill:lightgray;}#mmd4 .disabled text{fill:#efefef;}#mmd4 .section-root rect,#mmd4 .section-root path,#mmd4 .section-root circle{fill:hsl(0, 0%, 70.6862745098%);}#mmd4 .section-root text{fill:#333;}#mmd4 .icon-container{height:100%;display:flex;justify-content:center;align-items:center;}#mmd4 .edge{fill:none;}#mmd4 .eventWrapper{filter:brightness(120%);}#mmd4 :root{--mermaid-font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;}</style><g></g><g></g><defs><marker orient="auto" markerHeight="4" markerWidth="6" refY="2" refX="5" id="arrowhead"><path d="M 0,0 V 4 L6,2 Z"></path></marker></defs><g transform="translate(100, 50)" class="taskWrapper"><g class="timeline-node section--1"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line--1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">2012</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="385.64687194824216" x2="195" y1="116.815625" x1="195"></line></g><g transform="translate(100, 250)" class="eventWrapper"><g class="timeline-node section--1"><g><path d="M0 77.01562194824218 v-72.01562194824218 q0,-5 5,-5 h180 q5,0 5,5 v77.01562194824218 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="82.01562194824218" x2="190" y1="82.01562194824218" x1="0" class="node-line--1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Colored   Coins</tspan><tspan dy="1.1em" x="0">(metadata   on</tspan><tspan dy="1.1em" x="0">Bitcoin   outputs)</tspan></text></g></g></g><g transform="translate(300, 50)" class="taskWrapper"><g class="timeline-node section-0"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line-0"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">2013</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="385.64687194824216" x2="395" y1="116.815625" x1="395"></line></g><g transform="translate(300, 250)" class="eventWrapper"><g class="timeline-node section-0"><g><path d="M0 77.01562194824218 v-72.01562194824218 q0,-5 5,-5 h180 q5,0 5,5 v77.01562194824218 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="82.01562194824218" x2="190" y1="82.01562194824218" x1="0" class="node-line-0"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Mastercoin   /   Omni</tspan><tspan dy="1.1em" x="0">(token   layers   on</tspan><tspan dy="1.1em" x="0">Bitcoin)</tspan></text></g></g></g><g transform="translate(500, 50)" class="taskWrapper"><g class="timeline-node section-1"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line-1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">2014</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="385.64687194824216" x2="595" y1="116.815625" x1="595"></line></g><g transform="translate(500, 250)" class="eventWrapper"><g class="timeline-node section-1"><g><path d="M0 77.01562194824218 v-72.01562194824218 q0,-5 5,-5 h180 q5,0 5,5 v77.01562194824218 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="82.01562194824218" x2="190" y1="82.01562194824218" x1="0" class="node-line-1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Counterparty</tspan><tspan dy="1.1em" x="0">(assets,   early</tspan><tspan dy="1.1em" x="0">collectibles)</tspan></text></g></g></g><g transform="translate(700, 50)" class="taskWrapper"><g class="timeline-node section-2"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line-2"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">2014</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="385.64687194824216" x2="795" y1="116.815625" x1="795"></line></g><g transform="translate(700, 250)" class="eventWrapper"><g class="timeline-node section-2"><g><path d="M0 77.01562194824218 v-72.01562194824218 q0,-5 5,-5 h180 q5,0 5,5 v77.01562194824218 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="82.01562194824218" x2="190" y1="82.01562194824218" x1="0" class="node-line-2"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Namecoin</tspan><tspan dy="1.1em" x="0">experiments</tspan><tspan dy="1.1em" x="0">(names/identities)</tspan></text></g></g></g><g class="lineWrapper"><line marker-end="url(#arrowhead)" stroke="black" stroke-width="4" y2="166.815625" x2="940" y1="166.815625" x1="50"></line></g></svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="from-experiments-to-nfts-a-combined-timeline"><h2 class="slide-title">From Experiments to NFTs — A Combined Timeline</h2><div class="slide-body">
+<figure class="diagram mermaid"><svg aria-roledescription="timeline" role="graphics-document document" viewBox="0 0 1190 470.84686279296875" style="max-width: 1190px;" xmlns="http://www.w3.org/2000/svg" width="100%" id="mmd5"><style>#mmd5{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;fill:#000000;}#mmd5 .error-icon{fill:#552222;}#mmd5 .error-text{fill:#552222;stroke:#552222;}#mmd5 .edge-thickness-normal{stroke-width:1px;}#mmd5 .edge-thickness-thick{stroke-width:3.5px;}#mmd5 .edge-pattern-solid{stroke-dasharray:0;}#mmd5 .edge-thickness-invisible{stroke-width:0;fill:none;}#mmd5 .edge-pattern-dashed{stroke-dasharray:3;}#mmd5 .edge-pattern-dotted{stroke-dasharray:2;}#mmd5 .marker{fill:#666;stroke:#666;}#mmd5 .marker.cross{stroke:#666;}#mmd5 svg{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;}#mmd5 p{margin:0;}#mmd5 .edge{stroke-width:3;}#mmd5 .section--1 rect,#mmd5 .section--1 path,#mmd5 .section--1 circle,#mmd5 .section--1 path{fill:#555;}#mmd5 .section--1 text{fill:#F4F4F4;}#mmd5 .node-icon--1{font-size:40px;color:#F4F4F4;}#mmd5 .section-edge--1{stroke:#555;}#mmd5 .edge-depth--1{stroke-width:17;}#mmd5 .section--1 line{stroke:#aaaaaa;stroke-width:3;}#mmd5 .lineWrapper line{stroke:#F4F4F4;}#mmd5 .disabled,#mmd5 .disabled circle,#mmd5 .disabled text{fill:lightgray;}#mmd5 .disabled text{fill:#efefef;}#mmd5 .section-0 rect,#mmd5 .section-0 path,#mmd5 .section-0 circle,#mmd5 .section-0 path{fill:#F4F4F4;}#mmd5 .section-0 text{fill:#333;}#mmd5 .node-icon-0{font-size:40px;color:#333;}#mmd5 .section-edge-0{stroke:#F4F4F4;}#mmd5 .edge-depth-0{stroke-width:14;}#mmd5 .section-0 line{stroke:#0b0b0b;stroke-width:3;}#mmd5 .lineWrapper line{stroke:#333;}#mmd5 .disabled,#mmd5 .disabled circle,#mmd5 .disabled text{fill:lightgray;}#mmd5 .disabled text{fill:#efefef;}#mmd5 .section-1 rect,#mmd5 .section-1 path,#mmd5 .section-1 circle,#mmd5 .section-1 path{fill:#555;}#mmd5 .section-1 text{fill:#F4F4F4;}#mmd5 .node-icon-1{font-size:40px;color:#F4F4F4;}#mmd5 .section-edge-1{stroke:#555;}#mmd5 .edge-depth-1{stroke-width:11;}#mmd5 .section-1 line{stroke:#aaaaaa;stroke-width:3;}#mmd5 .lineWrapper line{stroke:#F4F4F4;}#mmd5 .disabled,#mmd5 .disabled circle,#mmd5 .disabled text{fill:lightgray;}#mmd5 .disabled text{fill:#efefef;}#mmd5 .section-2 rect,#mmd5 .section-2 path,#mmd5 .section-2 circle,#mmd5 .section-2 path{fill:#BBB;}#mmd5 .section-2 text{fill:#333;}#mmd5 .node-icon-2{font-size:40px;color:#333;}#mmd5 .section-edge-2{stroke:#BBB;}#mmd5 .edge-depth-2{stroke-width:8;}#mmd5 .section-2 line{stroke:#444444;stroke-width:3;}#mmd5 .lineWrapper line{stroke:#333;}#mmd5 .disabled,#mmd5 .disabled circle,#mmd5 .disabled text{fill:lightgray;}#mmd5 .disabled text{fill:#efefef;}#mmd5 .section-3 rect,#mmd5 .section-3 path,#mmd5 .section-3 circle,#mmd5 .section-3 path{fill:#777;}#mmd5 .section-3 text{fill:#333;}#mmd5 .node-icon-3{font-size:40px;color:#333;}#mmd5 .section-edge-3{stroke:#777;}#mmd5 .edge-depth-3{stroke-width:5;}#mmd5 .section-3 line{stroke:#888888;stroke-width:3;}#mmd5 .lineWrapper line{stroke:#333;}#mmd5 .disabled,#mmd5 .disabled circle,#mmd5 .disabled text{fill:lightgray;}#mmd5 .disabled text{fill:#efefef;}#mmd5 .section-4 rect,#mmd5 .section-4 path,#mmd5 .section-4 circle,#mmd5 .section-4 path{fill:#999;}#mmd5 .section-4 text{fill:#333;}#mmd5 .node-icon-4{font-size:40px;color:#333;}#mmd5 .section-edge-4{stroke:#999;}#mmd5 .edge-depth-4{stroke-width:2;}#mmd5 .section-4 line{stroke:#666666;stroke-width:3;}#mmd5 .lineWrapper line{stroke:#333;}#mmd5 .disabled,#mmd5 .disabled circle,#mmd5 .disabled text{fill:lightgray;}#mmd5 .disabled text{fill:#efefef;}#mmd5 .section-5 rect,#mmd5 .section-5 path,#mmd5 .section-5 circle,#mmd5 .section-5 path{fill:#DDD;}#mmd5 .section-5 text{fill:#333;}#mmd5 .node-icon-5{font-size:40px;color:#333;}#mmd5 .section-edge-5{stroke:#DDD;}#mmd5 .edge-depth-5{stroke-width:-1;}#mmd5 .section-5 line{stroke:#222222;stroke-width:3;}#mmd5 .lineWrapper line{stroke:#333;}#mmd5 .disabled,#mmd5 .disabled circle,#mmd5 .disabled text{fill:lightgray;}#mmd5 .disabled text{fill:#efefef;}#mmd5 .section-6 rect,#mmd5 .section-6 path,#mmd5 .section-6 circle,#mmd5 .section-6 path{fill:#FFF;}#mmd5 .section-6 text{fill:#333;}#mmd5 .node-icon-6{font-size:40px;color:#333;}#mmd5 .section-edge-6{stroke:#FFF;}#mmd5 .edge-depth-6{stroke-width:-4;}#mmd5 .section-6 line{stroke:#000000;stroke-width:3;}#mmd5 .lineWrapper line{stroke:#333;}#mmd5 .disabled,#mmd5 .disabled circle,#mmd5 .disabled text{fill:lightgray;}#mmd5 .disabled text{fill:#efefef;}#mmd5 .section-7 rect,#mmd5 .section-7 path,#mmd5 .section-7 circle,#mmd5 .section-7 path{fill:#DDD;}#mmd5 .section-7 text{fill:#333;}#mmd5 .node-icon-7{font-size:40px;color:#333;}#mmd5 .section-edge-7{stroke:#DDD;}#mmd5 .edge-depth-7{stroke-width:-7;}#mmd5 .section-7 line{stroke:#222222;stroke-width:3;}#mmd5 .lineWrapper line{stroke:#333;}#mmd5 .disabled,#mmd5 .disabled circle,#mmd5 .disabled text{fill:lightgray;}#mmd5 .disabled text{fill:#efefef;}#mmd5 .section-8 rect,#mmd5 .section-8 path,#mmd5 .section-8 circle,#mmd5 .section-8 path{fill:#BBB;}#mmd5 .section-8 text{fill:#333;}#mmd5 .node-icon-8{font-size:40px;color:#333;}#mmd5 .section-edge-8{stroke:#BBB;}#mmd5 .edge-depth-8{stroke-width:-10;}#mmd5 .section-8 line{stroke:#444444;stroke-width:3;}#mmd5 .lineWrapper line{stroke:#333;}#mmd5 .disabled,#mmd5 .disabled circle,#mmd5 .disabled text{fill:lightgray;}#mmd5 .disabled text{fill:#efefef;}#mmd5 .section-9 rect,#mmd5 .section-9 path,#mmd5 .section-9 circle,#mmd5 .section-9 path{fill:#999;}#mmd5 .section-9 text{fill:#333;}#mmd5 .node-icon-9{font-size:40px;color:#333;}#mmd5 .section-edge-9{stroke:#999;}#mmd5 .edge-depth-9{stroke-width:-13;}#mmd5 .section-9 line{stroke:#666666;stroke-width:3;}#mmd5 .lineWrapper line{stroke:#333;}#mmd5 .disabled,#mmd5 .disabled circle,#mmd5 .disabled text{fill:lightgray;}#mmd5 .disabled text{fill:#efefef;}#mmd5 .section-10 rect,#mmd5 .section-10 path,#mmd5 .section-10 circle,#mmd5 .section-10 path{fill:#777;}#mmd5 .section-10 text{fill:#333;}#mmd5 .node-icon-10{font-size:40px;color:#333;}#mmd5 .section-edge-10{stroke:#777;}#mmd5 .edge-depth-10{stroke-width:-16;}#mmd5 .section-10 line{stroke:#888888;stroke-width:3;}#mmd5 .lineWrapper line{stroke:#333;}#mmd5 .disabled,#mmd5 .disabled circle,#mmd5 .disabled text{fill:lightgray;}#mmd5 .disabled text{fill:#efefef;}#mmd5 .section-root rect,#mmd5 .section-root path,#mmd5 .section-root circle{fill:hsl(0, 0%, 70.6862745098%);}#mmd5 .section-root text{fill:#333;}#mmd5 .icon-container{height:100%;display:flex;justify-content:center;align-items:center;}#mmd5 .edge{fill:none;}#mmd5 .eventWrapper{filter:brightness(120%);}#mmd5 :root{--mermaid-font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;}</style><g></g><g></g><defs><marker orient="auto" markerHeight="4" markerWidth="6" refY="2" refX="5" id="arrowhead"><path d="M 0,0 V 4 L6,2 Z"></path></marker></defs><g transform="translate(100, 50)" class="taskWrapper"><g class="timeline-node section--1"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line--1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">2017</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="420.84686889648435" x2="195" y1="116.815625" x1="195"></line></g><g transform="translate(100, 250)" class="eventWrapper"><g class="timeline-node section--1"><g><path d="M0 112.21561889648437 v-107.21561889648437 q0,-5 5,-5 h180 q5,0 5,5 v112.21561889648437 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="117.21561889648437" x2="190" y1="117.21561889648437" x1="0" class="node-line--1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">CryptoPunks   &amp;</tspan><tspan dy="1.1em" x="0">CryptoKitties</tspan><tspan dy="1.1em" x="0">popularize   NFT</tspan><tspan dy="1.1em" x="0">scarcity   and</tspan><tspan dy="1.1em" x="0">provenance</tspan></text></g></g></g><g transform="translate(300, 50)" class="taskWrapper"><g class="timeline-node section-0"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line-0"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">2018-2019</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="420.84686889648435" x2="395" y1="116.815625" x1="395"></line></g><g transform="translate(300, 250)" class="eventWrapper"><g class="timeline-node section-0"><g><path d="M0 112.21561889648437 v-107.21561889648437 q0,-5 5,-5 h180 q5,0 5,5 v112.21561889648437 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="117.21561889648437" x2="190" y1="117.21561889648437" x1="0" class="node-line-0"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Marketplaces</tspan><tspan dy="1.1em" x="0">(OpenSea,</tspan><tspan dy="1.1em" x="0">SuperRare)   and</tspan><tspan dy="1.1em" x="0">metadata   standards</tspan><tspan dy="1.1em" x="0">mature</tspan></text></g></g></g><g transform="translate(500, 50)" class="taskWrapper"><g class="timeline-node section-1"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line-1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">2020-2021</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="420.84686889648435" x2="595" y1="116.815625" x1="595"></line></g><g transform="translate(500, 250)" class="eventWrapper"><g class="timeline-node section-1"><g><path d="M0 94.61562042236328 v-89.61562042236328 q0,-5 5,-5 h180 q5,0 5,5 v94.61562042236328 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="99.61562042236328" x2="190" y1="99.61562042236328" x1="0" class="node-line-1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Fractional.art,   NFTfi,</tspan><tspan dy="1.1em" x="0">Aavegotchi   integrate</tspan><tspan dy="1.1em" x="0">NFTs   with   DeFi   &amp;</tspan><tspan dy="1.1em" x="0">gaming</tspan></text></g></g></g><g transform="translate(700, 50)" class="taskWrapper"><g class="timeline-node section-2"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line-2"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">2021-2023</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="420.84686889648435" x2="795" y1="116.815625" x1="795"></line></g><g transform="translate(700, 250)" class="eventWrapper"><g class="timeline-node section-2"><g><path d="M0 112.21561889648437 v-107.21561889648437 q0,-5 5,-5 h180 q5,0 5,5 v112.21561889648437 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="117.21561889648437" x2="190" y1="117.21561889648437" x1="0" class="node-line-2"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Beeple's   $69M   sale,</tspan><tspan dy="1.1em" x="0">BAYC   boom,   brand</tspan><tspan dy="1.1em" x="0">&amp;   celebrity</tspan><tspan dy="1.1em" x="0">adoption;   market</tspan><tspan dy="1.1em" x="0">correction</tspan></text></g></g></g><g transform="translate(900, 50)" class="taskWrapper"><g class="timeline-node section-3"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line-3"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">2024+</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="420.84686889648435" x2="995" y1="116.815625" x1="995"></line></g><g transform="translate(900, 250)" class="eventWrapper"><g class="timeline-node section-3"><g><path d="M0 94.61562042236328 v-89.61562042236328 q0,-5 5,-5 h180 q5,0 5,5 v94.61562042236328 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="99.61562042236328" x2="190" y1="99.61562042236328" x1="0" class="node-line-3"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Utility   &amp;   identity</tspan><tspan dy="1.1em" x="0">NFTs   (POAPs,   Lens,</tspan><tspan dy="1.1em" x="0">ticketing,   loyalty,</tspan><tspan dy="1.1em" x="0">credentials)</tspan></text></g></g></g><g class="lineWrapper"><line marker-end="url(#arrowhead)" stroke="black" stroke-width="4" y2="166.815625" x2="1140" y1="166.815625" x1="50"></line></g></svg></figure>
+</div></section>
+<section class="slide smaller" id="fungible-vs-non-fungible-design-implications"><h2 class="slide-title">Fungible vs Non-Fungible — Design Implications</h2><div class="slide-body">
+<ul>
+<li><strong>Fungible assets:</strong> track balances and allowances; code optimizes for arithmetic safety, batch transfers, and spending permissions.<br />
+</li>
+<li><strong>Non-fungible assets:</strong> track unique identifiers; design centers on metadata integrity, ownership transfer hooks, and provenance tracking.<br />
+</li>
+<li><strong>Multi-asset contracts:</strong> combine both patterns; shared logic with type or ID differentiation for games, marketplaces, and multi-currency systems.<br />
+</li>
+<li><strong>Design priorities diverge:</strong> efficiency and allowance safety dominate fungible design; metadata integrity and transfer correctness dominate NFT design.</li>
+</ul>
+</div></section>
+<section class="slide" id="nfts-what-are-we-actually-buying"><h2 class="slide-title">NFTs: What Are We Actually Buying?</h2><div class="slide-body">
+<div style="font-size: .77em;">
+<ul>
+<li><p>Token ownership ≠ intellectual property ownership by default.</p></li>
+<li><p>Token points to metadata which may reference media (image, model, etc.).</p></li>
+<li><p>Rights live in licenses/terms; on‑chain standards rarely encode legal rights.</p>
+<ul>
+<li>Owning Real World Assets (RWA) NFTs does not grant ownership of real-world items without a separate, legally recognized agreement.</li>
+</ul></li>
+<li><p>Good practice: clear licensing combined with content hashes to anchor files.</p></li>
+<li><p><strong>Example:</strong> Bored Ape Yacht Club granted commercial rights to holders via an explicit license, while many other projects granted nothing at all. When Yuga Labs acquired CryptoPunks, one of the first actions was to grant IP rights that the original project never provided — illustrating how token ownership alone was insufficient.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="metadata-and-storage-models"><h2 class="slide-title">Metadata and Storage Models</h2><div class="slide-body">
+<ul>
+<li><strong>On-chain</strong> storage: metadata or media bytes are written directly into the smart contract’s state.
+<ul>
+<li>Immutable and permanent as long as the chain exists.<br />
+</li>
+<li>Gas costs make this practical only for small files or manifests.</li>
+</ul></li>
+<li><strong>Off-chain, content-addressed</strong> storage (IPFS, Arweave): files stored outside the blockchain but addressed by their <strong>hash</strong> rather than a fixed location.
+<ul>
+<li>The hash acts as a fingerprint: if the file changes, the address changes.<br />
+</li>
+<li>Tamper-evident and verifiable, but requires someone to “pin” or pay for long-term availability.</li>
+</ul></li>
+<li><strong>Off-chain, location-addressed</strong> storage (traditional web servers / HTTPS URLs): data retrieved from a specific domain and path like <code>https://example.com/file.json</code>.
+<ul>
+<li>Cheap and flexible but mutable — the host can change or remove the file without detection.<br />
+</li>
+<li>Depends entirely on the operator’s honesty and infrastructure.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="royalties-economics-and-marketplace-realities"><h2 class="slide-title">Royalties, Economics, and Marketplace Realities</h2><div class="slide-body">
+<div style="font-size: .80em;">
+<ul>
+<li><p><strong>Royalties are signals, not rules.</strong> Standards like EIP-2981 let creators publish a preferred royalty percentage on-chain, but marketplaces choose whether to honor it. Some pay creators on every resale; others bypass royalties to attract traders with lower fees.</p></li>
+<li><p><strong>Primary vs secondary markets work differently.</strong> Primary sales (mints) are event-driven — allowlists, fixed prices, or auctions set initial distribution. Secondary markets discover ongoing demand through open trading, but liquidity is never guaranteed.</p></li>
+<li><p><strong>Wash trading distorts signals.</strong> A wallet buying from itself inflates volume and price history. Thin markets mean a few large orders can swing prices dramatically. Provenance proves history, not value — a long chain of sales does not imply healthy demand.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="minting-and-market-design-patterns"><h2 class="slide-title">Minting and Market Design Patterns</h2><div class="slide-body">
+<div style="font-size: .80em;">
+<ul>
+<li><strong>Allowlists and phases:</strong> staged mint windows that control who can mint and when; used to shape demand and reward early community members.<br />
+</li>
+<li><strong>Auctions:</strong> Different methods of offering NFTs
+<ul>
+<li><em>English</em>: ascending bids until highest bidder wins.<br />
+</li>
+<li><em>Dutch</em>: price starts high and falls until enough buyers commit.<br />
+</li>
+<li><em>Batch</em>: many bids collected, one clearing price for all winners.<br />
+</li>
+</ul></li>
+<li><strong>Reveals and fairness:</strong> if token traits are visible before or during minting, insiders can selectively mint rare items. Commit–reveal schemes (hash a secret at mint, reveal later) and verifiable random functions (VRFs) ensure trait assignment is both fair and auditable after the fact.</li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="realworld-assets-rwas-and-tokenization"><h2 class="slide-title">Real‑World Assets (RWAs) and Tokenization</h2><div class="slide-body">
+<div style="font-size: .77em;">
+<ul>
+<li><p>Reference tokens for fiat, commodities, or securities rely on <strong>off‑chain enforcement</strong>.</p></li>
+<li><p>Custody, auditing, and legal agreements determine safety—not just code.</p></li>
+<li><p>Benefits: fractionalization, 24/7 settlement, programmable compliance.</p></li>
+<li><p>Risks: jurisdictional complexity, oracle/data integrity, redemption gates.</p></li>
+<li><p><strong>Examples in practice:</strong> Ondo Finance tokenized U.S. Treasuries (OUSG) to offer on-chain yield exposure backed by BlackRock funds. Paxos issues PAXG, a gold-backed token where each token represents one troy ounce held in London vaults. Centrifuge tokenizes real-world invoices and loans as collateral for on-chain lending pools. In each case, the token’s trustworthiness depends on the custodian and legal structure, not just the smart contract.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="enterprise-tokenization-and-permissioned-ledgers"><h2 class="slide-title">Enterprise Tokenization and Permissioned Ledgers</h2><div class="slide-body">
+<div style="font-size: 1.1em;">
+<ul>
+<li><strong>Permissioned ledgers (e.g., Hyperledger Fabric, Corda):</strong> known participants, authenticated identities, governed access.<br />
+</li>
+<li><strong>Assets as chaincode:</strong> unique tokens represent equipment, documents, or credentials within controlled networks.<br />
+</li>
+<li><strong>Use cases:</strong> provenance tracking, maintenance records, certification, or supply-chain assurance.<br />
+</li>
+<li><strong>Pros:</strong> high throughput, privacy channels, auditability, clear governance.<br />
+</li>
+<li><strong>Cons:</strong> limited openness; trust rests on consortium operations rather than public consensus.</li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="critiques-and-misunderstandings"><h2 class="slide-title">Critiques and Misunderstandings</h2><div class="slide-body">
+<div style="font-size: 1.2em;">
+<ul>
+<li><strong>Environmental impact:</strong> proof-of-work once consumed vast energy; post-Merge proof-of-stake cut usage by &gt;99%, but energy and sustainability questions remain relevant to system design.<br />
+</li>
+<li><strong>Speculation and hype:</strong> early markets often priced art and collectibles irrationally, leading to bubbles, scams, and disillusionment.<br />
+</li>
+<li><strong>‘Right-click save’ critique:</strong> copying an image ≠ owning its token; NFTs record provenance, not exclusivity or copyright.<br />
+</li>
+<li><strong>Ownership vs access:</strong> tokens reference off-chain media; control of the token does not guarantee control of the file or rights.</li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="system-architecture-where-everything-lives"><h2 class="slide-title">System Architecture — Where Everything Lives</h2><div class="slide-body">
+<div style="font-size: .85em;">
+<ul>
+<li>On‑chain state is canonical for ownership; metadata may be off‑chain.</li>
+<li>Events drive discovery; indexers reflect, not define, truth.</li>
+<li>Wallets sign; contracts enforce; markets render.</li>
+</ul>
+<div style="margin-top: -3em;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 1585.41 290.20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:2113px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 286.2)">
+<g id="node1" class="node">
+<path fill="#1e6e42" stroke="black" stroke-width="1.5" d="M150.23,-202C150.23,-202 13.88,-202 13.88,-202 7.88,-202 1.88,-196 1.88,-190 1.88,-190 1.88,-172 1.88,-172 1.88,-166 7.88,-160 13.88,-160 13.88,-160 150.23,-160 150.23,-160 156.23,-160 162.23,-166 162.23,-172 162.23,-172 162.23,-190 162.23,-190 162.23,-196 156.23,-202 150.23,-202"/>
+<text text-anchor="middle" x="82.05" y="-175.9" font-family="Arial" font-size="17.00" fill="white">Creator / Issuer</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#1a3a4a" stroke="black" stroke-width="1.5" d="M467.76,-162.2C467.76,-162.2 316.27,-162.2 316.27,-162.2 310.27,-162.2 304.27,-156.2 304.27,-150.2 304.27,-150.2 304.27,-111.8 304.27,-111.8 304.27,-105.8 310.27,-99.8 316.27,-99.8 316.27,-99.8 467.76,-99.8 467.76,-99.8 473.76,-99.8 479.76,-105.8 479.76,-111.8 479.76,-111.8 479.76,-150.2 479.76,-150.2 479.76,-156.2 473.76,-162.2 467.76,-162.2"/>
+<text text-anchor="middle" x="392.02" y="-136.1" font-family="Arial" font-size="17.00" fill="white">Smart Contract</text>
+<text text-anchor="middle" x="392.02" y="-115.7" font-family="Arial" font-size="17.00" fill="white">(Token Standard)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#888888" stroke-width="2.5" d="M162.36,-168.12C201.36,-161.79 248.78,-154.09 290.3,-147.35"/>
+<polygon fill="#888888" stroke="#888888" stroke-width="2.5" points="290.81,-150.82 300.12,-145.76 289.68,-143.91 290.81,-150.82"/>
+<text text-anchor="middle" x="234.19" y="-164.98" font-family="Arial Bold" font-size="15.00" fill="#333333"> &#160;deploys</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#1e6e42" stroke="black" stroke-width="1.5" d="M152.11,-102C152.11,-102 12,-102 12,-102 6,-102 0,-96 0,-90 0,-90 0,-72 0,-72 0,-66 6,-60 12,-60 12,-60 152.11,-60 152.11,-60 158.11,-60 164.11,-66 164.11,-72 164.11,-72 164.11,-90 164.11,-90 164.11,-96 158.11,-102 152.11,-102"/>
+<text text-anchor="middle" x="82.05" y="-75.9" font-family="Arial" font-size="17.00" fill="white">Users &amp; Wallets</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#888888" stroke-width="2.5" d="M164.37,-94.2C202.96,-100.47 249.44,-108.01 290.24,-114.64"/>
+<polygon fill="#888888" stroke="#888888" stroke-width="2.5" points="289.67,-118.09 300.11,-116.24 290.8,-111.18 289.67,-118.09"/>
+<text text-anchor="middle" x="234.19" y="-113.49" font-family="Arial Bold" font-size="15.00" fill="#333333"> &#160;sign tx</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#1e6e42" stroke="black" stroke-width="1.5" d="M928.19,-282.2C928.19,-282.2 644.42,-282.2 644.42,-282.2 638.42,-282.2 632.42,-276.2 632.42,-270.2 632.42,-270.2 632.42,-231.8 632.42,-231.8 632.42,-225.8 638.42,-219.8 644.42,-219.8 644.42,-219.8 928.19,-219.8 928.19,-219.8 934.19,-219.8 940.19,-225.8 940.19,-231.8 940.19,-231.8 940.19,-270.2 940.19,-270.2 940.19,-276.2 934.19,-282.2 928.19,-282.2"/>
+<text text-anchor="middle" x="786.3" y="-256.1" font-family="Arial" font-size="17.00" fill="white">On&#45;Chain State</text>
+<text text-anchor="middle" x="786.3" y="-235.7" font-family="Arial" font-size="17.00" fill="white">Balances · Ownership · Approvals</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#888888" stroke-width="2.5" d="M480.08,-157.63C535.6,-174.61 608.21,-196.83 668.68,-215.33"/>
+<polygon fill="#888888" stroke="#888888" stroke-width="2.5" points="667.58,-218.65 678.17,-218.23 669.63,-211.96 667.58,-218.65"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#1e6e42" stroke="black" stroke-width="1.5" d="M889.43,-162.2C889.43,-162.2 683.18,-162.2 683.18,-162.2 677.18,-162.2 671.18,-156.2 671.18,-150.2 671.18,-150.2 671.18,-111.8 671.18,-111.8 671.18,-105.8 677.18,-99.8 683.18,-99.8 683.18,-99.8 889.43,-99.8 889.43,-99.8 895.43,-99.8 901.43,-105.8 901.43,-111.8 901.43,-111.8 901.43,-150.2 901.43,-150.2 901.43,-156.2 895.43,-162.2 889.43,-162.2"/>
+<text text-anchor="middle" x="786.3" y="-136.1" font-family="Arial" font-size="17.00" fill="white">Metadata</text>
+<text text-anchor="middle" x="786.3" y="-115.7" font-family="Arial" font-size="17.00" fill="white">(on&#45;chain / IPFS / HTTP)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#888888" stroke-width="2.5" d="M480.08,-131C532.11,-131 599.16,-131 657.16,-131"/>
+<polygon fill="#888888" stroke="#888888" stroke-width="2.5" points="657.14,-134.5 667.14,-131 657.14,-127.5 657.14,-134.5"/>
+<text text-anchor="middle" x="556.09" y="-135.5" font-family="Arial Bold" font-size="15.00" fill="#333333"> &#160;tokenURI</text>
+</g>
+
+<g id="node7" class="node">
+<path fill="#1e6e42" stroke="black" stroke-width="1.5" d="M847.41,-42C847.41,-42 725.2,-42 725.2,-42 719.2,-42 713.2,-36 713.2,-30 713.2,-30 713.2,-12 713.2,-12 713.2,-6 719.2,0 725.2,0 725.2,0 847.41,0 847.41,0 853.41,0 859.41,-6 859.41,-12 859.41,-12 859.41,-30 859.41,-30 859.41,-36 853.41,-42 847.41,-42"/>
+<text text-anchor="middle" x="786.3" y="-15.9" font-family="Arial" font-size="17.00" fill="white">Events / Logs</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#888888" stroke-width="2.5" d="M480.08,-106.59C545.54,-88.23 634.78,-63.21 699.85,-44.96"/>
+<polygon fill="#888888" stroke="#888888" stroke-width="2.5" points="700.61,-48.38 709.3,-42.31 698.72,-41.64 700.61,-48.38"/>
+<text text-anchor="middle" x="556.09" y="-96.78" font-family="Arial Bold" font-size="15.00" fill="#333333"> &#160;emits</text>
+</g>
+
+<g id="node6" class="node">
+<path fill="#1e6e42" stroke="black" stroke-width="1.5" d="M1231.38,-152C1231.38,-152 1125.26,-152 1125.26,-152 1119.26,-152 1113.26,-146 1113.26,-140 1113.26,-140 1113.26,-122 1113.26,-122 1113.26,-116 1119.26,-110 1125.26,-110 1125.26,-110 1231.38,-110 1231.38,-110 1237.38,-110 1243.38,-116 1243.38,-122 1243.38,-122 1243.38,-140 1243.38,-140 1243.38,-146 1237.38,-152 1231.38,-152"/>
+<text text-anchor="middle" x="1178.32" y="-125.9" font-family="Arial" font-size="17.00" fill="white">Media Files</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#888888" stroke-width="2.5" d="M901.69,-131C965.23,-131 1042.63,-131 1099.21,-131"/>
+<polygon fill="#888888" stroke="#888888" stroke-width="2.5" points="1098.98,-134.5 1108.98,-131 1098.98,-127.5 1098.98,-134.5"/>
+<text text-anchor="middle" x="1026.72" y="-135.5" font-family="Arial Bold" font-size="15.00" fill="#333333"> &#160;references</text>
+</g>
+
+<g id="node8" class="node">
+<path fill="#1e6e42" stroke="black" stroke-width="1.5" d="M1220.52,-42C1220.52,-42 1136.12,-42 1136.12,-42 1130.12,-42 1124.12,-36 1124.12,-30 1124.12,-30 1124.12,-12 1124.12,-12 1124.12,-6 1130.12,0 1136.12,0 1136.12,0 1220.52,0 1220.52,0 1226.52,0 1232.52,-6 1232.52,-12 1232.52,-12 1232.52,-30 1232.52,-30 1232.52,-36 1226.52,-42 1220.52,-42"/>
+<text text-anchor="middle" x="1178.32" y="-15.9" font-family="Arial" font-size="17.00" fill="white">Indexers</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#888888" stroke-width="2.5" d="M859.75,-21C931.52,-21 1040.53,-21 1110.33,-21"/>
+<polygon fill="#888888" stroke="#888888" stroke-width="2.5" points="1109.96,-24.5 1119.96,-21 1109.96,-17.5 1109.96,-24.5"/>
+<text text-anchor="middle" x="1026.72" y="-25.5" font-family="Arial Bold" font-size="15.00" fill="#333333"> &#160;consumed by</text>
+</g>
+
+<g id="node9" class="node">
+<path fill="#6b1a1a" stroke="black" stroke-width="1.5" d="M1565.41,-42C1565.41,-42 1392.2,-42 1392.2,-42 1386.2,-42 1380.2,-36 1380.2,-30 1380.2,-30 1380.2,-12 1380.2,-12 1380.2,-6 1386.2,0 1392.2,0 1392.2,0 1565.41,0 1565.41,0 1571.41,0 1577.41,-6 1577.41,-12 1577.41,-12 1577.41,-30 1577.41,-30 1577.41,-36 1571.41,-42 1565.41,-42"/>
+<text text-anchor="middle" x="1478.81" y="-15.9" font-family="Arial" font-size="17.00" fill="white">Marketplaces / Apps</text>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#888888" stroke-width="2.5" d="M1232.68,-21C1269.77,-21 1320.55,-21 1366.27,-21"/>
+<polygon fill="#888888" stroke="#888888" stroke-width="2.5" points="1366.18,-24.5 1376.18,-21 1366.18,-17.5 1366.18,-24.5"/>
+<text text-anchor="middle" x="1311.79" y="-25.5" font-family="Arial Bold" font-size="15.00" fill="#333333"> &#160;powers</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="common-pitfalls-in-nft-projects"><h2 class="slide-title">Common Pitfalls in NFT Projects</h2><div class="slide-body">
+<div style="font-size: .85em;">
+<ul>
+<li><p>Mutable metadata without disclosure — changing assets after sale erodes buyer trust.</p></li>
+<li><p>Centralized hosting with no content hashes — link rot and silent content swaps.</p></li>
+<li><p>Over-broad approvals and compromised marketplaces — poorly scoped permissions let attackers drain wallets.</p></li>
+<li><p>Ambiguous or missing rights — no license means buyers cannot know what they are permitted to do.</p></li>
+<li><p><strong>Verification discipline:</strong> always check the <strong>contract address</strong> and <strong>token ID</strong> before trusting an NFT. Verify metadata hashes and storage locations (IPFS CID or Arweave TX). Use provenance graphs to spot fakes. Beware spoofed domains, fake collections, and phishing signing prompts.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="real-world-examples"><h2 class="slide-title">Real World Examples</h2><div class="slide-body">
+<div style="font-size: .75em;">
+<ul>
+<li><p><strong>CryptoPunks (2017):</strong> 10,000 algorithmically generated avatars on Ethereum. No explicit IP license at launch — rights were retroactively granted after Yuga Labs’ acquisition. Demonstrates how token ownership alone does not confer rights.</p></li>
+<li><p><strong>Starbucks Odyssey (2022–2024):</strong> loyalty NFTs on Polygon granting members access to exclusive experiences. Showed enterprise interest in utility-based tokens, but was discontinued — illustrating that even well-resourced projects can fail to find product-market fit.</p></li>
+<li><p><strong>Propy (2017–present):</strong> tokenized real estate transactions. The on-chain record represents a legal transfer processed through traditional title and escrow — the blockchain layer adds transparency but does not replace the legal framework.</p></li>
+<li><p><strong>U.S. DoD supply-chain pilots:</strong> permissioned ledger experiments tracking aircraft parts and maintenance records as unique tokens, prioritizing auditability and provenance over public tradability.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="looking-forward-dynamic-assets"><h2 class="slide-title">Looking Forward: Dynamic Assets</h2><div class="slide-body">
+<div style="font-size: .80em;">
+<ul>
+<li><p>Dynamic NFTs and programmable rights; evolving metadata schemes.</p></li>
+<li><p>Royalty signaling standards and market enforcement debates.</p></li>
+<li><p>Cross‑chain identity and portability; wallets as identity hubs.</p></li>
+<li><p>Data availability advances enable richer on‑chain assets at lower cost.</p></li>
+<li><p><strong>Central Bank Digital Currencies (CBDCs):</strong> many central banks are exploring or piloting tokenized sovereign currency. CBDCs apply the same tokenization logic — programmable, auditable digital claims — but under centralized issuance and policy control. They represent a major design space where the concepts from this lecture (token standards, metadata, on-chain vs off-chain enforcement) intersect directly with monetary policy and national security.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="key-takeaways"><h2 class="slide-title">Key Takeaways</h2><div class="slide-body">
+<ul>
+<li><p>Tokenization maps claims to on‑chain objects with programmable control.</p></li>
+<li><p>NFTs provide provenance and uniqueness; rights depend on explicit licenses.</p></li>
+<li><p>Storage choices (on‑chain/IPFS/HTTP) determine integrity and trust.</p></li>
+<li><p>Standards enable composability; design discipline prevents common harms.</p></li>
+</ul>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-buterin_ethereumnextgenerationsmart_2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">V. Buterin, <span>“Ethereum: <span>A Next-Generation Smart Contract</span> and <span>Decentralized Application Platform</span>.”</span> Ethereum.org, 2014. Available: <a href="https://ethereum.org/content/whitepaper/whitepaper-pdf/Ethereum_Whitepaper_-_Buterin_2014.pdf">https://ethereum.org/content/whitepaper/whitepaper-pdf/Ethereum_Whitepaper_-_Buterin_2014.pdf</a></div>
+</div>
+<div id="ref-wood_ethereumsecuredecentralised_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">G. Wood, <span>“Ethereum: <span>A Secure Decentralised Generalised Transaction Ledger</span>, <span>EIP-150 Revision</span>.”</span> 2016. Available: <a href="https://ethereum.github.io/yellowpaper/paper.pdf">https://ethereum.github.io/yellowpaper/paper.pdf</a></div>
+</div>
+<div id="ref-wang_soktokenizationblockchain_2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">G. Wang and M. Nixon, <span>“<span>SoK</span>: Tokenization on blockchain,”</span> in <em>Proceedings of the 14th <span>IEEE</span>/<span>ACM International Conference</span> on <span>Utility</span> and <span>Cloud Computing Companion</span></em>, Leicester United Kingdom: ACM, Dec. 2021, pp. 1–9. doi: <a href="https://doi.org/10.1145/3492323.3495577">10.1145/3492323.3495577</a>.</div>
+</div>
+<div id="ref-tierno_tokenizedassets_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">P. Tierno, <span>“Tokenized <span>Assets</span>,”</span> Congressional Research Service, Washington, D.C., In Focus IF12670.3, Jan. 2025. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://www.congress.gov/crs_external_products/IF/PDF/IF12670/IF12670.3.pdf">https://www.congress.gov/crs_external_products/IF/PDF/IF12670/IF12670.3.pdf</a></div>
+</div>
+<div id="ref-vogelsteller_eip20tokenstandard_2015" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">F. Vogelsteller and V. Buterin, <span>“<span>EIP-20</span>: <span>Token Standard</span>.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://eips.ethereum.org/EIPS/eip-20">https://eips.ethereum.org/EIPS/eip-20</a></div>
+</div>
+<div id="ref-sharma_understandingrugpulls_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">T. Sharma, R. Agarwal, and S. K. Shukla, <span>“Understanding <span>Rug Pulls</span>: <span>An In-Depth Behavioral Analysis</span> of <span>Fraudulent NFT Creators</span>.”</span> Accessed: Oct. 17, 2025. [Online]. Available: <a href="http://arxiv.org/abs/2304.07598">http://arxiv.org/abs/2304.07598</a></div>
+</div>
+<div id="ref-labonte_keyissuesstablecoin_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">M. Labonte and P. Tierno, <span>“Key <span>Issues</span> in <span>Stablecoin Legislation</span> in the 119th <span>Congress</span>,”</span> Congressional Research Service, Washington, D.C., In Focus IF12984, Sept. 2025. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://www.congress.gov/crs_external_products/IF/PDF/IF12984/IF12984.3.pdf">https://www.congress.gov/crs_external_products/IF/PDF/IF12984/IF12984.3.pdf</a></div>
+</div>
+<div id="ref-chainalysis_reports_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">Chainalysis, <span>“Chainalysis reports.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.chainalysis.com/reports/">https://www.chainalysis.com/reports/</a></div>
+</div>
+<div id="ref-ethereumorg_history_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline"><span class="nocase">ethereum.org</span>, <span>“Ethereum history.”</span> Accessed: Mar. 27, 2026. [Online]. Available: <a href="https://ethereum.org/en/history/">https://ethereum.org/en/history/</a></div>
+</div>
+<div id="ref-ethereumorg_nfts_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">Ethereum.org, <span>“What are NFTs?”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://ethereum.org/en/nft/">https://ethereum.org/en/nft/</a></div>
+</div>
+<div id="ref-ante_nonfungibletokennft_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">L. Ante, <span>“The <span>Non-Fungible Token</span> (<span>NFT</span>) <span>Market</span> and <span>Its Relationship</span> with <span>Bitcoin</span> and <span>Ethereum</span>,”</span> <em>FinTech</em>, vol. 1, no. 3, pp. 216–224, Sept. 2022, doi: <a href="https://doi.org/10.3390/fintech1030017">10.3390/fintech1030017</a>.</div>
+</div>
+<div id="ref-hammi_nonfungibletokensreview_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">B. Hammi, S. Zeadally, and A. J. Perez, <span>“Non-fungible tokens: A review,”</span> <em>IEEE Internet of Things Magazine</em>, vol. 6, no. 1, pp. 46–50, Mar. 2023, doi: <a href="https://doi.org/10.1109/IOTM.001.2200244">10.1109/IOTM.001.2200244</a>.</div>
+</div>
+<div id="ref-ipfs_docs_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">IPFS, <span>“IPFS.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://ipfs.tech">https://ipfs.tech</a></div>
+</div>
+<div id="ref-opensea_helpcenter_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">OpenSea, <span>“OpenSea help center.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://support.opensea.io">https://support.opensea.io</a></div>
+</div>
+<div id="ref-aramonte_defirisksdecentralisation_2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline">S. Aramonte, W. Huang, and A. Schrimpf, <span>“DeFi risks and the decentralisation illusion,”</span> <em>BIS Quarterly Review</em>, Dec. 2021, Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.bis.org/publ/qtrpdf/r_qt2112b.htm">https://www.bis.org/publ/qtrpdf/r_qt2112b.htm</a></div>
+</div>
+<div id="ref-schwarcz_nextgenerationsecuritizationnfts_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[16] </div><div class="csl-right-inline">S. L. Schwarcz, <span>“Next-<span>Generation Securitization</span>: <span>NFTs</span>, <span>Tokenization</span>, and the <span>Monetization</span> of <span>‘<span>Things</span>’</span>.”</span> Accessed: Oct. 21, 2025. [Online]. Available: <a href="https://papers.ssrn.com/abstract=4044101">https://papers.ssrn.com/abstract=4044101</a></div>
+</div>
+<div id="ref-regner_nftspracticenonfungible_2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[17] </div><div class="csl-right-inline">F. Regner, A. Schweizer, and N. Urbach, <span>“<span>NFTs</span> in practice – <span>Non-Fungible Tokens</span> as <span>Core Component</span> of a <span class="nocase">Blockchain-based Event Ticketing Application</span>,”</span> in <em>40th <span>International Conference</span> on <span>Information Systems</span></em>, Munich, DE, Dec. 2019. Available: <a href="https://www.researchgate.net/publication/336057493_NFTs_in_Practice_-_Non-Fungible_Tokens_as_Core_Component_of_a_Blockchain-based_Event_Ticketing_Application">https://www.researchgate.net/publication/336057493_NFTs_in_Practice_-_Non-Fungible_Tokens_as_Core_Component_of_a_Blockchain-based_Event_Ticketing_Application</a></div>
+</div>
+<div id="ref-scharfman_nonfungibletokennft_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[18] </div><div class="csl-right-inline">J. Scharfman, <span>“Non-fungible token (<span>NFT</span>) fraud, hacks, and controversies,”</span> vol. 2. in Springer books, vol. 2. pp. 307–325, Dec. 2024. doi: <a href="https://doi.org/10.1007/978-3-031-60836-0_11">10.1007/978-3-031-60836-0_11</a>.</div>
+</div>
+<div id="ref-kaal_digitalassetmarket_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[19] </div><div class="csl-right-inline">W. A. Kaal, <span>“Digital <span>Asset Market Evolution</span>,”</span> <em>J. Corp. L.</em>, vol. 46, p. 909, 2020, Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://jcl.law.uiowa.edu/sites/jcl.law.uiowa.edu/files/2021-08/Kaal_Final_Web_0.pdf">https://jcl.law.uiowa.edu/sites/jcl.law.uiowa.edu/files/2021-08/Kaal_Final_Web_0.pdf</a></div>
+</div>
+<div id="ref-dowling_fertilelandpricing_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[20] </div><div class="csl-right-inline">M. Dowling, <span>“Fertile <span>LAND</span>: <span>Pricing Non-Fungible Tokens</span> and <span>Virtual Real Estate</span>.”</span> 2022. Available: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4044101">https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4044101</a></div>
+</div>
+<div id="ref-szabo_smartcontractsbuilding_1996" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[21] </div><div class="csl-right-inline">N. Szabo, <span>“Smart <span>Contracts</span>: <span>Building Blocks</span> for <span>Digital Markets</span>.”</span> 1996. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://www.truevaluemetrics.org/DBpdfs/BlockChain/Nick-Szabo-Smart-Contracts-Building-Blocks-for-Digital-Markets-1996-14591.pdf">https://www.truevaluemetrics.org/DBpdfs/BlockChain/Nick-Szabo-Smart-Contracts-Building-Blocks-for-Digital-Markets-1996-14591.pdf</a></div>
+</div>
+<div id="ref-yaga_blockchaintechnologyoverview_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[22] </div><div class="csl-right-inline">D. Yaga, P. Mell, N. Roby, and K. Scarfone, <span>“Blockchain technology overview,”</span> <span>National Institute of Standards and Technology</span>, Gaithersburg, MD, NIST IR 8202, Oct. 2018. doi: <a href="https://doi.org/10.6028/NIST.IR.8202">10.6028/NIST.IR.8202</a>.</div>
+</div>
+<div id="ref-howard_blockchainemergingtechnology_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[23] </div><div class="csl-right-inline">K. L. Howard, <span>“Blockchain: <span>Emerging Technology Offers Benefits</span> for <span>Some Applications</span> but <span>Faces Challenges</span>,”</span> United States Government Accountability Office, Washington, DC, Technology Assessment GAO-22-104625, Mar. 2022. Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://www.gao.gov/assets/gao-22-104625.pdf">https://www.gao.gov/assets/gao-22-104625.pdf</a></div>
+</div>
+<div id="ref-sun_soktaxonomicanalysis_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[24] </div><div class="csl-right-inline">D. Sun, W. Ma, L. Nie, and Y. Liu, <span>“<span>SoK</span>: <span>A Taxonomic Analysis</span> of <span>DeFi Rug Pulls</span>: <span>Types</span>, <span>Dataset</span>, and <span>Tool Assessment</span>,”</span> <em>Proc. ACM Softw. Eng.</em>, vol. 2, pp. 550–572, June 2025, doi: <a href="https://doi.org/10.1145/3728900">10.1145/3728900</a>.</div>
+</div>
+<div id="ref-zhou_stoppullingmy_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[25] </div><div class="csl-right-inline">Y. Zhou, J. Sun, F. Ma, Y. Chen, Z. Yan, and Y. Jiang, <span>“Stop <span>Pulling</span> my <span>Rug</span>: <span>Exposing Rug Pull Risks</span> in <span>Crypto Token</span> to <span>Investors</span>,”</span> in <em>Proceedings of the 46th <span>International Conference</span> on <span>Software Engineering</span>: <span>Software Engineering</span> in <span>Practice</span></em>, Lisbon Portugal: ACM, Apr. 2024, pp. 228–239. doi: <a href="https://doi.org/10.1145/3639477.3639722">10.1145/3639477.3639722</a>.</div>
+</div>
+<div id="ref-legalinformationinstitutecornelllawschool_uscodedefinition_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[26] </div><div class="csl-right-inline">Legal Information Institute, Cornell Law School, <span>“U.<span>S</span>. <span>Code Definition</span>: <span>Digital Asset</span>.”</span> 2024. Available: <a href="https://www.law.cornell.edu/definitions/uscode.php?def_id=26-USC-2050229528-298491989">https://www.law.cornell.edu/definitions/uscode.php?def_id=26-USC-2050229528-298491989</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

@@ -1,0 +1,894 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Contracts: From Concept to Ethereum</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/ethereum/04-EF-smart_contracts.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="ef-04" data-code="04-EF" data-src="e6c0b66bfb60513a" data-slides="27">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section VII: Ethereum Framework · Lesson 04-EF</p><h1>Smart Contracts: From Concept to Ethereum</h1></div></section>
+<section class="slide" id="smart-contracts-concept-and-scope"><h2 class="slide-title">Smart Contracts: Concept and Scope</h2><div class="slide-body">
+<ul>
+<li><p>In the last lesson we traced how transactions flow through the network. Now we look at what those transactions actually execute.</p></li>
+<li><p>A smart contract is a program and its state at an address on the blockchain.</p></li>
+<li><p>Its functions run automatically when a transaction or call reaches that contract.</p></li>
+<li><p>Different from ‘legal contracts’: execution is automatic and deterministic, not interpretive.</p></li>
+<li><p>We will briefly survey non-Ethereum smart contract models to situate the landscape.</p></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="from-bitcoin-script-to-solidity"><h2 class="slide-title">From Bitcoin Script to Solidity</h2><div class="slide-body">
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 35%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th><strong>Bitcoin Script</strong></th>
+<th><strong>Solidity (Ethereum)</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Purpose</strong></td>
+<td>Defines <em>conditions to spend</em> a specific UTXO.</td>
+<td>Defines <em>programs</em> that manage state and logic.</td>
+</tr>
+<tr>
+<td><strong>Language Type</strong></td>
+<td>Stack-based, declarative, non–Turing complete.</td>
+<td>High-level, imperative, Turing complete.</td>
+</tr>
+<tr>
+<td><strong>State Model</strong></td>
+<td>Stateless: no memory of prior executions.</td>
+<td>Stateful: contracts maintain persistent storage between calls.</td>
+</tr>
+<tr>
+<td><strong>Execution Context</strong></td>
+<td>Runs only when spending an output.</td>
+<td>Invoked via transactions or calls; read/write storage, call contracts.</td>
+</tr>
+<tr>
+<td><strong>Control Flow</strong></td>
+<td>No loops or recursion; limited branching.</td>
+<td>Full control flow (loops, branching, function calls, libraries).</td>
+</tr>
+<tr>
+<td><strong>Resource Control</strong></td>
+<td>Bounded by design.</td>
+<td>Bounded by gas metering; execution stops when gas runs out.</td>
+</tr>
+<tr>
+<td><strong>Security Model</strong></td>
+<td>Simplicity and determinism reduce attack surface.</td>
+<td>Expressiveness increases flexibility <em>and</em> vulnerability (reentrancy, etc.).</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide smaller" id="beyond-ethereum-other-smart-contract-models"><h2 class="slide-title">Beyond Ethereum: Other Smart Contract Models</h2><div class="slide-body">
+<ul>
+<li>UTXO-plus models (e.g., <strong>Cardano eUTXO</strong>): richer logic while keeping UTXO structure.
+<ul>
+<li>Stronger formal verification, but stateless contracts are harder to program.</li>
+</ul></li>
+<li>Account-centric but non-EVM (e.g., <strong>Solana</strong>): program-owned accounts with explicit parallelism.
+<ul>
+<li>High throughput, but developers must declare all touched accounts upfront.</li>
+</ul></li>
+<li>WebAssembly-based contracts (e.g., <strong>CosmWasm</strong>, <strong>Near</strong>): compile Rust/Go to a WASM sandbox.
+<ul>
+<li>Familiar languages and memory safety, but smaller ecosystem and tooling.</li>
+</ul></li>
+<li>Private/permissioned chaincode (e.g., <strong>Hyperledger Fabric</strong>): enterprise settings with known participants.
+<ul>
+<li>Fine-grained access control, but sacrifices permissionless composability.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="ethereums-advantage-for-smart-contracts"><h2 class="slide-title">Ethereum’s Advantage for Smart Contracts</h2><div class="slide-body">
+<div style="font-size: 0.88em;">
+<ul>
+<li>Largest and most mature ecosystem for contract development and deployment.<br />
+</li>
+<li>Clear execution environment (EVM) with deterministic outcomes and gas-metered computation.<br />
+</li>
+<li>Contracts compile to bytecode that every EVM node executes in the same way.<br />
+</li>
+<li>Shared standards enable composability and predictable interfaces.<br />
+</li>
+<li>Rich tooling and libraries lower barriers to safe experimentation.<br />
+</li>
+<li>Open participation model: anyone can verify, deploy, or compose with existing code.</li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="ethereum-accounts-and-contract-review"><h2 class="slide-title">Ethereum Accounts and Contract Review</h2><div class="slide-body">
+<ul>
+<li>Two account types: <strong>EOA</strong> (user, has private key) and <strong>Contract</strong> (code + storage).
+<ul>
+<li>Both share the same address format and can hold ETH, but only EOAs can sign transactions.</li>
+</ul></li>
+<li>Contracts execute on message calls; they cannot self-initiate.
+<ul>
+<li>Every on-chain action traces back to an EOA signature, preserving explicit causality.</li>
+</ul></li>
+<li>Contract state lives in storage (persistent), while each call gets temporary working memory.</li>
+<li>Each call executes with <code>msg.sender</code>, <code>msg.value</code>, available gas, calldata (function inputs), block context, etc.
+<ul>
+<li><code>msg.sender</code> is the <em>immediate</em> caller, not necessarily the original user. This matters for access control.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="contract-deployment"><h2 class="slide-title">Contract Deployment</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:56%;">
+<div style="font-size: 0.84em;">
+<p>Deployment happens in a short sequence:</p>
+<ol type="1">
+<li>A developer writes Solidity and compiles it into deployment bytecode.</li>
+<li>The deployment transaction carries compiled creation code (<code>initcode</code>).</li>
+<li>The EVM runs that code, including constructor logic, and charges gas while it executes.</li>
+<li>The result is a new contract address with runtime bytecode and initialized storage on-chain.</li>
+</ol>
+<p>The contract address is derived deterministically from the deployment rule in use.</p>
+<p>Source-code verification on explorers is separate from deployment.</p>
+</div>
+</div><div class="column" style="width:44%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 157.61 332.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:211px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 328)">
+<g id="node1" class="node">
+<path fill="#dbeafe" stroke="black" d="M106.57,-324C106.57,-324 43.04,-324 43.04,-324 37.04,-324 31.04,-318 31.04,-312 31.04,-312 31.04,-300 31.04,-300 31.04,-294 37.04,-288 43.04,-288 43.04,-288 106.57,-288 106.57,-288 112.57,-288 118.57,-294 118.57,-300 118.57,-300 118.57,-312 118.57,-312 118.57,-318 112.57,-324 106.57,-324"/>
+<text text-anchor="middle" x="74.8" y="-302.7" font-family="Helvetica,sans-Serif" font-size="11.00">Solidity source</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#dcfce7" stroke="black" d="M90.98,-252C90.98,-252 58.63,-252 58.63,-252 52.63,-252 46.63,-246 46.63,-240 46.63,-240 46.63,-228 46.63,-228 46.63,-222 52.63,-216 58.63,-216 58.63,-216 90.98,-216 90.98,-216 96.98,-216 102.98,-222 102.98,-228 102.98,-228 102.98,-240 102.98,-240 102.98,-246 96.98,-252 90.98,-252"/>
+<text text-anchor="middle" x="74.8" y="-230.7" font-family="Helvetica,sans-Serif" font-size="11.00">Compile</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M74.8,-287.7C74.8,-280.41 74.8,-271.73 74.8,-263.54"/>
+<polygon fill="black" stroke="black" points="78.3,-263.62 74.8,-253.62 71.3,-263.62 78.3,-263.62"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fef3c7" stroke="black" d="M105.96,-180C105.96,-180 43.65,-180 43.65,-180 37.65,-180 31.65,-174 31.65,-168 31.65,-168 31.65,-156 31.65,-156 31.65,-150 37.65,-144 43.65,-144 43.65,-144 105.96,-144 105.96,-144 111.96,-144 117.96,-150 117.96,-156 117.96,-156 117.96,-168 117.96,-168 117.96,-174 111.96,-180 105.96,-180"/>
+<text text-anchor="middle" x="74.8" y="-165.3" font-family="Helvetica,sans-Serif" font-size="11.00">Deployment tx</text>
+<text text-anchor="middle" x="74.8" y="-152.1" font-family="Helvetica,sans-Serif" font-size="11.00">with initcode</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M74.8,-215.7C74.8,-208.41 74.8,-199.73 74.8,-191.54"/>
+<polygon fill="black" stroke="black" points="78.3,-191.62 74.8,-181.62 71.3,-191.62 78.3,-191.62"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fde68a" stroke="black" d="M123.54,-108C123.54,-108 26.07,-108 26.07,-108 20.07,-108 14.07,-102 14.07,-96 14.07,-96 14.07,-84 14.07,-84 14.07,-78 20.07,-72 26.07,-72 26.07,-72 123.54,-72 123.54,-72 129.54,-72 135.54,-78 135.54,-84 135.54,-84 135.54,-96 135.54,-96 135.54,-102 129.54,-108 123.54,-108"/>
+<text text-anchor="middle" x="74.8" y="-93.3" font-family="Helvetica,sans-Serif" font-size="11.00">Initcode + constructor</text>
+<text text-anchor="middle" x="74.8" y="-80.1" font-family="Helvetica,sans-Serif" font-size="11.00">run in the EVM</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M74.8,-143.7C74.8,-136.41 74.8,-127.73 74.8,-119.54"/>
+<polygon fill="black" stroke="black" points="78.3,-119.62 74.8,-109.62 71.3,-119.62 78.3,-119.62"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#bbf7d0" stroke="black" d="M137.61,-36C137.61,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 137.61,0 137.61,0 143.61,0 149.61,-6 149.61,-12 149.61,-12 149.61,-24 149.61,-24 149.61,-30 143.61,-36 137.61,-36"/>
+<text text-anchor="middle" x="74.8" y="-21.3" font-family="Helvetica,sans-Serif" font-size="11.00">Contract address</text>
+<text text-anchor="middle" x="74.8" y="-8.1" font-family="Helvetica,sans-Serif" font-size="11.00">runtime bytecode + storage</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M74.8,-71.7C74.8,-64.41 74.8,-55.73 74.8,-47.54"/>
+<polygon fill="black" stroke="black" points="78.3,-47.62 74.8,-37.62 71.3,-47.62 78.3,-47.62"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="calls-and-control-flow-in-the-evm"><h2 class="slide-title">Calls and Control Flow in the EVM</h2><div class="slide-body">
+<ul>
+<li>External calls hand control to untrusted code; treat with care.
+<ul>
+<li>The callee can execute arbitrary logic, including calling back into your contract (reentrancy).</li>
+</ul></li>
+<li>Reverts cascade unless caught; state changes roll back per frame.
+<ul>
+<li>If contract B reverts and A does not handle it (try/catch), A reverts too and the whole transaction unwinds.</li>
+</ul></li>
+<li><code>msg.sender</code> and <code>msg.value</code> are per-frame; gas forwarding is explicit.
+<ul>
+<li>When A calls B, B sees A as <code>msg.sender</code>, not the original user. This is critical for access control.</li>
+</ul></li>
+<li>Each call frame has a gas budget.
+<ul>
+<li>If a loop runs too long or the callee uses too much gas, that frame fails when its gas is exhausted.</li>
+</ul></li>
+</ul>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 444.61 47.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:593px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 43.6)">
+<g id="node1" class="node">
+<path fill="#dbeafe" stroke="black" d="M42,-36C42,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 42,0 42,0 48,0 54,-6 54,-12 54,-12 54,-24 54,-24 54,-30 48,-36 42,-36"/>
+<text text-anchor="middle" x="27" y="-21.3" font-family="Helvetica,sans-Serif" font-size="11.00">User</text>
+<text text-anchor="middle" x="27" y="-8.1" font-family="Helvetica,sans-Serif" font-size="11.00">(EOA)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#dcfce7" stroke="black" d="M241.25,-36C241.25,-36 156.02,-36 156.02,-36 150.02,-36 144.02,-30 144.02,-24 144.02,-24 144.02,-12 144.02,-12 144.02,-6 150.02,0 156.02,0 156.02,0 241.25,0 241.25,0 247.25,0 253.25,-6 253.25,-12 253.25,-12 253.25,-24 253.25,-24 253.25,-30 247.25,-36 241.25,-36"/>
+<text text-anchor="middle" x="198.63" y="-21.3" font-family="Helvetica,sans-Serif" font-size="11.00">Contract A</text>
+<text text-anchor="middle" x="198.63" y="-8.1" font-family="Helvetica,sans-Serif" font-size="11.00">msg.sender = User</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M54.13,-18C74.95,-18 105.02,-18 132.26,-18"/>
+<polygon fill="black" stroke="black" points="132.21,-21.5 142.21,-18 132.21,-14.5 132.21,-21.5"/>
+<text text-anchor="middle" x="99.01" y="-31.5" font-family="Helvetica,sans-Serif" font-size="9.00">tx: A.f(x)</text>
+<text text-anchor="middle" x="99.01" y="-20.7" font-family="Helvetica,sans-Serif" font-size="9.00">value = v</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M143.68,-5.04C121.43,-1.4 95.41,0.63 72,-3.2 69.7,-3.58 67.36,-4.06 65.02,-4.61"/>
+<polygon fill="black" stroke="black" points="64.31,-1.17 55.63,-7.25 66.2,-7.91 64.31,-1.17"/>
+<text text-anchor="middle" x="99.01" y="-5.9" font-family="Helvetica,sans-Serif" font-size="9.00">return / revert</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fef3c7" stroke="black" d="M424.61,-36C424.61,-36 355.27,-36 355.27,-36 349.27,-36 343.27,-30 343.27,-24 343.27,-24 343.27,-12 343.27,-12 343.27,-6 349.27,0 355.27,0 355.27,0 424.61,0 424.61,0 430.61,0 436.61,-6 436.61,-12 436.61,-12 436.61,-24 436.61,-24 436.61,-30 430.61,-36 424.61,-36"/>
+<text text-anchor="middle" x="389.94" y="-21.3" font-family="Helvetica,sans-Serif" font-size="11.00">Contract B</text>
+<text text-anchor="middle" x="389.94" y="-8.1" font-family="Helvetica,sans-Serif" font-size="11.00">msg.sender = A</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M253.63,-18C277.97,-18 306.74,-18 331.48,-18"/>
+<polygon fill="black" stroke="black" points="331.38,-21.5 341.38,-18 331.38,-14.5 331.38,-21.5"/>
+<text text-anchor="middle" x="298.26" y="-31.5" font-family="Helvetica,sans-Serif" font-size="9.00">external call</text>
+<text text-anchor="middle" x="298.26" y="-20.7" font-family="Helvetica,sans-Serif" font-size="9.00">B.g(y)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M342.9,-6C337,-4.84 331.02,-3.86 325.27,-3.2 301.42,-0.46 295.13,-0.76 271.25,-3.2 269.07,-3.42 266.86,-3.68 264.63,-3.97"/>
+<polygon fill="black" stroke="black" points="264.28,-0.49 254.91,-5.44 265.32,-7.41 264.28,-0.49"/>
+<text text-anchor="middle" x="298.26" y="-5.9" font-family="Helvetica,sans-Serif" font-size="9.00">return / revert</text>
+</g>
+</g>
+</svg></figure>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Call frame:</strong> the EVM’s execution context for a single call. Each frame has its own <code>msg.sender</code>, <code>msg.value</code>, gas budget, memory, and return data. A revert undoes state changes within that frame only.</p>
+</div>
+</div></section>
+<section class="slide" id="solidity-file-structure-from-top-to-bottom"><h2 class="slide-title">Solidity: File Structure, From Top to Bottom</h2><div class="slide-body">
+<div style="font-size: 0.88em;">
+<p>Each section in a Solidity file explains its behavior:</p>
+<ul>
+<li><strong><code>pragma solidity ...</code></strong> sets compiler expectations, so readers know which language rules and safety checks apply.</li>
+<li><strong><code>contract Name { ... }</code></strong> identifies the unit of code and state that will be deployed at one address.</li>
+<li><strong>State variables</strong> show which data persists between calls.</li>
+<li><strong>Functions and modifiers</strong> show how callers interact with the contract and whether state can change.</li>
+<li><strong>Constructor and events</strong> show what happens at deployment and what off-chain systems can observe afterward.</li>
+<li>The source file is what humans review; the deployed contract is compiled runtime bytecode.</li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="types-value-types"><h2 class="slide-title">Types: Value Types</h2><div class="slide-body">
+<div style="font-size: 0.70em;">
+<p>Solidity groups types into <strong>value types</strong> and <strong>reference types</strong>. Value types are copied when assigned or passed around, so they do not use a data-location label like <code>storage</code>, <code>memory</code>, or <code>calldata</code>.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th><strong>Type</strong></th>
+<th><strong>Represents</strong></th>
+<th><strong>Uses</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>uint</code> / <code>int</code></td>
+<td>Signed and unsigned integers for arithmetic</td>
+<td>Balances, counters, timestamps, and range checks</td>
+</tr>
+<tr>
+<td><code>bool</code></td>
+<td><code>true</code> / <code>false</code> values</td>
+<td>Flags, checks, and branching logic</td>
+</tr>
+<tr>
+<td><code>address</code> / <code>address payable</code></td>
+<td>Account identifiers; <code>payable</code> can receive ETH</td>
+<td>Ownership, recipients, and access-control decisions</td>
+</tr>
+<tr>
+<td><code>enum</code></td>
+<td>A limited set of named states</td>
+<td>Helps constrain contract state to valid options</td>
+</tr>
+</tbody>
+</table>
+<p>Literal suffixes like <code>1 ether</code> and time units are syntax conveniences, not a separate datatype family.</p>
+</div>
+</div></section>
+<section class="slide" id="types-reference-types"><h2 class="slide-title">Types: Reference Types</h2><div class="slide-body">
+<div style="font-size: 0.70em;">
+<p><strong>Reference types</strong> types refer to larger data structures–their behavior depends on where the data lives: <code>storage</code>, <code>memory</code>, or <code>calldata</code>.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th><strong>Type</strong></th>
+<th><strong>Represents</strong></th>
+<th><strong>Uses</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Arrays</td>
+<td>Ordered collections of values, fixed-size or dynamic</td>
+<td>Lists of items, histories, and batched data</td>
+</tr>
+<tr>
+<td><code>bytes</code> / <code>string</code></td>
+<td>Dynamic byte arrays and text data</td>
+<td>Raw data/metadata</td>
+</tr>
+<tr>
+<td><code>struct</code></td>
+<td>A custom grouped record with multiple fields</td>
+<td>Models richer state such as users, proposals, or assets</td>
+</tr>
+<tr>
+<td><code>mapping(Key =&gt; Value)</code></td>
+<td>Key-value lookup table</td>
+<td>Balances, permissions, and registries</td>
+</tr>
+</tbody>
+</table>
+<p>Reference types often need an explicit data location, and copying them can change both gas cost and behavior.</p>
+</div>
+</div></section>
+<section class="slide" id="visibility-mutability-and-payable"><h2 class="slide-title">Visibility, Mutability, and Payable</h2><div class="slide-body">
+<div style="font-size: 0.70em;">
+<p>These are <strong>function-level modifiers</strong>. They tell readers who can call a function, whether it may read or change state, and whether it may receive ETH.</p>
+<ul>
+<li><strong>Visibility</strong> controls who can call or access the function:
+<ul>
+<li><code>public</code>: callable from inside the contract and from outside</li>
+<li><code>external</code>: callable from outside the contract</li>
+<li><code>internal</code>: callable only inside the contract or derived contracts</li>
+<li><code>private</code>: callable only inside the same contract</li>
+</ul></li>
+<li><strong>Mutability</strong> describes how the function interacts with state:
+<ul>
+<li><code>view</code>: may read state, but not write it</li>
+<li><code>pure</code>: does not read or write contract state</li>
+<li>default: may change state</li>
+</ul></li>
+<li><strong><code>payable</code></strong> means the function can receive ETH with the call.
+<ul>
+<li><strong><code>nonpayable</code></strong> is the contrasting default: attached ETH causes the call to revert.</li>
+</ul></li>
+<li>Public state variables get auto-generated getters.</li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="data-locations-storage-memory-calldata"><h2 class="slide-title">Data Locations: Storage, Memory, Calldata</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:50%;">
+<ul>
+<li><strong>Storage</strong>: persistent across transactions
+<ul>
+<li>Balances, owners, mappings</li>
+<li>Most expensive to write because the new state must be recorded on-chain</li>
+</ul></li>
+<li><strong>Memory</strong>: temp workspace for one call
+<ul>
+<li>Local arrays, decoded values, ABI encoding buffers</li>
+<li>Zeroed between calls</li>
+</ul></li>
+<li><strong>Calldata</strong>: read-only transaction inputs
+<ul>
+<li>Function arguments from the caller</li>
+<li>Often cheapest; <code>external</code> functions can read it without making a copy</li>
+</ul></li>
+<li>Wrong location choices can waste gas, trigger unnecessary copies, or change how updates behave.</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 226.00 394.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:301px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 390.8)">
+<g id="clust1" class="cluster">
+<path fill="none" stroke="#555555" stroke-dasharray="5,2" d="M20,-8C20,-8 198,-8 198,-8 204,-8 210,-14 210,-20 210,-20 210,-195.6 210,-195.6 210,-201.6 204,-207.6 198,-207.6 198,-207.6 20,-207.6 20,-207.6 14,-207.6 8,-201.6 8,-195.6 8,-195.6 8,-20 8,-20 8,-14 14,-8 20,-8"/>
+<text text-anchor="middle" x="63.07" y="-191" font-family="Helvetica,sans-Serif" font-size="14.00">Smart Contract</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#f3f4f6" stroke="black" d="M138.96,-386.8C138.96,-386.8 79.04,-386.8 79.04,-386.8 73.04,-386.8 67.04,-380.8 67.04,-374.8 67.04,-374.8 67.04,-362.8 67.04,-362.8 67.04,-356.8 73.04,-350.8 79.04,-350.8 79.04,-350.8 138.96,-350.8 138.96,-350.8 144.96,-350.8 150.96,-356.8 150.96,-362.8 150.96,-362.8 150.96,-374.8 150.96,-374.8 150.96,-380.8 144.96,-386.8 138.96,-386.8"/>
+<text text-anchor="middle" x="109" y="-364.9" font-family="Helvetica,sans-Serif" font-size="13.00">Transaction</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fef3c7" stroke="black" d="M174.36,-301.6C174.36,-301.6 43.64,-301.6 43.64,-301.6 37.64,-301.6 31.64,-295.6 31.64,-289.6 31.64,-289.6 31.64,-258.8 31.64,-258.8 31.64,-252.8 37.64,-246.8 43.64,-246.8 43.64,-246.8 174.36,-246.8 174.36,-246.8 180.36,-246.8 186.36,-252.8 186.36,-258.8 186.36,-258.8 186.36,-289.6 186.36,-289.6 186.36,-295.6 180.36,-301.6 174.36,-301.6"/>
+<text text-anchor="middle" x="109" y="-285.9" font-family="Helvetica,sans-Serif" font-size="13.00">Calldata</text>
+<text text-anchor="middle" x="109" y="-270.3" font-family="Helvetica,sans-Serif" font-size="13.00">function args from caller</text>
+<text text-anchor="middle" x="109" y="-254.7" font-family="Helvetica,sans-Serif" font-size="13.00">(read&#45;only)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M109,-350.38C109,-339.95 109,-326.27 109,-313.44"/>
+<polygon fill="black" stroke="black" points="112.5,-313.52 109,-303.52 105.5,-313.52 112.5,-313.52"/>
+<text text-anchor="middle" x="135.6" y="-322.9" font-family="Helvetica,sans-Serif" font-size="11.00">input bytes</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#dcfce7" stroke="black" d="M189.91,-174.8C189.91,-174.8 28.09,-174.8 28.09,-174.8 22.09,-174.8 16.09,-168.8 16.09,-162.8 16.09,-162.8 16.09,-132 16.09,-132 16.09,-126 22.09,-120 28.09,-120 28.09,-120 189.91,-120 189.91,-120 195.91,-120 201.91,-126 201.91,-132 201.91,-132 201.91,-162.8 201.91,-162.8 201.91,-168.8 195.91,-174.8 189.91,-174.8"/>
+<text text-anchor="middle" x="109" y="-159.1" font-family="Helvetica,sans-Serif" font-size="13.00">Memory</text>
+<text text-anchor="middle" x="109" y="-143.5" font-family="Helvetica,sans-Serif" font-size="13.00">local arrays, encoding buffers</text>
+<text text-anchor="middle" x="109" y="-127.9" font-family="Helvetica,sans-Serif" font-size="13.00">(cleared each call)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M109,-246.43C109,-238.22 109,-228.78 109,-219.07"/>
+<polygon fill="black" stroke="black" points="112.5,-219.11 109,-209.11 105.5,-219.11 112.5,-219.11"/>
+<text text-anchor="middle" x="144.78" y="-218.9" font-family="Helvetica,sans-Serif" font-size="11.00">copy if needed</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#dbeafe" stroke="black" d="M188.38,-70.8C188.38,-70.8 31.62,-70.8 31.62,-70.8 25.62,-70.8 19.62,-64.8 19.62,-58.8 19.62,-58.8 19.62,-28 19.62,-28 19.62,-22 25.62,-16 31.62,-16 31.62,-16 188.38,-16 188.38,-16 194.38,-16 200.38,-22 200.38,-28 200.38,-28 200.38,-58.8 200.38,-58.8 200.38,-64.8 194.38,-70.8 188.38,-70.8"/>
+<text text-anchor="middle" x="110" y="-55.1" font-family="Helvetica,sans-Serif" font-size="13.00">Storage</text>
+<text text-anchor="middle" x="110" y="-39.5" font-family="Helvetica,sans-Serif" font-size="13.00">balances, owners, mappings</text>
+<text text-anchor="middle" x="110" y="-23.9" font-family="Helvetica,sans-Serif" font-size="13.00">(persists forever)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M53.51,-119.69C43.26,-111 37.51,-100.53 43.77,-88.8 45.62,-85.34 47.87,-82.1 50.41,-79.07"/>
+<polygon fill="black" stroke="black" points="52.67,-81.77 57.19,-72.19 47.68,-76.85 52.67,-81.77"/>
+<text text-anchor="middle" x="66.39" y="-92.1" font-family="Helvetica,sans-Serif" font-size="11.00">SSTORE</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M109.74,-71.02C109.63,-82.36 109.5,-95.8 109.37,-108.17"/>
+<polygon fill="black" stroke="black" points="105.88,-108.05 109.28,-118.09 112.88,-108.12 105.88,-108.05"/>
+<text text-anchor="middle" x="128.21" y="-92.1" font-family="Helvetica,sans-Serif" font-size="11.00">SLOAD</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="example-simplestorage-code"><h2 class="slide-title">Example: SimpleStorage (Code)</h2><div class="slide-body">
+<pre class="solidity"><code>pragma solidity ^0.8.26;
+contract SimpleStorage {
+    uint256 private stored;
+    event Updated(uint256 oldValue, uint256 newValue);
+
+    function set(uint256 x) public {
+        emit Updated(stored, x);
+        stored = x;
+    }
+
+    function get() public view returns (uint256) {
+        return stored;
+    }
+}</code></pre>
+<div style="font-size: 0.70em;">
+<ul>
+<li>One state variable; one setter, one getter, one event.</li>
+<li><code>stored</code> is a storage variable; <code>x</code> exists only for the duration of the call.</li>
+<li>Demonstrates state write vs view read.</li>
+<li>Events record history clients can subscribe to.</li>
+<li><em>What about access control or input validation?</em></li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="example-coin-code-part-1"><h2 class="slide-title">Example: Coin (Code, Part 1)</h2><div class="slide-body">
+<pre class="solidity"><code>pragma solidity ^0.8.26;
+contract Coin {
+    address public minter;
+    mapping(address =&gt; uint) public balances;
+    event Sent(address from, address to, uint amount);
+    constructor() { minter = msg.sender; }
+    function mint(address receiver, uint amount) public {
+        require(msg.sender == minter, &quot;not minter&quot;);
+        balances[receiver] += amount;
+    }</code></pre>
+<ul>
+<li>Public state vars auto-generate getters.</li>
+<li><code>minter</code> and <code>balances</code> live in storage.</li>
+<li>Constructor initializes the minter to deployer.</li>
+<li><code>mint</code> restricts access to minter via <code>require</code>.</li>
+<li>Mapping initializes to zero.</li>
+</ul>
+</div></section>
+<section class="slide" id="example-coin-code-part-2"><h2 class="slide-title">Example: Coin (Code, Part 2)</h2><div class="slide-body">
+<pre class="solidity"><code>    error InsufficientBalance(uint requested, uint available);
+    function send(address receiver, uint amount) public {
+        require(amount &lt;= balances[msg.sender], 
+                InsufficientBalance(amount, balances[msg.sender]));
+        balances[msg.sender] -= amount;
+        balances[receiver] += amount;
+        emit Sent(msg.sender, receiver, amount);
+    }
+}</code></pre>
+<div style="font-size: 0.70em;">
+<ul>
+<li>The custom error function names the failure case and returns the requested and available amounts.</li>
+<li>The <code>require</code> check stops the transfer unless the sender has enough balance.</li>
+<li>Lines 6-7 move value by subtracting from the sender and adding to the receiver in storage.</li>
+<li>The event on line 8 gives wallets, explorers, and indexers a record of the transfer.</li>
+<li>This is the core accounting pattern behind token transfers, even though this example does not include allowances.</li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="events-and-logs"><h2 class="slide-title">Events and Logs</h2><div class="slide-body">
+<ul>
+<li>Contracts emit events, append-only records stored in the transaction’s receipt.<br />
+</li>
+<li>Each event creates a log entry with:
+<ul>
+<li>emitter address</li>
+<li>topics (up to 4, including the event signature hash)</li>
+<li>data (unindexed fields, ABI-encoded)</li>
+</ul></li>
+<li>Logs stored in transaction but are not contract storage; they are not visible to smart contracts but are visible to off-chain systems (UIs, indexers, proofs).<br />
+</li>
+<li>Indexed fields (<code>indexed</code>) create searchable topics; non-indexed fields go into the data blob.<br />
+</li>
+<li>Events vanish if the transaction reverts.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Topic:</strong> a 32-byte indexed field in a log entry. Topic 0 is the keccak-256 hash of the event signature (e.g., <code>Transfer(address,address,uint256)</code>); topics 1–3 hold <code>indexed</code> parameter values. Clients filter logs by topic without scanning the full data blob.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="abi-encoding-and-function-selectors"><h2 class="slide-title">ABI, Encoding, and Function Selectors</h2><div class="slide-body">
+<ul>
+<li><strong>ABI (Application Binary Interface)</strong> is the byte-level interface that tells wallets, apps, and other contracts how to call a contract and interpret what comes back.<br />
+</li>
+<li>Defines the format for: function calls, return values, event data</li>
+<li>ABI Function call format:
+<ul>
+<li>4-byte selector = <code>keccak256("name(types)")[:4]</code></li>
+<li>Followed by arguments, each encoded per ABI rules (32-byte words, offsets for dynamic types).<br />
+</li>
+</ul></li>
+<li>Callers interact with deployed bytecode without needing the Solidity source on-chain.</li>
+<li>Return data and event logs follow ABI conventions.<br />
+</li>
+<li><code>receive</code> handles plain ETH transfers; <code>fallback</code> handles unknown selectors or bad calldata.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="reentrancy-anatomy-and-defenses"><h2 class="slide-title">Reentrancy: Anatomy and Defenses</h2><div class="slide-body">
+<ul>
+<li>Occurs when an external call <strong>reenters</strong> before your function finishes.</li>
+<li>Here, the victim contract is trying to <strong>pay the attacker a withdrawal</strong> from the attacker’s recorded balance.</li>
+<li>The bug is that the contract sends ETH <strong>before</strong> it updates that balance to zero.</li>
+<li>Classics: withdraw pattern before balance update; ERC-777 hooks misused.</li>
+</ul>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 613.26 196.17" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:817px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 192.17)">
+<g id="clust1" class="cluster">
+<path fill="#dbeafe" stroke="#93c5fd" d="M20,-103.17C20,-103.17 457.24,-103.17 457.24,-103.17 463.24,-103.17 469.24,-109.17 469.24,-115.17 469.24,-115.17 469.24,-168.17 469.24,-168.17 469.24,-174.17 463.24,-180.17 457.24,-180.17 457.24,-180.17 20,-180.17 20,-180.17 14,-180.17 8,-174.17 8,-168.17 8,-168.17 8,-115.17 8,-115.17 8,-109.17 14,-103.17 20,-103.17"/>
+<text text-anchor="middle" x="53.29" y="-166.27" font-family="Helvetica,sans-Serif" font-size="11.00">Victim Contract</text>
+</g>
+<g id="clust2" class="cluster">
+<path fill="#fef3c7" stroke="#fbbf24" d="M351,-22.17C351,-22.17 585.26,-22.17 585.26,-22.17 591.26,-22.17 597.26,-28.17 597.26,-34.17 597.26,-34.17 597.26,-83.17 597.26,-83.17 597.26,-89.17 591.26,-95.17 585.26,-95.17 585.26,-95.17 351,-95.17 351,-95.17 345,-95.17 339,-89.17 339,-83.17 339,-83.17 339,-34.17 339,-34.17 339,-28.17 345,-22.17 351,-22.17"/>
+<text text-anchor="middle" x="389.49" y="-81.27" font-family="Helvetica,sans-Serif" font-size="11.00">Attacker Contract</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#bfdbfe" stroke="black" d="M89.47,-147.17C89.47,-147.17 28,-147.17 28,-147.17 22,-147.17 16,-141.17 16,-135.17 16,-135.17 16,-123.17 16,-123.17 16,-117.17 22,-111.17 28,-111.17 28,-111.17 89.47,-111.17 89.47,-111.17 95.47,-111.17 101.47,-117.17 101.47,-123.17 101.47,-123.17 101.47,-135.17 101.47,-135.17 101.47,-141.17 95.47,-147.17 89.47,-147.17"/>
+<text text-anchor="middle" x="58.74" y="-132.17" font-family="Helvetica,sans-Serif" font-size="10.00">1. attacker calls</text>
+<text text-anchor="middle" x="58.74" y="-120.17" font-family="Helvetica,sans-Serif" font-size="10.00">withdraw()</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fee2e2" stroke="black" d="M242,-147.17C242,-147.17 150.47,-147.17 150.47,-147.17 144.47,-147.17 138.47,-141.17 138.47,-135.17 138.47,-135.17 138.47,-123.17 138.47,-123.17 138.47,-117.17 144.47,-111.17 150.47,-111.17 150.47,-111.17 242,-111.17 242,-111.17 248,-111.17 254,-117.17 254,-123.17 254,-123.17 254,-135.17 254,-135.17 254,-141.17 248,-147.17 242,-147.17"/>
+<text text-anchor="middle" x="196.24" y="-132.17" font-family="Helvetica,sans-Serif" font-size="10.00">2. victim sends ETH</text>
+<text text-anchor="middle" x="196.24" y="-120.17" font-family="Helvetica,sans-Serif" font-size="10.00">before balance update</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M101.87,-129.17C109.77,-129.17 118.22,-129.17 126.69,-129.17"/>
+<polygon fill="black" stroke="black" points="126.68,-132.67 136.68,-129.17 126.68,-125.67 126.68,-132.67"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fecaca" stroke="black" stroke-dasharray="5,2" d="M449.24,-147.17C449.24,-147.17 353.01,-147.17 353.01,-147.17 347.01,-147.17 341.01,-141.17 341.01,-135.17 341.01,-135.17 341.01,-123.17 341.01,-123.17 341.01,-117.17 347.01,-111.17 353.01,-111.17 353.01,-111.17 449.24,-111.17 449.24,-111.17 455.24,-111.17 461.24,-117.17 461.24,-123.17 461.24,-123.17 461.24,-135.17 461.24,-135.17 461.24,-141.17 455.24,-147.17 449.24,-147.17"/>
+<text text-anchor="middle" x="401.13" y="-132.17" font-family="Helvetica,sans-Serif" font-size="10.00">5. balance[attacker] = 0</text>
+<text text-anchor="middle" x="401.13" y="-120.17" font-family="Helvetica,sans-Serif" font-size="10.00">(too late!)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M254.29,-129.17C277.56,-129.17 304.72,-129.17 329.24,-129.17"/>
+<polygon fill="black" stroke="black" points="329.16,-132.67 339.16,-129.17 329.16,-125.67 329.16,-132.67"/>
+<text text-anchor="middle" x="297.5" y="-142.67" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#991b1b">never</text>
+<text text-anchor="middle" x="297.5" y="-131.87" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#991b1b">reached</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fde68a" stroke="black" d="M443.26,-66.17C443.26,-66.17 359,-66.17 359,-66.17 353,-66.17 347,-60.17 347,-54.17 347,-54.17 347,-42.17 347,-42.17 347,-36.17 353,-30.17 359,-30.17 359,-30.17 443.26,-30.17 443.26,-30.17 449.26,-30.17 455.26,-36.17 455.26,-42.17 455.26,-42.17 455.26,-54.17 455.26,-54.17 455.26,-60.17 449.26,-66.17 443.26,-66.17"/>
+<text text-anchor="middle" x="401.13" y="-45.17" font-family="Helvetica,sans-Serif" font-size="10.00">3. receive() triggered</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#dc2626" stroke-width="2" d="M243.53,-110.69C272.75,-99.02 310.74,-83.85 341.98,-71.38"/>
+<polygon fill="#dc2626" stroke="#dc2626" stroke-width="2" points="343.23,-74.65 351.22,-67.69 340.64,-68.15 343.23,-74.65"/>
+<text text-anchor="middle" x="297.5" y="-101" font-family="Helvetica,sans-Serif" font-size="9.00">ETH transfer</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#fde68a" stroke="black" d="M577.26,-66.17C577.26,-66.17 510.24,-66.17 510.24,-66.17 504.24,-66.17 498.24,-60.17 498.24,-54.17 498.24,-54.17 498.24,-42.17 498.24,-42.17 498.24,-36.17 504.24,-30.17 510.24,-30.17 510.24,-30.17 577.26,-30.17 577.26,-30.17 583.26,-30.17 589.26,-36.17 589.26,-42.17 589.26,-42.17 589.26,-54.17 589.26,-54.17 589.26,-60.17 583.26,-66.17 577.26,-66.17"/>
+<text text-anchor="middle" x="543.75" y="-51.17" font-family="Helvetica,sans-Serif" font-size="10.00">4. call withdraw()</text>
+<text text-anchor="middle" x="543.75" y="-39.17" font-family="Helvetica,sans-Serif" font-size="10.00">again!</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M455.69,-48.17C465.84,-48.17 476.49,-48.17 486.72,-48.17"/>
+<polygon fill="black" stroke="black" points="486.52,-51.67 496.52,-48.17 486.52,-44.67 486.52,-51.67"/>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="5,2" d="M500.31,-29.71C490.31,-26.17 479.55,-23 469.24,-21.17 412.25,-11.03 395.9,-10.55 339,-21.17 253.48,-37.13 160.44,-78.37 106.25,-105.02"/>
+<polygon fill="#dc2626" stroke="#dc2626" stroke-width="2" points="104.74,-101.86 97.35,-109.45 107.86,-108.13 104.74,-101.86"/>
+<text text-anchor="middle" x="483.96" y="-13.5" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#dc2626">re&#45;enters</text>
+<text text-anchor="middle" x="483.96" y="-2.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#dc2626">(balance still 10!)</text>
+</g>
+</g>
+</svg></figure>
+<ul>
+<li>Defenses: Check-Effects-Interactions (CEI) ordering, <strong>ReentrancyGuard</strong>, pull over push payments.</li>
+</ul>
+</div></section>
+<section class="slide" id="reentrancy-vulnerable-pattern-code"><h2 class="slide-title">Reentrancy: Vulnerable Pattern (Code)</h2><div class="slide-body">
+<pre class="solidity"><code>mapping(address =&gt; uint) public balances;
+
+function withdraw() public {
+    uint amount = balances[msg.sender];
+    require(amount &gt; 0, &quot;no funds&quot;);
+    (bool ok,) = msg.sender.call{value: amount}(&quot;&quot;);
+    require(ok, &quot;send failed&quot;);
+    balances[msg.sender] = 0;
+}</code></pre>
+<ul>
+<li>External call before state update enables reentry.</li>
+<li>Attacker’s fallback re-calls <code>withdraw()</code> before zeroing balance.</li>
+<li>Result: multiple withdrawals from one balance.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="reentrancy-checks-effects-interactions-fix"><h2 class="slide-title">Reentrancy: Checks-Effects-Interactions (Fix)</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:42%;">
+<p>The fix is disciplined ordering:</p>
+<ol type="1">
+<li><strong>Check</strong> preconditions (<code>require</code>)</li>
+<li><strong>Update state</strong> (effects) before yielding control</li>
+<li><strong>External call</strong> last (interactions)</li>
+</ol>
+<p>A reentrant call now sees zero balance and fails the check. The attack loop from the previous slide is broken.</p>
+<p>Some contracts add a second protection: a reentry lock. That pattern blocks the same function from being entered again before the first call finishes.</p>
+</div><div class="column" style="width:58%;">
+<p><strong>CEI pattern:</strong></p>
+<pre class="solidity"><code>function withdraw() public {
+    uint amount = balances[msg.sender];
+    require(amount &gt; 0, &quot;no funds&quot;);   // CHECK
+    balances[msg.sender] = 0;          // EFFECT
+    (bool ok,) = payable(msg.sender)   // INTERACTION
+        .call{value: amount}(&quot;&quot;);
+    require(ok, &quot;send failed&quot;);
+}</code></pre>
+<p> </p>
+<p><strong>ReentrancyGuard (mutex):</strong></p>
+<pre class="solidity"><code>import &quot;...utils/ReentrancyGuard.sol&quot;;
+
+contract Vault is ReentrancyGuard {
+    function withdraw() public nonReentrant {
+        // CEI ordering + mutex lock
+    }
+}</code></pre>
+</div>
+</div>
+</div></section>
+<section class="slide" id="case-study-the-dao-hack-2016"><h2 class="slide-title">Case Study: The DAO Hack (2016)</h2><div class="slide-body">
+<ul>
+<li>“The DAO,” a decentralized investment fund built on Ethereum, launched in 2016. It raised over 11 million ETH (≈ $150 million at the time, 14% of all ETH).</li>
+<li>Vulnerability: contract sent ETH <strong>before</strong> updating balances.
+<ul>
+<li>Exploited on June 17, 2016: attacker’s fallback reentered <code>withdraw()</code> before balance changed.<br />
+</li>
+<li>Each loop drained more funds; state always one step behind reality.<br />
+</li>
+</ul></li>
+<li>Ethereum hard fork to revert chain, dissenters split off into Ethereum Classic (ETC)</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="upgradeability-and-proxy-patterns"><h2 class="slide-title">Upgradeability and Proxy Patterns</h2><div class="slide-body">
+<ul>
+<li>Contracts on Ethereum are immutable once deployed.
+<ul>
+<li>No patching; bugs and all are permanent unless you plan ahead.</li>
+</ul></li>
+<li>The <strong>proxy pattern</strong> separates <strong>storage</strong> (state) from <strong>logic</strong> (code) so new logic can be deployed without migrating data.</li>
+<li><code>delegatecall</code> executes the logic contract’s code in the <strong>proxy’s storage context</strong>.
+<ul>
+<li>The proxy address never changes; users and other contracts always call the same address.</li>
+</ul></li>
+<li>Governance controls (multi-sig, timelocks) prevent malicious upgrades.</li>
+</ul>
+<div class="columns">
+<div class="column" style="width:48%;">
+<p><strong>Without proxy (immutable)</strong></p>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 200.20 128.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:267px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 124.8)">
+<g id="node1" class="node">
+<path fill="#dbeafe" stroke="black" d="M111.85,-120.8C111.85,-120.8 81.85,-120.8 81.85,-120.8 75.85,-120.8 69.85,-114.8 69.85,-108.8 69.85,-108.8 69.85,-96.8 69.85,-96.8 69.85,-90.8 75.85,-84.8 81.85,-84.8 81.85,-84.8 111.85,-84.8 111.85,-84.8 117.85,-84.8 123.85,-90.8 123.85,-96.8 123.85,-96.8 123.85,-108.8 123.85,-108.8 123.85,-114.8 117.85,-120.8 111.85,-120.8"/>
+<text text-anchor="middle" x="96.85" y="-99.2" font-family="Helvetica,sans-Serif" font-size="12.00">User</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#dcfce7" stroke="black" d="M77.71,-36.8C77.71,-36.8 12,-36.8 12,-36.8 6,-36.8 0,-30.8 0,-24.8 0,-24.8 0,-12 0,-12 0,-6 6,0 12,0 12,0 77.71,0 77.71,0 83.71,0 89.71,-6 89.71,-12 89.71,-12 89.71,-24.8 89.71,-24.8 89.71,-30.8 83.71,-36.8 77.71,-36.8"/>
+<text text-anchor="middle" x="44.85" y="-22" font-family="Helvetica,sans-Serif" font-size="12.00">Contract v1</text>
+<text text-anchor="middle" x="44.85" y="-7.6" font-family="Helvetica,sans-Serif" font-size="12.00">(code + state)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M85.82,-84.33C78.91,-73.37 69.85,-59.01 62.01,-46.58"/>
+<polygon fill="black" stroke="black" points="65.15,-45 56.85,-38.41 59.23,-48.74 65.15,-45"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fef3c7" stroke="black" stroke-dasharray="5,2" d="M180.2,-36.8C180.2,-36.8 119.5,-36.8 119.5,-36.8 113.5,-36.8 107.5,-30.8 107.5,-24.8 107.5,-24.8 107.5,-12 107.5,-12 107.5,-6 113.5,0 119.5,0 119.5,0 180.2,0 180.2,0 186.2,0 192.2,-6 192.2,-12 192.2,-12 192.2,-24.8 192.2,-24.8 192.2,-30.8 186.2,-36.8 180.2,-36.8"/>
+<text text-anchor="middle" x="149.85" y="-22" font-family="Helvetica,sans-Serif" font-size="12.00">Contract v2</text>
+<text text-anchor="middle" x="149.85" y="-7.6" font-family="Helvetica,sans-Serif" font-size="12.00">(new deploy)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M108.09,-84.33C115.14,-73.37 124.38,-59.01 132.37,-46.58"/>
+<polygon fill="black" stroke="black" points="135.16,-48.71 137.63,-38.41 129.27,-44.92 135.16,-48.71"/>
+<text text-anchor="middle" x="145.98" y="-57.8" font-family="Helvetica,sans-Serif" font-size="10.00">migrate?</text>
+</g>
+</g>
+</svg></figure>
+</div><div class="column" style="width:4%;">
+
+</div><div class="column" style="width:48%;">
+<p><strong>With proxy (upgradeable)</strong></p>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 153.12 201.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:204px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 197.8)">
+<g id="node1" class="node">
+<path fill="#dbeafe" stroke="black" d="M84.35,-193.8C84.35,-193.8 54.35,-193.8 54.35,-193.8 48.35,-193.8 42.35,-187.8 42.35,-181.8 42.35,-181.8 42.35,-169.8 42.35,-169.8 42.35,-163.8 48.35,-157.8 54.35,-157.8 54.35,-157.8 84.35,-157.8 84.35,-157.8 90.35,-157.8 96.35,-163.8 96.35,-169.8 96.35,-169.8 96.35,-181.8 96.35,-181.8 96.35,-187.8 90.35,-193.8 84.35,-193.8"/>
+<text text-anchor="middle" x="69.35" y="-172.2" font-family="Helvetica,sans-Serif" font-size="12.00">User</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#dcfce7" stroke="black" d="M109.7,-120.8C109.7,-120.8 29,-120.8 29,-120.8 23,-120.8 17,-114.8 17,-108.8 17,-108.8 17,-96 17,-96 17,-90 23,-84 29,-84 29,-84 109.7,-84 109.7,-84 115.7,-84 121.7,-90 121.7,-96 121.7,-96 121.7,-108.8 121.7,-108.8 121.7,-114.8 115.7,-120.8 109.7,-120.8"/>
+<text text-anchor="middle" x="69.35" y="-106" font-family="Helvetica,sans-Serif" font-size="12.00">Proxy</text>
+<text text-anchor="middle" x="69.35" y="-91.6" font-family="Helvetica,sans-Serif" font-size="12.00">(state lives here)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M69.35,-157.52C69.35,-150.05 69.35,-141.11 69.35,-132.67"/>
+<polygon fill="black" stroke="black" points="72.85,-132.78 69.35,-122.78 65.85,-132.78 72.85,-132.78"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fee2e2" stroke="black" stroke-dasharray="5,2" d="M48.7,-36C48.7,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 48.7,0 48.7,0 54.7,0 60.7,-6 60.7,-12 60.7,-12 60.7,-24 60.7,-24 60.7,-30 54.7,-36 48.7,-36"/>
+<text text-anchor="middle" x="30.35" y="-14.4" font-family="Helvetica,sans-Serif" font-size="12.00">Logic v1</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M60.89,-83.52C55.76,-72.68 49.11,-58.64 43.33,-46.42"/>
+<polygon fill="black" stroke="black" points="46.62,-45.19 39.17,-37.65 40.29,-48.18 46.62,-45.19"/>
+<text text-anchor="middle" x="58.86" y="-57" font-family="Helvetica,sans-Serif" font-size="10.00">old</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#bbf7d0" stroke="black" d="M127.7,-36C127.7,-36 91,-36 91,-36 85,-36 79,-30 79,-24 79,-24 79,-12 79,-12 79,-6 85,0 91,0 91,0 127.7,0 127.7,0 133.7,0 139.7,-6 139.7,-12 139.7,-12 139.7,-24 139.7,-24 139.7,-30 133.7,-36 127.7,-36"/>
+<text text-anchor="middle" x="109.35" y="-14.4" font-family="Helvetica,sans-Serif" font-size="12.00">Logic v2</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M78.03,-83.52C83.29,-72.68 90.11,-58.64 96.04,-46.42"/>
+<polygon fill="black" stroke="black" points="99.08,-48.17 100.3,-37.64 92.78,-45.11 99.08,-48.17"/>
+<text text-anchor="middle" x="118.43" y="-57" font-family="Helvetica,sans-Serif" font-size="10.00">delegatecall</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="randomness-oracles-and-external-data"><h2 class="slide-title">Randomness, Oracles, and External Data</h2><div class="slide-body">
+<ul>
+<li>The EVM is deterministic: every node must compute the same result. That means contracts <strong>cannot</strong> reach outside the chain for data, generate true randomness, or call external APIs.</li>
+<li>Naive on-chain “randomness” (block hash, timestamp) is manipulable by block proposers.
+<ul>
+<li>Safer approaches: <strong>commit-reveal</strong> schemes or <strong>Verifiable Random Functions</strong> (VRF) with cryptographic proofs.</li>
+</ul></li>
+<li>External facts (prices, weather, sports scores) require <strong>oracles</strong> that post data on-chain.
+<ul>
+<li>Oracles introduce a trust assumption: who posts the data, how it is aggregated, and how manipulation is detected.</li>
+</ul></li>
+<li>Defensive patterns for oracle failure:
+<ul>
+<li>Staleness checks (reject data older than N blocks)</li>
+<li>Bounds/rate-of-change limits (reject implausible jumps)</li>
+<li>Circuit breakers (pause critical operations if feeds go offline)</li>
+<li>Multi-source aggregation (Chainlink, UMA, Pyth)</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="key-takeaways"><h2 class="slide-title">Key Takeaways</h2><div class="slide-body">
+<ul>
+<li><p>A smart contract is code + persistent state that executes deterministically on every node.</p></li>
+<li><p>Ethereum’s EVM provides the execution environment: accounts, gas metering, runtime bytecode, and a shared state trie.</p></li>
+<li><p>Solidity source is compiled into bytecode for deployment; after creation, the contract account stores runtime bytecode on-chain.</p></li>
+<li><p>External calls transfer control to untrusted code; the <strong>Checks-Effects-Interactions</strong> pattern and reentrancy guards are the primary defenses.</p></li>
+<li><p>Contracts cannot reach outside the chain; oracles and VRFs bridge that gap, each with their own trust assumptions.</p></li>
+<li><p>Immutability is the default; proxy patterns trade it for upgradeability at the cost of added governance complexity.</p></li>
+<li><p>Next lesson: we apply these concepts to <strong>digital assets, tokenization, and NFTs</strong> (ERC-20, ERC-721, ERC-1155).</p></li>
+</ul>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-buterin_ethereumnextgenerationsmart_2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">V. Buterin, <span>“Ethereum: <span>A Next-Generation Smart Contract</span> and <span>Decentralized Application Platform</span>.”</span> Ethereum.org, 2014. Available: <a href="https://ethereum.org/content/whitepaper/whitepaper-pdf/Ethereum_Whitepaper_-_Buterin_2014.pdf">https://ethereum.org/content/whitepaper/whitepaper-pdf/Ethereum_Whitepaper_-_Buterin_2014.pdf</a></div>
+</div>
+<div id="ref-ethereum.org_smartcontractsdeveloper_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">Ethereum.org, <span>“Smart <span>Contracts</span> — <span>Developer Docs</span>.”</span> 2025. Available: <a href="https://ethereum.org/en/developers/docs/smart-contracts/">https://ethereum.org/en/developers/docs/smart-contracts/</a></div>
+</div>
+<div id="ref-nakamoto_bitcoinpeertopeerelectronic_2008" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">S. Nakamoto, <span>“Bitcoin: <span class="nocase">A Peer-to-Peer Electronic Cash System</span>.”</span> Satoshi Nakamoto Institute, Oct. 31, 2008. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf">https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf</a></div>
+</div>
+<div id="ref-wood_ethereumsecuredecentralised_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">G. Wood, <span>“Ethereum: <span>A Secure Decentralised Generalised Transaction Ledger</span>, <span>EIP-150 Revision</span>.”</span> 2016. Available: <a href="https://ethereum.github.io/yellowpaper/paper.pdf">https://ethereum.github.io/yellowpaper/paper.pdf</a></div>
+</div>
+<div id="ref-ethereum.org_accountsdeveloperdocs_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">Ethereum.org, <span>“Accounts — <span>Developer Docs</span>.”</span> 2025. Available: <a href="https://ethereum.org/en/developers/docs/accounts/">https://ethereum.org/en/developers/docs/accounts/</a></div>
+</div>
+<div id="ref-solidityteam_solidityexample_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">Solidity Team, <span>“Solidity by <span>Example</span>.”</span> 2025. Available: <a href="https://docs.soliditylang.org/en/latest/solidity-by-example.html">https://docs.soliditylang.org/en/latest/solidity-by-example.html</a></div>
+</div>
+<div id="ref-siegel_understandingdaoattack_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">D. A. Siegel, <span>“Understanding the <span>DAO Attack</span>.”</span> 2016. Available: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3014782">https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3014782</a></div>
+</div>
+<div id="ref-l34_ethereum_dao_vulnerability_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">Ethereum Foundation, <span>“Critical update re: DAO vulnerability.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://blog.ethereum.org/2016/06/17/critical-update-re-dao-vulnerability">https://blog.ethereum.org/2016/06/17/critical-update-re-dao-vulnerability</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

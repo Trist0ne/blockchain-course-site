@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Money, Institutions, and the Case for Alternatives</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/introduction/04-IN-money_institutions_and_the_case_for_alternatives.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="in-04" data-code="04-IN" data-src="b58a867b9aaf2843" data-slides="21">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section I: Introduction · Lesson 04-IN</p><h1>Money, Institutions, and the Case for Alternatives</h1></div></section>
+<section class="slide" id="year-savings-poll"><h2 class="slide-title">10-Year Savings Poll</h2><div class="slide-body">
+<p>If you had to store your life savings for 10 years, would you pick:</p>
+<ol type="A">
+<li>U.S. dollars in a bank account</li>
+<li>Physical gold</li>
+<li>Bitcoin</li>
+<li>The stock market (e.g., an S&amp;P 500 index fund)</li>
+<li>Something else / a mix?</li>
+</ol>
+</div></section>
+<section class="slide" id="agenda-our-guiding-questions"><h2 class="slide-title">Agenda: Our Guiding Questions</h2><div class="slide-body">
+<ul>
+<li><p>What is money, really? And where did our current system come from?</p></li>
+<li><p>How is our financial system <em>supposed</em> to work?</p></li>
+<li><p>What are its hidden vulnerabilities and single points of failure?</p></li>
+<li><p>Why was a technology like Bitcoin invented in the first place?</p></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="what-is-money-a-social-technology"><h2 class="slide-title">What is Money? A Social Technology</h2><div class="slide-body">
+<div class="columns">
+<div class="column">
+<p>Money is a tool that serves three functions:</p>
+<ol type="1">
+<li><strong>Medium of Exchange</strong>
+<ul>
+<li>Eliminates the “coincidence of wants” problem of barter.</li>
+</ul></li>
+<li><strong>Unit of Account</strong>
+<ul>
+<li>Provides a common measure of value; a pricing yardstick.</li>
+</ul></li>
+<li><strong>Store of Value</strong>
+<ul>
+<li>Allows you to save purchasing power for the future.</li>
+</ul></li>
+</ol>
+</div><div class="column">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 479.00 208.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:639px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 204.8)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="8,-8 8,-84.8 463,-84.8 463,-8 8,-8"/>
+<text text-anchor="middle" x="235.5" y="-68.2" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="14.00">Solves Problems</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#003366" stroke="#ffffff" stroke-width="2" d="M281.78,-200.8C281.78,-200.8 176.22,-200.8 176.22,-200.8 170.22,-200.8 164.22,-194.8 164.22,-188.8 164.22,-188.8 164.22,-176.8 164.22,-176.8 164.22,-170.8 170.22,-164.8 176.22,-164.8 176.22,-164.8 281.78,-164.8 281.78,-164.8 287.78,-164.8 293.78,-170.8 293.78,-176.8 293.78,-176.8 293.78,-188.8 293.78,-188.8 293.78,-194.8 287.78,-200.8 281.78,-200.8"/>
+<text text-anchor="middle" x="229" y="-178.6" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="14.00" fill="#ffffff">Functions of Money</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="none" stroke="black" d="M139.65,-128.8C139.65,-128.8 26.35,-128.8 26.35,-128.8 20.35,-128.8 14.35,-122.8 14.35,-116.8 14.35,-116.8 14.35,-104.8 14.35,-104.8 14.35,-98.8 20.35,-92.8 26.35,-92.8 26.35,-92.8 139.65,-92.8 139.65,-92.8 145.65,-92.8 151.65,-98.8 151.65,-104.8 151.65,-104.8 151.65,-116.8 151.65,-116.8 151.65,-122.8 145.65,-128.8 139.65,-128.8"/>
+<text text-anchor="middle" x="83" y="-106.6" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="14.00">Medium of Exchange</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M191.78,-163.95C172.86,-154.88 149.68,-143.77 129.58,-134.13"/>
+<polygon fill="black" stroke="black" points="131.29,-131.07 120.76,-129.9 128.26,-137.38 131.29,-131.07"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="none" stroke="black" d="M270.49,-128.8C270.49,-128.8 187.51,-128.8 187.51,-128.8 181.51,-128.8 175.51,-122.8 175.51,-116.8 175.51,-116.8 175.51,-104.8 175.51,-104.8 175.51,-98.8 181.51,-92.8 187.51,-92.8 187.51,-92.8 270.49,-92.8 270.49,-92.8 276.49,-92.8 282.49,-98.8 282.49,-104.8 282.49,-104.8 282.49,-116.8 282.49,-116.8 282.49,-122.8 276.49,-128.8 270.49,-128.8"/>
+<text text-anchor="middle" x="229" y="-106.6" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="14.00">Unit of Account</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M229,-164.14C229,-157.04 229,-148.66 229,-140.72"/>
+<polygon fill="black" stroke="black" points="232.5,-140.73 229,-130.73 225.5,-140.73 232.5,-140.73"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="none" stroke="black" d="M404.82,-128.8C404.82,-128.8 331.18,-128.8 331.18,-128.8 325.18,-128.8 319.18,-122.8 319.18,-116.8 319.18,-116.8 319.18,-104.8 319.18,-104.8 319.18,-98.8 325.18,-92.8 331.18,-92.8 331.18,-92.8 404.82,-92.8 404.82,-92.8 410.82,-92.8 416.82,-98.8 416.82,-104.8 416.82,-104.8 416.82,-116.8 416.82,-116.8 416.82,-122.8 410.82,-128.8 404.82,-128.8"/>
+<text text-anchor="middle" x="368" y="-106.6" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="14.00">Store of Value</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M264.44,-163.95C282.35,-154.93 304.28,-143.89 323.34,-134.29"/>
+<polygon fill="black" stroke="black" points="324.88,-137.43 332.24,-129.81 321.73,-131.18 324.88,-137.43"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="none" stroke="black" d="M126.05,-52C126.05,-52 27.95,-52 27.95,-52 21.95,-52 15.95,-46 15.95,-40 15.95,-40 15.95,-28 15.95,-28 15.95,-22 21.95,-16 27.95,-16 27.95,-16 126.05,-16 126.05,-16 132.05,-16 138.05,-22 138.05,-28 138.05,-28 138.05,-40 138.05,-40 138.05,-46 132.05,-52 126.05,-52"/>
+<text text-anchor="middle" x="77" y="-29.8" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="14.00">Barter Inefficiency</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M81.61,-92.45C80.92,-83.86 80.07,-73.27 79.29,-63.52"/>
+<polygon fill="black" stroke="black" points="82.79,-63.45 78.51,-53.76 75.82,-64.01 82.79,-63.45"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="none" stroke="black" d="M289.54,-52C289.54,-52 168.46,-52 168.46,-52 162.46,-52 156.46,-46 156.46,-40 156.46,-40 156.46,-28 156.46,-28 156.46,-22 162.46,-16 168.46,-16 168.46,-16 289.54,-16 289.54,-16 295.54,-16 301.54,-22 301.54,-28 301.54,-28 301.54,-40 301.54,-40 301.54,-46 295.54,-52 289.54,-52"/>
+<text text-anchor="middle" x="229" y="-29.8" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="14.00">Relative Pricing Chaos</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M229,-92.45C229,-83.86 229,-73.27 229,-63.52"/>
+<polygon fill="black" stroke="black" points="232.5,-63.77 229,-53.77 225.5,-63.77 232.5,-63.77"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="none" stroke="black" d="M442.68,-52C442.68,-52 331.32,-52 331.32,-52 325.32,-52 319.32,-46 319.32,-40 319.32,-40 319.32,-28 319.32,-28 319.32,-22 325.32,-16 331.32,-16 331.32,-16 442.68,-16 442.68,-16 448.68,-16 454.68,-22 454.68,-28 454.68,-28 454.68,-40 454.68,-40 454.68,-46 448.68,-52 442.68,-52"/>
+<text text-anchor="middle" x="387" y="-29.8" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="14.00">Saving for the Future</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M372.41,-92.45C374.61,-83.77 377.34,-73.03 379.84,-63.2"/>
+<polygon fill="black" stroke="black" points="383.17,-64.28 382.24,-53.72 376.39,-62.55 383.17,-64.28"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+<p><strong>Key Idea:</strong> Money isn’t inherently valuable. It’s a social agreement—a technology we invented to coordinate economic activity.</p>
+</div></section>
+<section class="slide smaller non-scrollable" id="a-brief-history-of-moneys-form"><h2 class="slide-title">A Brief History of Money’s Form</h2><div class="slide-body">
+<figure class="diagram mermaid"><svg aria-roledescription="timeline" role="graphics-document document" viewBox="0 -61 990 660.5999755859375" style="max-width: 990px;" xmlns="http://www.w3.org/2000/svg" width="100%" id="mmd7"><style>#mmd7{font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:16px;fill:#000000;}#mmd7 .error-icon{fill:#552222;}#mmd7 .error-text{fill:#552222;stroke:#552222;}#mmd7 .edge-thickness-normal{stroke-width:1px;}#mmd7 .edge-thickness-thick{stroke-width:3.5px;}#mmd7 .edge-pattern-solid{stroke-dasharray:0;}#mmd7 .edge-thickness-invisible{stroke-width:0;fill:none;}#mmd7 .edge-pattern-dashed{stroke-dasharray:3;}#mmd7 .edge-pattern-dotted{stroke-dasharray:2;}#mmd7 .marker{fill:#666;stroke:#666;}#mmd7 .marker.cross{stroke:#666;}#mmd7 svg{font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:16px;}#mmd7 p{margin:0;}#mmd7 .edge{stroke-width:3;}#mmd7 .section--1 rect,#mmd7 .section--1 path,#mmd7 .section--1 circle,#mmd7 .section--1 path{fill:#555;}#mmd7 .section--1 text{fill:#F4F4F4;}#mmd7 .node-icon--1{font-size:40px;color:#F4F4F4;}#mmd7 .section-edge--1{stroke:#555;}#mmd7 .edge-depth--1{stroke-width:17;}#mmd7 .section--1 line{stroke:#aaaaaa;stroke-width:3;}#mmd7 .lineWrapper line{stroke:#F4F4F4;}#mmd7 .disabled,#mmd7 .disabled circle,#mmd7 .disabled text{fill:lightgray;}#mmd7 .disabled text{fill:#efefef;}#mmd7 .section-0 rect,#mmd7 .section-0 path,#mmd7 .section-0 circle,#mmd7 .section-0 path{fill:#F4F4F4;}#mmd7 .section-0 text{fill:#333;}#mmd7 .node-icon-0{font-size:40px;color:#333;}#mmd7 .section-edge-0{stroke:#F4F4F4;}#mmd7 .edge-depth-0{stroke-width:14;}#mmd7 .section-0 line{stroke:#0b0b0b;stroke-width:3;}#mmd7 .lineWrapper line{stroke:#333;}#mmd7 .disabled,#mmd7 .disabled circle,#mmd7 .disabled text{fill:lightgray;}#mmd7 .disabled text{fill:#efefef;}#mmd7 .section-1 rect,#mmd7 .section-1 path,#mmd7 .section-1 circle,#mmd7 .section-1 path{fill:#555;}#mmd7 .section-1 text{fill:#F4F4F4;}#mmd7 .node-icon-1{font-size:40px;color:#F4F4F4;}#mmd7 .section-edge-1{stroke:#555;}#mmd7 .edge-depth-1{stroke-width:11;}#mmd7 .section-1 line{stroke:#aaaaaa;stroke-width:3;}#mmd7 .lineWrapper line{stroke:#F4F4F4;}#mmd7 .disabled,#mmd7 .disabled circle,#mmd7 .disabled text{fill:lightgray;}#mmd7 .disabled text{fill:#efefef;}#mmd7 .section-2 rect,#mmd7 .section-2 path,#mmd7 .section-2 circle,#mmd7 .section-2 path{fill:#BBB;}#mmd7 .section-2 text{fill:#333;}#mmd7 .node-icon-2{font-size:40px;color:#333;}#mmd7 .section-edge-2{stroke:#BBB;}#mmd7 .edge-depth-2{stroke-width:8;}#mmd7 .section-2 line{stroke:#444444;stroke-width:3;}#mmd7 .lineWrapper line{stroke:#333;}#mmd7 .disabled,#mmd7 .disabled circle,#mmd7 .disabled text{fill:lightgray;}#mmd7 .disabled text{fill:#efefef;}#mmd7 .section-3 rect,#mmd7 .section-3 path,#mmd7 .section-3 circle,#mmd7 .section-3 path{fill:#777;}#mmd7 .section-3 text{fill:#333;}#mmd7 .node-icon-3{font-size:40px;color:#333;}#mmd7 .section-edge-3{stroke:#777;}#mmd7 .edge-depth-3{stroke-width:5;}#mmd7 .section-3 line{stroke:#888888;stroke-width:3;}#mmd7 .lineWrapper line{stroke:#333;}#mmd7 .disabled,#mmd7 .disabled circle,#mmd7 .disabled text{fill:lightgray;}#mmd7 .disabled text{fill:#efefef;}#mmd7 .section-4 rect,#mmd7 .section-4 path,#mmd7 .section-4 circle,#mmd7 .section-4 path{fill:#999;}#mmd7 .section-4 text{fill:#333;}#mmd7 .node-icon-4{font-size:40px;color:#333;}#mmd7 .section-edge-4{stroke:#999;}#mmd7 .edge-depth-4{stroke-width:2;}#mmd7 .section-4 line{stroke:#666666;stroke-width:3;}#mmd7 .lineWrapper line{stroke:#333;}#mmd7 .disabled,#mmd7 .disabled circle,#mmd7 .disabled text{fill:lightgray;}#mmd7 .disabled text{fill:#efefef;}#mmd7 .section-5 rect,#mmd7 .section-5 path,#mmd7 .section-5 circle,#mmd7 .section-5 path{fill:#DDD;}#mmd7 .section-5 text{fill:#333;}#mmd7 .node-icon-5{font-size:40px;color:#333;}#mmd7 .section-edge-5{stroke:#DDD;}#mmd7 .edge-depth-5{stroke-width:-1;}#mmd7 .section-5 line{stroke:#222222;stroke-width:3;}#mmd7 .lineWrapper line{stroke:#333;}#mmd7 .disabled,#mmd7 .disabled circle,#mmd7 .disabled text{fill:lightgray;}#mmd7 .disabled text{fill:#efefef;}#mmd7 .section-6 rect,#mmd7 .section-6 path,#mmd7 .section-6 circle,#mmd7 .section-6 path{fill:#FFF;}#mmd7 .section-6 text{fill:#333;}#mmd7 .node-icon-6{font-size:40px;color:#333;}#mmd7 .section-edge-6{stroke:#FFF;}#mmd7 .edge-depth-6{stroke-width:-4;}#mmd7 .section-6 line{stroke:#000000;stroke-width:3;}#mmd7 .lineWrapper line{stroke:#333;}#mmd7 .disabled,#mmd7 .disabled circle,#mmd7 .disabled text{fill:lightgray;}#mmd7 .disabled text{fill:#efefef;}#mmd7 .section-7 rect,#mmd7 .section-7 path,#mmd7 .section-7 circle,#mmd7 .section-7 path{fill:#DDD;}#mmd7 .section-7 text{fill:#333;}#mmd7 .node-icon-7{font-size:40px;color:#333;}#mmd7 .section-edge-7{stroke:#DDD;}#mmd7 .edge-depth-7{stroke-width:-7;}#mmd7 .section-7 line{stroke:#222222;stroke-width:3;}#mmd7 .lineWrapper line{stroke:#333;}#mmd7 .disabled,#mmd7 .disabled circle,#mmd7 .disabled text{fill:lightgray;}#mmd7 .disabled text{fill:#efefef;}#mmd7 .section-8 rect,#mmd7 .section-8 path,#mmd7 .section-8 circle,#mmd7 .section-8 path{fill:#BBB;}#mmd7 .section-8 text{fill:#333;}#mmd7 .node-icon-8{font-size:40px;color:#333;}#mmd7 .section-edge-8{stroke:#BBB;}#mmd7 .edge-depth-8{stroke-width:-10;}#mmd7 .section-8 line{stroke:#444444;stroke-width:3;}#mmd7 .lineWrapper line{stroke:#333;}#mmd7 .disabled,#mmd7 .disabled circle,#mmd7 .disabled text{fill:lightgray;}#mmd7 .disabled text{fill:#efefef;}#mmd7 .section-9 rect,#mmd7 .section-9 path,#mmd7 .section-9 circle,#mmd7 .section-9 path{fill:#999;}#mmd7 .section-9 text{fill:#333;}#mmd7 .node-icon-9{font-size:40px;color:#333;}#mmd7 .section-edge-9{stroke:#999;}#mmd7 .edge-depth-9{stroke-width:-13;}#mmd7 .section-9 line{stroke:#666666;stroke-width:3;}#mmd7 .lineWrapper line{stroke:#333;}#mmd7 .disabled,#mmd7 .disabled circle,#mmd7 .disabled text{fill:lightgray;}#mmd7 .disabled text{fill:#efefef;}#mmd7 .section-10 rect,#mmd7 .section-10 path,#mmd7 .section-10 circle,#mmd7 .section-10 path{fill:#777;}#mmd7 .section-10 text{fill:#333;}#mmd7 .node-icon-10{font-size:40px;color:#333;}#mmd7 .section-edge-10{stroke:#777;}#mmd7 .edge-depth-10{stroke-width:-16;}#mmd7 .section-10 line{stroke:#888888;stroke-width:3;}#mmd7 .lineWrapper line{stroke:#333;}#mmd7 .disabled,#mmd7 .disabled circle,#mmd7 .disabled text{fill:lightgray;}#mmd7 .disabled text{fill:#efefef;}#mmd7 .section-root rect,#mmd7 .section-root path,#mmd7 .section-root circle{fill:hsl(0, 0%, 70.6862745098%);}#mmd7 .section-root text{fill:#333;}#mmd7 .icon-container{height:100%;display:flex;justify-content:center;align-items:center;}#mmd7 .edge{fill:none;}#mmd7 .eventWrapper{filter:brightness(120%);}#mmd7 :root{--mermaid-font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;}</style><g></g><g></g><defs><marker orient="auto" markerHeight="4" markerWidth="6" refY="2" refX="5" id="arrowhead"><path d="M 0,0 V 4 L6,2 Z"></path></marker></defs><g transform="translate(100, 50)" class="taskWrapper"><g class="timeline-node section--1"><g><path d="M0 61.8 v-56.8 q0,-5 5,-5 h180 q5,0 5,5 v61.8 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.8" x2="190" y1="66.8" x1="0" class="node-line--1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Ancient   Times</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="549.5999908447266" x2="195" y1="116.8" x1="195"></line></g><g transform="translate(100, 250)" class="eventWrapper"><g class="timeline-node section--1"><g><path d="M0 45 v-40 q0,-5 5,-5 h180 q5,0 5,5 v45 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="50" x2="190" y1="50" x1="0" class="node-line--1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Commodity   Money</tspan></text></g></g></g><g transform="translate(100, 310)" class="eventWrapper"><g class="timeline-node section--1"><g><path d="M0 59.39999847412109 v-54.39999847412109 q0,-5 5,-5 h180 q5,0 5,5 v59.39999847412109 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="64.39999847412109" x2="190" y1="64.39999847412109" x1="0" class="node-line--1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Salt,   cattle,</tspan><tspan dy="1.1em" x="0">seashells</tspan></text></g></g></g><g transform="translate(100, 384.3999984741211)" class="eventWrapper"><g class="timeline-node section--1"><g><path d="M0 45 v-40 q0,-5 5,-5 h180 q5,0 5,5 v45 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="50" x2="190" y1="50" x1="0" class="node-line--1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Value   is   intrinsic</tspan></text></g></g></g><g transform="translate(300, 50)" class="taskWrapper"><g class="timeline-node section-0"><g><path d="M0 61.8 v-56.8 q0,-5 5,-5 h180 q5,0 5,5 v61.8 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.8" x2="190" y1="66.8" x1="0" class="node-line-0"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">~700   BCE</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="549.5999908447266" x2="395" y1="116.8" x1="395"></line></g><g transform="translate(300, 250)" class="eventWrapper"><g class="timeline-node section-0"><g><path d="M0 45 v-40 q0,-5 5,-5 h180 q5,0 5,5 v45 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="50" x2="190" y1="50" x1="0" class="node-line-0"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Metallic   Standards</tspan></text></g></g></g><g transform="translate(300, 310)" class="eventWrapper"><g class="timeline-node section-0"><g><path d="M0 45 v-40 q0,-5 5,-5 h180 q5,0 5,5 v45 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="50" x2="190" y1="50" x1="0" class="node-line-0"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Gold   &amp;   silver   coins</tspan></text></g></g></g><g transform="translate(300, 370)" class="eventWrapper"><g class="timeline-node section-0"><g><path d="M0 76.99999694824218 v-71.99999694824218 q0,-5 5,-5 h180 q5,0 5,5 v76.99999694824218 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="81.99999694824218" x2="190" y1="81.99999694824218" x1="0" class="node-line-0"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Value   is   in   the</tspan><tspan dy="1.1em" x="0">metal's   scarcity,</tspan><tspan dy="1.1em" x="0">durability,   divisibility</tspan></text></g></g></g><g transform="translate(500, 50)" class="taskWrapper"><g class="timeline-node section-1"><g><path d="M0 61.8 v-56.8 q0,-5 5,-5 h180 q5,0 5,5 v61.8 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.8" x2="190" y1="66.8" x1="0" class="node-line-1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">~17th-19th   C.</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="549.5999908447266" x2="595" y1="116.8" x1="595"></line></g><g transform="translate(500, 250)" class="eventWrapper"><g class="timeline-node section-1"><g><path d="M0 59.39999847412109 v-54.39999847412109 q0,-5 5,-5 h180 q5,0 5,5 v59.39999847412109 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="64.39999847412109" x2="190" y1="64.39999847412109" x1="0" class="node-line-1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Representative</tspan><tspan dy="1.1em" x="0">Money</tspan></text></g></g></g><g transform="translate(500, 324.3999984741211)" class="eventWrapper"><g class="timeline-node section-1"><g><path d="M0 94.59999542236328 v-89.59999542236328 q0,-5 5,-5 h180 q5,0 5,5 v94.59999542236328 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="99.59999542236328" x2="190" y1="99.59999542236328" x1="0" class="node-line-1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Banknotes</tspan><tspan dy="1.1em" x="0">representing   a   claim</tspan><tspan dy="1.1em" x="0">on   gold/silver   held   in</tspan><tspan dy="1.1em" x="0">a   vault</tspan></text></g></g></g><g transform="translate(500, 433.9999938964844)" class="eventWrapper"><g class="timeline-node section-1"><g><path d="M0 59.39999847412109 v-54.39999847412109 q0,-5 5,-5 h180 q5,0 5,5 v59.39999847412109 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="64.39999847412109" x2="190" y1="64.39999847412109" x1="0" class="node-line-1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Value   is   in   the</tspan><tspan dy="1.1em" x="0">promise   to   redeem</tspan></text></g></g></g><g transform="translate(700, 50)" class="taskWrapper"><g class="timeline-node section-2"><g><path d="M0 61.8 v-56.8 q0,-5 5,-5 h180 q5,0 5,5 v61.8 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.8" x2="190" y1="66.8" x1="0" class="node-line-2"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">20th   Century</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="549.5999908447266" x2="795" y1="116.8" x1="795"></line></g><g transform="translate(700, 250)" class="eventWrapper"><g class="timeline-node section-2"><g><path d="M0 45 v-40 q0,-5 5,-5 h180 q5,0 5,5 v45 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="50" x2="190" y1="50" x1="0" class="node-line-2"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Fiat   Money</tspan></text></g></g></g><g transform="translate(700, 310)" class="eventWrapper"><g class="timeline-node section-2"><g><path d="M0 94.59999542236328 v-89.59999542236328 q0,-5 5,-5 h180 q5,0 5,5 v94.59999542236328 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="99.59999542236328" x2="190" y1="99.59999542236328" x1="0" class="node-line-2"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Government-issued</tspan><tspan dy="1.1em" x="0">currency   not   backed</tspan><tspan dy="1.1em" x="0">by   a   physical</tspan><tspan dy="1.1em" x="0">commodity</tspan></text></g></g></g><g transform="translate(700, 419.5999954223633)" class="eventWrapper"><g class="timeline-node section-2"><g><path d="M0 94.59999542236328 v-89.59999542236328 q0,-5 5,-5 h180 q5,0 5,5 v94.59999542236328 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="99.59999542236328" x2="190" y1="99.59999542236328" x1="0" class="node-line-2"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Value   is   based   on</tspan><tspan dy="1.1em" x="0">trust   in   the   issuing</tspan><tspan dy="1.1em" x="0">government   and</tspan><tspan dy="1.1em" x="0">legal   decree</tspan></text></g></g></g><text y="20" font-weight="bold" font-size="4ex" x="345">Evolution of Monetary Forms</text><g class="lineWrapper"><line marker-end="url(#arrowhead)" stroke="black" stroke-width="4" y2="166.8" x2="940" y1="166.8" x1="50"></line></g></svg></figure>
+</div></section>
+<section class="slide smaller" id="the-turning-point-ending-bretton-woods"><h2 class="slide-title">The Turning Point: Ending Bretton Woods</h2><div class="slide-body">
+<p>On <strong>August 15, 1971</strong>, the global monetary system was fundamentally changed by a single announcement.</p>
+<div class="columns">
+<div class="column">
+<p><strong>The Old System (Bretton Woods):</strong></p>
+<ul>
+<li>USD was the world’s reserve currency.</li>
+<li>USD was convertible to gold at a fixed rate: $35 per ounce.</li>
+<li>Other major currencies were pegged to the USD.</li>
+<li>This created a global gold-exchange standard.</li>
+</ul>
+</div><div class="column">
+<p><strong>The “Nixon Shock”:</strong></p>
+<ul>
+<li>Facing dwindling gold reserves and international pressure, President Nixon unilaterally suspended the dollar’s convertibility to gold.</li>
+<li>This act severed the last link between the world’s major currencies and a physical commodity.</li>
+</ul>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="the-modern-financial-architect-central-banks"><h2 class="slide-title">The Modern Financial Architect: Central Banks</h2><div class="slide-body">
+<p>In the post-1971 world, central banks manage the fiat money system.</p>
+<div class="columns">
+<div class="column">
+<p><strong>U.S. Federal Reserve Mandate:</strong></p>
+<ul>
+<li><strong>Price Stability:</strong> Keep inflation low and predictable.</li>
+<li><strong>Maximum Employment:</strong> Foster economic conditions for job growth.</li>
+</ul>
+</div><div class="column">
+<p><strong>Core Functions:</strong></p>
+<ul>
+<li>Conducting monetary policy (e.g., setting interest rates).</li>
+<li>Acting as a “lender of last resort” to prevent bank panics.</li>
+<li>Overseeing the payment systems that move money.</li>
+</ul>
+</div>
+</div>
+<p><strong>The Global Coordinator:</strong> The <strong>Bank for International Settlements (BIS)</strong> acts as the “central bank for central banks,” fostering international cooperation.</p>
+</div></section>
+<section class="slide smaller" id="the-market-for-lemons-when-trust-breaks-down"><h2 class="slide-title">The “Market for Lemons”: When Trust Breaks Down</h2><div class="slide-body">
+<div class="columns">
+<div class="column">
+<p><strong>The Used Car Analogy:</strong></p>
+<ul>
+<li>Sellers know if their car is a high-quality “peach” or a defective “lemon.”</li>
+<li>Buyers <em>cannot</em> tell the difference and must assume any car could be a lemon.</li>
+<li>Therefore, buyers will only offer an average price.</li>
+<li>This price is too low for sellers of “peaches,” so they leave the market.</li>
+</ul>
+<p><strong>The Result: Adverse Selection</strong></p>
+<ul>
+<li>The market becomes flooded with “lemons.”</li>
+<li>Trust evaporates, and beneficial trades may not happen at all.</li>
+</ul>
+</div><div class="column">
+<div style="text-align: center;">
+<p><em>What happens when one party in a transaction knows more than the other?</em></p>
+</div>
+<p><img src="../img/day1_lesson3_car.png" data-align="center" /></p>
+<div style="text-align: center;">
+<p>This is called <strong>Information Asymmetry</strong>.</p>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide smaller non-scrollable" id="case-study-the-2008-global-financial-crisis"><h2 class="slide-title">Case Study: The 2008 Global Financial Crisis</h2><div class="slide-body">
+<p>In 2008, the “lemons” weren’t cars—they were toxic mortgages packaged into complex securities.</p>
+<ul>
+<li><strong>The “Lemons”:</strong> Risky subprime mortgage loans given to borrowers who were unlikely to repay.</li>
+<li><strong>The Packaging:</strong> Banks bundled thousands of these mortgages together into securities (MBS) and more complex derivatives (CDOs).</li>
+<li><strong>The Information Asymmetry:</strong> Credit rating agencies stamped these toxic packages with top-tier AAA ratings, hiding the underlying risk. The creators knew the risk, but the buyers (pension funds, investors worldwide) did not.</li>
+<li><strong>The Collapse:</strong> When the housing market turned and homeowners began to default, these securities became worthless. No one knew which banks held the toxic assets. Trust evaporated, credit markets froze, and major institutions failed.</li>
+</ul>
+<div class="fragment fade-in-then-out" style="background-color: rgba(0, 0, 0, 0.7); color: white; padding: 5px;">
+<p>“We conclude this financial crisis was avoidable. The crisis was the result of human action and inaction… widespread failures in financial regulation and supervision proved devastating…” - <em>Financial Crisis Inquiry Commission Report, 2011</em></p>
+</div>
+</div></section>
+<section class="slide smaller" id="the-problem-of-control-chokepoints-censorship"><h2 class="slide-title">The Problem of Control: Chokepoints &amp; Censorship</h2><div class="slide-body">
+<p>Centralized systems create single points of control that can be used to restrict access to money.</p>
+<p><strong>Capital Controls</strong></p>
+<p>Governments can legally restrict or halt the flow of money out of a country during a crisis.</p>
+<p><strong>Examples:</strong></p>
+<ul>
+<li><strong>Greece (2015):</strong> During its debt crisis, banks were closed and citizens were limited to withdrawing only €60 per day from ATMs.</li>
+<li><strong>Iceland (2008):</strong> After its banking system collapsed, strict controls were placed on moving money out of the country for nearly a decade.</li>
+</ul>
+<p><strong>Payment Censorship</strong></p>
+<p>Financial intermediaries (banks, payment processors) can block transactions for policy, political, or business reasons.</p>
+<p>This creates a permissioned system where access to the financial network is not guaranteed.</p>
+</div></section>
+<section class="slide smaller" id="the-problem-of-value-the-specter-of-inflation"><h2 class="slide-title">The Problem of Value: The Specter of Inflation</h2><div class="slide-body">
+<div class="columns">
+<div class="column">
+<p>With no anchor to gold, the value of fiat currency depends on policy.</p>
+<p><strong>The “Great Inflation” (c. 1965-1982)</strong></p>
+<p>Following the breakdown of Bretton Woods, the U.S. and much of the world experienced a prolonged period of high and volatile inflation.</p>
+<ul>
+<li>Prices more than doubled over the decade of the 1970s.</li>
+<li>The purchasing power of savings held in dollars was severely eroded.</li>
+</ul>
+</div><div class="column">
+<figure class="diagram mermaid"><svg aria-roledescription="xychart" role="graphics-document document" viewBox="0 0 700 500" style="max-width: 700px;" xmlns="http://www.w3.org/2000/svg" width="100%" id="mmd8"><style>#mmd8{font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:16px;fill:#000000;}#mmd8 .error-icon{fill:#552222;}#mmd8 .error-text{fill:#552222;stroke:#552222;}#mmd8 .edge-thickness-normal{stroke-width:1px;}#mmd8 .edge-thickness-thick{stroke-width:3.5px;}#mmd8 .edge-pattern-solid{stroke-dasharray:0;}#mmd8 .edge-thickness-invisible{stroke-width:0;fill:none;}#mmd8 .edge-pattern-dashed{stroke-dasharray:3;}#mmd8 .edge-pattern-dotted{stroke-dasharray:2;}#mmd8 .marker{fill:#666;stroke:#666;}#mmd8 .marker.cross{stroke:#666;}#mmd8 svg{font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:16px;}#mmd8 p{margin:0;}#mmd8 :root{--mermaid-font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;}</style><g></g><g class="main"><rect fill="#ffffff" class="background" height="500" width="700"></rect><g class="chart-title"><text transform="translate(350, 21.5) rotate(0)" text-anchor="middle" dominant-baseline="middle" font-size="20" fill="#111111" y="0" x="0">U.S. Annual Inflation Rate (CPI) % Change</text></g><g class="plot"><g class="bar-plot-0"><rect stroke-width="0" stroke="#EEE" fill="#EEE" height="101.83999999999997" width="30.4" y="365.16" x="61.37812690734863"></rect><rect stroke-width="0" stroke="#EEE" fill="#EEE" height="8" width="30.4" y="459" x="111.99661633173623"></rect><rect stroke-width="0" stroke="#EEE" fill="#EEE" height="12.080000000000041" width="30.4" y="454.91999999999996" x="162.61510575612385"></rect><rect stroke-width="0" stroke="#EEE" fill="#EEE" height="228.31999999999996" width="30.4" y="238.68000000000004" x="213.2335951805115"></rect><rect stroke-width="0" stroke="#EEE" fill="#EEE" height="375.20000000000005" width="30.4" y="91.79999999999998" x="263.85208460489906"></rect><rect stroke-width="0" stroke="#EEE" fill="#EEE" height="154.88000000000005" width="30.4" y="312.11999999999995" x="314.4705740292867"></rect><rect stroke-width="0" stroke="#EEE" fill="#EEE" height="73.27999999999997" width="30.4" y="393.72" x="365.0890634536743"></rect><rect stroke-width="0" stroke="#EEE" fill="#EEE" height="146.72000000000008" width="30.4" y="320.2799999999999" x="415.7075528780619"></rect><rect stroke-width="0" stroke="#EEE" fill="#EEE" height="240.56000000000003" width="30.4" y="226.43999999999997" x="466.32604230244954"></rect><rect stroke-width="0" stroke="#EEE" fill="#EEE" height="416" width="30.4" y="51" x="516.9445317268371"></rect><rect stroke-width="0" stroke="#EEE" fill="#EEE" height="383.35999999999996" width="30.4" y="83.64000000000003" x="567.5630211512247"></rect><rect stroke-width="0" stroke="#EEE" fill="#EEE" height="236.48000000000002" width="30.4" y="230.51999999999998" x="618.1815105756123"></rect><rect stroke-width="0" stroke="#EEE" fill="#EEE" height="28.400000000000034" width="30.4" y="438.59999999999997" x="668.8"></rect></g></g><g class="bottom-axis"><g class="axis-line"><path stroke-width="2" stroke="#111111" fill="none" d="M 60.57812690734863,468 L 700,468"></path></g><g class="label"><text transform="translate(76.57812690734863, 479) rotate(0)" text-anchor="middle" dominant-baseline="text-before-edge" font-size="14" fill="#111111" y="0" x="0">1970</text><text transform="translate(127.19661633173624, 479) rotate(0)" text-anchor="middle" dominant-baseline="text-before-edge" font-size="14" fill="#111111" y="0" x="0">1971</text><text transform="translate(177.81510575612384, 479) rotate(0)" text-anchor="middle" dominant-baseline="text-before-edge" font-size="14" fill="#111111" y="0" x="0">1972</text><text transform="translate(228.43359518051147, 479) rotate(0)" text-anchor="middle" dominant-baseline="text-before-edge" font-size="14" fill="#111111" y="0" x="0">1973</text><text transform="translate(279.05208460489905, 479) rotate(0)" text-anchor="middle" dominant-baseline="text-before-edge" font-size="14" fill="#111111" y="0" x="0">1974</text><text transform="translate(329.6705740292867, 479) rotate(0)" text-anchor="middle" dominant-baseline="text-before-edge" font-size="14" fill="#111111" y="0" x="0">1975</text><text transform="translate(380.2890634536743, 479) rotate(0)" text-anchor="middle" dominant-baseline="text-before-edge" font-size="14" fill="#111111" y="0" x="0">1976</text><text transform="translate(430.9075528780619, 479) rotate(0)" text-anchor="middle" dominant-baseline="text-before-edge" font-size="14" fill="#111111" y="0" x="0">1977</text><text transform="translate(481.5260423024495, 479) rotate(0)" text-anchor="middle" dominant-baseline="text-before-edge" font-size="14" fill="#111111" y="0" x="0">1978</text><text transform="translate(532.1445317268372, 479) rotate(0)" text-anchor="middle" dominant-baseline="text-before-edge" font-size="14" fill="#111111" y="0" x="0">1979</text><text transform="translate(582.7630211512247, 479) rotate(0)" text-anchor="middle" dominant-baseline="text-before-edge" font-size="14" fill="#111111" y="0" x="0">1980</text><text transform="translate(633.3815105756123, 479) rotate(0)" text-anchor="middle" dominant-baseline="text-before-edge" font-size="14" fill="#111111" y="0" x="0">1981</text><text transform="translate(684, 479) rotate(0)" text-anchor="middle" dominant-baseline="text-before-edge" font-size="14" fill="#111111" y="0" x="0">1982</text></g><g class="ticks"><path stroke-width="2" stroke="#111111" fill="none" d="M 76.57812690734863,469 L 76.57812690734863,474"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 127.19661633173624,469 L 127.19661633173624,474"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 177.81510575612384,469 L 177.81510575612384,474"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 228.43359518051147,469 L 228.43359518051147,474"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 279.05208460489905,469 L 279.05208460489905,474"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 329.6705740292867,469 L 329.6705740292867,474"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 380.2890634536743,469 L 380.2890634536743,474"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 430.9075528780619,469 L 430.9075528780619,474"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 481.5260423024495,469 L 481.5260423024495,474"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 532.1445317268372,469 L 532.1445317268372,474"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 582.7630211512247,469 L 582.7630211512247,474"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 633.3815105756123,469 L 633.3815105756123,474"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 684,469 L 684,474"></path></g></g><g class="left-axis"><g class="axisl-line"><path stroke-width="2" stroke="#111111" fill="none" d="M 59.57812690734863,43 L 59.57812690734863,467"></path></g><g class="label"><text transform="translate(48.57812690734863, 63.24000000000001) rotate(0)" text-anchor="end" dominant-baseline="middle" font-size="14" fill="#111111" y="0" x="0">13</text><text transform="translate(48.57812690734863, 104.04000000000005) rotate(0)" text-anchor="end" dominant-baseline="middle" font-size="14" fill="#111111" y="0" x="0">12</text><text transform="translate(48.57812690734863, 144.84) rotate(0)" text-anchor="end" dominant-baseline="middle" font-size="14" fill="#111111" y="0" x="0">11</text><text transform="translate(48.57812690734863, 185.64) rotate(0)" text-anchor="end" dominant-baseline="middle" font-size="14" fill="#111111" y="0" x="0">10</text><text transform="translate(48.57812690734863, 226.43999999999997) rotate(0)" text-anchor="end" dominant-baseline="middle" font-size="14" fill="#111111" y="0" x="0">9</text><text transform="translate(48.57812690734863, 267.24) rotate(0)" text-anchor="end" dominant-baseline="middle" font-size="14" fill="#111111" y="0" x="0">8</text><text transform="translate(48.57812690734863, 308.04) rotate(0)" text-anchor="end" dominant-baseline="middle" font-size="14" fill="#111111" y="0" x="0">7</text><text transform="translate(48.57812690734863, 348.84) rotate(0)" text-anchor="end" dominant-baseline="middle" font-size="14" fill="#111111" y="0" x="0">6</text><text transform="translate(48.57812690734863, 389.64) rotate(0)" text-anchor="end" dominant-baseline="middle" font-size="14" fill="#111111" y="0" x="0">5</text><text transform="translate(48.57812690734863, 430.43999999999994) rotate(0)" text-anchor="end" dominant-baseline="middle" font-size="14" fill="#111111" y="0" x="0">4</text></g><g class="ticks"><path stroke-width="2" stroke="#111111" fill="none" d="M 58.57812690734863,63.24000000000001 L 53.57812690734863,63.24000000000001"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 58.57812690734863,104.04000000000005 L 53.57812690734863,104.04000000000005"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 58.57812690734863,144.84 L 53.57812690734863,144.84"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 58.57812690734863,185.64 L 53.57812690734863,185.64"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 58.57812690734863,226.43999999999997 L 53.57812690734863,226.43999999999997"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 58.57812690734863,267.24 L 53.57812690734863,267.24"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 58.57812690734863,308.04 L 53.57812690734863,308.04"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 58.57812690734863,348.84 L 53.57812690734863,348.84"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 58.57812690734863,389.64 L 53.57812690734863,389.64"></path><path stroke-width="2" stroke="#111111" fill="none" d="M 58.57812690734863,430.43999999999994 L 53.57812690734863,430.43999999999994"></path></g><g class="title"><text transform="translate(5, 255) rotate(270)" text-anchor="middle" dominant-baseline="text-before-edge" font-size="16" fill="#111111" y="0" x="0">Inflation Rate (%)</text></g></g></g><g class="mermaid-tmp-group"></g></svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="the-ideological-divide-austrian-vs.-keynesian-economics"><h2 class="slide-title">The Ideological Divide: Austrian vs. Keynesian Economics</h2><div class="slide-body">
+<div class="columns">
+<div class="column">
+<p><strong>Keynesian Economics (Mainstream View)</strong></p>
+<ul>
+<li><strong>Core Idea:</strong> Economies can get stuck in recessions due to a lack of spending.</li>
+<li><strong>Role of Government:</strong> Actively intervene to manage the economy using:
+<ul>
+<li><em>Fiscal Policy</em> (government spending, tax cuts)</li>
+<li><em>Monetary Policy</em> (central bank adjusting interest rates)</li>
+</ul></li>
+<li><strong>Ideal Money:</strong> An <strong>elastic</strong>, government-managed fiat currency that can be expanded or contracted to meet economic needs.</li>
+</ul>
+</div><div class="column">
+<p><strong>Austrian Economics (Challenger View)</strong></p>
+<ul>
+<li><strong>Core Idea:</strong> Recessions are caused by central banks creating artificial credit booms, leading to bad investments.</li>
+<li><strong>Role of Government:</strong> Laissez-faire. Do not intervene. The recession is the necessary, painful cure that liquidates the bad investments.</li>
+<li><strong>Ideal Money:</strong> A <strong>hard</strong>, predictable money (like gold) with a stable supply, free from political manipulation.</li>
+</ul>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="the-bitcoin-standard-a-digital-return-to-hard-money"><h2 class="slide-title">The Bitcoin Standard: A Digital Return to “Hard Money”</h2><div class="slide-body">
+<p>Saifedean Ammous’s 2018 book frames Bitcoin as the modern successor to gold, based on Austrian economic principles.</p>
+<p><strong>The Core Thesis:</strong></p>
+<ol type="1">
+<li><strong>Digital Scarcity (Hard Money)</strong>
+<ul>
+<li>Bitcoin’s supply is capped by the protocol at 21 million coins. This makes it verifiably scarce and, proponents argue, resistant to the inflation that plagues fiat currencies.</li>
+</ul></li>
+<li><strong>Sovereign, Decentralized Settlement</strong>
+<ul>
+<li>It allows for final settlement of value globally without relying on trusted intermediaries like banks or governments. It replaces institutional trust with cryptographic proof.</li>
+</ul></li>
+<li><strong>Low Time Preference</strong>
+<ul>
+<li>The book argues that “sound money” (money that holds its value) encourages a culture of saving and long-term investment, leading to capital accumulation and societal progress.</li>
+</ul></li>
+</ol>
+</div></section>
+<section class="slide smaller" id="the-engineers-dilemma-the-blockchain-trilemma"><h2 class="slide-title">The Engineer’s Dilemma: The Blockchain Trilemma</h2><div class="slide-body">
+<div class="columns">
+<div class="column">
+<p>Decentralized systems face a fundamental trade-off between three key properties. You can pick two.</p>
+<ul>
+<li><strong>Decentralization:</strong> How many independent participants run the network? No single point of control.</li>
+<li><strong>Security:</strong> How difficult is it for an attacker to compromise or reverse transactions?</li>
+<li><strong>Scalability:</strong> How many transactions can the network process per second?</li>
+</ul>
+</div><div class="column">
+<figure class="diagram mermaid"><svg aria-roledescription="flowchart-v2" role="graphics-document document" viewBox="0 0 756.53125 530" style="max-width: 756.53125px;" class="flowchart" xmlns="http://www.w3.org/2000/svg" width="100%" id="mmd9"><style>#mmd9{font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:16px;fill:#000000;}#mmd9 .error-icon{fill:#552222;}#mmd9 .error-text{fill:#552222;stroke:#552222;}#mmd9 .edge-thickness-normal{stroke-width:1px;}#mmd9 .edge-thickness-thick{stroke-width:3.5px;}#mmd9 .edge-pattern-solid{stroke-dasharray:0;}#mmd9 .edge-thickness-invisible{stroke-width:0;fill:none;}#mmd9 .edge-pattern-dashed{stroke-dasharray:3;}#mmd9 .edge-pattern-dotted{stroke-dasharray:2;}#mmd9 .marker{fill:#666;stroke:#666;}#mmd9 .marker.cross{stroke:#666;}#mmd9 svg{font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:16px;}#mmd9 p{margin:0;}#mmd9 .label{font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#000000;}#mmd9 .cluster-label text{fill:#333;}#mmd9 .cluster-label span{color:#333;}#mmd9 .cluster-label span p{background-color:transparent;}#mmd9 .label text,#mmd9 span{fill:#000000;color:#000000;}#mmd9 .node rect,#mmd9 .node circle,#mmd9 .node ellipse,#mmd9 .node polygon,#mmd9 .node path{fill:#eee;stroke:#999;stroke-width:1px;}#mmd9 .rough-node .label text,#mmd9 .node .label text,#mmd9 .image-shape .label,#mmd9 .icon-shape .label{text-anchor:middle;}#mmd9 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#mmd9 .rough-node .label,#mmd9 .node .label,#mmd9 .image-shape .label,#mmd9 .icon-shape .label{text-align:center;}#mmd9 .node.clickable{cursor:pointer;}#mmd9 .root .anchor path{fill:#666!important;stroke-width:0;stroke:#666;}#mmd9 .arrowheadPath{fill:#333333;}#mmd9 .edgePath .path{stroke:#666;stroke-width:2.0px;}#mmd9 .flowchart-link{stroke:#666;fill:none;}#mmd9 .edgeLabel{background-color:white;text-align:center;}#mmd9 .edgeLabel p{background-color:white;}#mmd9 .edgeLabel rect{opacity:0.5;background-color:white;fill:white;}#mmd9 .labelBkg{background-color:rgba(255, 255, 255, 0.5);}#mmd9 .cluster rect{fill:hsl(0, 0%, 98.9215686275%);stroke:#707070;stroke-width:1px;}#mmd9 .cluster text{fill:#333;}#mmd9 .cluster span{color:#333;}#mmd9 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:12px;background:hsl(-160, 0%, 93.3333333333%);border:1px solid #707070;border-radius:2px;pointer-events:none;z-index:100;}#mmd9 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#000000;}#mmd9 rect.text{fill:none;stroke-width:0;}#mmd9 .icon-shape,#mmd9 .image-shape{background-color:white;text-align:center;}#mmd9 .icon-shape p,#mmd9 .image-shape p{background-color:white;padding:2px;}#mmd9 .icon-shape rect,#mmd9 .image-shape rect{opacity:0.5;background-color:white;fill:white;}#mmd9 :root{--mermaid-font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;}</style><g><marker orient="auto" markerHeight="8" markerWidth="8" markerUnits="userSpaceOnUse" refY="5" refX="5" viewBox="0 0 10 10" class="marker flowchart-v2" id="mmd9_flowchart-v2-pointEnd"><path style="stroke-width: 1; stroke-dasharray: 1, 0;" class="arrowMarkerPath" d="M 0 0 L 10 5 L 0 10 z"></path></marker><marker orient="auto" markerHeight="8" markerWidth="8" markerUnits="userSpaceOnUse" refY="5" refX="4.5" viewBox="0 0 10 10" class="marker flowchart-v2" id="mmd9_flowchart-v2-pointStart"><path style="stroke-width: 1; stroke-dasharray: 1, 0;" class="arrowMarkerPath" d="M 0 5 L 10 10 L 10 0 z"></path></marker><marker orient="auto" markerHeight="11" markerWidth="11" markerUnits="userSpaceOnUse" refY="5" refX="11" viewBox="0 0 10 10" class="marker flowchart-v2" id="mmd9_flowchart-v2-circleEnd"><circle style="stroke-width: 1; stroke-dasharray: 1, 0;" class="arrowMarkerPath" r="5" cy="5" cx="5"></circle></marker><marker orient="auto" markerHeight="11" markerWidth="11" markerUnits="userSpaceOnUse" refY="5" refX="-1" viewBox="0 0 10 10" class="marker flowchart-v2" id="mmd9_flowchart-v2-circleStart"><circle style="stroke-width: 1; stroke-dasharray: 1, 0;" class="arrowMarkerPath" r="5" cy="5" cx="5"></circle></marker><marker orient="auto" markerHeight="11" markerWidth="11" markerUnits="userSpaceOnUse" refY="5.2" refX="12" viewBox="0 0 11 11" class="marker cross flowchart-v2" id="mmd9_flowchart-v2-crossEnd"><path style="stroke-width: 2; stroke-dasharray: 1, 0;" class="arrowMarkerPath" d="M 1,1 l 9,9 M 10,1 l -9,9"></path></marker><marker orient="auto" markerHeight="11" markerWidth="11" markerUnits="userSpaceOnUse" refY="5.2" refX="-1" viewBox="0 0 11 11" class="marker cross flowchart-v2" id="mmd9_flowchart-v2-crossStart"><path style="stroke-width: 2; stroke-dasharray: 1, 0;" class="arrowMarkerPath" d="M 1,1 l 9,9 M 10,1 l -9,9"></path></marker><g class="root"><g class="clusters"><g data-look="classic" id="part2" class="cluster"><rect height="104" width="740.53125" y="8" x="8" style=""></rect><g transform="translate(378.265625, 8)" class="cluster-label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"></span></div></foreignObject></g></g><g data-look="classic" id="part1" class="cluster"><rect height="336" width="724.9921875" y="186" x="18.234375" style=""></rect><g transform="translate(380.73046875, 186)" class="cluster-label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"></span></div></foreignObject></g></g></g><g class="edgePaths"><path marker-end="url(#mmd9_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_A_B_0" d="M241.07,257.123L212.766,264.602C184.461,272.082,127.852,287.041,104.251,300.175C80.65,313.308,90.057,324.617,94.761,330.271L99.465,335.925"></path><path marker-end="url(#mmd9_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_B_C_1" d="M124.484,393L124.484,397.167C124.484,401.333,124.484,409.667,200.842,421.571C277.2,433.476,429.915,448.951,506.272,456.689L582.63,464.427"></path><path marker-end="url(#mmd9_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_C_A_2" d="M674.083,443L679.709,438.833C685.335,434.667,696.587,426.333,702.214,413.5C707.84,400.667,707.84,383.333,707.84,364C707.84,344.667,707.84,323.333,654.825,304.064C601.811,284.795,495.782,267.589,442.768,258.986L389.753,250.384"></path><path marker-end="url(#mmd9_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_D_A_3" d="M173.431,87L179.441,91.167C185.451,95.333,197.472,103.667,203.482,114C209.492,124.333,209.492,136.667,209.492,149C209.492,161.333,209.492,173.667,217.225,183.702C224.958,193.737,240.423,201.474,248.156,205.342L255.889,209.21"></path><path marker-end="url(#mmd9_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_D_B_4" d="M122.13,87L120.224,91.167C118.317,95.333,114.504,103.667,112.598,114C110.691,124.333,110.691,136.667,110.691,149C110.691,161.333,110.691,173.667,110.691,188.5C110.691,203.333,110.691,220.667,110.691,240C110.691,259.333,110.691,280.667,111.88,296.848C113.069,313.03,115.446,324.06,116.634,329.575L117.823,335.09"></path><path marker-end="url(#mmd9_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_E_B_5" d="M597.975,87L594.169,91.167C590.362,95.333,582.75,103.667,578.943,114C575.137,124.333,575.137,136.667,575.137,149C575.137,161.333,575.137,173.667,575.137,188.5C575.137,203.333,575.137,220.667,575.137,240C575.137,259.333,575.137,280.667,508.004,300.867C440.872,321.068,306.608,340.136,239.475,349.669L172.343,359.203"></path><path marker-end="url(#mmd9_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_E_C_6" d="M638.26,87L640.671,91.167C643.081,95.333,647.902,103.667,650.312,114C652.723,124.333,652.723,136.667,652.723,149C652.723,161.333,652.723,173.667,652.723,188.5C652.723,203.333,652.723,220.667,652.723,240C652.723,259.333,652.723,280.667,652.723,302C652.723,323.333,652.723,344.667,652.723,364C652.723,383.333,652.723,400.667,651.699,412.86C650.675,425.053,648.627,432.106,647.603,435.632L646.579,439.159"></path><path marker-end="url(#mmd9_flowchart-v2-pointEnd)" style="" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" id="L_F_A_7" d="M380.102,87L380.102,91.167C380.102,95.333,380.102,103.667,380.102,114C380.102,124.333,380.102,136.667,380.102,149C380.102,161.333,380.102,173.667,375.286,183.59C370.47,193.513,360.838,201.027,356.022,204.783L351.205,208.54"></path></g><g class="edgeLabels"><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"></span></div></foreignObject></g></g><g class="edgeLabel"><g transform="translate(0, 0)" class="label"><foreignObject height="0" width="0"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"></span></div></foreignObject></g></g><g transform="translate(209.4921875, 149)" class="edgeLabel"><g transform="translate(-35.1171875, -12)" class="label"><foreignObject height="24" width="70.234375"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"><p>Prioritizes</p></span></div></foreignObject></g></g><g transform="translate(110.69140625, 238)" class="edgeLabel"><g transform="translate(-35.1171875, -12)" class="label"><foreignObject height="24" width="70.234375"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"><p>Prioritizes</p></span></div></foreignObject></g></g><g transform="translate(575.13671875, 238)" class="edgeLabel"><g transform="translate(-35.1171875, -12)" class="label"><foreignObject height="24" width="70.234375"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"><p>Prioritizes</p></span></div></foreignObject></g></g><g transform="translate(652.72265625, 302)" class="edgeLabel"><g transform="translate(-35.1171875, -12)" class="label"><foreignObject height="24" width="70.234375"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"><p>Prioritizes</p></span></div></foreignObject></g></g><g transform="translate(380.1015625, 149)" class="edgeLabel"><g transform="translate(-48.015625, -12)" class="label"><foreignObject height="24" width="96.03125"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" class="labelBkg" xmlns="http://www.w3.org/1999/xhtml"><span class="edgeLabel"><p>May Sacrifice</p></span></div></foreignObject></g></g></g><g class="nodes"><g transform="translate(313.4375, 238)" id="flowchart-A-19" class="node default"><rect height="54" width="144.734375" y="-27" x="-72.3671875" ry="5" rx="5" style="fill:#f9f !important;stroke:#333 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-57.3671875, -12)" style="" class="label"><rect></rect><foreignObject height="24" width="114.734375"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>Decentralization</p></span></div></foreignObject></g></g><g transform="translate(124.484375, 366)" id="flowchart-B-20" class="node default"><rect height="54" width="87.796875" y="-27" x="-43.8984375" ry="5" rx="5" style="fill:#ccf !important;stroke:#333 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-28.8984375, -12)" style="" class="label"><rect></rect><foreignObject height="24" width="57.796875"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>Security</p></span></div></foreignObject></g></g><g transform="translate(637.625, 470)" id="flowchart-C-22" class="node default"><rect height="54" width="102.03125" y="-27" x="-51.015625" ry="5" rx="5" style="fill:#cfc !important;stroke:#333 !important;stroke-width:2px !important" class="basic label-container"></rect><g transform="translate(-36.015625, -12)" style="" class="label"><rect></rect><foreignObject height="24" width="72.03125"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>Scalability</p></span></div></foreignObject></g></g><g transform="translate(134.484375, 60)" id="flowchart-D-25" class="node default"><rect height="54" width="182.96875" y="-27" x="-91.484375" ry="5" rx="5" style="" class="basic label-container"></rect><g transform="translate(-76.484375, -12)" style="" class="label"><rect></rect><foreignObject height="24" width="152.96875"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>Bitcoin / Ethereum L1</p></span></div></foreignObject></g></g><g transform="translate(622.640625, 60)" id="flowchart-E-29" class="node default"><rect height="54" width="181.78125" y="-27" x="-90.890625" ry="5" rx="5" style="" class="basic label-container"></rect><g transform="translate(-75.890625, -12)" style="" class="label"><rect></rect><foreignObject height="24" width="151.78125"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>Visa / Centralized DB</p></span></div></foreignObject></g></g><g transform="translate(380.1015625, 60)" id="flowchart-F-33" class="node default"><rect height="54" width="203.296875" y="-27" x="-101.6484375" ry="5" rx="5" style="" class="basic label-container"></rect><g transform="translate(-86.6484375, -12)" style="" class="label"><rect></rect><foreignObject height="24" width="173.296875"><div style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;" xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>Some 'Fast' Blockchains</p></span></div></foreignObject></g></g></g></g></g></svg></figure>
+</div>
+</div>
+<p>Bitcoin’s design deliberately prioritizes <strong>Decentralization</strong> and <strong>Security</strong> at the expense of <strong>Scalability</strong>.</p>
+</div></section>
+<section class="slide smaller" id="the-institutional-counterpoint-the-bis-critique"><h2 class="slide-title">The Institutional Counterpoint: The BIS Critique</h2><div class="slide-body">
+<p>The Bank for International Settlements (the “central bank for central banks”) offered a strong critique of cryptocurrencies in 2018.</p>
+<p><strong>Key Arguments from the BIS:</strong></p>
+<ul>
+<li><p><strong>Scalability &amp; Efficiency:</strong> Distributed ledgers are inherently inefficient. The amount of data and processing required to run a global payment system would be unmanageable and could “bring the internet to a halt.”</p></li>
+<li><p><strong>Energy Consumption:</strong> The proof-of-work consensus mechanism is an “environmental disaster,” consuming as much electricity as a mid-sized country.</p></li>
+<li><p><strong>Value Stability:</strong> Extreme price volatility makes cryptocurrencies unreliable as a store of value and unusable as a common unit of account.</p></li>
+<li><p><strong>Trust &amp; Finality:</strong> Trust in decentralized systems is “fragile” and can “evaporate at any time” due to software bugs or attacks. Transaction finality is only probabilistic, not guaranteed.</p></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="a-taxonomy-for-the-future-the-money-flower"><h2 class="slide-title">A Taxonomy for the Future: The “Money Flower”</h2><div class="slide-body">
+<div class="colunns">
+<div class="column">
+<p>To analyze new forms of money, the BIS created a helpful classification tool.</p>
+<p>It classifies money along four key properties:</p>
+<ol type="1">
+<li><strong>Issuer:</strong> Central Bank or Other?</li>
+<li><strong>Form:</strong> Digital or Physical?</li>
+<li><strong>Access:</strong> Widely available or Restricted?</li>
+<li><strong>Technology:</strong> Centralized or Peer-to-Peer?</li>
+</ol>
+</div>
+<div class="column">
+<p><img src="../img/money_flower_actual.png" data-align="center" /></p>
+</div>
+</div>
+<p>This framework helps us see that Bitcoin, Cash, Bank Deposits, and potential Central Bank Digital Currencies (CBDCs) are all just different combinations of these design choices.</p>
+</div></section>
+<section class="slide smaller" id="design-tradeoffs-efficiency-vs.-autonomy"><h2 class="slide-title">Design Trade‑Offs: Efficiency vs. Autonomy</h2><div class="slide-body">
+<p>When evaluating a monetary system, what should it optimize for?</p>
+<div class="columns">
+<div class="column">
+<p><strong>Efficiency</strong></p>
+<ul>
+<li>High transaction speed</li>
+<li>Low cost per transaction</li>
+<li>High throughput (scalability)</li>
+<li>Dispute resolution / reversibility</li>
+</ul>
+<p><strong>Tends toward:</strong></p>
+<ul>
+<li>Trusted intermediaries</li>
+<li>Centralized record‑keeping</li>
+<li>Institutional control</li>
+</ul>
+</div><div class="column">
+<p><strong>Autonomy</strong></p>
+<ul>
+<li>Censorship resistance</li>
+<li>Self‑custody of assets</li>
+<li>Permissionless participation</li>
+<li>Transparency / auditability</li>
+</ul>
+<p><strong>Tends toward:</strong></p>
+<ul>
+<li>Distributed consensus</li>
+<li>Decentralized control</li>
+<li>Trust‑minimized protocols</li>
+</ul>
+</div>
+</div>
+<div class="callout-caution" data-appearance="minimal">
+<p>Systems that maximize efficiency often rely on trusted authorities.<br />
+Systems that maximize individual user autonomy often reduce reliance on them.<br />
+Improving one typically constrains the other.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="summary-key-takeaways"><h2 class="slide-title">Summary &amp; Key Takeaways</h2><div class="slide-body">
+<ul>
+<li><p><strong>Money is a social technology</strong>, and our modern fiat system is a recent, 50-year-old experiment with known vulnerabilities (inflation, control, information asymmetry).</p></li>
+<li><p>The <strong>2008 financial crisis</strong> was a profound <strong>shock to institutional trust</strong>, revealing deep-seated risks in the centralized system.</p></li>
+<li><p>Decentralized alternatives like Bitcoin were created as a direct <strong>ideological and technical response</strong> to these perceived failures, drawing heavily from Austrian economics.</p></li>
+<li><p>This response comes with its own fundamental trade-offs, captured by the <strong>Blockchain Trilemma</strong> (Decentralization vs. Security vs. Scalability).</p></li>
+<li><p>To analyze any monetary system, you must separate its <strong>motivations</strong> from its <strong>mechanisms</strong> and evaluate it through the lenses of <strong>efficiency, freedom, and ideology</strong>.</p></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="check-on-learning-discussion"><h2 class="slide-title">Check on Learning &amp; Discussion</h2><div class="slide-body">
+<p>Let’s apply what we’ve learned.</p>
+<ol type="1">
+<li><p>How did the failure of <strong>e-gold</strong> (a centralized system) directly influence the design of <strong>Bitcoin</strong> (a decentralized system)?</p></li>
+<li><p>Using the <strong>Blockchain Trilemma</strong>, explain why a system like Visa can process 50,000 transactions per second, while Bitcoin can only process about 7.</p></li>
+<li><p>Imagine two people arguing about a new digital currency. Person A says, “It’s great because it’s fast and the fees are almost zero.” Person B says, “It’s terrible because it’s run by only 10 servers and the company can freeze accounts.” Using the <strong>three-lens framework</strong>, what is each person prioritizing?</p></li>
+</ol>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-federalreserve_federalreserve_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">Federal Reserve, <span>“Board of governors of the federal reserve system.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.federalreserve.gov">https://www.federalreserve.gov</a></div>
+</div>
+<div id="ref-bis_annualeconomicreport_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">BIS, <span>“Annual <span>Economic Report</span> 2022,”</span> Bank for International Settlements (BIS), Annual AR2022E, June 2022. Available: <a href="https://www.bis.org/publ/arpdf/ar2022e.pdf">https://www.bis.org/publ/arpdf/ar2022e.pdf</a></div>
+</div>
+<div id="ref-ammous_bitcoinstandarddecentralized_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">S. Ammous, <em>The <span>Bitcoin Standard</span>: <span>The Decentralized Alternative</span> to <span>Central Banking</span></em>. Wiley, 2018.</div>
+</div>
+<div id="ref-l35_fedhistory_nixon_convertibility_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">Federal Reserve History, <span>“Nixon ends convertibility of US dollars to gold and announces wage/price controls.”</span> Accessed: Mar. 28, 2026. [Online]. Available: <a href="https://www.federalreservehistory.org/essays/nixon-ends-convertibility-of-us-dollars-to-gold-and-announces-wage-price-controls">https://www.federalreservehistory.org/essays/nixon-ends-convertibility-of-us-dollars-to-gold-and-announces-wage-price-controls</a></div>
+</div>
+<div id="ref-financialcrisisinquirycommission_financialcrisisinquiry_2011" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">Financial Crisis Inquiry Commission, <span>“The <span>Financial Crisis Inquiry Report</span>: <span>Final Report</span> of the <span>National Commission</span> on the <span>Causes</span> of the <span>Financial</span> and <span>Economic Crisis</span> in the <span>United States</span>,”</span> U.S. Government Printing Office, Government, Feb. 2011. Available: <a href="https://www.govinfo.gov/content/pkg/GPO-FCIC/pdf/GPO-FCIC.pdf">https://www.govinfo.gov/content/pkg/GPO-FCIC/pdf/GPO-FCIC.pdf</a></div>
+</div>
+<div id="ref-akerlof_marketlemonsquality_1970" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">G. A. Akerlof, <span>“The <span>Market</span> for "<span>Lemons</span>": <span>Quality Uncertainty</span> and the <span>Market Mechanism</span>,”</span> <em>The Quarterly Journal of Economics</em>, vol. 84, no. 3, pp. 488–500, Aug. 1970, doi: <a href="https://doi.org/10.2307/1879431">10.2307/1879431</a>.</div>
+</div>
+<div id="ref-l35_capitalgr_capital_controls_2015" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">Capital.gr, <span>“Τι ισχύει με τα capital controls.”</span> Accessed: Mar. 28, 2026. [Online]. Available: <a href="https://www.capital.gr/oikonomia/3038221/ti-isxuei-me-ta-capital-controls/">https://www.capital.gr/oikonomia/3038221/ti-isxuei-me-ta-capital-controls/</a></div>
+</div>
+<div id="ref-l35_imf_iceland_selected_issues_2015" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">International Monetary Fund, <span>“Iceland: Selected issues paper,”</span> International Monetary Fund, Mar. 2015. Accessed: Mar. 28, 2026. [Online]. Available: <a href="https://www.imf.org/en/Publications/CR/Issues/2016/12/31/Iceland-Selected-Issues-Paper-42783">https://www.imf.org/en/Publications/CR/Issues/2016/12/31/Iceland-Selected-Issues-Paper-42783</a></div>
+</div>
+<div id="ref-l35_fedhistory_great_inflation_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">Federal Reserve History, <span>“The great inflation.”</span> Accessed: Mar. 28, 2026. [Online]. Available: <a href="https://www.federalreservehistory.org/essays/great-inflation">https://www.federalreservehistory.org/essays/great-inflation</a></div>
+</div>
+<div id="ref-croman_scalingdecentralizedblockchains_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">K. Croman <em>et al.</em>, <span>“On scaling decentralized blockchains - (a position paper),”</span> in <em>Financial cryptography workshops</em>, Feb. 2016. Available: <a href="http://diyhpl.us/~bryan/papers2/bitcoin/On%20scaling%20decentralized%20blockchains%20-%20A%20position%20paper.pdf">http://diyhpl.us/~bryan/papers2/bitcoin/On%20scaling%20decentralized%20blockchains%20-%20A%20position%20paper.pdf</a></div>
+</div>
+<div id="ref-l35_bis_crypto_beyond_hype_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">Bank for International Settlements, <span>“V. Cryptocurrencies: Looking beyond the hype,”</span> Bank for International Settlements, June 2018. Accessed: Mar. 28, 2026. [Online]. Available: <a href="https://www.bis.org/publ/arpdf/ar2018e5.htm">https://www.bis.org/publ/arpdf/ar2018e5.htm</a></div>
+</div>
+<div id="ref-l35_bis_central_bank_cryptocurrencies_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">M. L. Bech and R. Garratt, <span>“Central bank cryptocurrencies,”</span> <em>BIS Quarterly Review</em>, Sept. 2017, Accessed: Mar. 28, 2026. [Online]. Available: <a href="https://www.bis.org/publ/qtrpdf/r_qt1709f.htm">https://www.bis.org/publ/qtrpdf/r_qt1709f.htm</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Home</title>
 <link rel="icon" href="kit/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="kit/house.css?v=19f128b1bf96">
+<link rel="stylesheet" href="kit/house.css?v=2e0e1e97d948">
 <script src="kit/class.js"></script>
-<script src="items.js?v=19f128b1bf96"></script>
-<script src="kit/kit.js?v=19f128b1bf96"></script>
-<script src="kit/lib/wallet-lib.js?v=19f128b1bf96"></script>
-<script src="kit/lib/course-words.js?v=19f128b1bf96"></script>
-<script src="kit/wallet.js?v=19f128b1bf96"></script>
+<script src="items.js?v=2e0e1e97d948"></script>
+<script src="kit/kit.js?v=2e0e1e97d948"></script>
+<script src="kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="kit/wallet.js?v=2e0e1e97d948"></script>
 </head>
 <body>
 <main class="page wide">
@@ -47,6 +47,11 @@
   }
   function itemCard(it) {
     var inbox = !!Kit.inbox(), waiting = !inbox ? 'Hand in with Copy or Download' : !asked ? 'Checking…' : handIns ? 'Not handed in yet' : 'Couldn\'t check right now';
+    if (it.kind === 'lesson') {   // nothing to hand in: a lesson is a link, ticked once this browser has opened it
+      var seen = Kit.mine.get('seen:' + it.id, null);
+      return el('a', { class: 'mapitem lesson' + (seen ? ' seen' : ''), href: it.href, 'data-item': it.id }, el('span', { class: 'tag', text: 'Lesson' }), el('span', { class: 't', text: it.title }),
+        seen ? el('span', { class: 's', text: '✓ Opened' }) : null);
+    }
     if (it.kind === 'quiz') {
       var q = graded && graded.quizzes[it.id], when = sentAt(it, ''), closed = cs && cs.closed[it.id], byHand = Kit.outbox().some(function (e) { return e.item === it.id; });
       var text = q ? 'Graded: ' + q.score + ' / ' + q.max : when ? '✓ Handed in ' + hhmm(when) + (closed ? '' : '. Your score appears when the quiz closes.') : byHand ? 'Not received by the class yet. It sends by itself.' : closed ? 'Closed. Not handed in.' : waiting;
@@ -69,8 +74,8 @@
     $('map').replaceChildren.apply($('map'), days.map(function (d) {
       var mine = items.filter(function (it) { return it.day === d.n; });
       var open = !cs ? null : !cs.open ? true : !!cs.open[String(d.n)];   // a class with no inbox has no locks
-      var nq = mine.filter(function (i) { return i.kind === 'quiz'; }).length, nf = mine.reduce(function (t, i) { return t + Object.keys(i.flags || {}).length; }, 0);
-      var inside = (nq ? nq + (nq === 1 ? ' quiz' : ' quizzes') : '') + (nq && nf ? ' · ' : '') + (nf ? nf + (nf === 1 ? ' flag' : ' flags') : '');
+      var nl = mine.filter(function (i) { return i.kind === 'lesson'; }).length, nq = mine.filter(function (i) { return i.kind === 'quiz'; }).length, nf = mine.reduce(function (t, i) { return t + Object.keys(i.flags || {}).length; }, 0);
+      var inside = [nl ? nl + (nl === 1 ? ' lesson' : ' lessons') : '', nq ? nq + (nq === 1 ? ' quiz' : ' quizzes') : '', nf ? nf + (nf === 1 ? ' flag' : ' flags') : ''].filter(Boolean).join(' · ');
       var body = open ? (mine.length ? mine.map(itemCard) : [el('p', { class: 'muted small', style: 'margin:0', text: 'Nothing to hand in today.' })])
         : [inside ? el('p', { class: 'small', style: 'margin:0', text: inside }) : null,
            el('div', { class: 'lock' }, open === null ? 'Checking…' : [svg(LOCK), cs.known ? 'Locked until your instructor unlocks it' : 'Couldn\'t reach the class to check'])].filter(Boolean);

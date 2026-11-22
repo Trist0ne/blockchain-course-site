@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Illicit Finance, Regulation, and Case Studies</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/forensics/01-FO-illicit_finance_regulation_case_studies.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="fo-01" data-code="01-FO" data-src="9087497ee93b3748" data-slides="33">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section VIII: Forensics · Lesson 01-FO</p><h1>Illicit Finance, Regulation, and Case Studies</h1></div></section>
+<section class="slide smaller" id="permissionless-finance"><h2 class="slide-title">Permissionless Finance</h2><div class="slide-body">
+<p>Blockchain’s borderless and decentralized features make it a powerful tool for illicit finance, enabling activities that attempt to bypass the traditional, regulated financial system.</p>
+<div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+<div style="display: flex; align-items: center;">
+<div style="flex: 0 0 70px; height: 70px; background: #f8f9fa; border-left: 4px solid #dc3545; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2em; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+🌍
+</div>
+<div style="margin-left: 20px; font-size: 0.95em;">
+<p><strong>Neutral Infrastructure:</strong> Protocols do not enforce “Know Your Customer” (KYC) rules at the base layer; anyone can create a wallet and transact.</p>
+</div>
+</div>
+<div style="display: flex; align-items: center;">
+<div style="flex: 0 0 70px; height: 70px; background: #f8f9fa; border-left: 4px solid #dc3545; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2em; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+💸
+</div>
+<div style="margin-left: 20px; font-size: 0.95em;">
+<p><strong>Ransomware Extortion:</strong> Bitcoin remains the most common currency for extortion. It is used because of its massive liquidity and accessibility, not because it is untraceable.</p>
+</div>
+</div>
+<div style="display: flex; align-items: center;">
+<div style="flex: 0 0 70px; height: 70px; background: #f8f9fa; border-left: 4px solid #dc3545; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2em; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+🌪️
+</div>
+<div style="margin-left: 20px; font-size: 0.95em;">
+<p><strong>Money Laundering:</strong> Criminals use decentralized networks to layer and obfuscate the origins of illicitly obtained funds.</p>
+</div>
+</div>
+<div style="display: flex; align-items: center;">
+<div style="flex: 0 0 70px; height: 70px; background: #f8f9fa; border-left: 4px solid #dc3545; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2em; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+🛡️
+</div>
+<div style="margin-left: 20px; font-size: 0.95em;">
+<p><strong>Sanctions Evasion:</strong> Used by state and non-state actors to bypass international economic restrictions.</p>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="the-immutable-ledger"><h2 class="slide-title">The Immutable Ledger</h2><div class="slide-body">
+<p>The same features that enable permissionless finance also create an unprecedented, permanent evidence trail for investigators. Because we cannot easily block malicious actors <em>before</em> they act on-chain, security relies heavily on tracing and analyzing funds <em>after</em> the fact.</p>
+<ul>
+<li><strong>Pseudonymous, not Anonymous:</strong> A blockchain address acts as a persistent, unique identifier. It does not inherently reveal a real-world identity, but it can be profiled and tracked over time.</li>
+<li><strong>Permanent Public Record:</strong> Every transaction is recorded on an immutable ledger, allowing for continuous monitoring and historical tracing.</li>
+<li><strong>The Operational Security Reality:</strong> While an adversary can create a wallet without an ID, any operational security mistake they make—even years later—is permanently recorded and can be used to unmask them.</li>
+</ul>
+<div style="margin-top: 40px; display: flex; align-items: center; justify-content: center; font-family: monospace; font-size: 1.1em;">
+<div style="background: #f8f9fa; padding: 10px 20px; border-radius: 5px; border: 2px solid #ced4da; color: #6c757d;">
+Tx: 0x1A2b…
+</div>
+<div style="margin: 0 10px; color: #adb5bd; font-weight: bold;">
+━━━
+</div>
+<div style="background: #e8f5e9; padding: 10px 20px; border-radius: 5px; border: 2px solid #198754; position: relative; color: #198754; font-weight: bold; box-shadow: 0 0 10px rgba(25, 135, 84, 0.2);">
+Tx: 0x8F4c…
+<div style="position: absolute; top: -25px; right: -25px; font-size: 1.8em; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.2));">
+🔍
+</div>
+</div>
+<div style="margin: 0 10px; color: #adb5bd; font-weight: bold;">
+━━━
+</div>
+<div style="background: #f8f9fa; padding: 10px 20px; border-radius: 5px; border: 2px solid #ced4da; color: #6c757d;">
+Tx: 0x9D3e…
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="how-adversaries-hide"><h2 class="slide-title">How Adversaries Hide</h2><div class="slide-body">
+<p>To break the trail of evidence on the public ledger, criminals use a toolkit of obfuscation techniques designed to make tracing as difficult as possible.</p>
+<ul>
+<li><p><strong>Mixers &amp; Tumblers:</strong> These services act like a digital laundry, mixing stolen funds with a large pool of other users’ money to hide the original source</p></li>
+<li><p><strong>Chain Hopping:</strong> Criminals use <strong>cross-chain bridges</strong> to jump assets between different blockchains (e.g., from Ethereum to Solana), forcing investigators to start their search over on a new, separate ledger</p></li>
+<li><p><strong>Layering (Peel Chains):</strong> Instead of making one large transfer, they use a series of transactions to “peel off” small amounts of crypto, creating a complex and confusing web that hides the total amount being moved</p></li>
+</ul>
+<div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 20px; font-family: sans-serif; text-align: center; flex-wrap: wrap; font-size: 0.8em;">
+<div style="background-color: #ffebee; border: 2px solid #b71c1c; padding: 10px; border-radius: 8px; font-weight: bold; color: #b71c1c;">
+Stolen
+</div>
+<div style="font-size: 18px; color: #6c757d;">
+→
+</div>
+<div style="background-color: #f8f9fa; border: 2px solid #6c757d; padding: 10px; border-radius: 8px;">
+<b>Mixer</b><br><span style="font-size: 0.8em; color: #495057;">(Breaks the Link)</span>
+</div>
+<div style="font-size: 18px; color: #6c757d;">
+→
+</div>
+<div style="background-color: #f8f9fa; border: 2px solid #6c757d; padding: 10px; border-radius: 8px;">
+<b>Bridge</b><br><span style="font-size: 0.8em; color: #495057;">(Hops the Chain)</span>
+</div>
+<div style="font-size: 18px; color: #6c757d;">
+→
+</div>
+<div style="background-color: #f8f9fa; border: 2px solid #6c757d; padding: 10px; border-radius: 8px;">
+<b>Layering</b><br><span style="font-size: 0.8em; color: #495057;">(Hides the Volume)</span>
+</div>
+<div style="font-size: 18px; color: #6c757d;">
+→
+</div>
+<div style="background-color: #e8f5e9; border: 2px solid #2e7d32; padding: 10px; border-radius: 8px; font-weight: bold; color: #2e7d32;">
+“Cleaned”
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="forensic-countermeasures"><h2 class="slide-title">Forensic Countermeasures</h2><div class="slide-body">
+<div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+<div style="display: flex; align-items: center;">
+<div style="flex: 0 0 70px; height: 70px; background: #f8f9fa; border-left: 4px solid #0d6efd; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2em; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+🔍
+</div>
+<div style="margin-left: 20px; font-size: 0.95em;">
+<p><strong>Combining All Signals:</strong> Mixing traditional on-chain ledger analysis with real-world open-source intelligence (OSINT) to find clues.</p>
+</div>
+</div>
+<div style="display: flex; align-items: center;">
+<div style="flex: 0 0 70px; height: 70px; background: #f8f9fa; border-left: 4px solid #0d6efd; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2em; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+🤖
+</div>
+<div style="margin-left: 20px; font-size: 0.95em;">
+<p><strong>Adaptive Tools:</strong> Using AI and machine learning to automatically adapt and spot complex, evolving laundering techniques.</p>
+</div>
+</div>
+<div style="display: flex; align-items: center;">
+<div style="flex: 0 0 70px; height: 70px; background: #f8f9fa; border-left: 4px solid #0d6efd; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2em; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+🤝
+</div>
+<div style="margin-left: 20px; font-size: 0.95em;">
+<p><strong>Teamwork &amp; Sharing:</strong> Agencies and companies sharing information on bad actors and suspicious patterns.</p>
+</div>
+</div>
+<div style="display: flex; align-items: center;">
+<div style="flex: 0 0 70px; height: 70px; background: #f8f9fa; border-left: 4px solid #0d6efd; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2em; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+⚖️
+</div>
+<div style="margin-left: 20px; font-size: 0.95em;">
+<p><strong>Regulation &amp; Mandates:</strong> Governments creating rules that require more transparency at key choke points, like bridges and exchanges.</p>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="challenges-in-forensic-analysis"><h2 class="slide-title">Challenges in Forensic Analysis</h2><div class="slide-body">
+<p>Blockchain analysis is powerful, but it is not a silver bullet. Sophisticated adversaries and inherent technical limitations create significant obstacles, meaning on-chain data alone is rarely enough to close a case.</p>
+<ul>
+<li><strong>Heuristic Evasion:</strong> Tools like <strong>CoinJoin</strong> are explicitly designed to break the foundational rules of tracing (like the Common-Input-Ownership heuristic) by mixing inputs from dozens of distinct users into a single transaction.</li>
+<li><strong>Cryptographic “Ghost Flows”:</strong> <strong>Privacy coins</strong> (e.g., Monero, Zcash) use advanced cryptography to completely hide senders, receivers, and transaction amounts. When funds enter these networks, the on-chain trail goes dark.</li>
+<li><strong>The Off-Chain Blind Spot:</strong> Much of the crypto economy happens off-chain inside the private databases of centralized exchanges, Over-The-Counter (OTC) desks, and darknet markets. Forensic tools cannot see into these private ledgers.</li>
+<li><strong>Attribution Uncertainty:</strong> Even a perfect on-chain trace only leads to a pseudonymous address. Linking that address to a real human requires off-chain intelligence. Relying solely on heuristics risks <strong>false positives</strong>, which carry severe legal and reputational consequences.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="policy-regulatory-response"><h2 class="slide-title">Policy &amp; Regulatory Response</h2><div class="slide-body">
+<p><strong>The Pivot to Policy:</strong> Because technical tracing has absolute limits, investigators cannot win the fight using software alone. Defeating illicit finance requires combining these technical traces with <strong>regulatory chokepoints</strong>.</p>
+<ul>
+<li><strong>Mandatory ID Checks (KYC/AML):</strong> Requiring identity verification at centralized exchanges and fiat on-ramps ensures that pseudonymous crypto can eventually be tied to a real-world identity when it enters the traditional financial system.</li>
+<li><strong>Required Reporting:</strong> Financial institutions and exchanges must file Suspicious Activity Reports (SARs) when detecting abnormal behavior, proactively creating a data trail for investigators.</li>
+<li><strong>Sanctions &amp; Enforcement:</strong> Governments can designate specific smart contracts (e.g., Tornado Cash) or entities (e.g., Lazarus Group) as sanctioned, making it illegal for citizens and businesses to interact with them.</li>
+<li><strong>Global Coordination:</strong> Because crypto is borderless, formal treaties and public-private partnerships are necessary to share intelligence and pursue criminals across international jurisdictions to prevent regulatory arbitrage.</li>
+</ul>
+<div class="callout-note" data-appearance="minimal">
+<p><strong>KYC</strong> — Know Your Customer | <strong>AML</strong> — Anti-Money Laundering</p>
+</div>
+</div></section>
+<section class="slide smaller" id="adversarial-counter-responses-to-regulation"><h2 class="slide-title">Adversarial Counter-Responses to Regulation</h2><div class="slide-body">
+<p>As global regulations tighten around centralized exchanges, adversaries adapt by avoiding compliant fiat off-ramps entirely. If an exchange requires an ID, criminals seek paths that do not.</p>
+<ul>
+<li><strong>Jurisdictional Arbitrage:</strong> Because crypto is borderless, adversaries route funds to exchanges located in countries with weak Anti-Money Laundering (AML) laws or jurisdictions that refuse to cooperate with Western subpoenas.</li>
+<li><strong>Privacy Coin Gateways:</strong> Criminals use decentralized exchanges (DEXs) or cross-chain bridges to swap traceable assets (like Bitcoin) into privacy coins (like Monero). This deliberately breaks the visible chain before the funds are eventually cashed out.</li>
+<li><strong>The “No Cash-Out” Economy:</strong> Often, adversaries don’t convert to fiat at all. They use cryptocurrency directly to purchase “bulletproof” hosting, VPNs, zero-day exploits, or physical goods from darknet providers that operate outside the law.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="decentralized-exchanges-dexs"><h2 class="slide-title">Decentralized Exchanges (DEXs)</h2><div class="slide-body">
+<ul>
+<li><strong>Smart Contract Driven:</strong> Unlike centralized exchanges (e.g., Coinbase), a DEX operates entirely via autonomous code on a blockchain, with no corporate entity holding user funds.</li>
+<li><strong>Crypto-to-Crypto Only:</strong> Because they cannot interface with traditional banks, DEXs do not allow users to “cash out” to fiat (e.g., USD). They strictly facilitate swapping one digital asset for another.</li>
+<li><strong>Automated Market Makers (AMMs):</strong> Instead of an order book matching buyers with sellers, a smart contract holds a <em>liquidity pool</em> of two tokens and enforces the <strong>constant product formula: x · y = k</strong>. The pool always holds Token A (quantity <em>x</em>) and Token B (quantity <em>y</em>) such that their product <em>k</em> stays fixed. Buying Token B reduces its supply, forcing <em>x</em> up to keep <em>k</em> constant—this is automatic, demand-driven pricing with no human market maker.</li>
+<li><strong>Self-Custody:</strong> Users trade directly from their own wallets, retaining absolute control of their private keys before, during, and after the trade.</li>
+<li><strong>Permissionless Access:</strong> There are no sign-ups, no accounts, and no Know Your Customer (KYC) identity checks required to swap tokens.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="bridges-swaps-crossing-the-chain-boundary"><h2 class="slide-title">Bridges &amp; Swaps: Crossing the Chain Boundary</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li><strong>The Single-Chain Limit:</strong> Standard DEXs only swap assets on the <em>same</em> blockchain. They cannot natively convert Ethereum into a completely separate privacy coin like Monero (XMR).</li>
+<li><strong>Wrapped Tokens:</strong> Adversaries can buy “Wrapped Monero” on an Ethereum DEX, but wrapped tokens live on the transparent public ledger, defeating the purpose of privacy.</li>
+</ul>
+</div><div class="column" style="width:40%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 314.07 471.33" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:419px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 467.33)">
+<g id="node1" class="node">
+<path fill="#ffebee" stroke="#c62828" stroke-width="2" d="M193.75,-463.33C193.75,-463.33 112.32,-463.33 112.32,-463.33 106.32,-463.33 100.32,-457.33 100.32,-451.33 100.32,-451.33 100.32,-429.73 100.32,-429.73 100.32,-423.73 106.32,-417.73 112.32,-417.73 112.32,-417.73 193.75,-417.73 193.75,-417.73 199.75,-417.73 205.75,-423.73 205.75,-429.73 205.75,-429.73 205.75,-451.33 205.75,-451.33 205.75,-457.33 199.75,-463.33 193.75,-463.33"/>
+<text text-anchor="middle" x="153.03" y="-436.33" font-family="sans-serif" font-size="14.00" fill="#c62828">Stolen USDC</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f8f9fa" stroke="#6c757d" d="M234.27,-352.12C234.27,-352.12 207.55,-374.1 207.55,-374.1 202.92,-377.92 192.28,-381.73 186.28,-381.73 186.28,-381.73 119.78,-381.73 119.78,-381.73 113.78,-381.73 103.15,-377.92 98.52,-374.1 98.52,-374.1 71.8,-352.12 71.8,-352.12 67.17,-348.31 67.17,-340.68 71.8,-336.87 71.8,-336.87 98.52,-314.89 98.52,-314.89 103.15,-311.08 113.78,-307.26 119.78,-307.26 119.78,-307.26 186.28,-307.26 186.28,-307.26 192.28,-307.26 202.92,-311.08 207.55,-314.89 207.55,-314.89 234.27,-336.87 234.27,-336.87 238.9,-340.68 238.9,-348.31 234.27,-352.12"/>
+<text text-anchor="middle" x="153.03" y="-340.3" font-family="sans-serif" font-size="14.00">Standard DEX</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#adb5bd" stroke-width="2" d="M153.03,-416.77C153.03,-409.51 153.03,-401.19 153.03,-392.86"/>
+<polygon fill="#adb5bd" stroke="#adb5bd" stroke-width="2" points="155.83,-393.01 153.03,-385.01 150.23,-393.01 155.83,-393.01"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e3f2fd" stroke="#0d6efd" stroke-width="2" d="M211.6,-271.26C211.6,-271.26 94.47,-271.26 94.47,-271.26 88.47,-271.26 82.47,-265.26 82.47,-259.26 82.47,-259.26 82.47,-237.66 82.47,-237.66 82.47,-231.66 88.47,-225.66 94.47,-225.66 94.47,-225.66 211.6,-225.66 211.6,-225.66 217.6,-225.66 223.6,-231.66 223.6,-237.66 223.6,-237.66 223.6,-259.26 223.6,-259.26 223.6,-265.26 217.6,-271.26 211.6,-271.26"/>
+<text text-anchor="middle" x="153.03" y="-244.26" font-family="sans-serif" font-size="14.00" fill="#0d6efd">ETH (Intermediary)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#adb5bd" stroke-width="2" d="M153.03,-306.87C153.03,-298.97 153.03,-290.66 153.03,-282.89"/>
+<polygon fill="#adb5bd" stroke="#adb5bd" stroke-width="2" points="155.83,-283.03 153.03,-275.03 150.23,-283.03 155.83,-283.03"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f8f9fa" stroke="#6c757d" d="M295.28,-157.68C295.28,-157.68 240.34,-184.41 240.34,-184.41 234.95,-187.04 223.55,-189.66 217.55,-189.66 217.55,-189.66 88.52,-189.66 88.52,-189.66 82.52,-189.66 71.12,-187.04 65.73,-184.41 65.73,-184.41 10.79,-157.68 10.79,-157.68 5.4,-155.06 5.4,-149.81 10.79,-147.18 10.79,-147.18 65.73,-120.45 65.73,-120.45 71.12,-117.83 82.52,-115.2 88.52,-115.2 88.52,-115.2 217.55,-115.2 217.55,-115.2 223.55,-115.2 234.95,-117.83 240.34,-120.45 240.34,-120.45 295.28,-147.18 295.28,-147.18 300.67,-149.81 300.67,-155.06 295.28,-157.68"/>
+<text text-anchor="middle" x="153.03" y="-148.23" font-family="sans-serif" font-size="14.00">Non&#45;KYC Instant Exchange</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#adb5bd" stroke-width="2" d="M153.03,-224.7C153.03,-217.45 153.03,-209.13 153.03,-200.8"/>
+<polygon fill="#adb5bd" stroke="#adb5bd" stroke-width="2" points="155.83,-200.95 153.03,-192.95 150.23,-200.95 155.83,-200.95"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#212529" stroke="#ffc107" stroke-width="3" d="M205.59,-79.2C205.59,-79.2 100.48,-79.2 100.48,-79.2 94.48,-79.2 88.48,-73.2 88.48,-67.2 88.48,-67.2 88.48,-12 88.48,-12 88.48,-6 94.48,0 100.48,0 100.48,0 205.59,0 205.59,0 211.59,0 217.59,-6 217.59,-12 217.59,-12 217.59,-67.2 217.59,-67.2 217.59,-73.2 211.59,-79.2 205.59,-79.2"/>
+<text text-anchor="middle" x="153.03" y="-52.2" font-family="sans-serif" font-size="14.00" fill="#ffc107">Native Monero or</text>
+<text text-anchor="middle" x="153.03" y="-35.4" font-family="sans-serif" font-size="14.00" fill="#ffc107">Shielded Zcash</text>
+<text text-anchor="middle" x="153.03" y="-18.6" font-family="sans-serif" font-size="14.00" fill="#ffc107">(Trail Goes Dark)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#adb5bd" stroke-width="2" d="M153.03,-114.83C153.03,-107.38 153.03,-99.4 153.03,-91.55"/>
+<polygon fill="#adb5bd" stroke="#adb5bd" stroke-width="2" points="155.83,-91.62 153.03,-83.62 150.23,-91.62 155.83,-91.62"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="bridges-swaps-crossing-the-chain-boundary-cont."><h2 class="slide-title">Bridges &amp; Swaps: Crossing the Chain Boundary (cont.)</h2><div class="slide-body">
+<ul>
+<li><strong>Atomic Swaps:</strong> A trustless cross-chain trade enforced by <strong>Hash Time-Locked Contracts (HTLCs)</strong>. Both parties lock funds on their respective chains behind the same cryptographic secret (a hash preimage). When the recipient reveals the secret to claim their funds, it simultaneously unlocks the funds on the other chain—or both sides expire and refund if no claim is made. No middleman, no bridge contract.
+<ul>
+<li><em>Forensic challenge:</em> the two on-chain transactions appear on completely separate ledgers with no shared identifier linking them.</li>
+</ul></li>
+<li><strong>Non-KYC Instant Exchanges:</strong> Criminals use automated swap services (e.g., SimpleSwap, FixedFloat) that do not require accounts. They send Bitcoin in, and the system sends native Monero—or Zcash directly to a “shielded” address—breaking the trail.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="future-of-forensics-automated-cross-chain-tracing"><h2 class="slide-title">Future of Forensics: Automated Cross-Chain Tracing</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:60%;">
+<p>Currently, tracing assets across chains is slow and manual—analysts juggle multiple block explorers, compare timestamps, and adjust for fees by hand. <em>XSema</em> automates this entirely.</p>
+<ul>
+<li><strong>Automated Provenance Extraction:</strong> Bridge contracts emit structured on-chain events (deposit/withdrawal logs). XSema parses these logs to extract <em>semantics</em>—asset type, amount, source chain, destination chain—then correlates cross-chain hops using <strong>timing windows</strong> (deposit and matching withdrawal settle within seconds to minutes) and <strong>fee-adjusted amount matching</strong>. The result is a unified provenance graph that definitively links a Bitcoin input to its eventual Ethereum output.</li>
+</ul>
+</div><div class="column" style="width:40%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 249.48 594.74" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:332px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 590.74)">
+<g id="node1" class="node">
+<path fill="#ffebee" stroke="#c62828" stroke-width="2" d="M159.81,-586.74C159.81,-586.74 81.68,-586.74 81.68,-586.74 75.68,-586.74 69.68,-580.74 69.68,-574.74 69.68,-574.74 69.68,-543.54 69.68,-543.54 69.68,-537.54 75.68,-531.54 81.68,-531.54 81.68,-531.54 159.81,-531.54 159.81,-531.54 165.81,-531.54 171.81,-537.54 171.81,-543.54 171.81,-543.54 171.81,-574.74 171.81,-574.74 171.81,-580.74 165.81,-586.74 159.81,-586.74"/>
+<text text-anchor="middle" x="120.74" y="-562.44" font-family="sans-serif" font-size="11.00" fill="#c62828">BTC Deposit Tx</text>
+<text text-anchor="middle" x="120.74" y="-549.24" font-family="sans-serif" font-size="11.00" fill="#c62828">(T=0)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fff9c4" stroke="#f9a825" stroke-width="2" d="M196.92,-447.23C196.92,-447.23 171.13,-474.78 171.13,-474.78 167.03,-479.16 156.93,-483.54 150.93,-483.54 150.93,-483.54 90.55,-483.54 90.55,-483.54 84.55,-483.54 74.45,-479.16 70.35,-474.78 70.35,-474.78 44.56,-447.23 44.56,-447.23 40.46,-442.85 40.46,-434.09 44.56,-429.71 44.56,-429.71 70.35,-402.16 70.35,-402.16 74.45,-397.78 84.55,-393.4 90.55,-393.4 90.55,-393.4 150.93,-393.4 150.93,-393.4 156.93,-393.4 167.03,-397.78 171.13,-402.16 171.13,-402.16 196.92,-429.71 196.92,-429.71 201.02,-434.09 201.02,-442.85 196.92,-447.23"/>
+<text text-anchor="middle" x="120.74" y="-441.77" font-family="sans-serif" font-size="11.00" fill="#f9a825">Bridge Contract</text>
+<text text-anchor="middle" x="120.74" y="-428.57" font-family="sans-serif" font-size="11.00" fill="#f9a825">Emits Log Event</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#adb5bd" stroke-width="2" d="M120.74,-530.62C120.74,-520.03 120.74,-507.51 120.74,-495.21"/>
+<polygon fill="#adb5bd" stroke="#adb5bd" stroke-width="2" points="123.54,-495.53 120.74,-487.53 117.94,-495.53 123.54,-495.53"/>
+<text text-anchor="middle" x="143.25" y="-504.54" font-family="Helvetica,sans-Serif" font-size="10.00">lock funds</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e3f2fd" stroke="#0d6efd" stroke-width="2" d="M176.77,-345.4C176.77,-345.4 64.72,-345.4 64.72,-345.4 58.72,-345.4 52.72,-339.4 52.72,-333.4 52.72,-333.4 52.72,-262.6 52.72,-262.6 52.72,-256.6 58.72,-250.6 64.72,-250.6 64.72,-250.6 176.77,-250.6 176.77,-250.6 182.77,-250.6 188.77,-256.6 188.77,-262.6 188.77,-262.6 188.77,-333.4 188.77,-333.4 188.77,-339.4 182.77,-345.4 176.77,-345.4"/>
+<text text-anchor="middle" x="120.74" y="-321.1" font-family="sans-serif" font-size="11.00" fill="#0d6efd">XSema</text>
+<text text-anchor="middle" x="120.74" y="-307.9" font-family="sans-serif" font-size="11.00" fill="#0d6efd">─────────────</text>
+<text text-anchor="middle" x="120.74" y="-294.7" font-family="sans-serif" font-size="11.00" fill="#0d6efd">parse semantics</text>
+<text text-anchor="middle" x="120.74" y="-281.5" font-family="sans-serif" font-size="11.00" fill="#0d6efd">timing window</text>
+<text text-anchor="middle" x="120.74" y="-268.3" font-family="sans-serif" font-size="11.00" fill="#0d6efd">amount − fee</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#adb5bd" stroke-width="2" d="M120.74,-392.51C120.74,-381.15 120.74,-368.78 120.74,-356.87"/>
+<polygon fill="#adb5bd" stroke="#adb5bd" stroke-width="2" points="123.54,-357.14 120.74,-349.14 117.94,-357.14 123.54,-357.14"/>
+<text text-anchor="middle" x="144.09" y="-366.4" font-family="Helvetica,sans-Serif" font-size="10.00">log parsed</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#e8f5e9" stroke="#2e7d32" stroke-width="2" d="M168.65,-202.6C168.65,-202.6 72.83,-202.6 72.83,-202.6 66.83,-202.6 60.83,-196.6 60.83,-190.6 60.83,-190.6 60.83,-159.4 60.83,-159.4 60.83,-153.4 66.83,-147.4 72.83,-147.4 72.83,-147.4 168.65,-147.4 168.65,-147.4 174.65,-147.4 180.65,-153.4 180.65,-159.4 180.65,-159.4 180.65,-190.6 180.65,-190.6 180.65,-196.6 174.65,-202.6 168.65,-202.6"/>
+<text text-anchor="middle" x="120.74" y="-178.3" font-family="sans-serif" font-size="11.00" fill="#2e7d32">ETH Withdrawal Tx</text>
+<text text-anchor="middle" x="120.74" y="-165.1" font-family="sans-serif" font-size="11.00" fill="#2e7d32">(T=0 + ~minutes)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#adb5bd" stroke-width="2" d="M120.74,-249.87C120.74,-238.03 120.74,-225.46 120.74,-214.12"/>
+<polygon fill="#adb5bd" stroke="#adb5bd" stroke-width="2" points="123.54,-214.28 120.74,-206.28 117.94,-214.28 123.54,-214.28"/>
+<text text-anchor="middle" x="148.53" y="-223.6" font-family="Helvetica,sans-Serif" font-size="10.00">correlated ✓</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#212529" stroke="#ffc107" stroke-width="2" d="M229.48,-110.4C229.48,-110.4 61.41,-110.4 61.41,-110.4 55.41,-110.4 46.96,-104.92 44.51,-99.45 44.51,-99.45 4.9,-10.95 4.9,-10.95 2.45,-5.48 6,0 12,0 12,0 180.07,0 180.07,0 186.07,0 194.52,-5.48 196.98,-10.95 196.98,-10.95 236.58,-99.45 236.58,-99.45 239.03,-104.92 235.48,-110.4 229.48,-110.4"/>
+<text text-anchor="middle" x="120.74" y="-58.5" font-family="sans-serif" font-size="11.00" fill="#ffc107">Unified Provenance</text>
+<text text-anchor="middle" x="120.74" y="-45.3" font-family="sans-serif" font-size="11.00" fill="#ffc107">Graph</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#adb5bd" stroke-width="2" d="M120.74,-146.68C120.74,-139.22 120.74,-130.81 120.74,-122.19"/>
+<polygon fill="#adb5bd" stroke="#adb5bd" stroke-width="2" points="123.54,-122.25 120.74,-114.25 117.94,-122.25 123.54,-122.25"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="future-of-forensics-secure-cross-agency-collaboration"><h2 class="slide-title">Future of Forensics: Secure Cross-Agency Collaboration</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:60%;">
+<p>Cross-chain crimes are cross-border crimes. Agencies often hold overlapping pieces of the same investigation but cannot legally share full case files. <em>ForensiCross</em> solves this without requiring disclosure.</p>
+<ul>
+<li><strong>Privacy-Preserving Record Linkage:</strong> ForensiCross uses <strong>private set intersection</strong>: Agency A and Agency B each submit their encrypted suspect wallet lists. The protocol reveals <em>only the overlap</em>—wallets appearing in both investigations—without either agency ever seeing the other’s full dataset.</li>
+</ul>
+</div><div class="column" style="width:40%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 224.37 346.30" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:299px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 342.3)">
+<g id="node1" class="node">
+<path fill="#e3f2fd" stroke="#0d6efd" stroke-width="2" d="M87.37,-338.3C87.37,-338.3 12,-338.3 12,-338.3 6,-338.3 0,-332.3 0,-326.3 0,-326.3 0,-281.9 0,-281.9 0,-275.9 6,-269.9 12,-269.9 12,-269.9 87.37,-269.9 87.37,-269.9 93.37,-269.9 99.37,-275.9 99.37,-281.9 99.37,-281.9 99.37,-326.3 99.37,-326.3 99.37,-332.3 93.37,-338.3 87.37,-338.3"/>
+<text text-anchor="middle" x="49.68" y="-314" font-family="sans-serif" font-size="11.00" fill="#0d6efd">FBI</text>
+<text text-anchor="middle" x="49.68" y="-300.8" font-family="sans-serif" font-size="11.00" fill="#0d6efd">Suspect Wallets</text>
+<text text-anchor="middle" x="49.68" y="-287.6" font-family="sans-serif" font-size="11.00" fill="#0d6efd">{A, B, C, D}</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fff9c4" stroke="#f9a825" stroke-width="2" d="M172.17,-171.38C172.17,-171.38 149.58,-206.97 149.58,-206.97 146.36,-212.03 137.14,-217.1 131.14,-217.1 131.14,-217.1 84.22,-217.1 84.22,-217.1 78.22,-217.1 69.01,-212.03 65.79,-206.97 65.79,-206.97 43.19,-171.38 43.19,-171.38 39.98,-166.31 39.98,-156.18 43.19,-151.12 43.19,-151.12 65.79,-115.53 65.79,-115.53 69.01,-110.47 78.22,-105.4 84.22,-105.4 84.22,-105.4 131.14,-105.4 131.14,-105.4 137.14,-105.4 146.36,-110.47 149.58,-115.53 149.58,-115.53 172.17,-151.12 172.17,-151.12 175.39,-156.18 175.39,-166.31 172.17,-171.38"/>
+<text text-anchor="middle" x="107.68" y="-171.15" font-family="sans-serif" font-size="11.00" fill="#f9a825">ForensiCross</text>
+<text text-anchor="middle" x="107.68" y="-157.95" font-family="sans-serif" font-size="11.00" fill="#f9a825">Private Set</text>
+<text text-anchor="middle" x="107.68" y="-144.75" font-family="sans-serif" font-size="11.00" fill="#f9a825">Intersection</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#adb5bd" stroke-width="2" d="M63.72,-269C68.84,-256.57 74.82,-242.05 80.69,-227.8"/>
+<polygon fill="#adb5bd" stroke="#adb5bd" stroke-width="2" points="83.11,-229.27 83.57,-220.8 77.94,-227.13 83.11,-229.27"/>
+<text text-anchor="middle" x="107.68" y="-239.3" font-family="Helvetica,sans-Serif" font-size="14.00">encrypted</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e8f5e9" stroke="#2e7d32" stroke-width="2" d="M204.37,-338.3C204.37,-338.3 129,-338.3 129,-338.3 123,-338.3 117,-332.3 117,-326.3 117,-326.3 117,-281.9 117,-281.9 117,-275.9 123,-269.9 129,-269.9 129,-269.9 204.37,-269.9 204.37,-269.9 210.37,-269.9 216.37,-275.9 216.37,-281.9 216.37,-281.9 216.37,-326.3 216.37,-326.3 216.37,-332.3 210.37,-338.3 204.37,-338.3"/>
+<text text-anchor="middle" x="166.68" y="-314" font-family="sans-serif" font-size="11.00" fill="#2e7d32">Europol</text>
+<text text-anchor="middle" x="166.68" y="-300.8" font-family="sans-serif" font-size="11.00" fill="#2e7d32">Suspect Wallets</text>
+<text text-anchor="middle" x="166.68" y="-287.6" font-family="sans-serif" font-size="11.00" fill="#2e7d32">{C, D, E, F}</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#adb5bd" stroke-width="2" d="M155.44,-268.93C151.63,-258.02 147.2,-245.97 142.68,-235.1 141.71,-232.75 140.69,-230.36 139.65,-227.96"/>
+<polygon fill="#adb5bd" stroke="#adb5bd" stroke-width="2" points="142.28,-226.99 136.48,-220.82 137.17,-229.26 142.28,-226.99"/>
+<text text-anchor="middle" x="179.94" y="-239.3" font-family="Helvetica,sans-Serif" font-size="14.00">encrypted</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#212529" stroke="#ffc107" stroke-width="2" d="M158.19,-68.4C158.19,-68.4 57.18,-68.4 57.18,-68.4 51.18,-68.4 45.18,-62.4 45.18,-56.4 45.18,-56.4 45.18,-12 45.18,-12 45.18,-6 51.18,0 57.18,0 57.18,0 158.19,0 158.19,0 164.19,0 170.19,-6 170.19,-12 170.19,-12 170.19,-56.4 170.19,-56.4 170.19,-62.4 164.19,-68.4 158.19,-68.4"/>
+<text text-anchor="middle" x="107.68" y="-44.1" font-family="sans-serif" font-size="11.00" fill="#ffc107">Shared Cluster</text>
+<text text-anchor="middle" x="107.68" y="-30.9" font-family="sans-serif" font-size="11.00" fill="#ffc107">{C, D} only</text>
+<text text-anchor="middle" x="107.68" y="-17.7" font-family="sans-serif" font-size="11.00" fill="#ffc107">(no other data shared)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#adb5bd" stroke-width="2" d="M107.68,-104.67C107.68,-96.43 107.68,-88.02 107.68,-80.03"/>
+<polygon fill="#adb5bd" stroke="#adb5bd" stroke-width="2" points="110.48,-80.1 107.68,-72.1 104.88,-80.1 110.48,-80.1"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="future-of-forensics-ai-powered-attribution"><h2 class="slide-title">Future of Forensics: AI-Powered Attribution</h2><div class="slide-body">
+<p>Even with a perfect transaction graph, analysts still face <strong>Attribution Uncertainty</strong>. To link a wallet to a real-world entity, analysts must scour the internet for open-source intelligence (OSINT). AI is revolutionizing this step.</p>
+<ul>
+<li><strong>Parsing Unstructured Data:</strong> Large Language Models (LLMs) can rapidly read millions of forum posts, darknet market listings, and social media tweets to find references to specific crypto addresses.</li>
+<li><strong>Knowledge Graph Integration:</strong> AI tools can take ambiguous “tags” (e.g., an address labeled “Suspected Lazarus” by one firm and “Darknet Vendor” by another) and intelligently link them into a unified Knowledge Graph of threat actors.</li>
+</ul>
+<div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 30px;">
+<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #6c757d; font-size: 0.9em; width: 30%;">
+<p>📄 “Send payment to 0x1A2b…”<br><i>- Dark web forum post</i></p>
+</div>
+<div style="font-size: 2em; color: #0d6efd;">
+🤖
+</div>
+<div style="background: #e3f2fd; padding: 15px; border-radius: 8px; border: 2px solid #0d6efd; text-align: center; width: 30%;">
+<p><b>Entity Profile:</b><br> Threat Actor X<br> <span style="font-size: 0.8em; color: #495057;">Confidence: 94%</span></p>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="future-of-forensics-forensiblock-the-design-trade-off"><h2 class="slide-title">Future of Forensics: ForensiBlock &amp; the Design Trade-off</h2><div class="slide-body">
+<p>Instead of treating forensics as a reactive, after-the-fact investigation, researchers are proposing <strong>“Security-by-Design”</strong> — building auditability directly into the protocol.</p>
+<ul>
+<li><strong>ForensiBlock:</strong> An academic framework for enterprise and consortium blockchains with native auditability. Provenance metadata is embedded at the consensus layer — not bolted on afterward — making it a network rule rather than an optional audit trail.</li>
+<li><strong>Where It Applies:</strong> Government supply chains, military logistics, and <strong>Central Bank Digital Currencies (CBDCs)</strong> — environments where auditability is a legal requirement and anonymity is not expected.</li>
+<li><strong>The Policy Trade-off:</strong> Embedding strict forensic tracking into a <em>public</em> protocol directly conflicts with the Cypherpunk ethos of privacy and permissionless access. Bitcoin will never adopt this. The architecture is a deliberate choice between two incompatible values.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="future-of-forensics-embedded-provenance"><h2 class="slide-title">Future of Forensics: Embedded Provenance</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:75%;">
+<p><strong>Immutability records facts — not meaning.</strong> A standard blockchain permanently records that wallet A sent funds to a mixer at 14:03. It does <em>not</em> record that those funds came from a ransomware payment.</p>
+<ul>
+<li><strong>The Obfuscation Problem:</strong> Criminals exploit immutability. A mixer’s hops are faithfully recorded forever — the history isn’t erased, it’s <em>buried</em> under layers of legitimate-looking transactions.</li>
+<li><strong>What Provenance Adds:</strong> Embedded provenance attaches semantic context to each asset — origin, custody chain, compliance attestation — that a raw transaction graph never carries.</li>
+<li><strong>Enforced at Consensus:</strong> A provenance-bearing system makes a valid custody proof a <em>condition of transaction acceptance</em>. No clean proof → transaction rejected by the protocol, not flagged by an analyst after the fact.</li>
+</ul>
+</div><div class="column" style="width:25%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 202.00 555.20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:269px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 551.2)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="#6c757d" stroke-dasharray="5,2" points="8,-289.6 8,-539.2 186,-539.2 186,-289.6 8,-289.6"/>
+<text text-anchor="middle" x="97" y="-522.6" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#6c757d">Standard Ledger</text>
+</g>
+<g id="clust2" class="cluster">
+<polygon fill="none" stroke="#0d6efd" stroke-dasharray="5,2" points="11,-8 11,-281.6 174,-281.6 174,-8 11,-8"/>
+<text text-anchor="middle" x="92.5" y="-265" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#0d6efd">Provenance&#45;Embedded</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#ffebee" stroke="#c62828" d="M81.57,-506.4C81.57,-506.4 28.43,-506.4 28.43,-506.4 22.43,-506.4 16.43,-500.4 16.43,-494.4 16.43,-494.4 16.43,-472.8 16.43,-472.8 16.43,-466.8 22.43,-460.8 28.43,-460.8 28.43,-460.8 81.57,-460.8 81.57,-460.8 87.57,-460.8 93.57,-466.8 93.57,-472.8 93.57,-472.8 93.57,-494.4 93.57,-494.4 93.57,-500.4 87.57,-506.4 81.57,-506.4"/>
+<text text-anchor="middle" x="55" y="-486.6" font-family="sans-serif" font-size="10.00" fill="#c62828">Tx: A→Mixer</text>
+<text text-anchor="middle" x="55" y="-474.6" font-family="sans-serif" font-size="10.00" fill="#c62828">14:03</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fff9c4" stroke="#f9a825" d="M84.3,-424.8C84.3,-424.8 31.7,-424.8 31.7,-424.8 25.7,-424.8 19.7,-418.8 19.7,-412.8 19.7,-412.8 19.7,-391.2 19.7,-391.2 19.7,-385.2 25.7,-379.2 31.7,-379.2 31.7,-379.2 84.3,-379.2 84.3,-379.2 90.3,-379.2 96.3,-385.2 96.3,-391.2 96.3,-391.2 96.3,-412.8 96.3,-412.8 96.3,-418.8 90.3,-424.8 84.3,-424.8"/>
+<text text-anchor="middle" x="58" y="-405" font-family="sans-serif" font-size="10.00" fill="#f9a825">Tx: Mixer→B</text>
+<text text-anchor="middle" x="58" y="-393" font-family="sans-serif" font-size="10.00" fill="#f9a825">14:07</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#adb5bd" stroke-width="1.8" d="M55.84,-460.43C56.14,-452.41 56.49,-443.19 56.81,-434.52"/>
+<polygon fill="#adb5bd" stroke="#adb5bd" stroke-width="1.8" points="59.25,-434.86 57.07,-427.78 54.35,-434.68 59.25,-434.86"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e8f5e9" stroke="#2e7d32" d="M95.79,-343.2C95.79,-343.2 28.21,-343.2 28.21,-343.2 22.21,-343.2 16.21,-337.2 16.21,-331.2 16.21,-331.2 16.21,-309.6 16.21,-309.6 16.21,-303.6 22.21,-297.6 28.21,-297.6 28.21,-297.6 95.79,-297.6 95.79,-297.6 101.79,-297.6 107.79,-303.6 107.79,-309.6 107.79,-309.6 107.79,-331.2 107.79,-331.2 107.79,-337.2 101.79,-343.2 95.79,-343.2"/>
+<text text-anchor="middle" x="62" y="-323.4" font-family="sans-serif" font-size="10.00" fill="#2e7d32">Tx: B→Exchange</text>
+<text text-anchor="middle" x="62" y="-311.4" font-family="sans-serif" font-size="10.00" fill="#2e7d32">14:55</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#adb5bd" stroke-width="1.8" d="M59.11,-378.83C59.52,-370.81 59.98,-361.59 60.42,-352.92"/>
+<polygon fill="#adb5bd" stroke="#adb5bd" stroke-width="1.8" points="62.85,-353.29 60.75,-346.18 57.96,-353.04 62.85,-353.29"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#e3f2fd" stroke="#0d6efd" d="M88.84,-248.8C88.84,-248.8 35.16,-248.8 35.16,-248.8 29.16,-248.8 23.16,-242.8 23.16,-236.8 23.16,-236.8 23.16,-203.2 23.16,-203.2 23.16,-197.2 29.16,-191.2 35.16,-191.2 35.16,-191.2 88.84,-191.2 88.84,-191.2 94.84,-191.2 100.84,-197.2 100.84,-203.2 100.84,-203.2 100.84,-236.8 100.84,-236.8 100.84,-242.8 94.84,-248.8 88.84,-248.8"/>
+<text text-anchor="middle" x="62" y="-229" font-family="sans-serif" font-size="10.00" fill="#0d6efd">Tx + proof:</text>
+<text text-anchor="middle" x="62" y="-217" font-family="sans-serif" font-size="10.00" fill="#0d6efd">payroll #1234</text>
+<text text-anchor="middle" x="62" y="-205" font-family="sans-serif" font-size="10.00" fill="#0d6efd">compliance ✓</text>
+</g>
+
+
+<g id="node4" class="node">
+<path fill="lightgrey" stroke="none" d="M166.15,-501.6C166.15,-501.6 123.85,-501.6 123.85,-501.6 117.85,-501.6 111.85,-495.6 111.85,-489.6 111.85,-489.6 111.85,-477.6 111.85,-477.6 111.85,-471.6 117.85,-465.6 123.85,-465.6 123.85,-465.6 166.15,-465.6 166.15,-465.6 172.15,-465.6 178.15,-471.6 178.15,-477.6 178.15,-477.6 178.15,-489.6 178.15,-489.6 178.15,-495.6 172.15,-501.6 166.15,-501.6"/>
+<text text-anchor="middle" x="145" y="-480.6" font-family="sans-serif" font-size="10.00" fill="#dc3545">Origin: ???</text>
+</g>
+
+<g id="node6" class="node">
+<path fill="#e3f2fd" stroke="#0d6efd" d="M88.43,-155.2C88.43,-155.2 35.57,-155.2 35.57,-155.2 29.57,-155.2 23.57,-149.2 23.57,-143.2 23.57,-143.2 23.57,-109.6 23.57,-109.6 23.57,-103.6 29.57,-97.6 35.57,-97.6 35.57,-97.6 88.43,-97.6 88.43,-97.6 94.43,-97.6 100.43,-103.6 100.43,-109.6 100.43,-109.6 100.43,-143.2 100.43,-143.2 100.43,-149.2 94.43,-155.2 88.43,-155.2"/>
+<text text-anchor="middle" x="62" y="-135.4" font-family="sans-serif" font-size="10.00" fill="#0d6efd">Tx + proof:</text>
+<text text-anchor="middle" x="62" y="-123.4" font-family="sans-serif" font-size="10.00" fill="#0d6efd">custody chain</text>
+<text text-anchor="middle" x="62" y="-111.4" font-family="sans-serif" font-size="10.00" fill="#0d6efd">intact ✓</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#adb5bd" stroke-width="1.8" d="M62,-191.02C62,-182.84 62,-173.76 62,-165.08"/>
+<polygon fill="#adb5bd" stroke="#adb5bd" stroke-width="1.8" points="64.45,-165.25 62,-158.25 59.55,-165.25 64.45,-165.25"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="#ffebee" stroke="#c62828" d="M90.24,-61.6C90.24,-61.6 33.76,-61.6 33.76,-61.6 27.76,-61.6 21.76,-55.6 21.76,-49.6 21.76,-49.6 21.76,-28 21.76,-28 21.76,-22 27.76,-16 33.76,-16 33.76,-16 90.24,-16 90.24,-16 96.24,-16 102.24,-22 102.24,-28 102.24,-28 102.24,-49.6 102.24,-49.6 102.24,-55.6 96.24,-61.6 90.24,-61.6"/>
+<text text-anchor="middle" x="62" y="-41.8" font-family="sans-serif" font-size="10.00" fill="#c62828">Tx: no proof</text>
+<text text-anchor="middle" x="62" y="-29.8" font-family="sans-serif" font-size="10.00" fill="#c62828">→ REJECTED</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#c62828" stroke-width="1.8" stroke-dasharray="5,2" d="M62,-97.37C62,-89.1 62,-79.99 62,-71.51"/>
+<polygon fill="#c62828" stroke="#c62828" stroke-width="1.8" points="64.45,-71.64 62,-64.65 59.55,-71.65 64.45,-71.64"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="case-study-silk-road"><h2 class="slide-title">Case Study: Silk Road</h2><div class="slide-body">
+<div style="float: right; position: relative; top: 0px; padding: 10px; width:400px;">
+<figure>
+<img src="../img/silk-road.jpg" alt="Silk Road Dashboard" />
+<figcaption aria-hidden="true">Silk Road Dashboard</figcaption>
+</figure>
+</div>
+<p>Launched in 2011 by Ross Ulbricht (alias “Dread Pirate Roberts”), Silk Road was a <strong>massive darknet market</strong> operating on the <strong>Tor network</strong>.</p>
+<p>It facilitated the sale of <strong>illegal drugs, forged identity documents, and hacking tools</strong>, making it a top target for federal law enforcement. Ulbricht famously attempted to use the network to commission <strong>murder-for-hire</strong> hits.</p>
+<p>It <strong>relied exclusively on Bitcoin</strong>, promising users financial anonymity beyond the reach of traditional banks and police.</p>
+<p>It used an internal Bitcoin bank, escrow, and “tumbler” to obscure flows. But the immutable ledger meant <strong>Bitcoin didn’t erase evidence; it permanently recorded it.</strong></p>
+</div></section>
+<section class="slide smaller" id="silk-road-the-break"><h2 class="slide-title">Silk Road: The Break</h2><div class="slide-body">
+<div style="float: right; position: relative; top: 0px; padding: 10px; width:400px;">
+<p><img src="../img/silk-road-seized.jpg" /></p>
+</div>
+<p>The FBI and DEA made over <strong>100 undercover purchases</strong> of narcotics and tracked the physical packages through the mail — the break came from physical detective work, not code analysis.</p>
+<p>Investigators found the real-world location of the Silk Road server by catching a <strong>brief IP address leak</strong> outside the Tor network.</p>
+<p>In October 2013, agents tracked Ulbricht to a <strong>San Francisco public library.</strong> They staged a distraction to grab his open, <strong>unencrypted laptop</strong> before he could lock it.</p>
+<p>Blockchain records became undeniable proof when analysts tied the public ledger’s transaction history directly to the 144,336 <strong>BTC recovered from his seized hard drive</strong>.</p>
+</div></section>
+<section class="slide" id="silk-road-the-ledger"><h2 class="slide-title">Silk Road: The Ledger</h2><div class="slide-body">
+<div style="float: right; position: relative; top: 0px; padding: 10px; width:400px;">
+<p><img src="../img/silk-road-forfeit.png" /></p>
+</div>
+<p>In November 2020, investigators <strong>seized over $1 billion in Bitcoin</strong> stolen from Silk Road back in 2012-2013.</p>
+<p>Prosecutors linked the massive stash to previously hidden transactions from a hacker known as “Individual X.”</p>
+<p>The market was long gone, but the <strong>immutable ledger preserved the evidence</strong> needed for attribution and civil forfeiture.</p>
+<div class="callout-note" data-appearance="minimal">
+<p>Ross Ulbricht received a presidential pardon on January 21, 2025.</p>
+</div>
+</div></section>
+<section class="slide" id="case-study-btc-e"><h2 class="slide-title">Case Study: BTC-e</h2><div class="slide-body">
+<div style="float: right; position: relative; top: 0px; padding: 10px; width:400px;">
+<p><img src="../img/btc-e-seizure.png" /></p>
+</div>
+<p>Founded in 2011 and operated by Alexander Vinnik, <strong>BTC-e</strong> (<em>Bitcoin Exchange</em>) was one of the world’s largest and most <strong>anonymous digital currency exchanges.</strong></p>
+<p>It operated with virtually <strong>no Anti-Money Laundering (AML) controls,</strong> making it a primary cash-out venue for cybercriminals worldwide.</p>
+<p>Investigators targeted it because it acted as a <strong>massive “service cluster,”</strong> facilitating <strong>billions in transactions</strong> for ransomware operators, hackers, and drug traffickers.</p>
+<div class="callout-note" data-appearance="minimal">
+<p>BTC-e was a full web-based exchange — not just a wallet or address cluster.</p>
+<p>Users created pseudonymous accounts, deposited crypto or wired fiat (USD, EUR, RUB) to BTC-e’s shell-company bank accounts, and traded on live order books across multiple pairs (BTC/USD, LTC/BTC, etc.).</p>
+<p>Cash-out happened via wire transfer or payment processors like WebMoney — no identity required.</p>
+</div>
+</div></section>
+<section class="slide" id="btc-e-weak-kyc-made-the-cluster-actionable"><h2 class="slide-title">BTC-e: Weak KYC Made the Cluster Actionable</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li><strong>Zero Identity Checks:</strong> Accounts could be opened with just a username, password, and an email address, explicitly attracting illicit users.</li>
+<li><strong>Clustering the Giant:</strong> Analysts used common-input heuristics to group millions of distinct deposit addresses into a single, massive “BTC-e entity” cluster.</li>
+<li><strong>The Aggregator:</strong> Once the cluster was mapped, investigators traced inflows from diverse criminal sources directly into it—including 300,000 BTC from the Mt. Gox hack.</li>
+<li><strong>The Analytic Signal:</strong> Instead of tracking individual hackers, investigators followed the repeated “fan-in” patterns of stolen funds pooling into BTC-e’s central hot wallets.</li>
+</ul>
+</div><div class="column" style="width:40%;">
+<div style="display: flex; align-items: center; justify-content: center; gap: 10px; font-family: sans-serif; padding: 10px; margin-top: 20px;">
+<div style="display: flex; flex-direction: column; gap: 15px; flex: 1;">
+<div style="background: #ffebee; border: 2px solid #c62828; padding: 10px; border-radius: 6px; text-align: center; color: #c62828; font-size: 0.85em; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+<strong>Mt. Gox Hack</strong><br/>(300k BTC)
+</div>
+<div style="background: #ffebee; border: 2px solid #c62828; padding: 10px; border-radius: 6px; text-align: center; color: #c62828; font-size: 0.85em; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+<strong>Ransomware</strong><br/>Proceeds
+</div>
+<div style="background: #ffebee; border: 2px solid #c62828; padding: 10px; border-radius: 6px; text-align: center; color: #c62828; font-size: 0.85em; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+<strong>Darknet</strong><br/>Markets
+</div>
+</div>
+<div style="display: flex; flex-direction: column; justify-content: space-around; color: #adb5bd; font-size: 2em; font-weight: bold; height: 180px;">
+<div style="transform: rotate(15deg); margin-top: 15px;">
+→
+</div>
+<div>
+→
+</div>
+<div style="transform: rotate(-15deg); margin-bottom: 15px;">
+→
+</div>
+</div>
+<div style="flex: 1.2;">
+<div style="background: #212529; border: 3px solid #ffc107; padding: 25px 10px; border-radius: 12px; text-align: center; color: #ffc107; box-shadow: 0 6px 12px rgba(0,0,0,0.15);">
+<div style="font-size: 2.5em; margin-bottom: 5px;">
+🏦
+</div>
+<p><strong style="font-size: 1.1em;">BTC-e Central<br/>Hot Wallets</strong><br/> <span style="font-size: 0.75em; color: #adb5bd;">Massive Service Cluster</span></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide" id="btc-e-deanonymization"><h2 class="slide-title">BTC-e: Deanonymization</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li><strong>The On-Chain Limit:</strong> Clustering proved the exchange was laundering billions, but an on-chain cluster is just a collection of numbers. It does not contain a name.</li>
+<li><strong>Following the Fiat:</strong> To identify the operator, investigators had to follow the money off the blockchain and into traditional digital payment processors (like WebMoney).</li>
+<li><strong>The OpSec Failure:</strong> Vinnik transferred millions in stolen Mt. Gox funds from BTC-e directly into personal accounts tied to his real name and IP addresses.</li>
+<li><strong>The Synthesis:</strong> By combining on-chain cluster mapping with real-world subpoenas to banks and payment providers, the FBI unmasked the administrator.</li>
+</ul>
+</div><div class="column" style="width:40%;">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 5px; font-family: sans-serif; margin-top: 10px;">
+<div style="background: #212529; border: 2px solid #ffc107; padding: 10px; border-radius: 8px; text-align: center; color: #ffc107; width: 85%; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+<div style="font-size: 1.5em; margin-bottom: 2px;">
+⛓️
+</div>
+<p><strong>On-Chain</strong><br/> <span style="font-size: 0.8em; color: #adb5bd;">BTC-e Cluster</span></p>
+</div>
+<div style="color: #adb5bd; font-size: 1.2em; font-weight: bold; line-height: 1;">
+↓
+</div>
+<div style="background: #f8f9fa; border: 2px solid #0d6efd; padding: 10px; border-radius: 8px; text-align: center; color: #0d6efd; width: 85%; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+<div style="font-size: 1.5em; margin-bottom: 2px;">
+🏦
+</div>
+<p><strong>Fiat Off-Ramp</strong><br/> <span style="font-size: 0.8em; color: #6c757d;">WebMoney Processor</span></p>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; color: #dc3545; font-size: 1em; font-weight: bold; line-height: 1;">
+<span style="font-size: 0.6em; text-transform: uppercase; background: #fff; padding: 2px 8px; border-radius: 10px; border: 1px solid #dc3545; position: relative; top: 6px;">Subpoena</span>
+<div>
+↓
+</div>
+</div>
+<div style="background: #ffebee; border: 2px solid #c62828; padding: 10px; border-radius: 8px; text-align: center; color: #c62828; width: 85%; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+<div style="font-size: 1.5em; margin-bottom: 2px;">
+👤
+</div>
+<p><strong>Real Identity</strong><br/> <span style="font-size: 0.8em;">Alexander Vinnik</span></p>
+</div>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide" id="btc-e-indictment"><h2 class="slide-title">BTC-e: Indictment</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:70%;">
+<ul>
+<li><strong>The 2017 Takedown:</strong> Coordinated action by the DOJ and FinCEN resulted in a $110 million penalty, domain seizures, and Vinnik’s arrest in Greece.</li>
+<li><strong>The Global Chase:</strong> What followed was a multi-year extradition battle, highlighting the complexities of international jurisdiction in borderless crimes.</li>
+<li><strong>The 2024 Resolution:</strong> On May 3, 2024, Alexander Vinnik pleaded guilty in the U.S. to conspiracy to commit money laundering.</li>
+<li><strong>The Strategic Impact:</strong> Taking down the exchange captured funds and fundamentally disrupted the liquidity infrastructure that other cybercriminals relied upon.</li>
+</ul>
+</div><div class="column" style="width:30%;">
+<p><img src="../img/btc-e-vinnick.png" /></p>
+</div>
+</div>
+<div class="callout-note" data-appearance="minimal">
+<p>Alexander Vinnik was released in exchanged for detained American teacher Marc Fogel in 2025.</p>
+</div>
+</div></section>
+<section class="slide" id="case-study-colonial-pipeline"><h2 class="slide-title">Case Study: Colonial Pipeline</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:30%;">
+<figure>
+<img src="../img/gas-closed.png" alt="GenAI vision May 2021" />
+<figcaption aria-hidden="true">GenAI vision May 2021</figcaption>
+</figure>
+</div><div class="column" style="width:70%;">
+<ul>
+<li><p>Colonial Pipeline is the largest refined products pipeline in the U.S., <strong>supplying nearly half the fuel for the East Coast.</strong></p></li>
+<li><p>In May 2021, a Russian-linked cybercriminal group called “DarkSide” <strong>breached Colonial’s IT network</strong> — then deployed ransomware that <strong>locked their billing and business systems.</strong></p></li>
+<li><p>Fearing the malware might spread to operational controls, <strong>Colonial proactively shut down the pipeline,</strong> causing widespread panic-buying and severe gas shortages.</p></li>
+<li><p>Desperate to restore critical infrastructure, <strong>Colonial paid a ransom of approximately 75 BTC</strong>, giving the FBI a live trail to trace on the public ledger.</p></li>
+</ul>
+</div>
+</div>
+</div></section>
+<section class="slide" id="colonial-pipeline-payment-recovery"><h2 class="slide-title">Colonial Pipeline: Payment Recovery</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li>Investigators used public blockchain explorers to follow the initial 75 BTC ransom through <strong>at least six sequential hops</strong> on the public ledger.</li>
+<li>The trace revealed <strong>63.7 BTC</strong> consolidating in a specific, identifiable target address.</li>
+<li><strong>The Jurisdiction:</strong> Because that address was tied to a server located in the <strong>Northern District of California</strong>, the FBI established <strong>legal jurisdiction</strong>.</li>
+<li><strong>The Seizure:</strong> A magistrate judge authorized a warrant, and the FBI used the <strong>recovered private key</strong> to directly transfer and seize the funds.</li>
+</ul>
+</div><div class="column" style="width:40%;">
+<p><img src="../img/colonial-trace.png" /></p>
+</div>
+</div>
+</div></section>
+<section class="slide" id="case-studey-ronin-bridge"><h2 class="slide-title">Case Studey: Ronin Bridge</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:65%;">
+<ul>
+<li>Ronin is an <strong>Ethereum-linked sidechain</strong> built by Sky Mavis specifically for the massively popular play-to-earn game, <em>Axie Infinity</em>.</li>
+<li>To move money between the game and the broader crypto economy, users locked assets in a <strong>cross-chain bridge contract</strong> on Ethereum.</li>
+<li>In March 2022, attackers completely drained the Ethereum side of the bridge, stealing <strong>173,600 ETH and 25.5M USDC</strong> (worth over $620 million).</li>
+<li>The theft <strong>went unnoticed for six days</strong> until a legitimate user tried to withdraw 5,000 ETH and found the contract empty.</li>
+</ul>
+</div><div class="column" style="width:35%;">
+<p><img src="../img/ronin-breach.png" /></p>
+</div>
+</div>
+</div></section>
+<section class="slide" id="ronin-key-management"><h2 class="slide-title">Ronin: Key Management</h2><div class="slide-body">
+<ul>
+<li><strong>The Validator Set:</strong> The bridge was secured by a multi-signature scheme requiring <strong>5 out of 9 validator nodes</strong> to approve any withdrawal.</li>
+<li><strong>The Compromise:</strong> It wasn’t a code exploit. Attackers used spear-phishing to breach Sky Mavis’s IT infrastructure, stealing <strong>four validator private keys</strong>.</li>
+<li><strong>The Fatal Flaw:</strong> To get the required fifth signature, attackers exploited a deprecated but active “gas-free” RPC node to hijack a key belonging to the <strong>Axie DAO</strong>.</li>
+<li><strong>The Forgery:</strong> Armed with 5 keys, the attackers simply <strong>forged valid withdrawal requests</strong>, commanding the bridge to hand over the assets.</li>
+</ul>
+</div></section>
+<section class="slide" id="ronin-tracing-through-the-mixers"><h2 class="slide-title">Ronin: Tracing Through the Mixers</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li><strong>The Wash Cycle:</strong> Lazarus immediately began moving the stolen ETH through <strong>Tornado Cash</strong> on the Ethereum network to break the on-chain links.</li>
+<li><strong>Chain Hopping:</strong> To further complicate the trace, they bridged a portion of the stolen funds from Ethereum over to the Bitcoin network.</li>
+<li><strong>Double Mixing:</strong> Once on Bitcoin, they fed the funds into <strong>Blender.io</strong>, a centralized Bitcoin mixer.</li>
+<li><strong>The Forensic Trace:</strong> Despite these layers, analysts used <strong>timing, volume correlations, and advanced heuristics</strong> to successfully trace the funds through both mixers and across the bridge.</li>
+</ul>
+</div><div class="column" style="width:40%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 220.71 427.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:295px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 423.8)">
+<g id="node1" class="node">
+<path fill="#ffebee" stroke="#c62828" stroke-width="2" d="M151.33,-419.8C151.33,-419.8 61.38,-419.8 61.38,-419.8 55.38,-419.8 49.38,-413.8 49.38,-407.8 49.38,-407.8 49.38,-369.4 49.38,-369.4 49.38,-363.4 55.38,-357.4 61.38,-357.4 61.38,-357.4 151.33,-357.4 151.33,-357.4 157.33,-357.4 163.33,-363.4 163.33,-369.4 163.33,-369.4 163.33,-407.8 163.33,-407.8 163.33,-413.8 157.33,-419.8 151.33,-419.8"/>
+<text text-anchor="middle" x="106.36" y="-392.8" font-family="sans-serif" font-size="14.00" fill="#c62828">Stolen ETH</text>
+<text text-anchor="middle" x="106.36" y="-376" font-family="sans-serif" font-size="14.00" fill="#c62828">(Ronin Bridge)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f8f9fa" stroke="#6c757d" d="M204.05,-278.75C204.05,-278.75 168.2,-313.1 168.2,-313.1 163.87,-317.25 153.53,-321.4 147.53,-321.4 147.53,-321.4 65.18,-321.4 65.18,-321.4 59.18,-321.4 48.85,-317.25 44.51,-313.1 44.51,-313.1 8.66,-278.75 8.66,-278.75 4.33,-274.6 4.33,-266.3 8.66,-262.15 8.66,-262.15 44.51,-227.8 44.51,-227.8 48.85,-223.65 59.18,-219.5 65.18,-219.5 65.18,-219.5 147.53,-219.5 147.53,-219.5 153.53,-219.5 163.87,-223.65 168.2,-227.8 168.2,-227.8 204.05,-262.15 204.05,-262.15 208.38,-266.3 208.38,-274.6 204.05,-278.75"/>
+<text text-anchor="middle" x="106.36" y="-274.65" font-family="sans-serif" font-size="14.00">Tornado Cash</text>
+<text text-anchor="middle" x="106.36" y="-257.85" font-family="sans-serif" font-size="14.00">(Ethereum Mixer)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#adb5bd" stroke-width="2" d="M106.36,-356.47C106.36,-349 106.36,-340.75 106.36,-332.43"/>
+<polygon fill="#adb5bd" stroke="#adb5bd" stroke-width="2" points="109.16,-332.53 106.36,-324.53 103.56,-332.53 109.16,-332.53"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e3f2fd" stroke="#0d6efd" stroke-width="2" d="M164.56,-183.5C164.56,-183.5 48.15,-183.5 48.15,-183.5 42.15,-183.5 36.15,-177.5 36.15,-171.5 36.15,-171.5 36.15,-149.9 36.15,-149.9 36.15,-143.9 42.15,-137.9 48.15,-137.9 48.15,-137.9 164.56,-137.9 164.56,-137.9 170.56,-137.9 176.56,-143.9 176.56,-149.9 176.56,-149.9 176.56,-171.5 176.56,-171.5 176.56,-177.5 170.56,-183.5 164.56,-183.5"/>
+<text text-anchor="middle" x="106.36" y="-156.5" font-family="sans-serif" font-size="14.00" fill="#0d6efd">Cross&#45;Chain Bridge</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#adb5bd" stroke-width="2" d="M106.36,-219.04C106.36,-210.97 106.36,-202.79 106.36,-195.24"/>
+<polygon fill="#adb5bd" stroke="#adb5bd" stroke-width="2" points="109.16,-195.37 106.36,-187.37 103.56,-195.37 109.16,-195.37"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f8f9fa" stroke="#6c757d" d="M193.72,-59.7C193.72,-59.7 162.35,-93.15 162.35,-93.15 158.25,-97.52 148.15,-101.9 142.15,-101.9 142.15,-101.9 70.57,-101.9 70.57,-101.9 64.57,-101.9 54.46,-97.52 50.36,-93.15 50.36,-93.15 18.99,-59.7 18.99,-59.7 14.88,-55.33 14.88,-46.57 18.99,-42.2 18.99,-42.2 50.36,-8.75 50.36,-8.75 54.46,-4.38 64.57,0 70.57,0 70.57,0 142.15,0 142.15,0 148.15,0 158.25,-4.38 162.35,-8.75 162.35,-8.75 193.72,-42.2 193.72,-42.2 197.83,-46.57 197.83,-55.33 193.72,-59.7"/>
+<text text-anchor="middle" x="106.36" y="-55.15" font-family="sans-serif" font-size="14.00">Blender.io</text>
+<text text-anchor="middle" x="106.36" y="-38.35" font-family="sans-serif" font-size="14.00">(Bitcoin Mixer)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#adb5bd" stroke-width="2" d="M106.36,-137.11C106.36,-129.91 106.36,-121.56 106.36,-112.97"/>
+<polygon fill="#adb5bd" stroke="#adb5bd" stroke-width="2" points="109.16,-113.05 106.36,-105.05 103.56,-113.05 109.16,-113.05"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="ronin-from-trace-to-takedown"><h2 class="slide-title">Ronin: From Trace to Takedown</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li><strong>Attribution:</strong> On April 14, 2022, using the blockchain trace, the FBI officially attributed the theft to North Korea’s Lazarus Group.</li>
+<li><strong>Sanctioning the Infrastructure:</strong> Because the trace undeniably proved the mixers were laundering Ronin proceeds, the U.S. Treasury sanctioned <strong>Blender.io</strong> (May 2022) and <strong>Tornado Cash</strong> (Aug 2022).</li>
+<li><strong>The Forensic Impact:</strong> This marked a shift: investigators weren’t just tracking the hackers; they were using on-chain evidence to systematically dismantle the obfuscation tools themselves.</li>
+</ul>
+</div><div class="column" style="width:40%;">
+<p><img src="../img/tornado-sanctions.png" /></p>
+</div>
+</div>
+</div></section>
+<section class="slide" id="ronin-the-norwegian-recovery"><h2 class="slide-title">Ronin: The Norwegian Recovery</h2><div class="slide-body">
+<ul>
+<li><strong>The Off-Ramp Mistake:</strong> Even after double-mixing and chain hopping, the hackers eventually needed to convert crypto to fiat, sending funds to centralized exchanges.</li>
+<li><strong>The Seizure:</strong> Norwegian authorities (Økokrim) tracked these specific deposits and worked with the exchanges to freeze the accounts before the hackers could cash out.</li>
+<li><strong>The Return:</strong> In 2023 and 2024, Norway successfully seized and returned approximately <strong>$5.8 million</strong> to the victims.</li>
+<li><strong>Forensic Lesson:</strong> No matter how complex the middle of the maze is, the exit points (centralized exchanges) remain highly vulnerable to tracing and legal process.</li>
+</ul>
+</div></section>
+<section class="slide" id="ronin-legal-battles"><h2 class="slide-title">Ronin: Legal Battles</h2><div class="slide-body">
+<ul>
+<li><strong>Sanctioning Code vs. Creators:</strong> Initially, the U.S. Treasury sanctioned the Tornado Cash smart contracts. However, following legal challenges, the sanctions were dropped in 2025 because immutable code is not a “person” or “entity.”</li>
+<li><strong>Prosecuting the Operator:</strong> Instead, the DOJ targeted the humans behind the code. They prosecuted <strong>Roman Storm</strong>, the co-founder of Tornado Cash, for knowingly facilitating the laundering of over $1 billion.</li>
+</ul>
+</div></section>
+<section class="slide unnumbered smaller" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-sykes_virtualcurrenciesmoney_2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">J. B. Sykes and N. Vanatko, <span>“Virtual <span>Currencies</span> and <span>Money Laundering</span>: <span>Legal Background</span>, <span>Enforcement Actions</span>, and <span>Legislative Proposals</span>,”</span> Congressional Research Service, Washington, D.C., CRS Report R45664.2, Mar. 2019. Available: <a href="https://www.congress.gov/crs_external_products/R/PDF/R45664/R45664.2.pdf">https://www.congress.gov/crs_external_products/R/PDF/R45664/R45664.2.pdf</a></div>
+</div>
+<div id="ref-uniswaplabs_uniswapdocs_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">Uniswap Labs, <span>“Uniswap documentation.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://docs.uniswap.org">https://docs.uniswap.org</a></div>
+</div>
+<div id="ref-boneh_anonymouscommunicationprivacy_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">D. Boneh and V. Shoup, <span>“Anonymous <span>Communication</span> and <span>Privacy Tools</span>.”</span> 2020. Available: <a href="https://files.boazbarak.org/crypto/lec_23_anonymous.pdf">https://files.boazbarak.org/crypto/lec_23_anonymous.pdf</a></div>
+</div>
+<div id="ref-gjorgjev_blockchainforensicsunmasking_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">J. Gjorgjev, M. F. Ramadhan, and S. Dhamayana, <span>“Blockchain forensics - unmasking anonymity in dark web transactions,”</span> <em>International Journal of Criminology and Sociology</em>, vol. 14, pp. 68–75, Mar. 2025, doi: <a href="https://doi.org/10.6000/1929-4409.2025.14.07">10.6000/1929-4409.2025.14.07</a>.</div>
+</div>
+<div id="ref-kappos_empiricalanalysisanonymity_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">G. Kappos, H. Yousaf, M. Maller, and S. Meiklejohn, <span>“An <span>Empirical Analysis</span> of <span>Anonymity</span> in <span>Zcash</span>,”</span> in <em><span>USENIX Security</span> 2018</em>, 2018, pp. 463–477. doi: <a href="https://doi.org/10.48550/arxiv.1805.03180">10.48550/arxiv.1805.03180</a>.</div>
+</div>
+<div id="ref-salisu_blockchainforensicsmodern_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">S. Salisu and V. Filipov, <span>“Blockchain forensics: A modern approach to investigating cybercrime in the age of decentralisation,”</span> <em>International Conference on Cyber Warfare and Security</em>, vol. 18, pp. 338–347, Feb. 2023, doi: <a href="https://doi.org/10.34190/iccws.18.1.947">10.34190/iccws.18.1.947</a>.</div>
+</div>
+<div id="ref-frowis_safeguardingevidentialvalue_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">M. Fröwis, T. Gottschalk, B. Haslhofer, C. Rückert, and P. Pesch, <span>“Safeguarding the evidential value of forensic cryptocurrency investigations,”</span> <em>Forensic Science International: Digital Investigation</em>, vol. 33, p. 200902, 2020, doi: <a href="https://doi.org/10.1016/j.fsidi.2019.200902">10.1016/j.fsidi.2019.200902</a>.</div>
+</div>
+<div id="ref-song_identifyingmoneylaundering_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">K. Song <em>et al.</em>, <span>“Identifying money laundering subgraphs on the blockchain.”</span> 2024. Available: <a href="https://arxiv.org/abs/2410.08394">https://arxiv.org/abs/2410.08394</a></div>
+</div>
+<div id="ref-atlam_blockchainforensicssystematic_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">H. F. Atlam, N. Ekuri, M. A. Azad, and H. S. Lallie, <span>“Blockchain <span>Forensics</span>: <span>A Systematic Literature Review</span> of <span>Techniques</span>, <span>Applications</span>, <span>Challenges</span>, and <span>Future Directions</span>,”</span> <em>Electronics</em>, vol. 13, no. 17, p. 3568, Jan. 2024, doi: <a href="https://doi.org/10.3390/electronics13173568">10.3390/electronics13173568</a>.</div>
+</div>
+<div id="ref-akbarfam_securecrosschainprovenance_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">A. J. Akbarfam, G. Dorai, and H. Maleki, <span>“Secure cross-chain provenance for digital forensics collaboration: <span>The ForensiCross</span> framework,”</span> <em>arXiv preprint</em>, 2024, doi: <a href="https://doi.org/10.48550/arXiv.2406.11729">10.48550/arXiv.2406.11729</a>.</div>
+</div>
+<div id="ref-akbarfam_forensiblockprovenancedrivenblockchain_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">A. J. Akbarfam, M. Heidaripour, H. Maleki, G. Dorai, and G. Agrawal, <span>“<span>ForensiBlock</span>: A provenance-driven blockchain framework for data forensics and auditability,”</span> <em>arXiv preprint</em>, 2023, doi: <a href="https://doi.org/10.48550/arXiv.2308.03927">10.48550/arXiv.2308.03927</a>.</div>
+</div>
+<div id="ref-avice_linkingcryptoassetattribution_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">R. Avice, B. Haslhofer, Z. Li, and J. Zhou, <span>“Linking cryptoasset attribution tags to knowledge graph entities: <span class="nocase">An LLM-based</span> approach.”</span> 2025. Available: <a href="https://arxiv.org/abs/2502.10453">https://arxiv.org/abs/2502.10453</a></div>
+</div>
+<div id="ref-financialcrimesenforcementnetworkfincen_applicationcertainbusinessmodels_2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">Financial Crimes Enforcement Network (FinCEN), <span>“Application of <span>FinCEN</span>’s regulations to certain business models involving convertible virtual currencies,”</span> U.S. Department of the Treasury, Guidance FIN-2019-G001, May 2019. Accessed: Mar. 27, 2026. [Online]. Available: <a href="https://www.fincen.gov/index.php/resources/statutes-regulations/guidance/application-fincens-regulations-certain-business-models">https://www.fincen.gov/index.php/resources/statutes-regulations/guidance/application-fincens-regulations-certain-business-models</a></div>
+</div>
+<div id="ref-departmentofjustice_operatorscryptocurrencymixers_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">Department of Justice, <span>“Operators of <span>Cryptocurrency Mixers Charged</span> with <span>Money Laundering</span>,”</span> U.S. Dept. of Justice, Washington, D.C., Press Release, Jan. 2025. Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://www.justice.gov/archives/opa/pr/operators-cryptocurrency-mixers-charged-money-laundering">https://www.justice.gov/archives/opa/pr/operators-cryptocurrency-mixers-charged-money-laundering</a></div>
+</div>
+<div id="ref-lin_tracktraceautomatically_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline">D. Lin <em>et al.</em>, <span>“Track and trace: <span>Automatically</span> uncovering cross-chain transactions in the multi-blockchain ecosystems.”</span> 2025. Available: <a href="https://arxiv.org/abs/2504.01822">https://arxiv.org/abs/2504.01822</a></div>
+</div>
+<div id="ref-departmentofjustice_manhattanusattorneyannounces_2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[16] </div><div class="csl-right-inline">Department of Justice, <span>“Manhattan <span>U.S. Attorney</span> announces the indictment of ross ulbricht, the creator and owner of the <span>‘<span>Silk Road</span>’</span> website,”</span> U.S. Dept. of Justice, New York, N.Y., Press Release, Feb. 2014. Accessed: Mar. 17, 2026. [Online]. Available: <a href="https://www.justice.gov/usao-sdny/pr/manhattan-us-attorney-announces-indictment-ross-ulbricht-creator-and-owner-silk-road">https://www.justice.gov/usao-sdny/pr/manhattan-us-attorney-announces-indictment-ross-ulbricht-creator-and-owner-silk-road</a></div>
+</div>
+<div id="ref-departmentofjustice_rossulbrichtcreator_2015" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[17] </div><div class="csl-right-inline">Department of Justice, <span>“Ross ulbricht, the creator and owner of the <span>‘<span>Silk Road</span>’</span> website, found guilty in manhattan federal court on all counts,”</span> U.S. Dept. of Justice, New York, N.Y., Press Release, Feb. 2015. Accessed: Mar. 17, 2026. [Online]. Available: <a href="https://www.justice.gov/usao-sdny/pr/ross-ulbricht-creator-and-owner-silk-road-website-found-guilty-manhattan-federal-court">https://www.justice.gov/usao-sdny/pr/ross-ulbricht-creator-and-owner-silk-road-website-found-guilty-manhattan-federal-court</a></div>
+</div>
+<div id="ref-financialcrimesenforcementnetworkfincen_fincenfinesbtce_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[18] </div><div class="csl-right-inline">Financial Crimes Enforcement Network (FinCEN), <span>“<span>FinCEN</span> fines <span class="nocase">BTC-e</span> virtual currency exchange $110 million for facilitating ransomware, dark net drug sales,”</span> U.S. Department of the Treasury, Washington, D.C., Press Release, July 2017. Accessed: Mar. 17, 2026. [Online]. Available: <a href="https://www.fincen.gov/news/news-releases/fincen-fines-btc-e-virtual-currency-exchange-110-million-facilitating-ransomware">https://www.fincen.gov/news/news-releases/fincen-fines-btc-e-virtual-currency-exchange-110-million-facilitating-ransomware</a></div>
+</div>
+<div id="ref-departmentofjustice_departmentjusticeseizes_2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[19] </div><div class="csl-right-inline">Department of Justice, <span>“Department of <span>Justice Seizes</span> $2.3 <span>Million</span> in <span>Cryptocurrency Paid</span> to the <span>Ransomware Extortionists Darkside</span>,”</span> U.S. Dept. of Justice, Washington, D.C., Press Release, June 2021. Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://www.justice.gov/archives/opa/pr/department-justice-seizes-23-million-cryptocurrency-paid-ransomware-extortionists-darkside">https://www.justice.gov/archives/opa/pr/department-justice-seizes-23-million-cryptocurrency-paid-ransomware-extortionists-darkside</a></div>
+</div>
+<div id="ref-roninnetwork_roninblogcommunity_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[20] </div><div class="csl-right-inline">Ronin Network, <span>“Ronin <span>Blog</span> | <span>Community Alert</span>: <span>Ronin Validators Compromised</span>.”</span> Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://roninchain.com/blog/posts/community-alert-ronin-validators-6513cc78a5edc1001b03c366">https://roninchain.com/blog/posts/community-alert-ronin-validators-6513cc78a5edc1001b03c366</a></div>
+</div>
+<div id="ref-fbinationalpressoffice_fbistatementattribution_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[21] </div><div class="csl-right-inline">FBI National Press Office, <span>“<span>FBI Statement</span> on <span>Attribution</span> of <span>Malicious Cyber Activity Posed</span> by the <span>Democratic People</span>’s <span>Republic</span> of <span>Korea</span>.”</span> Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://www.fbi.gov/news/press-releases/fbi-statement-on-attribution-of-malicious-cyber-activity-posed-by-the-democratic-peoples-republic-of-korea">https://www.fbi.gov/news/press-releases/fbi-statement-on-attribution-of-malicious-cyber-activity-posed-by-the-democratic-peoples-republic-of-korea</a></div>
+</div>
+<div id="ref-u.s.dept.oftreasury_ustreasurysanctions_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[22] </div><div class="csl-right-inline">U.S. Dept. of Treasury, <span>“U.<span>S</span>. <span>Treasury Sanctions Notorious Virtual Currency Mixer Tornado Cash</span>,”</span> United States Government, Washington, D.C., Press Release, Aug. 2022. Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://home.treasury.gov/news/press-releases/jy0916">https://home.treasury.gov/news/press-releases/jy0916</a></div>
+</div>
+<div id="ref-u.s.dept.oftreasury_ustreasuryissuesfirstever_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[23] </div><div class="csl-right-inline">U.S. Dept. of Treasury, <span>“<span>U.S. Treasury</span> issues first-ever sanctions on a virtual currency mixer, targets <span>DPRK</span> cyber threats,”</span> United States Government, Washington, D.C., Press Release, May 2022. Accessed: Mar. 17, 2026. [Online]. Available: <a href="https://home.treasury.gov/news/press-releases/jy0768">https://home.treasury.gov/news/press-releases/jy0768</a></div>
+</div>
+<div id="ref-okokrim_recordcryptocurrencyseizure_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[24] </div><div class="csl-right-inline">Økokrim, <span>“Record cryptocurrency seizure in the <span>Axie</span> case.”</span> Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://www.okokrim.no/record-cryptocurrency-seizure-in-the-axie-case.6585495-549344.html">https://www.okokrim.no/record-cryptocurrency-seizure-in-the-axie-case.6585495-549344.html</a></div>
+</div>
+<div id="ref-okokrim_nok60million_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[25] </div><div class="csl-right-inline">Økokrim, <span>“<span>NOK</span> 60 million confiscated in the <span>Axie</span> case - <span>Økokrim</span>.”</span> Accessed: Oct. 20, 2025. [Online]. Available: <a href="https://www.okokrim.no/nok-60-million-confiscated-in-the-axie-case.6671030-549344.html">https://www.okokrim.no/nok-60-million-confiscated-in-the-axie-case.6671030-549344.html</a></div>
+</div>
+<div id="ref-u.s.dept.oftreasury_tornadocashdelisting_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[26] </div><div class="csl-right-inline">U.S. Dept. of Treasury, <span>“<span>Tornado Cash</span> delisting,”</span> United States Government, Washington, D.C., Press Release, Mar. 2025. Accessed: Mar. 17, 2026. [Online]. Available: <a href="https://home.treasury.gov/news/press-releases/sb0057">https://home.treasury.gov/news/press-releases/sb0057</a></div>
+</div>
+<div id="ref-departmentofjustice_foundertornadocash_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[27] </div><div class="csl-right-inline">Department of Justice, <span>“Founder of <span>Tornado Cash</span> crypto mixing service convicted of knowingly transmitting criminal proceeds,”</span> U.S. Dept. of Justice, New York, N.Y., Press Release, Aug. 2025. Accessed: Mar. 17, 2026. [Online]. Available: <a href="https://www.justice.gov/usao-sdny/pr/founder-tornado-cash-crypto-mixing-service-convicted-knowingly-transmitting-criminal">https://www.justice.gov/usao-sdny/pr/founder-tornado-cash-crypto-mixing-service-convicted-knowingly-transmitting-criminal</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

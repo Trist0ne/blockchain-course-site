@@ -1,3 +1,4 @@
+/* Built by tools/build.py from blockchain-course/modules/ethereum/labs/ctf-calldata/lab-data.js. Edit that file, not this copy. */
 /* "What did the wallet sign?": read an ERC-20 call out of a transaction's data field.
    Each student's call is built from the room code and their account; the answers are computed, never stored.
    Needs kit.js, kit/wallet.js and kit/lab.js. */
@@ -20,6 +21,7 @@
   function structure() { return { legend: LEGEND, regions: [{ kind: 'fixed', label: 'selector', start: 0, end: 4 }, { kind: 'inputs', label: 'first argument', start: 4, end: 36 }, { kind: 'outputs', label: 'second argument', start: 36, end: 68 }] }; }
   Kit.defineLab({
     id: 'ctf-calldata', rev: 1,
+    covers: ['ef-04'],   // the lessons this builds on: the plan checker warns if it is scheduled before them
     title: 'What did the wallet sign?', tags: ['Ethereum', 'Transactions'], minutes: 12, crumbs: 'Ethereum Framework · Challenge',
     lede: 'A wallet shows a prompt: send 0 ETH to a contract, plus a line of hex. People press Confirm on prompts like this every day. Everything that matters is in the hex.',
     real: 'The contract address is the real Tether USD (USDT) token on Ethereum, which uses 6 decimals. The data is encoded exactly as Ethereum encodes a contract call, and the hashing is real Keccak-256. The shortcut: this call was made up for you and was never sent.',

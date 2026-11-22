@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bitcoin Security and Legal Concerns</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/bitcoin/04-BF-bitcoin_security_and_legal_concerns.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="bf-04" data-code="04-BF" data-src="db8e438adf114f0c" data-slides="22">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section VI: Bitcoin Framework · Lesson 04-BF</p><h1>Bitcoin Security and Legal Concerns</h1></div></section>
+<section class="slide" id="agenda"><h2 class="slide-title">Agenda</h2><div class="slide-body">
+<ul>
+<li><strong>Start with attack surfaces</strong>: ask what an adversary might try to achieve against Bitcoin and which parts of the system they would target.</li>
+<li><strong>Work through concrete examples</strong>: compare consensus, network, and incentive attacks, then study the 2010 overflow bug and the Bitcoin Gold 51% attack.</li>
+<li><strong>End with off-chain controls</strong>: examine how KYC and AML shape Bitcoin use through exchanges and custodians rather than through the protocol itself.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="why-attack-bitcoin"><h2 class="slide-title">Why Attack Bitcoin?</h2><div class="slide-body">
+<ul>
+<li><strong>Profit from fraud</strong>: spend the same coins twice or redirect newly created coins by reorganizing recent blocks.</li>
+<li><strong>Erode public trust</strong>: make the shared ledger appear unreliable or unsafe.</li>
+<li><strong>Impose policy control</strong>: censor transactions or monitor participants to advance state or institutional goals.</li>
+<li><strong>Cause strategic disruption</strong>: trigger instability or price dislocation to create economic or political leverage.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p>As we review these attacks, take a moment and assume an adversarial mindset and consider how an adversary can abuse weaknesses in bitcoin in unconventional ways.</p>
+</div>
+</div></section>
+<section class="slide" id="what-can-consensus-attacks-achieve"><h2 class="slide-title">What Can Consensus Attacks Achieve?</h2><div class="slide-body">
+<p><strong>Recall the basic idea</strong>: a consensus attack tries to manipulate which version of recent ledger history honest nodes accept as the valid chain, which could possibly:</p>
+<ul>
+<li><strong>Spend the same coins twice</strong>: defraud merchants or trading platforms by reversing a recent payment.</li>
+<li><strong>Block selected transactions</strong>: delay or exclude chosen payments to enforce censorship.</li>
+<li><strong>Rewrite recent ledger history</strong>: perform short reorganizations that replace a few recent blocks.</li>
+<li><strong>Split the network</strong>: create conflicting versions of the ledger, causing confusion and loss of confidence.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="sybil-attacks"><h2 class="slide-title">Sybil Attacks</h2><div class="slide-body">
+<ul>
+<li><strong>Attack premise:</strong> a Sybil attack on Bitcoin means surrounding the peer-to-peer network with many attacker-controlled nodes so a victim is more likely to connect to them.</li>
+<li><strong>Main practical goal:</strong> isolate one wallet, merchant, or full node in an <strong>eclipse attack</strong>, so the victim sees a distorted view of transactions and blocks.</li>
+<li><strong>How it works in Bitcoin:</strong> attackers try to fill peer tables, bias address gossip, or exploit restarts and weak peer diversity so the target reconnects mostly to attacker peers.</li>
+<li><strong>What it enables:</strong> delayed block and transaction relay, selective censorship, bad fee estimates, and support for follow-on attacks like double-spends against a specific target.</li>
+<li><strong>Why this is not a 51% attack:</strong> the attacker controls the victim’s network view, not global block production or the validity rules of Bitcoin itself.</li>
+<li><strong>Bitcoin’s defenses:</strong> outbound peer preference, subnet and address diversity, anchor and feeler connections, peer rotation, and denial-of-service penalties all raise the cost of maintaining fake identities at scale.</li>
+</ul>
+</div></section>
+<section class="slide" id="partitioning-attacks"><h2 class="slide-title">Partitioning Attacks</h2><div class="slide-body">
+<div style="font-size: 0.76em;">
+<ul>
+<li><strong>Attack premise:</strong> a partitioning attack tries to split nodes or miners into different network views so they stop learning about the same blocks at the same time.</li>
+<li><strong>Real-world mechanism:</strong> Internet routing incidents such as BGP hijacks and route leaks already happen in practice; <a href="https://ieeexplore.ieee.org/document/7958588/">research showed</a> an AS-level attacker could exploit that infrastructure to isolate or delay Bitcoin traffic.</li>
+<li><strong>Why Bitcoin is exposed:</strong> mining and relay traffic are not spread evenly across the whole Internet, so a small number of routing choke points matter disproportionately.</li>
+<li><strong>What this can cause:</strong> slower block relay, wasted mining effort, temporary competing tips, and better conditions for targeted double-spend attempts.</li>
+</ul>
+</div>
+<div style="position: relative; top: -190px;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 826.03 145.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1101px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 141)">
+<g id="clust1" class="cluster">
+<path fill="none" stroke="#9ad7e0" d="M20,-13C20,-13 285.89,-13 285.89,-13 291.89,-13 297.89,-19 297.89,-25 297.89,-25 297.89,-114 297.89,-114 297.89,-120 291.89,-126 285.89,-126 285.89,-126 20,-126 20,-126 14,-126 8,-120 8,-114 8,-114 8,-25 8,-25 8,-19 14,-13 20,-13"/>
+<text text-anchor="middle" x="152.94" y="-109.4" font-family="Helvetica,sans-Serif" font-size="14.00">Region A</text>
+</g>
+<g id="clust2" class="cluster">
+<path fill="none" stroke="#9ad7e0" d="M532.14,-16C532.14,-16 798.03,-16 798.03,-16 804.03,-16 810.03,-22 810.03,-28 810.03,-28 810.03,-117 810.03,-117 810.03,-123 804.03,-129 798.03,-129 798.03,-129 532.14,-129 532.14,-129 526.14,-129 520.14,-123 520.14,-117 520.14,-117 520.14,-28 520.14,-28 520.14,-22 526.14,-16 532.14,-16"/>
+<text text-anchor="middle" x="665.09" y="-112.4" font-family="Helvetica,sans-Serif" font-size="14.00">Region B</text>
+</g>
+
+<g id="node1" class="node">
+<ellipse fill="#e0f7fa" stroke="#006064" stroke-width="1.2" cx="34.65" cy="-58" rx="18.65" ry="18.65"/>
+<text text-anchor="middle" x="34.65" y="-54.7" font-family="Helvetica,sans-Serif" font-size="11.00">A1</text>
+</g>
+
+<g id="node2" class="node">
+<ellipse fill="#e0f7fa" stroke="#006064" stroke-width="1.2" cx="152.94" cy="-40" rx="18.65" ry="18.65"/>
+<text text-anchor="middle" x="152.94" y="-36.7" font-family="Helvetica,sans-Serif" font-size="11.00">A2</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#4f6b72" stroke-width="1.2" d="M53.56,-55.23C75.48,-51.83 112.36,-46.13 134.2,-42.75"/>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="#e0f7fa" stroke="#006064" stroke-width="1.2" cx="271.24" cy="-75" rx="18.65" ry="18.65"/>
+<text text-anchor="middle" x="271.24" y="-71.7" font-family="Helvetica,sans-Serif" font-size="11.00">A3</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#4f6b72" stroke-width="1.2" stroke-dasharray="1,5" d="M53.35,-61.99C73,-66.2 105.73,-72.56 134.3,-75 176.39,-78.6 226.08,-77.17 252.17,-75.98"/>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#4f6b72" stroke-width="1.2" d="M171.35,-45.24C193.41,-51.88 231.16,-63.24 253.09,-69.84"/>
+</g>
+
+<g id="node5" class="node">
+<ellipse fill="#e0f7fa" stroke="#006064" stroke-width="1.2" cx="665.09" cy="-43" rx="18.65" ry="18.65"/>
+<text text-anchor="middle" x="665.09" y="-39.7" font-family="Helvetica,sans-Serif" font-size="11.00">B2</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#c62828" stroke-width="1.2" stroke-dasharray="5,2" d="M169.54,-30.92C191.32,-19.12 232.45,0 270.24,0 270.24,0 270.24,0 547.79,0 582.07,0 618.69,-16.63 641.49,-29.21"/>
+<polygon fill="#c62828" stroke="#c62828" stroke-width="1.2" points="640.07,-31.23 647.37,-32.56 642.5,-26.97 640.07,-31.23"/>
+<text text-anchor="middle" x="409.02" y="-4.2" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#c62828">limited route</text>
+</g>
+
+<g id="node4" class="node">
+<ellipse fill="#e0f7fa" stroke="#006064" stroke-width="1.2" cx="546.79" cy="-78" rx="18.65" ry="18.65"/>
+<text text-anchor="middle" x="546.79" y="-74.7" font-family="Helvetica,sans-Serif" font-size="11.00">B1</text>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#c62828" stroke-width="1.2" stroke-dasharray="5,2" d="M290.19,-75.2C337.14,-75.71 463.78,-77.1 519.21,-77.71"/>
+<polygon fill="#c62828" stroke="#c62828" stroke-width="1.2" points="518.93,-80.16 525.96,-77.78 518.99,-75.26 518.93,-80.16"/>
+<text text-anchor="middle" x="409.02" y="-81.11" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#c62828">limited route</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#4f6b72" stroke-width="1.2" d="M565.2,-72.76C587.25,-66.12 625.01,-54.76 646.94,-48.16"/>
+</g>
+
+<g id="node6" class="node">
+<ellipse fill="#e0f7fa" stroke="#006064" stroke-width="1.2" cx="783.38" cy="-61" rx="18.65" ry="18.65"/>
+<text text-anchor="middle" x="783.38" y="-57.7" font-family="Helvetica,sans-Serif" font-size="11.00">B3</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#4f6b72" stroke-width="1.2" stroke-dasharray="1,5" d="M565.86,-78.98C591.95,-80.17 641.64,-81.6 683.73,-78 712.31,-75.56 745.03,-69.2 764.68,-64.99"/>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#4f6b72" stroke-width="1.2" d="M684,-45.77C705.92,-49.17 742.8,-54.87 764.64,-58.25"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide" id="mitigations-against-eclipsepartitioning"><h2 class="slide-title">Mitigations Against Eclipse/Partitioning</h2><div class="slide-body">
+<div style="font-size: 0.76em;">
+<ul>
+<li>Diversify peers across ISPs, ASNs, and regions so one network domain cannot dominate what your node sees.</li>
+<li>Prefer stable outbound peers and refresh connections over time instead of trusting a static or attacker-shaped peer set.</li>
+<li>Limit concentration from the same subnet or hosting provider to make eclipse-style crowding harder.</li>
+<li>For miners, exchanges, and other high-value operators, watch for routing anomalies and use redundant paths before trusting rapid settlement.</li>
+</ul>
+</div>
+<div style="position: relative; top: -100px;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 495.70 166.40" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:661px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 162.4)">
+<g id="node1" class="node">
+<path fill="#ede7f6" stroke="#4527a0" stroke-width="1.5" d="M255.01,-158.4C255.01,-158.4 212.24,-158.4 212.24,-158.4 206.24,-158.4 200.24,-152.4 200.24,-146.4 200.24,-146.4 200.24,-134.4 200.24,-134.4 200.24,-128.4 206.24,-122.4 212.24,-122.4 212.24,-122.4 255.01,-122.4 255.01,-122.4 261.01,-122.4 267.01,-128.4 267.01,-134.4 267.01,-134.4 267.01,-146.4 267.01,-146.4 267.01,-152.4 261.01,-158.4 255.01,-158.4"/>
+<text text-anchor="middle" x="233.63" y="-137.1" font-family="Helvetica,sans-Serif" font-size="11.00">Your node</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e0f7fa" stroke="#006064" stroke-width="1.1" d="M49.25,-47.6C49.25,-47.6 12,-47.6 12,-47.6 6,-47.6 0,-41.6 0,-35.6 0,-35.6 0,-12 0,-12 0,-6 6,0 12,0 12,0 49.25,0 49.25,0 55.25,0 61.25,-6 61.25,-12 61.25,-12 61.25,-35.6 61.25,-35.6 61.25,-41.6 55.25,-47.6 49.25,-47.6"/>
+<text text-anchor="middle" x="30.63" y="-33.7" font-family="Helvetica,sans-Serif" font-size="11.00">Peer</text>
+<text text-anchor="middle" x="30.63" y="-20.5" font-family="Helvetica,sans-Serif" font-size="11.00">Region A</text>
+<text text-anchor="middle" x="30.63" y="-7.3" font-family="Helvetica,sans-Serif" font-size="11.00">ASN 1</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#5f6b73" stroke-width="1.2" d="M202.79,-121.99C167.02,-101.8 108.01,-68.48 69.22,-46.59"/>
+<polygon fill="#5f6b73" stroke="#5f6b73" stroke-width="1.2" points="70.63,-44.57 63.33,-43.26 68.22,-48.84 70.63,-44.57"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e0f7fa" stroke="#006064" stroke-width="1.1" d="M150.25,-47.6C150.25,-47.6 113,-47.6 113,-47.6 107,-47.6 101,-41.6 101,-35.6 101,-35.6 101,-12 101,-12 101,-6 107,0 113,0 113,0 150.25,0 150.25,0 156.25,0 162.25,-6 162.25,-12 162.25,-12 162.25,-35.6 162.25,-35.6 162.25,-41.6 156.25,-47.6 150.25,-47.6"/>
+<text text-anchor="middle" x="131.63" y="-33.7" font-family="Helvetica,sans-Serif" font-size="11.00">Peer</text>
+<text text-anchor="middle" x="131.63" y="-20.5" font-family="Helvetica,sans-Serif" font-size="11.00">Region B</text>
+<text text-anchor="middle" x="131.63" y="-7.3" font-family="Helvetica,sans-Serif" font-size="11.00">ASN 2</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#5f6b73" stroke-width="1.2" d="M218.13,-121.99C202.17,-104.06 177,-75.78 157.92,-54.34"/>
+<polygon fill="#5f6b73" stroke="#5f6b73" stroke-width="1.2" points="159.9,-52.88 153.42,-49.28 156.24,-56.14 159.9,-52.88"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#e0f7fa" stroke="#006064" stroke-width="1.1" d="M252.55,-47.6C252.55,-47.6 214.7,-47.6 214.7,-47.6 208.7,-47.6 202.7,-41.6 202.7,-35.6 202.7,-35.6 202.7,-12 202.7,-12 202.7,-6 208.7,0 214.7,0 214.7,0 252.55,0 252.55,0 258.55,0 264.55,-6 264.55,-12 264.55,-12 264.55,-35.6 264.55,-35.6 264.55,-41.6 258.55,-47.6 252.55,-47.6"/>
+<text text-anchor="middle" x="233.63" y="-33.7" font-family="Helvetica,sans-Serif" font-size="11.00">Peer</text>
+<text text-anchor="middle" x="233.63" y="-20.5" font-family="Helvetica,sans-Serif" font-size="11.00">Region C</text>
+<text text-anchor="middle" x="233.63" y="-7.3" font-family="Helvetica,sans-Serif" font-size="11.00">ASN 3</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#5f6b73" stroke-width="1.2" d="M233.63,-121.99C233.63,-104.68 233.63,-77.72 233.63,-56.58"/>
+<polygon fill="#5f6b73" stroke="#5f6b73" stroke-width="1.2" points="236.08,-56.74 233.63,-49.74 231.18,-56.74 236.08,-56.74"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#f1f8e9" stroke="#33691e" stroke-width="1.1" d="M346.63,-41.8C346.63,-41.8 316.63,-41.8 316.63,-41.8 310.63,-41.8 304.63,-35.8 304.63,-29.8 304.63,-29.8 304.63,-17.8 304.63,-17.8 304.63,-11.8 310.63,-5.8 316.63,-5.8 316.63,-5.8 346.63,-5.8 346.63,-5.8 352.63,-5.8 358.63,-11.8 358.63,-17.8 358.63,-17.8 358.63,-29.8 358.63,-29.8 358.63,-35.8 352.63,-41.8 346.63,-41.8"/>
+<text text-anchor="middle" x="331.63" y="-20.5" font-family="Helvetica,sans-Serif" font-size="11.00">ISP A</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#c62828" stroke-width="1.2" stroke-dasharray="5,2" d="M248.51,-121.99C265.3,-102.36 292.7,-70.32 311.41,-48.43"/>
+<polygon fill="#c62828" stroke="#c62828" stroke-width="1.2" points="313.05,-50.29 315.74,-43.37 309.33,-47.1 313.05,-50.29"/>
+<text text-anchor="middle" x="328.37" y="-80.8" font-family="Helvetica,sans-Serif" font-size="14.00">alternate path</text>
+</g>
+
+<g id="node6" class="node">
+<path fill="#f1f8e9" stroke="#33691e" stroke-width="1.1" d="M461.63,-41.8C461.63,-41.8 431.63,-41.8 431.63,-41.8 425.63,-41.8 419.63,-35.8 419.63,-29.8 419.63,-29.8 419.63,-17.8 419.63,-17.8 419.63,-11.8 425.63,-5.8 431.63,-5.8 431.63,-5.8 461.63,-5.8 461.63,-5.8 467.63,-5.8 473.63,-11.8 473.63,-17.8 473.63,-17.8 473.63,-29.8 473.63,-29.8 473.63,-35.8 467.63,-41.8 461.63,-41.8"/>
+<text text-anchor="middle" x="446.63" y="-20.5" font-family="Helvetica,sans-Serif" font-size="11.00">ISP B</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#c62828" stroke-width="1.2" stroke-dasharray="5,2" d="M267.42,-133.98C298.83,-127.81 345.99,-115.58 381.63,-93.4 400.18,-81.85 417.02,-63.75 428.91,-49.04"/>
+<polygon fill="#c62828" stroke="#c62828" stroke-width="1.2" points="430.82,-50.58 433.22,-43.56 426.96,-47.55 430.82,-50.58"/>
+<text text-anchor="middle" x="444.89" y="-80.8" font-family="Helvetica,sans-Serif" font-size="14.00">alternate path</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide" id="timing-latency-attacks"><h2 class="slide-title">Timing &amp; Latency Attacks</h2><div class="slide-body">
+<div style="font-size: 0.69em;">
+<ul>
+<li><strong>Attack premise:</strong> watch enough peers and infer the source from who relayed first.</li>
+<li><strong>First-spy heuristic:</strong> timestamp <code>inv(tx)</code> sightings and treat the earliest one as the best source guess.</li>
+<li><strong>What it reveals:</strong> a likely origin IP or network location that can be linked to a user or service.</li>
+<li><strong>Why it matters:</strong> <a href="https://dl.acm.org/doi/10.1145/2660267.2660379">research showed</a> this can work in practice, and routing attackers can improve the view they observe.</li>
+</ul>
+</div>
+<div class="columns">
+<div class="column" style="width:20%;">
+
+</div><div class="column" style="width:60%;">
+<figure class="diagram mermaid"><svg aria-roledescription="sequence" role="graphics-document document" viewBox="-50 -10 868 309" style="max-width: 868px;" xmlns="http://www.w3.org/2000/svg" width="100%" id="mmd1"><g><rect class="actor actor-bottom" ry="3" rx="3" name="N" height="65" width="150" stroke="#666" fill="#eaeaea" y="223" x="618"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="255.5" x="693"><tspan dy="0" x="693">Network Monitor</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="P2" height="65" width="150" stroke="#666" fill="#eaeaea" y="223" x="407"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="255.5" x="482"><tspan dy="0" x="482">Peer 2 (Observer)</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="P1" height="65" width="150" stroke="#666" fill="#eaeaea" y="223" x="207"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="255.5" x="282"><tspan dy="0" x="282">Peer 1</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="U" height="65" width="157" stroke="#666" fill="#eaeaea" y="223" x="0"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="255.5" x="78.5"><tspan dy="0" x="78.5">User Node (Origin)</tspan></text></g><g><line name="N" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="223" x2="693" y1="65" x1="693" id="actor6"></line><g id="root-6"><rect class="actor actor-top" ry="3" rx="3" name="N" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="618"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="693"><tspan dy="0" x="693">Network Monitor</tspan></text></g></g><g><line name="P2" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="223" x2="482" y1="65" x1="482" id="actor5"></line><g id="root-5"><rect class="actor actor-top" ry="3" rx="3" name="P2" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="407"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="482"><tspan dy="0" x="482">Peer 2 (Observer)</tspan></text></g></g><g><line name="P1" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="223" x2="282" y1="65" x1="282" id="actor4"></line><g id="root-4"><rect class="actor actor-top" ry="3" rx="3" name="P1" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="207"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="282"><tspan dy="0" x="282">Peer 1</tspan></text></g></g><g><line name="U" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="223" x2="78.5" y1="65" x1="78.5" id="actor3"></line><g id="root-3"><rect class="actor actor-top" ry="3" rx="3" name="U" height="65" width="157" stroke="#666" fill="#eaeaea" y="0" x="0"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400; font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="78.5"><tspan dy="0" x="78.5">User Node (Origin)</tspan></text></g></g><style>#mmd1{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;fill:#000000;}#mmd1 .error-icon{fill:#552222;}#mmd1 .error-text{fill:#552222;stroke:#552222;}#mmd1 .edge-thickness-normal{stroke-width:1px;}#mmd1 .edge-thickness-thick{stroke-width:3.5px;}#mmd1 .edge-pattern-solid{stroke-dasharray:0;}#mmd1 .edge-thickness-invisible{stroke-width:0;fill:none;}#mmd1 .edge-pattern-dashed{stroke-dasharray:3;}#mmd1 .edge-pattern-dotted{stroke-dasharray:2;}#mmd1 .marker{fill:#666;stroke:#666;}#mmd1 .marker.cross{stroke:#666;}#mmd1 svg{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;}#mmd1 p{margin:0;}#mmd1 .actor{stroke:hsl(0, 0%, 83%);fill:#eee;}#mmd1 text.actor&gt;tspan{fill:#333;stroke:none;}#mmd1 .actor-line{stroke:hsl(0, 0%, 83%);}#mmd1 .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:#333;}#mmd1 .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:#333;}#mmd1 #arrowhead path{fill:#333;stroke:#333;}#mmd1 .sequenceNumber{fill:white;}#mmd1 #sequencenumber{fill:#333;}#mmd1 #crosshead path{fill:#333;stroke:#333;}#mmd1 .messageText{fill:#333;stroke:none;}#mmd1 .labelBox{stroke:hsl(0, 0%, 83%);fill:#eee;}#mmd1 .labelText,#mmd1 .labelText&gt;tspan{fill:#333;stroke:none;}#mmd1 .loopText,#mmd1 .loopText&gt;tspan{fill:#333;stroke:none;}#mmd1 .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:hsl(0, 0%, 83%);fill:hsl(0, 0%, 83%);}#mmd1 .note{stroke:#999;fill:#666;}#mmd1 .noteText,#mmd1 .noteText&gt;tspan{fill:#fff;stroke:none;}#mmd1 .activation0{fill:#f4f4f4;stroke:#666;}#mmd1 .activation1{fill:#f4f4f4;stroke:#666;}#mmd1 .activation2{fill:#f4f4f4;stroke:#666;}#mmd1 .actorPopupMenu{position:absolute;}#mmd1 .actorPopupMenuPanel{position:absolute;fill:#eee;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#mmd1 .actor-man line{stroke:hsl(0, 0%, 83%);fill:#eee;}#mmd1 .actor-man circle,#mmd1 line{stroke:hsl(0, 0%, 83%);fill:#eee;stroke-width:2px;}#mmd1 :root{--mermaid-font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;}</style><g></g><defs><symbol height="24" width="24" id="computer"><path d="M2 2v13h20v-13h-20zm18 11h-16v-9h16v9zm-10.228 6l.466-1h3.524l.467 1h-4.457zm14.228 3h-24l2-6h2.104l-1.33 4h18.45l-1.297-4h2.073l2 6zm-5-10h-14v-7h14v7z" transform="scale(.5)"></path></symbol></defs><defs><symbol clip-rule="evenodd" fill-rule="evenodd" id="database"><path d="M12.258.001l.256.004.255.005.253.008.251.01.249.012.247.015.246.016.242.019.241.02.239.023.236.024.233.027.231.028.229.031.225.032.223.034.22.036.217.038.214.04.211.041.208.043.205.045.201.046.198.048.194.05.191.051.187.053.183.054.18.056.175.057.172.059.168.06.163.061.16.063.155.064.15.066.074.033.073.033.071.034.07.034.069.035.068.035.067.035.066.035.064.036.064.036.062.036.06.036.06.037.058.037.058.037.055.038.055.038.053.038.052.038.051.039.05.039.048.039.047.039.045.04.044.04.043.04.041.04.04.041.039.041.037.041.036.041.034.041.033.042.032.042.03.042.029.042.027.042.026.043.024.043.023.043.021.043.02.043.018.044.017.043.015.044.013.044.012.044.011.045.009.044.007.045.006.045.004.045.002.045.001.045v17l-.001.045-.002.045-.004.045-.006.045-.007.045-.009.044-.011.045-.012.044-.013.044-.015.044-.017.043-.018.044-.02.043-.021.043-.023.043-.024.043-.026.043-.027.042-.029.042-.03.042-.032.042-.033.042-.034.041-.036.041-.037.041-.039.041-.04.041-.041.04-.043.04-.044.04-.045.04-.047.039-.048.039-.05.039-.051.039-.052.038-.053.038-.055.038-.055.038-.058.037-.058.037-.06.037-.06.036-.062.036-.064.036-.064.036-.066.035-.067.035-.068.035-.069.035-.07.034-.071.034-.073.033-.074.033-.15.066-.155.064-.16.063-.163.061-.168.06-.172.059-.175.057-.18.056-.183.054-.187.053-.191.051-.194.05-.198.048-.201.046-.205.045-.208.043-.211.041-.214.04-.217.038-.22.036-.223.034-.225.032-.229.031-.231.028-.233.027-.236.024-.239.023-.241.02-.242.019-.246.016-.247.015-.249.012-.251.01-.253.008-.255.005-.256.004-.258.001-.258-.001-.256-.004-.255-.005-.253-.008-.251-.01-.249-.012-.247-.015-.245-.016-.243-.019-.241-.02-.238-.023-.236-.024-.234-.027-.231-.028-.228-.031-.226-.032-.223-.034-.22-.036-.217-.038-.214-.04-.211-.041-.208-.043-.204-.045-.201-.046-.198-.048-.195-.05-.19-.051-.187-.053-.184-.054-.179-.056-.176-.057-.172-.059-.167-.06-.164-.061-.159-.063-.155-.064-.151-.066-.074-.033-.072-.033-.072-.034-.07-.034-.069-.035-.068-.035-.067-.035-.066-.035-.064-.036-.063-.036-.062-.036-.061-.036-.06-.037-.058-.037-.057-.037-.056-.038-.055-.038-.053-.038-.052-.038-.051-.039-.049-.039-.049-.039-.046-.039-.046-.04-.044-.04-.043-.04-.041-.04-.04-.041-.039-.041-.037-.041-.036-.041-.034-.041-.033-.042-.032-.042-.03-.042-.029-.042-.027-.042-.026-.043-.024-.043-.023-.043-.021-.043-.02-.043-.018-.044-.017-.043-.015-.044-.013-.044-.012-.044-.011-.045-.009-.044-.007-.045-.006-.045-.004-.045-.002-.045-.001-.045v-17l.001-.045.002-.045.004-.045.006-.045.007-.045.009-.044.011-.045.012-.044.013-.044.015-.044.017-.043.018-.044.02-.043.021-.043.023-.043.024-.043.026-.043.027-.042.029-.042.03-.042.032-.042.033-.042.034-.041.036-.041.037-.041.039-.041.04-.041.041-.04.043-.04.044-.04.046-.04.046-.039.049-.039.049-.039.051-.039.052-.038.053-.038.055-.038.056-.038.057-.037.058-.037.06-.037.061-.036.062-.036.063-.036.064-.036.066-.035.067-.035.068-.035.069-.035.07-.034.072-.034.072-.033.074-.033.151-.066.155-.064.159-.063.164-.061.167-.06.172-.059.176-.057.179-.056.184-.054.187-.053.19-.051.195-.05.198-.048.201-.046.204-.045.208-.043.211-.041.214-.04.217-.038.22-.036.223-.034.226-.032.228-.031.231-.028.234-.027.236-.024.238-.023.241-.02.243-.019.245-.016.247-.015.249-.012.251-.01.253-.008.255-.005.256-.004.258-.001.258.001zm-9.258 20.499v.01l.001.021.003.021.004.022.005.021.006.022.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.023.018.024.019.024.021.024.022.025.023.024.024.025.052.049.056.05.061.051.066.051.07.051.075.051.079.052.084.052.088.052.092.052.097.052.102.051.105.052.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.048.144.049.147.047.152.047.155.047.16.045.163.045.167.043.171.043.176.041.178.041.183.039.187.039.19.037.194.035.197.035.202.033.204.031.209.03.212.029.216.027.219.025.222.024.226.021.23.02.233.018.236.016.24.015.243.012.246.01.249.008.253.005.256.004.259.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.021.224-.024.22-.026.216-.027.212-.028.21-.031.205-.031.202-.034.198-.034.194-.036.191-.037.187-.039.183-.04.179-.04.175-.042.172-.043.168-.044.163-.045.16-.046.155-.046.152-.047.148-.048.143-.049.139-.049.136-.05.131-.05.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.053.083-.051.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.05.023-.024.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.023.01-.022.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.127l-.077.055-.08.053-.083.054-.085.053-.087.052-.09.052-.093.051-.095.05-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.045-.118.044-.12.043-.122.042-.124.042-.126.041-.128.04-.13.04-.132.038-.134.038-.135.037-.138.037-.139.035-.142.035-.143.034-.144.033-.147.032-.148.031-.15.03-.151.03-.153.029-.154.027-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.01-.179.008-.179.008-.181.006-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.006-.179-.008-.179-.008-.178-.01-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.027-.153-.029-.151-.03-.15-.03-.148-.031-.146-.032-.145-.033-.143-.034-.141-.035-.14-.035-.137-.037-.136-.037-.134-.038-.132-.038-.13-.04-.128-.04-.126-.041-.124-.042-.122-.042-.12-.044-.117-.043-.116-.045-.113-.045-.112-.046-.109-.047-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.05-.093-.052-.09-.051-.087-.052-.085-.053-.083-.054-.08-.054-.077-.054v4.127zm0-5.654v.011l.001.021.003.021.004.021.005.022.006.022.007.022.009.022.01.022.011.023.012.023.013.023.015.024.016.023.017.024.018.024.019.024.021.024.022.024.023.025.024.024.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.052.11.051.114.051.119.052.123.05.127.051.131.05.135.049.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.044.171.042.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.022.23.02.233.018.236.016.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.012.241-.015.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.048.139-.05.136-.049.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.051.051-.049.023-.025.023-.024.021-.025.02-.024.019-.024.018-.024.017-.024.015-.023.014-.023.013-.024.012-.022.01-.023.01-.023.008-.022.006-.022.006-.022.004-.021.004-.022.001-.021.001-.021v-4.139l-.077.054-.08.054-.083.054-.085.052-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.044-.118.044-.12.044-.122.042-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.035-.143.033-.144.033-.147.033-.148.031-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.009-.179.009-.179.007-.181.007-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.007-.179-.007-.179-.009-.178-.009-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.031-.146-.033-.145-.033-.143-.033-.141-.035-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.04-.126-.041-.124-.042-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.051-.093-.051-.09-.051-.087-.053-.085-.052-.083-.054-.08-.054-.077-.054v4.139zm0-5.666v.011l.001.02.003.022.004.021.005.022.006.021.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.024.018.023.019.024.021.025.022.024.023.024.024.025.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.051.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.043.171.043.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.021.23.02.233.018.236.017.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.013.241-.014.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.049.139-.049.136-.049.131-.051.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.049.023-.025.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.022.01-.023.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.153l-.077.054-.08.054-.083.053-.085.053-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.048-.105.048-.106.048-.109.046-.111.046-.114.046-.115.044-.118.044-.12.043-.122.043-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.034-.143.034-.144.033-.147.032-.148.032-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.024-.161.024-.162.023-.163.023-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.01-.178.01-.179.009-.179.007-.181.006-.182.006-.182.004-.184.003-.184.001-.185.001-.185-.001-.184-.001-.184-.003-.182-.004-.182-.006-.181-.006-.179-.007-.179-.009-.178-.01-.176-.01-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.023-.162-.023-.161-.024-.159-.024-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.032-.146-.032-.145-.033-.143-.034-.141-.034-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.041-.126-.041-.124-.041-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.048-.105-.048-.102-.048-.1-.05-.097-.049-.095-.051-.093-.051-.09-.052-.087-.052-.085-.053-.083-.053-.08-.054-.077-.054v4.153zm8.74-8.179l-.257.004-.254.005-.25.008-.247.011-.244.012-.241.014-.237.016-.233.018-.231.021-.226.022-.224.023-.22.026-.216.027-.212.028-.21.031-.205.032-.202.033-.198.034-.194.036-.191.038-.187.038-.183.04-.179.041-.175.042-.172.043-.168.043-.163.045-.16.046-.155.046-.152.048-.148.048-.143.048-.139.049-.136.05-.131.05-.126.051-.123.051-.118.051-.114.052-.11.052-.106.052-.101.052-.096.052-.092.052-.088.052-.083.052-.079.052-.074.051-.07.052-.065.051-.06.05-.056.05-.051.05-.023.025-.023.024-.021.024-.02.025-.019.024-.018.024-.017.023-.015.024-.014.023-.013.023-.012.023-.01.023-.01.022-.008.022-.006.023-.006.021-.004.022-.004.021-.001.021-.001.021.001.021.001.021.004.021.004.022.006.021.006.023.008.022.01.022.01.023.012.023.013.023.014.023.015.024.017.023.018.024.019.024.02.025.021.024.023.024.023.025.051.05.056.05.06.05.065.051.07.052.074.051.079.052.083.052.088.052.092.052.096.052.101.052.106.052.11.052.114.052.118.051.123.051.126.051.131.05.136.05.139.049.143.048.148.048.152.048.155.046.16.046.163.045.168.043.172.043.175.042.179.041.183.04.187.038.191.038.194.036.198.034.202.033.205.032.21.031.212.028.216.027.22.026.224.023.226.022.231.021.233.018.237.016.241.014.244.012.247.011.25.008.254.005.257.004.26.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.022.224-.023.22-.026.216-.027.212-.028.21-.031.205-.032.202-.033.198-.034.194-.036.191-.038.187-.038.183-.04.179-.041.175-.042.172-.043.168-.043.163-.045.16-.046.155-.046.152-.048.148-.048.143-.048.139-.049.136-.05.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.05.051-.05.023-.025.023-.024.021-.024.02-.025.019-.024.018-.024.017-.023.015-.024.014-.023.013-.023.012-.023.01-.023.01-.022.008-.022.006-.023.006-.021.004-.022.004-.021.001-.021.001-.021-.001-.021-.001-.021-.004-.021-.004-.022-.006-.021-.006-.023-.008-.022-.01-.022-.01-.023-.012-.023-.013-.023-.014-.023-.015-.024-.017-.023-.018-.024-.019-.024-.02-.025-.021-.024-.023-.024-.023-.025-.051-.05-.056-.05-.06-.05-.065-.051-.07-.052-.074-.051-.079-.052-.083-.052-.088-.052-.092-.052-.096-.052-.101-.052-.106-.052-.11-.052-.114-.052-.118-.051-.123-.051-.126-.051-.131-.05-.136-.05-.139-.049-.143-.048-.148-.048-.152-.048-.155-.046-.16-.046-.163-.045-.168-.043-.172-.043-.175-.042-.179-.041-.183-.04-.187-.038-.191-.038-.194-.036-.198-.034-.202-.033-.205-.032-.21-.031-.212-.028-.216-.027-.22-.026-.224-.023-.226-.022-.231-.021-.233-.018-.237-.016-.241-.014-.244-.012-.247-.011-.25-.008-.254-.005-.257-.004-.26-.001-.26.001z" transform="scale(.5)"></path></symbol></defs><defs><symbol height="24" width="24" id="clock"><path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.848 12.459c.202.038.202.333.001.372-1.907.361-6.045 1.111-6.547 1.111-.719 0-1.301-.582-1.301-1.301 0-.512.77-5.447 1.125-7.445.034-.192.312-.181.343.014l.985 6.238 5.394 1.011z" transform="scale(.5)"></path></symbol></defs><defs><marker orient="auto-start-reverse" markerHeight="12" markerWidth="12" markerUnits="userSpaceOnUse" refY="5" refX="7.9" id="arrowhead"><path d="M -1 0 L 10 5 L 0 10 z"></path></marker></defs><defs><marker refY="4.5" refX="4" orient="auto" markerHeight="8" markerWidth="15" id="crosshead"><path style="stroke-dasharray: 0, 0;" d="M 1,2 L 6,7 M 6,2 L 1,7" stroke-width="1pt" stroke="#000000" fill="none"></path></marker></defs><defs><marker orient="auto" markerHeight="28" markerWidth="20" refY="7" refX="15.5" id="filled-head"><path d="M 18,7 L9,13 L14,7 L9,1 Z"></path></marker></defs><defs><marker orient="auto" markerHeight="40" markerWidth="60" refY="15" refX="15" id="sequencenumber"><circle r="6" cy="15" cx="15"></circle></marker></defs><text style="font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="80" x="179">inv(tx)</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="111" x2="278" y1="111" x1="79.5"></line><text style="font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="126" x="381">inv(tx)</text><line style="stroke-dasharray: 3, 3; fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine1" y2="157" x2="478" y1="157" x1="283"></line><text style="font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, sans-serif; font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="172" x="586">timestamp(tx seen)</text><line style="stroke-dasharray: 3, 3; fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine1" y2="203" x2="689" y1="203" x1="483"></line></svg></figure>
+</div><div class="column" style="width:20%;">
+
+</div>
+</div>
+<div class="callout-note" data-appearance="simple">
+<div style="font-size: 0.62em;">
+<p>“First-spy” correlates earliest sightings to infer origin</p>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="mitigating-network-deanonymization"><h2 class="slide-title">Mitigating Network Deanonymization</h2><div class="slide-body">
+<ul>
+<li><strong>Goal:</strong> make it harder for observers to link a transaction to the node, IP address, or user who first created it.</li>
+<li><strong>Hide the apparent origin with Dandelion-style relay</strong>: send the transaction quietly along a short random path before broader broadcast.</li>
+<li><strong>Route through anonymity layers</strong>: use Tor or a VPN so the first peers you contact do not learn your real network address.</li>
+<li><strong>Add relay uncertainty</strong>: broad rebroadcasting by many peers makes the true origin harder to infer from timing alone.</li>
+<li><strong>Reduce on-chain linkability too</strong>: tools like CoinJoin help because network privacy is weaker if the transaction graph remains easy to trace.</li>
+<li><strong>Know the limits</strong>: these measures reduce, but do not eliminate, deanonymization; timing, amounts, and wallet behavior can still leak patterns.</li>
+</ul>
+</div></section>
+<section class="slide" id="selfish-mining"><h2 class="slide-title">Selfish Mining</h2><div class="slide-body">
+<div style="font-size: 0.76em;">
+<ul>
+<li>Withhold found blocks and release them strategically to earn more than an honest miner with the same hash share.</li>
+<li>In the <a href="https://doi.org/10.1007/978-3-662-45472-5_28">original analysis</a>, profitability begins above about <strong>33%</strong> hash power with no relay edge, and can fall toward <strong>25%</strong> with better fork-race wins.</li>
+<li>Real-world comparison: <a href="https://foundrydigital.com/foundry-usa-pool-3/">Foundry USA</a> calls itself the largest Bitcoin pool, and <a href="https://research.mempool.space/empty-block-report/">mempool research</a> attributes about <strong>28.7%</strong> of blocks over the last 24 months to Foundry USA.</li>
+<li>That does <strong>not</strong> mean Foundry is selfish mining; it means pool concentration can drift into the same range discussed in the theory.</li>
+</ul>
+</div>
+<div style="position: relative; top: -110px;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 985.64 126.24" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1315px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 122.24)">
+<g id="node1" class="node">
+<path fill="#e0f7fa" stroke="#006064" stroke-width="1.2" d="M63.31,-75C63.31,-75 12,-75 12,-75 6,-75 0,-69 0,-63 0,-63 0,-51 0,-51 0,-45 6,-39 12,-39 12,-39 63.31,-39 63.31,-39 69.31,-39 75.31,-45 75.31,-51 75.31,-51 75.31,-63 75.31,-63 75.31,-69 69.31,-75 63.31,-75"/>
+<text text-anchor="middle" x="37.66" y="-60.3" font-family="Helvetica,sans-Serif" font-size="11.00">Public chain</text>
+<text text-anchor="middle" x="37.66" y="-47.1" font-family="Helvetica,sans-Serif" font-size="11.00">Block h</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e0f7fa" stroke="#006064" stroke-width="1.2" d="M370.78,-115C370.78,-115 269.95,-115 269.95,-115 263.95,-115 257.95,-109 257.95,-103 257.95,-103 257.95,-91 257.95,-91 257.95,-85 263.95,-79 269.95,-79 269.95,-79 370.78,-79 370.78,-79 376.78,-79 382.78,-85 382.78,-91 382.78,-91 382.78,-103 382.78,-103 382.78,-109 376.78,-115 370.78,-115"/>
+<text text-anchor="middle" x="320.37" y="-100.3" font-family="Helvetica,sans-Serif" font-size="11.00">Honest miners publish</text>
+<text text-anchor="middle" x="320.37" y="-87.1" font-family="Helvetica,sans-Serif" font-size="11.00">Block h+1</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#666666" stroke-width="1.2" d="M75.49,-63.62C86.07,-65.45 97.64,-67.37 108.31,-69 155.22,-76.15 208.15,-83.17 249.27,-88.39"/>
+<polygon fill="#666666" stroke="#666666" stroke-width="1.2" points="248.81,-90.8 256.06,-89.25 249.42,-85.94 248.81,-90.8"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#ffebee" stroke="#b71c1c" stroke-width="1.2" d="M212.95,-36C212.95,-36 154.31,-36 154.31,-36 148.31,-36 142.31,-30 142.31,-24 142.31,-24 142.31,-12 142.31,-12 142.31,-6 148.31,0 154.31,0 154.31,0 212.95,0 212.95,0 218.95,0 224.95,-6 224.95,-12 224.95,-12 224.95,-24 224.95,-24 224.95,-30 218.95,-36 212.95,-36"/>
+<text text-anchor="middle" x="183.63" y="-21.3" font-family="Helvetica,sans-Serif" font-size="11.00">Attacker finds</text>
+<text text-anchor="middle" x="183.63" y="-8.1" font-family="Helvetica,sans-Serif" font-size="11.00">Block h+1*</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#b71c1c" stroke-width="1.2" stroke-dasharray="5,2" d="M75.73,-46.96C93.29,-42.2 114.5,-36.45 133.39,-31.34"/>
+<polygon fill="#b71c1c" stroke="#b71c1c" stroke-width="1.2" points="134.01,-33.71 140.13,-29.51 132.73,-28.98 134.01,-33.71"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#ffcdd2" stroke="#b71c1c" stroke-width="1.5" d="M965.64,-75C965.64,-75 877.63,-75 877.63,-75 871.63,-75 865.63,-69 865.63,-63 865.63,-63 865.63,-51 865.63,-51 865.63,-45 871.63,-39 877.63,-39 877.63,-39 965.64,-39 965.64,-39 971.64,-39 977.64,-45 977.64,-51 977.64,-51 977.64,-63 977.64,-63 977.64,-69 971.64,-75 965.64,-75"/>
+<text text-anchor="middle" x="921.64" y="-60.3" font-family="Helvetica,sans-Serif" font-size="11.00">Publish private lead</text>
+<text text-anchor="middle" x="921.64" y="-47.1" font-family="Helvetica,sans-Serif" font-size="11.00">when ahead</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#999999" stroke-width="1.2" stroke-dasharray="5,2" d="M383.22,-94.46C479.44,-90.26 670.74,-80.94 832.63,-67 840.4,-66.33 848.54,-65.54 856.59,-64.69"/>
+<polygon fill="#999999" stroke="#999999" stroke-width="1.2" points="856.78,-67.13 863.48,-63.95 856.26,-62.26 856.78,-67.13"/>
+<text text-anchor="middle" x="628.92" y="-105.64" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#666666">honest work risks</text>
+<text text-anchor="middle" x="628.92" y="-88.84" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#666666">being orphaned</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#ffebee" stroke="#b71c1c" stroke-width="1.2" d="M529.85,-36C529.85,-36 427.78,-36 427.78,-36 421.78,-36 415.78,-30 415.78,-24 415.78,-24 415.78,-12 415.78,-12 415.78,-6 421.78,0 427.78,0 427.78,0 529.85,0 529.85,0 535.85,0 541.85,-6 541.85,-12 541.85,-12 541.85,-24 541.85,-24 541.85,-30 535.85,-36 529.85,-36"/>
+<text text-anchor="middle" x="478.82" y="-21.3" font-family="Helvetica,sans-Serif" font-size="11.00">Keep private and mine</text>
+<text text-anchor="middle" x="478.82" y="-8.1" font-family="Helvetica,sans-Serif" font-size="11.00">on hidden branch</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#b71c1c" stroke-width="1.2" d="M225.4,-18C272.24,-18 349.95,-18 406.8,-18"/>
+<polygon fill="#b71c1c" stroke="#b71c1c" stroke-width="1.2" points="406.57,-20.45 413.57,-18 406.57,-15.55 406.57,-20.45"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#ffebee" stroke="#b71c1c" stroke-width="1.2" d="M786.63,-36C786.63,-36 728,-36 728,-36 722,-36 716,-30 716,-24 716,-24 716,-12 716,-12 716,-6 722,0 728,0 728,0 786.63,0 786.63,0 792.63,0 798.63,-6 798.63,-12 798.63,-12 798.63,-24 798.63,-24 798.63,-30 792.63,-36 786.63,-36"/>
+<text text-anchor="middle" x="757.32" y="-21.3" font-family="Helvetica,sans-Serif" font-size="11.00">Attacker finds</text>
+<text text-anchor="middle" x="757.32" y="-8.1" font-family="Helvetica,sans-Serif" font-size="11.00">Block h+2*</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#b71c1c" stroke-width="1.2" d="M542.21,-18C592.04,-18 660.91,-18 706.95,-18"/>
+<polygon fill="#b71c1c" stroke="#b71c1c" stroke-width="1.2" points="706.74,-20.45 713.74,-18 706.74,-15.55 706.74,-20.45"/>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#b71c1c" stroke-width="1.2" d="M798.86,-27.74C816.36,-31.95 837.26,-36.97 856.77,-41.65"/>
+<polygon fill="#b71c1c" stroke="#b71c1c" stroke-width="1.2" points="856.17,-44.03 863.55,-43.28 857.32,-39.27 856.17,-44.03"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide" id="bitcoin-overflow-bug"><h2 class="slide-title">Bitcoin Overflow Bug</h2><div class="slide-body">
+<ul>
+<li><strong>August 15, 2010:</strong> block <code>74638</code> included a transaction that created about <strong>184 billion BTC</strong>.</li>
+<li><strong>Root cause:</strong> an <strong>integer overflow</strong> in transaction validation let the outputs wrap around and appear valid.</li>
+<li><strong>Why it mattered:</strong> this directly violated Bitcoin’s fixed-supply rule and threatened trust in the system’s monetary integrity.</li>
+<li><strong>Why it was caught quickly:</strong> Bitcoin’s public ledger and open community made the anomaly visible almost immediately.</li>
+</ul>
+</div></section>
+<section class="slide" id="emergency-response-to-the-overflow-bug"><h2 class="slide-title">Emergency Response to the Overflow Bug</h2><div class="slide-body">
+<ul>
+<li>Developers released a patch within hours to reject the overflow transaction and close the validation flaw.</li>
+<li>A software patch alone was <strong>not enough</strong> because the invalid coins were already recorded on-chain.</li>
+<li>The network coordinated a <strong>rollback past block 74638</strong>, reorganizing onto a valid chain without the overflow transaction.</li>
+<li>This is one of Bitcoin’s clearest examples of the community choosing <strong>security and rule integrity over strict immutability</strong>.</li>
+</ul>
+</div></section>
+<section class="slide" id="implementation-vs.-design"><h2 class="slide-title">Implementation vs. Design</h2><div class="slide-body">
+<ul>
+<li>Bitcoin’s <strong>design rule</strong> was sound: total supply should remain capped.</li>
+<li>The failure came from an <strong>implementation bug</strong> in the code that checked transaction outputs.</li>
+<li>The lesson is broader than Bitcoin: secure designs still fail when the enforcing software is wrong.</li>
+<li>Open-source review, audits, and fast disclosure are part of the security model, not afterthoughts.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="bitcoin-gold-51-attack-discovery"><h2 class="slide-title">Bitcoin Gold 51% Attack Discovery</h2><div class="slide-body">
+<div class="callout-note" data-appearance="simple">
+<p><strong>Bitcoin Gold (BTG)</strong> is a 2017 Bitcoin fork that changed the mining algorithm in an effort to resist ASIC concentration, but it never approached Bitcoin’s hash rate or economic scale.</p>
+</div>
+<ul>
+<li><strong>January 23-24, 2020:</strong> <a href="https://gist.github.com/metalicjames/71321570a105940529e709651d0a9765#file-btg-attacks-md">two deep reorganizations</a> replaced about 29 blocks and enabled about 7,000 BTG in double-spends.</li>
+<li><strong>Some double-spends succeeded,</strong> but exchanges limited further losses by pausing activity and raising confirmation requirements.</li>
+<li><strong>Community analysis pointed to temporary majority hash control,</strong> likely rented on a much smaller Proof-of-Work network.</li>
+<li><strong>Why this matters for Bitcoin:</strong> BTG’s much lower hash rate made this plausible; doing the same on Bitcoin would be far costlier and easier to detect.</li>
+<li><strong>Key lesson:</strong> smaller PoW networks may not stop majority attacks outright, so services rely more on deep confirmations and fast monitoring.</li>
+</ul>
+</div></section>
+<section class="slide" id="lessons-small-community-risks"><h2 class="slide-title">Lessons: Small Community Risks</h2><div class="slide-body">
+<div style="font-size: 0.84em;">
+<ul>
+<li>Hard forks often leave the new chain with much less hash power, liquidity, and ecosystem support.</li>
+<li>Lower hash power makes majority attacks and deep reorganizations cheaper.</li>
+<li>Concentrated mining means fewer independent defenders of the chain.</li>
+<li>Trust depends on code, but also on the size and strength of the community securing it.</li>
+</ul>
+</div>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Hard fork vs. soft fork:</strong> A <strong>hard fork</strong> can split the chain if the community does not upgrade together. A <strong>soft fork</strong> tightens the rules without forcing the same kind of split. In Bitcoin, both only matter if enough miners, nodes, businesses, and users coordinate around the same rules.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="bitcoin-like-pow-chains"><h2 class="slide-title">Bitcoin-Like PoW Chains</h2><div class="slide-body">
+<p><strong>Teaching point:</strong> a fork or Bitcoin-like design inherits ideas, not Bitcoin’s security budget.</p>
+<div style="font-size: 0.74em; line-height: 1.12;">
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Chain</th>
+<th>What it shares with Bitcoin</th>
+<th>What changes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bitcoin Cash</td>
+<td>Bitcoin hard fork; UTXO-style PoW</td>
+<td>Separate miners, markets, users, and post-fork rules.</td>
+</tr>
+<tr>
+<td>Litecoin</td>
+<td>UTXO-style PoW payment chain</td>
+<td>Different hash function, mining market, and economic depth.</td>
+</tr>
+<tr>
+<td>Dogecoin</td>
+<td>UTXO-style PoW; merge-mined with Litecoin</td>
+<td>Security depends on miner and pool participation in merge mining.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Merged mining:</strong> a miner reuses the same proof-of-work attempt to help secure more than one compatible chain. This can lend a smaller chain hashpower from a larger mining ecosystem, but only if miners and pools actually participate.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="other-pow-chains-change-the-questions"><h2 class="slide-title">Other PoW Chains Change the Questions</h2><div class="slide-body">
+<p><strong>Teaching point:</strong> proof-of-work tells you how blocks are contested; it does not tell you what evidence is visible or how expensive attacks are.</p>
+<div style="font-size: 0.76em; line-height: 1.12;">
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Chain</th>
+<th>What differs from Bitcoin</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Monero</td>
+<td>Default privacy design</td>
+<td>Public transaction-graph assumptions do not carry over cleanly.</td>
+</tr>
+<tr>
+<td>Zcash</td>
+<td>Transparent and shielded activity</td>
+<td>Analysis depends on which pool or address type was used.</td>
+</tr>
+<tr>
+<td>Ethereum Classic</td>
+<td>Ethereum lineage, but still PoW</td>
+<td>Smaller security budget and past 51% attacks affect confirmation policy.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Analysis habit:</strong> name the chain first, then check its transaction model, privacy defaults, mining economics, liquidity, and exchange policies.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="off-chain-controls-kyc-and-aml"><h2 class="slide-title">Off-Chain Controls: KYC and AML</h2><div class="slide-body">
+<p><strong>Bitcoin does not implement KYC or AML in the protocol</strong>; these are obligations imposed on regulated intermediaries around Bitcoin.</p>
+<ul>
+<li><strong>Know Your Customer (KYC)</strong> means identifying the customer and, where required, the beneficial owner before or during service.</li>
+<li><strong>Anti-Money Laundering (AML)</strong> means ongoing risk-based monitoring: recordkeeping, sanctions screening, suspicious-activity review, and required reporting.</li>
+<li><strong>Policy anchors</strong> include U.S. Bank Secrecy Act / FinCEN guidance and FATF standards for virtual-asset service providers.</li>
+<li><strong>Who is covered</strong>: exchanges, custodians, brokers, and payment processors; not a person simply holding keys and transacting peer-to-peer on Bitcoin.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="how-kycaml-apply-to-bitcoin"><h2 class="slide-title">How KYC/AML Apply to Bitcoin</h2><div class="slide-body">
+<ul>
+<li><strong>Exchange onboarding links identity to Bitcoin activity</strong>: IDs, addresses, and account records connect real people to deposit and withdrawal flows.</li>
+<li><strong>Compliance teams monitor the ledger around those flows</strong>: they screen for sanctions exposure, risky counterparties, structuring, and suspicious patterns.</li>
+<li><strong>Blockchain analytics assist but do not replace judgment</strong>: clustering and risk scoring help, but firms still decide whether to freeze, delay, or report activity.</li>
+<li><strong>Bitcoin remains usable peer-to-peer</strong>, but converting to fiat or using custodial services pulls activity into the regulated perimeter.</li>
+<li><strong>Practical result</strong>: Bitcoin is pseudonymous on-chain, yet often identifiable at the on/off ramps where most users enter and exit.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="regulatory-pressure-beyond-bitcoin"><h2 class="slide-title">Regulatory Pressure Beyond Bitcoin</h2><div class="slide-body">
+<ul>
+<li><strong>Centralized digital money systems can be shut down outright</strong>: e-gold and Liberty Reserve show what happens when operators fail or evade AML/KYC obligations.</li>
+<li><strong>Privacy-enhancing assets face more exchange pressure</strong> because opaque transaction graphs make screening, traceability, and transfer-information compliance harder.</li>
+<li><strong>Bitcoin has generally remained listed</strong> because its public ledger, deep liquidity, and mature analytics/compliance tooling make it easier for exchanges to monitor flows than with strong privacy coins.</li>
+<li><strong>Big lesson</strong>: regulation often works by constraining gateways, liquidity, and access rather than by changing the protocol itself.</li>
+</ul>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-mitdigitalcurrencyinitiative_51percentattacks_2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">MIT Digital Currency Initiative, <span>“51 <span>Percent Attacks</span> (<span>Project Overview</span>).”</span> 2021. Available: <a href="https://www.dci.mit.edu/projects/51-percent-attacks">https://www.dci.mit.edu/projects/51-percent-attacks</a></div>
+</div>
+<div id="ref-narayanan_bitcoincryptocurrencytechnologies_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">A. Narayanan, J. Bonneau, E. Felten, A. Miller, and S. Goldfeder, <em>Bitcoin and <span>Cryptocurrency Technologies</span></em>. Princeton University Press, 2016.</div>
+</div>
+<div id="ref-financialactiontaskforce_updatedguidanceriskbased_2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">Financial Action Task Force, <span>“Updated <span>Guidance</span> for a <span>Risk-Based Approach</span> to <span>Virtual Assets</span> and <span>Virtual Asset Service Providers</span>.”</span> Accessed: Oct. 20, 2025. [Online]. Available: <a href="https://www.fatf-gafi.org/en/publications/Fatfrecommendations/Guidance-rba-virtual-assets-2021.html">https://www.fatf-gafi.org/en/publications/Fatfrecommendations/Guidance-rba-virtual-assets-2021.html</a></div>
+</div>
+<div id="ref-bitcoin.orgdevelopers_p2pnetworkdeveloper_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">Bitcoin.org Developers, <span>“<span>P2P Network</span> (<span>Developer Guide</span>).”</span> 2024. Available: <a href="https://developer.bitcoin.org/devguide/p2p_network.html">https://developer.bitcoin.org/devguide/p2p_network.html</a></div>
+</div>
+<div id="ref-heilman_eclipseattacksbitcoins_2015" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">E. Heilman, A. Kendler, A. Zohar, and S. Goldberg, <span>“Eclipse <span>Attacks</span> on <span>Bitcoin</span>’s <span class="nocase">Peer-to-Peer Network</span>.”</span> Accessed: Oct. 21, 2025. [Online]. Available: <a href="https://eprint.iacr.org/2015/263">https://eprint.iacr.org/2015/263</a></div>
+</div>
+<div id="ref-apostolaki_hijackingbitcoinrouting_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">M. Apostolaki, A. Zohar, and L. Vanbever, <span>“Hijacking <span>Bitcoin</span>: <span>Routing Attacks</span> on <span>Cryptocurrencies</span>,”</span> in <em>2017 <span>IEEE Symposium</span> on <span>Security</span> and <span>Privacy</span> (<span>SP</span>)</em>, May 2017, pp. 375–392. doi: <a href="https://doi.org/10.1109/SP.2017.29">10.1109/SP.2017.29</a>.</div>
+</div>
+<div id="ref-biryukov_deanonymisationclientsbitcoin_2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">A. Biryukov, D. Khovratovich, and I. Pustogarov, <span>“Deanonymisation of clients in <span>Bitcoin P2P</span> network,”</span> in <em>Proceedings of the 2014 <span>ACM SIGSAC Conference</span> on <span>Computer</span> and <span>Communications Security</span></em>, New York, NY, USA: Association for Computing Machinery, 2014, pp. 15–29. doi: <a href="https://doi.org/10.1145/2660267.2660379">10.1145/2660267.2660379</a>.</div>
+</div>
+<div id="ref-venkatakrishnan_dandelionredesigningbitcoin_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">S. B. Venkatakrishnan, G. Fanti, and P. Viswanath, <span>“Dandelion: <span>Redesigning</span> the <span>Bitcoin Network</span> for <span>Anonymity</span>.”</span> Accessed: Oct. 15, 2025. [Online]. Available: <a href="https://arxiv.org/abs/1701.04439">https://arxiv.org/abs/1701.04439</a></div>
+</div>
+<div id="ref-sykes_virtualcurrenciesmoney_2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">J. B. Sykes and N. Vanatko, <span>“Virtual <span>Currencies</span> and <span>Money Laundering</span>: <span>Legal Background</span>, <span>Enforcement Actions</span>, and <span>Legislative Proposals</span>,”</span> Congressional Research Service, Washington, D.C., CRS Report R45664.2, Mar. 2019. Available: <a href="https://www.congress.gov/crs_external_products/R/PDF/R45664/R45664.2.pdf">https://www.congress.gov/crs_external_products/R/PDF/R45664/R45664.2.pdf</a></div>
+</div>
+<div id="ref-eyal_majoritynotenough_2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">I. Eyal and E. G. Sirer, <span>“Majority is <span>Not Enough</span>: <span>Bitcoin Mining</span> is <span>Vulnerable</span>,”</span> in <em>Financial <span>Cryptography</span> and <span>Data Security</span></em>, in <span>LNCS</span>, vol. 8437. 2014, pp. 436–454. doi: <a href="https://doi.org/10.1007/978-3-662-45472-5_28">10.1007/978-3-662-45472-5_28</a>.</div>
+</div>
+<div id="ref-lfm_overflowbugserious_2010" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline"><span class="nocase">lfm</span>, <span>“Overflow bug <span>SERIOUS</span>.”</span> Accessed: Oct. 21, 2025. [Online]. Available: <a href="https://bitcointalk.org/index.php?topic=823.0">https://bitcointalk.org/index.php?topic=823.0</a></div>
+</div>
+<div id="ref-nist_cve20105139_2012" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">NIST, <span>“<span>CVE-2010-5139</span>.”</span> Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://nvd.nist.gov/vuln/detail/CVE-2010-5139">https://nvd.nist.gov/vuln/detail/CVE-2010-5139</a></div>
+</div>
+<div id="ref-lovejoy_bitcoingoldbtg_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">J. Lovejoy, <span>“Bitcoin <span>Gold</span> (<span>BTG</span>) was 51% attacked.”</span> [Online]. Available: <a href="https://gist.github.com/metalicjames/71321570a105940529e709651d0a9765#file-btg-attacks-md">https://gist.github.com/metalicjames/71321570a105940529e709651d0a9765#file-btg-attacks-md</a></div>
+</div>
+<div id="ref-antonopoulos_masteringbitcoinprogramming_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">A. M. Antonopoulos, <em>Mastering <span>Bitcoin</span>: Programming the open blockchain</em>, Second edition. Sebastopol, CA: O’Reilly, 2017.</div>
+</div>
+<div id="ref-makarov_risedynamicsdogecoin_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline"><span class="nocase">I. Makarov <em>et al.</em></span>, <span>“On the <span>Rise</span> and <span>Dynamics</span> of <span>Dogecoin</span>.”</span> 2022. Available: <a href="https://arxiv.org/pdf/2210.09884">https://arxiv.org/pdf/2210.09884</a></div>
+</div>
+<div id="ref-koe_zeromonerosecond_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[16] </div><div class="csl-right-inline">Koe, K. M. Alonso, and S. Noether, <span>“Zero to <span>Monero</span>: <span>Second Edition</span>.”</span> Apr. 04, 2020. Available: <a href="https://web.getmonero.org/library/Zero-to-Monero-2-0-0.pdf">https://web.getmonero.org/library/Zero-to-Monero-2-0-0.pdf</a></div>
+</div>
+<div id="ref-electriccoincompany_zcashbasicszcash_2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[17] </div><div class="csl-right-inline">Electric Coin Company, <span>“Zcash <span>Basics</span> — <span>Zcash Documentation</span> 6.10.0.”</span> Accessed: Oct. 20, 2025. [Online]. Available: <a href="https://zcash.readthedocs.io/en/latest/rtd_pages/basics.html">https://zcash.readthedocs.io/en/latest/rtd_pages/basics.html</a></div>
+</div>
+<div id="ref-financialcrimesenforcementnetworkfincen_applicationpersonsadministering_2013" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[18] </div><div class="csl-right-inline">Financial Crimes Enforcement Network (FinCEN), <span>“Application of <span>FinCEN</span>’s regulations to persons administering, exchanging, or using virtual currencies,”</span> U.S. Department of the Treasury, Guidance FIN-2013-G001, Mar. 2013. Accessed: Mar. 27, 2026. [Online]. Available: <a href="https://www.fincen.gov/resources/statutes-regulations/guidance/application-fincens-regulations-persons-administering">https://www.fincen.gov/resources/statutes-regulations/guidance/application-fincens-regulations-persons-administering</a></div>
+</div>
+<div id="ref-financialcrimesenforcementnetworkfincen_applicationcertainbusinessmodels_2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[19] </div><div class="csl-right-inline">Financial Crimes Enforcement Network (FinCEN), <span>“Application of <span>FinCEN</span>’s regulations to certain business models involving convertible virtual currencies,”</span> U.S. Department of the Treasury, Guidance FIN-2019-G001, May 2019. Accessed: Mar. 27, 2026. [Online]. Available: <a href="https://www.fincen.gov/index.php/resources/statutes-regulations/guidance/application-fincens-regulations-certain-business-models">https://www.fincen.gov/index.php/resources/statutes-regulations/guidance/application-fincens-regulations-certain-business-models</a></div>
+</div>
+<div id="ref-l33_fatf_fatf_targeted_update_on_implementation_of_the_fatf_stan_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[20] </div><div class="csl-right-inline">FATF, <span>“<span class="nocase">FATF: Targeted Update on Implementation of the FATF Standards on Virtual Assets and VASPs (June 26, 2025)</span>.”</span> [Online]. Available: <a href="https://www.fatf-gafi.org/en/publications/Fatfrecommendations/targeted-update-virtual-assets-vasps-2025.html">https://www.fatf-gafi.org/en/publications/Fatfrecommendations/targeted-update-virtual-assets-vasps-2025.html</a></div>
+</div>
+<div id="ref-u.s.departmentofjustice_libertyreserveitmanager_2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[21] </div><div class="csl-right-inline">Office of Public Affairs, U.S. Department of Justice, <span>“Former <span>Liberty Reserve IT Manager Sentenced</span> to 36 <span>Months</span> in <span>Prison</span>.”</span> Accessed: Mar. 27, 2026. [Online]. Available: <a href="https://www.justice.gov/archives/opa/pr/former-liberty-reserve-it-manager-sentenced-36-months-prison">https://www.justice.gov/archives/opa/pr/former-liberty-reserve-it-manager-sentenced-36-months-prison</a></div>
+</div>
+<div id="ref-u.s.departmentofjustice_egoldforfeited_2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[22] </div><div class="csl-right-inline">U.S. Attorney’s Office, District of Maryland, <span>“Over $56.6 <span>Million Forfeited In E-Gold Accounts Involved In Criminal Offenses</span>.”</span> Accessed: Mar. 27, 2026. [Online]. Available: <a href="https://www.justice.gov/usao-md/pr/over-566-million-forfeited-e-gold-accounts-involved-criminal-offenses">https://www.justice.gov/usao-md/pr/over-566-million-forfeited-e-gold-accounts-involved-criminal-offenses</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

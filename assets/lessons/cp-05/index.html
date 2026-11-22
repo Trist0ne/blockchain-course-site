@@ -1,0 +1,870 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cryptographic Assumptions &amp; Challenges</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/primitives/05-CP-crypto_assumptions_and_challenges.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="cp-05" data-code="05-CP" data-src="8c8c1e541765f3fd" data-slides="22">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section II: Cryptographic Primitives · Lesson 05-CP</p><h1>Cryptographic Assumptions &amp; Challenges</h1></div></section>
+<section class="slide smaller" id="why-these-topics-now-scope-objectives"><h2 class="slide-title">Why These Topics Now? Scope &amp; Objectives</h2><div class="slide-body">
+<ul>
+<li><p>We’ve covered symmetric, asymmetric, hashing, signatures.</p></li>
+<li><p>Today: <strong>assumptions under pressure</strong> and <strong>new tools</strong>.</p></li>
+<li><p>Themes:</p>
+<ul>
+<li>Real-world implementation failures</li>
+<li>Quantum threats</li>
+<li>Post-quantum cryptography,</li>
+<li>Fully-homomorphic Encryption</li>
+<li>Zero Knowledge Proofs</li>
+</ul></li>
+<li><p>Outcome: awareness and evaluation skills, not proofs.</p></li>
+</ul>
+</div></section>
+<section class="slide" id="cryptographic-assumptions-decay-over-time"><h2 class="slide-title">Cryptographic Assumptions Decay Over Time</h2><div class="slide-body">
+<ul>
+<li><p>As attacks against algorithms evolve; difficulty to break ciphers falls.</p></li>
+<li><p>We must build hash/signature agility now.</p></li>
+<li><p>Plan migrations in protocols and apps.</p></li>
+</ul>
+<figure class="diagram mermaid"><svg aria-roledescription="timeline" role="graphics-document document" viewBox="0 -63 1190 498.64691162109375" style="max-width: 1190px;" xmlns="http://www.w3.org/2000/svg" width="100%" id="mmd11"><style>#mmd11{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;fill:#000000;}#mmd11 .error-icon{fill:#552222;}#mmd11 .error-text{fill:#552222;stroke:#552222;}#mmd11 .edge-thickness-normal{stroke-width:1px;}#mmd11 .edge-thickness-thick{stroke-width:3.5px;}#mmd11 .edge-pattern-solid{stroke-dasharray:0;}#mmd11 .edge-thickness-invisible{stroke-width:0;fill:none;}#mmd11 .edge-pattern-dashed{stroke-dasharray:3;}#mmd11 .edge-pattern-dotted{stroke-dasharray:2;}#mmd11 .marker{fill:#666;stroke:#666;}#mmd11 .marker.cross{stroke:#666;}#mmd11 svg{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:16px;}#mmd11 p{margin:0;}#mmd11 .edge{stroke-width:3;}#mmd11 .section--1 rect,#mmd11 .section--1 path,#mmd11 .section--1 circle,#mmd11 .section--1 path{fill:#555;}#mmd11 .section--1 text{fill:#F4F4F4;}#mmd11 .node-icon--1{font-size:40px;color:#F4F4F4;}#mmd11 .section-edge--1{stroke:#555;}#mmd11 .edge-depth--1{stroke-width:17;}#mmd11 .section--1 line{stroke:#aaaaaa;stroke-width:3;}#mmd11 .lineWrapper line{stroke:#F4F4F4;}#mmd11 .disabled,#mmd11 .disabled circle,#mmd11 .disabled text{fill:lightgray;}#mmd11 .disabled text{fill:#efefef;}#mmd11 .section-0 rect,#mmd11 .section-0 path,#mmd11 .section-0 circle,#mmd11 .section-0 path{fill:#F4F4F4;}#mmd11 .section-0 text{fill:#333;}#mmd11 .node-icon-0{font-size:40px;color:#333;}#mmd11 .section-edge-0{stroke:#F4F4F4;}#mmd11 .edge-depth-0{stroke-width:14;}#mmd11 .section-0 line{stroke:#0b0b0b;stroke-width:3;}#mmd11 .lineWrapper line{stroke:#333;}#mmd11 .disabled,#mmd11 .disabled circle,#mmd11 .disabled text{fill:lightgray;}#mmd11 .disabled text{fill:#efefef;}#mmd11 .section-1 rect,#mmd11 .section-1 path,#mmd11 .section-1 circle,#mmd11 .section-1 path{fill:#555;}#mmd11 .section-1 text{fill:#F4F4F4;}#mmd11 .node-icon-1{font-size:40px;color:#F4F4F4;}#mmd11 .section-edge-1{stroke:#555;}#mmd11 .edge-depth-1{stroke-width:11;}#mmd11 .section-1 line{stroke:#aaaaaa;stroke-width:3;}#mmd11 .lineWrapper line{stroke:#F4F4F4;}#mmd11 .disabled,#mmd11 .disabled circle,#mmd11 .disabled text{fill:lightgray;}#mmd11 .disabled text{fill:#efefef;}#mmd11 .section-2 rect,#mmd11 .section-2 path,#mmd11 .section-2 circle,#mmd11 .section-2 path{fill:#BBB;}#mmd11 .section-2 text{fill:#333;}#mmd11 .node-icon-2{font-size:40px;color:#333;}#mmd11 .section-edge-2{stroke:#BBB;}#mmd11 .edge-depth-2{stroke-width:8;}#mmd11 .section-2 line{stroke:#444444;stroke-width:3;}#mmd11 .lineWrapper line{stroke:#333;}#mmd11 .disabled,#mmd11 .disabled circle,#mmd11 .disabled text{fill:lightgray;}#mmd11 .disabled text{fill:#efefef;}#mmd11 .section-3 rect,#mmd11 .section-3 path,#mmd11 .section-3 circle,#mmd11 .section-3 path{fill:#777;}#mmd11 .section-3 text{fill:#333;}#mmd11 .node-icon-3{font-size:40px;color:#333;}#mmd11 .section-edge-3{stroke:#777;}#mmd11 .edge-depth-3{stroke-width:5;}#mmd11 .section-3 line{stroke:#888888;stroke-width:3;}#mmd11 .lineWrapper line{stroke:#333;}#mmd11 .disabled,#mmd11 .disabled circle,#mmd11 .disabled text{fill:lightgray;}#mmd11 .disabled text{fill:#efefef;}#mmd11 .section-4 rect,#mmd11 .section-4 path,#mmd11 .section-4 circle,#mmd11 .section-4 path{fill:#999;}#mmd11 .section-4 text{fill:#333;}#mmd11 .node-icon-4{font-size:40px;color:#333;}#mmd11 .section-edge-4{stroke:#999;}#mmd11 .edge-depth-4{stroke-width:2;}#mmd11 .section-4 line{stroke:#666666;stroke-width:3;}#mmd11 .lineWrapper line{stroke:#333;}#mmd11 .disabled,#mmd11 .disabled circle,#mmd11 .disabled text{fill:lightgray;}#mmd11 .disabled text{fill:#efefef;}#mmd11 .section-5 rect,#mmd11 .section-5 path,#mmd11 .section-5 circle,#mmd11 .section-5 path{fill:#DDD;}#mmd11 .section-5 text{fill:#333;}#mmd11 .node-icon-5{font-size:40px;color:#333;}#mmd11 .section-edge-5{stroke:#DDD;}#mmd11 .edge-depth-5{stroke-width:-1;}#mmd11 .section-5 line{stroke:#222222;stroke-width:3;}#mmd11 .lineWrapper line{stroke:#333;}#mmd11 .disabled,#mmd11 .disabled circle,#mmd11 .disabled text{fill:lightgray;}#mmd11 .disabled text{fill:#efefef;}#mmd11 .section-6 rect,#mmd11 .section-6 path,#mmd11 .section-6 circle,#mmd11 .section-6 path{fill:#FFF;}#mmd11 .section-6 text{fill:#333;}#mmd11 .node-icon-6{font-size:40px;color:#333;}#mmd11 .section-edge-6{stroke:#FFF;}#mmd11 .edge-depth-6{stroke-width:-4;}#mmd11 .section-6 line{stroke:#000000;stroke-width:3;}#mmd11 .lineWrapper line{stroke:#333;}#mmd11 .disabled,#mmd11 .disabled circle,#mmd11 .disabled text{fill:lightgray;}#mmd11 .disabled text{fill:#efefef;}#mmd11 .section-7 rect,#mmd11 .section-7 path,#mmd11 .section-7 circle,#mmd11 .section-7 path{fill:#DDD;}#mmd11 .section-7 text{fill:#333;}#mmd11 .node-icon-7{font-size:40px;color:#333;}#mmd11 .section-edge-7{stroke:#DDD;}#mmd11 .edge-depth-7{stroke-width:-7;}#mmd11 .section-7 line{stroke:#222222;stroke-width:3;}#mmd11 .lineWrapper line{stroke:#333;}#mmd11 .disabled,#mmd11 .disabled circle,#mmd11 .disabled text{fill:lightgray;}#mmd11 .disabled text{fill:#efefef;}#mmd11 .section-8 rect,#mmd11 .section-8 path,#mmd11 .section-8 circle,#mmd11 .section-8 path{fill:#BBB;}#mmd11 .section-8 text{fill:#333;}#mmd11 .node-icon-8{font-size:40px;color:#333;}#mmd11 .section-edge-8{stroke:#BBB;}#mmd11 .edge-depth-8{stroke-width:-10;}#mmd11 .section-8 line{stroke:#444444;stroke-width:3;}#mmd11 .lineWrapper line{stroke:#333;}#mmd11 .disabled,#mmd11 .disabled circle,#mmd11 .disabled text{fill:lightgray;}#mmd11 .disabled text{fill:#efefef;}#mmd11 .section-9 rect,#mmd11 .section-9 path,#mmd11 .section-9 circle,#mmd11 .section-9 path{fill:#999;}#mmd11 .section-9 text{fill:#333;}#mmd11 .node-icon-9{font-size:40px;color:#333;}#mmd11 .section-edge-9{stroke:#999;}#mmd11 .edge-depth-9{stroke-width:-13;}#mmd11 .section-9 line{stroke:#666666;stroke-width:3;}#mmd11 .lineWrapper line{stroke:#333;}#mmd11 .disabled,#mmd11 .disabled circle,#mmd11 .disabled text{fill:lightgray;}#mmd11 .disabled text{fill:#efefef;}#mmd11 .section-10 rect,#mmd11 .section-10 path,#mmd11 .section-10 circle,#mmd11 .section-10 path{fill:#777;}#mmd11 .section-10 text{fill:#333;}#mmd11 .node-icon-10{font-size:40px;color:#333;}#mmd11 .section-edge-10{stroke:#777;}#mmd11 .edge-depth-10{stroke-width:-16;}#mmd11 .section-10 line{stroke:#888888;stroke-width:3;}#mmd11 .lineWrapper line{stroke:#333;}#mmd11 .disabled,#mmd11 .disabled circle,#mmd11 .disabled text{fill:lightgray;}#mmd11 .disabled text{fill:#efefef;}#mmd11 .section-root rect,#mmd11 .section-root path,#mmd11 .section-root circle{fill:hsl(0, 0%, 70.6862745098%);}#mmd11 .section-root text{fill:#333;}#mmd11 .icon-container{height:100%;display:flex;justify-content:center;align-items:center;}#mmd11 .edge{fill:none;}#mmd11 .eventWrapper{filter:brightness(120%);}#mmd11 :root{--mermaid-font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;}</style><g></g><g></g><defs><marker orient="auto" markerHeight="4" markerWidth="6" refY="2" refX="5" id="arrowhead"><path d="M 0,0 V 4 L6,2 Z"></path></marker></defs><g transform="translate(100, 50)" class="taskWrapper"><g class="timeline-node section--1"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line--1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">1995</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="385.64687194824216" x2="195" y1="116.815625" x1="195"></line></g><g transform="translate(100, 250)" class="eventWrapper"><g class="timeline-node section--1"><g><path d="M0 59.41562347412109 v-54.41562347412109 q0,-5 5,-5 h180 q5,0 5,5 v59.41562347412109 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="64.41562347412109" x2="190" y1="64.41562347412109" x1="0" class="node-line--1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">SHA-1   standardized;</tspan><tspan dy="1.1em" x="0">RSA-1024   common</tspan></text></g></g></g><g transform="translate(300, 50)" class="taskWrapper"><g class="timeline-node section-0"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line-0"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">2005</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="385.64687194824216" x2="395" y1="116.815625" x1="395"></line></g><g transform="translate(300, 250)" class="eventWrapper"><g class="timeline-node section-0"><g><path d="M0 59.41562347412109 v-54.41562347412109 q0,-5 5,-5 h180 q5,0 5,5 v59.41562347412109 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="64.41562347412109" x2="190" y1="64.41562347412109" x1="0" class="node-line-0"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Theoretical   attacks</tspan><tspan dy="1.1em" x="0">on   SHA-1   published</tspan></text></g></g></g><g transform="translate(500, 50)" class="taskWrapper"><g class="timeline-node section-1"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line-1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">2011</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="385.64687194824216" x2="595" y1="116.815625" x1="595"></line></g><g transform="translate(500, 250)" class="eventWrapper"><g class="timeline-node section-1"><g><path d="M0 59.41562347412109 v-54.41562347412109 q0,-5 5,-5 h180 q5,0 5,5 v59.41562347412109 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="64.41562347412109" x2="190" y1="64.41562347412109" x1="0" class="node-line-1"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">SHA-1   deprecated</tspan><tspan dy="1.1em" x="0">in   many   standards</tspan></text></g></g></g><g transform="translate(700, 50)" class="taskWrapper"><g class="timeline-node section-2"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line-2"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">2017</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="385.64687194824216" x2="795" y1="116.815625" x1="795"></line></g><g transform="translate(700, 250)" class="eventWrapper"><g class="timeline-node section-2"><g><path d="M0 77.01562194824218 v-72.01562194824218 q0,-5 5,-5 h180 q5,0 5,5 v77.01562194824218 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="82.01562194824218" x2="190" y1="82.01562194824218" x1="0" class="node-line-2"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">Practical   SHA-1</tspan><tspan dy="1.1em" x="0">collision</tspan><tspan dy="1.1em" x="0">demonstrated</tspan></text></g></g></g><g transform="translate(900, 50)" class="taskWrapper"><g class="timeline-node section-3"><g><path d="M0 61.815625 v-56.815625 q0,-5 5,-5 h180 q5,0 5,5 v61.815625 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="66.815625" x2="190" y1="66.815625" x1="0" class="node-line-3"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">202X</tspan></text></g></g></g><g class="lineWrapper"><line stroke-dasharray="5,5" marker-end="url(#arrowhead)" stroke="black" stroke-width="2" y2="385.64687194824216" x2="995" y1="116.815625" x1="995"></line></g><g transform="translate(900, 250)" class="eventWrapper"><g class="timeline-node section-3"><g><path d="M0 77.01562194824218 v-72.01562194824218 q0,-5 5,-5 h180 q5,0 5,5 v77.01562194824218 H0 Z" class="node-bkg node-undefined" id="node-undefined"></path><line y2="82.01562194824218" x2="190" y1="82.01562194824218" x1="0" class="node-line-3"></line></g><g transform="translate(95, 10)"><text text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle" dy="1em"><tspan dy="1em" x="0">PQC</tspan><tspan dy="1.1em" x="0">standardization;</tspan><tspan dy="1.1em" x="0">migration   planning</tspan></text></g></g></g><text y="20" font-weight="bold" font-size="4ex" x="445">From "Safe" to "Deprecated"</text><g class="lineWrapper"><line marker-end="url(#arrowhead)" stroke="black" stroke-width="4" y2="166.815625" x2="1140" y1="166.815625" x1="50"></line></g></svg></figure>
+</div></section>
+<section class="slide smaller" id="hash-fragility-collision-resistance-isnt-forever"><h2 class="slide-title">Hash Fragility: Collision Resistance Isn’t Forever</h2><div class="slide-body">
+<ul>
+<li><strong>SHA-1 (1995-2017):</strong> Once a global standard, now entirely deprecated due to practical collision attacks (e.g., SHAttered).</li>
+<li><strong>The Threat:</strong> Attackers can engineer two entirely different files (one benign, one malicious) that produce the <strong>exact same hash</strong>.</li>
+<li><strong>The Impact:</strong> Systems often sign the <em>hash</em>, not the file itself. A signature generated for the benign file will perfectly validate the malicious one.</li>
+<li><strong>The Fix:</strong> Migrate to modern, collision-resistant algorithms like <strong>SHA-256</strong>, <strong>SHA-512</strong>, or <strong>SHA-3</strong>.</li>
+</ul>
+<div style="text-align: center; position:relative; z-index:-1; top:-100px;max-height:400px;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 672.29 197.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:896px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 193)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="black" stroke-width="0" points="1.02,-8 1.02,-181 140.27,-181 140.27,-8 1.02,-8"/>
+<text text-anchor="middle" x="70.64" y="-164.4" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">1. Crafted Documents</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#e8f5e9" stroke="#22c55e" d="M98.96,-141.2C98.96,-141.2 41.33,-141.2 41.33,-141.2 35.33,-141.2 29.33,-135.2 29.33,-129.2 29.33,-129.2 29.33,-102.8 29.33,-102.8 29.33,-96.8 35.33,-90.8 41.33,-90.8 41.33,-90.8 98.96,-90.8 98.96,-90.8 104.96,-90.8 110.96,-96.8 110.96,-102.8 110.96,-102.8 110.96,-129.2 110.96,-129.2 110.96,-135.2 104.96,-141.2 98.96,-141.2"/>
+<text text-anchor="middle" x="70.14" y="-119.6" font-family="Helvetica,sans-Serif" font-size="12.00">Benign File</text>
+<text text-anchor="middle" x="70.14" y="-105.2" font-family="Helvetica,sans-Serif" font-size="12.00">(Safe)</text>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="#fef3c7" stroke="#eab308" cx="226.82" cy="-87" rx="59.55" ry="35.64"/>
+<text text-anchor="middle" x="226.82" y="-90.6" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">SHA&#45;1</text>
+<text text-anchor="middle" x="226.82" y="-76.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">(Deprecated)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" d="M111.38,-108.46C125.78,-105.76 142.43,-102.63 158.49,-99.62"/>
+<polygon fill="#64748b" stroke="#64748b" points="158.81,-103.12 167.99,-97.84 157.52,-96.24 158.81,-103.12"/>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fee2e2" stroke="#ef4444" d="M105.29,-73.2C105.29,-73.2 35,-73.2 35,-73.2 29,-73.2 23,-67.2 23,-61.2 23,-61.2 23,-34.8 23,-34.8 23,-28.8 29,-22.8 35,-22.8 35,-22.8 105.29,-22.8 105.29,-22.8 111.29,-22.8 117.29,-28.8 117.29,-34.8 117.29,-34.8 117.29,-61.2 117.29,-61.2 117.29,-67.2 111.29,-73.2 105.29,-73.2"/>
+<text text-anchor="middle" x="70.14" y="-51.6" font-family="Helvetica,sans-Serif" font-size="12.00">Malicious File</text>
+<text text-anchor="middle" x="70.14" y="-37.2" font-family="Helvetica,sans-Serif" font-size="12.00">(Exploit)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" d="M117.55,-59.7C131.09,-63.12 146.15,-66.91 160.63,-70.56"/>
+<polygon fill="#64748b" stroke="#64748b" points="159.53,-73.9 170.08,-72.95 161.24,-67.11 159.53,-73.9"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f1f5f9" stroke="#94a3b8" d="M459.92,-112.2C459.92,-112.2 374.94,-112.2 374.94,-112.2 368.94,-112.2 362.94,-106.2 362.94,-100.2 362.94,-100.2 362.94,-73.8 362.94,-73.8 362.94,-67.8 368.94,-61.8 374.94,-61.8 374.94,-61.8 459.92,-61.8 459.92,-61.8 465.92,-61.8 471.92,-67.8 471.92,-73.8 471.92,-73.8 471.92,-100.2 471.92,-100.2 471.92,-106.2 465.92,-112.2 459.92,-112.2"/>
+<text text-anchor="middle" x="417.43" y="-90.6" font-family="Helvetica,sans-Serif" font-size="12.00">Identical Digest</text>
+<text text-anchor="middle" x="417.43" y="-76.2" font-family="Helvetica,sans-Serif" font-size="12.00">(e.g., 38762cf...)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#ef4444" stroke-width="2" d="M286.72,-87C307.15,-87 330.17,-87 351.09,-87"/>
+<polygon fill="#ef4444" stroke="#ef4444" stroke-width="2" points="349.43,-90.5 359.43,-87 349.43,-83.5 349.43,-90.5"/>
+<text text-anchor="middle" x="324.65" y="-90" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ef4444"> Collision</text>
+</g>
+
+<g id="node5" class="node">
+<polygon fill="#e0f2fe" stroke="#0ea5e9" points="658.29,-112.2 530.71,-112.2 530.71,-61.8 664.29,-61.8 664.29,-106.2 658.29,-112.2"/>
+<polyline fill="none" stroke="#0ea5e9" points="658.29,-112.2 658.29,-106.2"/>
+<polyline fill="none" stroke="#0ea5e9" points="664.29,-106.2 658.29,-106.2"/>
+<text text-anchor="middle" x="597.5" y="-90.6" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">Valid Digital Signature</text>
+<text text-anchor="middle" x="597.5" y="-76.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="12.00">(For Both Files!)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" d="M472.34,-87C487.09,-87 503.36,-87 519.14,-87"/>
+<polygon fill="#64748b" stroke="#64748b" points="519,-90.5 529,-87 519,-83.5 519,-90.5"/>
+<text text-anchor="middle" x="501.32" y="-90" font-family="Helvetica,sans-Serif" font-size="10.00"> Sign</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide smaller" id="quantum-primer-why-it-matters-for-cryptography"><h2 class="slide-title">Quantum Primer: Why It Matters for Cryptography</h2><div class="slide-body">
+<ul>
+<li><strong>Classical vs. Quantum:</strong> Classical computers use bits (0 or 1). Quantum computers use <strong>qubits</strong>, leveraging <strong>superposition</strong> and <strong>entanglement</strong> to represent complex, overlapping states.</li>
+<li><strong>Exponential Speedup:</strong> Quantum algorithms use <strong>interference</strong> to solve <em>specific structured math problems</em> exponentially faster than any classical supercomputer.</li>
+<li><strong>The Cryptographic Threat:</strong> Unfortunately, the mathematical foundations of <strong>RSA</strong> and <strong>Elliptic Curve Cryptography (ECC)</strong> are exactly the types of problems quantum computers excel at breaking.</li>
+</ul>
+<div class="callout-warning" data-appearance="minimal">
+<p><strong>The Timeline:</strong> While practical, large-scale quantum computers do not exist yet, the threat of <strong>“Harvest Now, Decrypt Later”</strong> makes this an immediate priority for long-lived secrets.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="shors-algorithm-1994-breaking-rsa-and-ecc"><h2 class="slide-title">Shor’s Algorithm (1994): Breaking RSA and ECC</h2><div class="slide-body">
+<ul>
+<li><strong>The Mathematical Breakthrough:</strong> In 1994, Peter Shor proved that a quantum computer could efficiently factor large integers and solve discrete logarithms, effectively breaking <strong>RSA</strong> and <strong>ECC</strong>.
+<ul>
+<li>Breaking modern crypto requires millions of physical qubits with advanced <strong>error correction</strong>, which remains a monumental engineering challenge.</li>
+</ul></li>
+<li><strong>The Mitigation:</strong> Proactively adopt <strong>Post-Quantum Cryptography (PQC)</strong> signatures and hybrid deployments.</li>
+</ul>
+<div style="text-align: center; position:relative; z-index:-1; top:-100px;max-height:400px;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 686.34 243.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:915px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 239)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="black" stroke-width="0" points="4.55,-44 4.55,-227 163.64,-227 163.64,-44 4.55,-44"/>
+<text text-anchor="middle" x="84.1" y="-210.4" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">1. Public Keys (Exposed)</text>
+</g>
+<g id="clust2" class="cluster">
+<polygon fill="none" stroke="black" stroke-width="0" points="473.24,-8 473.24,-191 670.34,-191 670.34,-8 473.24,-8"/>
+<text text-anchor="middle" x="571.79" y="-174.4" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">2. Private Keys (Recovered)</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#e0f2fe" stroke="#0ea5e9" d="M131.81,-187.6C131.81,-187.6 35.39,-187.6 35.39,-187.6 29.39,-187.6 23.39,-181.6 23.39,-175.6 23.39,-175.6 23.39,-144.4 23.39,-144.4 23.39,-138.4 29.39,-132.4 35.39,-132.4 35.39,-132.4 131.81,-132.4 131.81,-132.4 137.81,-132.4 143.81,-138.4 143.81,-144.4 143.81,-144.4 143.81,-175.6 143.81,-175.6 143.81,-181.6 137.81,-187.6 131.81,-187.6"/>
+<text text-anchor="middle" x="83.6" y="-164.2" font-family="Helvetica,sans-Serif" font-size="14.00">RSA Public Key</text>
+<text text-anchor="middle" x="83.6" y="-147.4" font-family="Helvetica,sans-Serif" font-size="14.00">N = p × q</text>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="#fef3c7" stroke="#eab308" cx="291.42" cy="-87" rx="100.78" ry="39.03"/>
+<text text-anchor="middle" x="291.42" y="-91.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">Shor&#39;s Algorithm</text>
+<text text-anchor="middle" x="291.42" y="-74.4" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">(Quantum Computer)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" d="M144.13,-138.89C163.34,-132.07 185.02,-124.38 205.68,-117.05"/>
+<polygon fill="#64748b" stroke="#64748b" points="206.7,-120.41 214.95,-113.77 204.36,-113.81 206.7,-120.41"/>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e0f2fe" stroke="#0ea5e9" d="M132.19,-114.6C132.19,-114.6 35,-114.6 35,-114.6 29,-114.6 23,-108.6 23,-102.6 23,-102.6 23,-71.4 23,-71.4 23,-65.4 29,-59.4 35,-59.4 35,-59.4 132.19,-59.4 132.19,-59.4 138.19,-59.4 144.19,-65.4 144.19,-71.4 144.19,-71.4 144.19,-102.6 144.19,-102.6 144.19,-108.6 138.19,-114.6 132.19,-114.6"/>
+<text text-anchor="middle" x="83.6" y="-91.2" font-family="Helvetica,sans-Serif" font-size="14.00">ECC Public Key</text>
+<text text-anchor="middle" x="83.6" y="-74.4" font-family="Helvetica,sans-Serif" font-size="14.00">Q = k × P</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" d="M144.68,-87C155.56,-87 167.22,-87 179.03,-87"/>
+<polygon fill="#64748b" stroke="#64748b" points="178.86,-90.5 188.86,-87 178.86,-83.5 178.86,-90.5"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fee2e2" stroke="#ef4444" d="M622.72,-151.6C622.72,-151.6 520.86,-151.6 520.86,-151.6 514.86,-151.6 508.86,-145.6 508.86,-139.6 508.86,-139.6 508.86,-108.4 508.86,-108.4 508.86,-102.4 514.86,-96.4 520.86,-96.4 520.86,-96.4 622.72,-96.4 622.72,-96.4 628.72,-96.4 634.72,-102.4 634.72,-108.4 634.72,-108.4 634.72,-139.6 634.72,-139.6 634.72,-145.6 628.72,-151.6 622.72,-151.6"/>
+<text text-anchor="middle" x="571.79" y="-128.2" font-family="Helvetica,sans-Serif" font-size="14.00">RSA Private Key</text>
+<text text-anchor="middle" x="571.79" y="-111.4" font-family="Helvetica,sans-Serif" font-size="14.00">(Factored p &amp; q)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" d="M387.05,-99.58C423.16,-104.38 463.74,-109.77 497.57,-114.27"/>
+<polygon fill="#64748b" stroke="#64748b" points="496.89,-117.71 507.26,-115.56 497.81,-110.77 496.89,-117.71"/>
+<text text-anchor="middle" x="437.72" y="-124.9" font-family="Helvetica,sans-Serif" font-size="10.00"> Exponential</text>
+<text text-anchor="middle" x="437.72" y="-112.9" font-family="Helvetica,sans-Serif" font-size="10.00"> Speedup</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#fee2e2" stroke="#ef4444" d="M643.34,-78.6C643.34,-78.6 500.24,-78.6 500.24,-78.6 494.24,-78.6 488.24,-72.6 488.24,-66.6 488.24,-66.6 488.24,-35.4 488.24,-35.4 488.24,-29.4 494.24,-23.4 500.24,-23.4 500.24,-23.4 643.34,-23.4 643.34,-23.4 649.34,-23.4 655.34,-29.4 655.34,-35.4 655.34,-35.4 655.34,-66.6 655.34,-66.6 655.34,-72.6 649.34,-78.6 643.34,-78.6"/>
+<text text-anchor="middle" x="571.79" y="-55.2" font-family="Helvetica,sans-Serif" font-size="14.00">ECC Private Key</text>
+<text text-anchor="middle" x="571.79" y="-38.4" font-family="Helvetica,sans-Serif" font-size="14.00">(Solved Discrete Log k)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" d="M386.9,-74.07C394.78,-73.02 402.63,-71.99 410.2,-71 431.67,-68.2 454.76,-65.28 476.56,-62.56"/>
+<polygon fill="#64748b" stroke="#64748b" points="476.84,-66.05 486.33,-61.34 475.97,-59.1 476.84,-66.05"/>
+<text text-anchor="middle" x="437.72" y="-86" font-family="Helvetica,sans-Serif" font-size="10.00"> Exponential</text>
+<text text-anchor="middle" x="437.72" y="-74" font-family="Helvetica,sans-Serif" font-size="10.00"> Speedup</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide smaller" id="grovers-algorithm-1996"><h2 class="slide-title">Grover’s Algorithm (1996)</h2><div class="slide-body">
+<ul>
+<li>Lov Grover formulated a quantum algorithm that searches unstructured data spaces quadratically faster than any classical algorithm.</li>
+<li>This <strong>effectively halves the security bit-strength of symmetric encryption (like AES) and cryptographic hashes (like SHA)</strong>. A 128-bit key provides only 64 bits of security against a quantum adversary.</li>
+<li><strong>The Mitigation:</strong> double the key or hash length. Primitives like <strong>AES-256</strong> and <strong>SHA-384/512</strong> remain robust and future-ready in a post-quantum world.</li>
+</ul>
+<div style="text-align: center; position:relative; z-index:-1; top:-100px;max-height:400px;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 706.40 243.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:941px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 239)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="black" stroke-width="0" points="8,-44 8,-227 226.1,-227 226.1,-44 8,-44"/>
+<text text-anchor="middle" x="117.05" y="-210.4" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">1. Symmetric Primitives</text>
+</g>
+<g id="clust2" class="cluster">
+<polygon fill="none" stroke="black" stroke-width="0" points="510.56,-8 510.56,-191 698.4,-191 698.4,-8 510.56,-8"/>
+<text text-anchor="middle" x="604.48" y="-174.4" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">2. Effective Quantum Strength</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#e0f2fe" stroke="#0ea5e9" d="M199.1,-187.6C199.1,-187.6 35,-187.6 35,-187.6 29,-187.6 23,-181.6 23,-175.6 23,-175.6 23,-144.4 23,-144.4 23,-138.4 29,-132.4 35,-132.4 35,-132.4 199.1,-132.4 199.1,-132.4 205.1,-132.4 211.1,-138.4 211.1,-144.4 211.1,-144.4 211.1,-175.6 211.1,-175.6 211.1,-181.6 205.1,-187.6 199.1,-187.6"/>
+<text text-anchor="middle" x="117.05" y="-164.2" font-family="Helvetica,sans-Serif" font-size="14.00">AES&#45;128 / SHA&#45;256</text>
+<text text-anchor="middle" x="117.05" y="-147.4" font-family="Helvetica,sans-Serif" font-size="14.00">(128&#45;bit Classical Security)</text>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="#fef3c7" stroke="#eab308" cx="345.76" cy="-87" rx="92.67" ry="39.03"/>
+<text text-anchor="middle" x="345.76" y="-91.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">Grover&#39;s Algorithm</text>
+<text text-anchor="middle" x="345.76" y="-74.4" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">(Quantum Search)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" d="M205.05,-131.99C223.24,-126.13 242.38,-119.97 260.46,-114.15"/>
+<polygon fill="#64748b" stroke="#64748b" points="261.38,-117.53 269.82,-111.13 259.23,-110.86 261.38,-117.53"/>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e0f2fe" stroke="#0ea5e9" d="M199.1,-114.6C199.1,-114.6 35,-114.6 35,-114.6 29,-114.6 23,-108.6 23,-102.6 23,-102.6 23,-71.4 23,-71.4 23,-65.4 29,-59.4 35,-59.4 35,-59.4 199.1,-59.4 199.1,-59.4 205.1,-59.4 211.1,-65.4 211.1,-71.4 211.1,-71.4 211.1,-102.6 211.1,-102.6 211.1,-108.6 205.1,-114.6 199.1,-114.6"/>
+<text text-anchor="middle" x="117.05" y="-91.2" font-family="Helvetica,sans-Serif" font-size="14.00">AES&#45;256 / SHA&#45;512</text>
+<text text-anchor="middle" x="117.05" y="-74.4" font-family="Helvetica,sans-Serif" font-size="14.00">(256&#45;bit Classical Security)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" d="M211.57,-87C221.5,-87 231.63,-87 241.66,-87"/>
+<polygon fill="#64748b" stroke="#64748b" points="241.4,-90.5 251.4,-87 241.4,-83.5 241.4,-90.5"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fee2e2" stroke="#ef4444" d="M647.52,-151.6C647.52,-151.6 560.44,-151.6 560.44,-151.6 554.44,-151.6 548.44,-145.6 548.44,-139.6 548.44,-139.6 548.44,-108.4 548.44,-108.4 548.44,-102.4 554.44,-96.4 560.44,-96.4 560.44,-96.4 647.52,-96.4 647.52,-96.4 653.52,-96.4 659.52,-102.4 659.52,-108.4 659.52,-108.4 659.52,-139.6 659.52,-139.6 659.52,-145.6 653.52,-151.6 647.52,-151.6"/>
+<text text-anchor="middle" x="603.98" y="-128.2" font-family="Helvetica,sans-Serif" font-size="14.00">64&#45;bit Security</text>
+<text text-anchor="middle" x="603.98" y="-111.4" font-family="Helvetica,sans-Serif" font-size="14.00">(Vulnerable)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#ef4444" stroke-width="2" d="M433.86,-99.58C467.59,-104.45 505.55,-109.93 536.95,-114.46"/>
+<polygon fill="#ef4444" stroke="#ef4444" stroke-width="2" points="534.81,-117.69 545.2,-115.66 535.81,-110.76 534.81,-117.69"/>
+<text text-anchor="middle" x="479.5" y="-123.81" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ef4444"> Quadratic</text>
+<text text-anchor="middle" x="479.5" y="-111.81" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ef4444"> Speedup</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#e8f5e9" stroke="#22c55e" d="M651.42,-78.6C651.42,-78.6 556.55,-78.6 556.55,-78.6 550.55,-78.6 544.55,-72.6 544.55,-66.6 544.55,-66.6 544.55,-35.4 544.55,-35.4 544.55,-29.4 550.55,-23.4 556.55,-23.4 556.55,-23.4 651.42,-23.4 651.42,-23.4 657.42,-23.4 663.42,-29.4 663.42,-35.4 663.42,-35.4 663.42,-66.6 663.42,-66.6 663.42,-72.6 657.42,-78.6 651.42,-78.6"/>
+<text text-anchor="middle" x="603.98" y="-55.2" font-family="Helvetica,sans-Serif" font-size="14.00">128&#45;bit Security</text>
+<text text-anchor="middle" x="603.98" y="-38.4" font-family="Helvetica,sans-Serif" font-size="14.00">(Safe)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" d="M433.85,-74.22C441.48,-73.12 449.09,-72.04 456.43,-71 481.34,-67.48 508.65,-63.73 532.88,-60.43"/>
+<polygon fill="#64748b" stroke="#64748b" points="533.2,-63.92 542.63,-59.11 532.25,-56.99 533.2,-63.92"/>
+<text text-anchor="middle" x="479.5" y="-86" font-family="Helvetica,sans-Serif" font-size="10.00"> Quadratic</text>
+<text text-anchor="middle" x="479.5" y="-74" font-family="Helvetica,sans-Serif" font-size="10.00"> Speedup</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide smaller" id="post-quantum-cryptography-the-new-toolbox"><h2 class="slide-title">Post-Quantum Cryptography: The New Toolbox</h2><div class="slide-body">
+<ul>
+<li><strong>The Objective:</strong> Proactively replace vulnerable public-key systems (RSA, ECC) with mathematical problems that resist known quantum algorithms.</li>
+<li><strong>The Candidates:</strong> Emerging standards rely on entirely new math, primarily <strong>lattice-based</strong>, <strong>code-based</strong>, <strong>hash-based</strong>, and <strong>multivariate</strong> cryptography.</li>
+<li><strong>The Replacements:</strong> NIST is actively standardizing new algorithms specifically for Key Encapsulation Mechanisms (KEMs) and Digital Signatures.</li>
+<li><strong>The Engineering Trade-offs:</strong> There is no free lunch. PQC algorithms typically demand significantly larger key sizes, bulkier signatures, or heavier computation than modern ECC.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="lattices-intuition-without-the-math"><h2 class="slide-title">Lattices: Intuition Without the Math</h2><div class="slide-body">
+<ul>
+<li>A lattice is a complex, repeating, high-dimensional grid of points generated by a set of basis vectors.</li>
+<li>Mathematical challenges like finding the closest point (<strong>Shortest Vector Problem - SVP</strong>) or solving linear equations with intentional noise (<strong>Learning With Errors - LWE</strong>) are astronomically difficult to solve at large dimensions.</li>
+<li><strong>The PQC Foundation:</strong> Unlike factoring (RSA), no efficient quantum algorithm exists to solve these lattice problems, making them the primary foundation for post-quantum encryption, signatures, and key encapsulation (KEMs).</li>
+</ul>
+<div style="text-align: center; position:relative; z-index:-1; top:-100px;max-height:400px;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 750.86 207.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1001px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 203)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="black" stroke-width="0" points="349.1,-8 349.1,-191 497.19,-191 497.19,-8 349.1,-8"/>
+<text text-anchor="middle" x="423.15" y="-174.4" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">Hard Math Problems</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#e0f2fe" stroke="#0ea5e9" d="M95.19,-114.6C95.19,-114.6 12,-114.6 12,-114.6 6,-114.6 0,-108.6 0,-102.6 0,-102.6 0,-71.4 0,-71.4 0,-65.4 6,-59.4 12,-59.4 12,-59.4 95.19,-59.4 95.19,-59.4 101.19,-59.4 107.19,-65.4 107.19,-71.4 107.19,-71.4 107.19,-102.6 107.19,-102.6 107.19,-108.6 101.19,-114.6 95.19,-114.6"/>
+<text text-anchor="middle" x="53.59" y="-91.2" font-family="Helvetica,sans-Serif" font-size="14.00">Basis Vectors</text>
+<text text-anchor="middle" x="53.59" y="-74.4" font-family="Helvetica,sans-Serif" font-size="14.00">(v₁, v₂, ...)</text>
+</g>
+
+<g id="node2" class="node">
+<ellipse fill="#fef3c7" stroke="#eab308" cx="233.14" cy="-87" rx="88.96" ry="39.03"/>
+<text text-anchor="middle" x="233.14" y="-91.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">High&#45;Dimensional</text>
+<text text-anchor="middle" x="233.14" y="-74.4" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">Lattice Grid</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" d="M107.38,-87C115.42,-87 123.92,-87 132.56,-87"/>
+<polygon fill="#64748b" stroke="#64748b" points="132.46,-90.5 142.46,-87 132.46,-83.5 132.46,-90.5"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fee2e2" stroke="#ef4444" d="M470.19,-151.6C470.19,-151.6 376.1,-151.6 376.1,-151.6 370.1,-151.6 364.1,-145.6 364.1,-139.6 364.1,-139.6 364.1,-108.4 364.1,-108.4 364.1,-102.4 370.1,-96.4 376.1,-96.4 376.1,-96.4 470.19,-96.4 470.19,-96.4 476.19,-96.4 482.19,-102.4 482.19,-108.4 482.19,-108.4 482.19,-139.6 482.19,-139.6 482.19,-145.6 476.19,-151.6 470.19,-151.6"/>
+<text text-anchor="middle" x="423.15" y="-128.2" font-family="Helvetica,sans-Serif" font-size="14.00">Shortest Vector</text>
+<text text-anchor="middle" x="423.15" y="-111.4" font-family="Helvetica,sans-Serif" font-size="14.00">Problem (SVP)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" d="M314.97,-102.91C327.54,-105.38 340.43,-107.92 352.72,-110.34"/>
+<polygon fill="#64748b" stroke="#64748b" points="351.84,-113.73 362.33,-112.23 353.19,-106.86 351.84,-113.73"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fee2e2" stroke="#ef4444" d="M465.14,-78.6C465.14,-78.6 381.16,-78.6 381.16,-78.6 375.16,-78.6 369.16,-72.6 369.16,-66.6 369.16,-66.6 369.16,-35.4 369.16,-35.4 369.16,-29.4 375.16,-23.4 381.16,-23.4 381.16,-23.4 465.14,-23.4 465.14,-23.4 471.14,-23.4 477.14,-29.4 477.14,-35.4 477.14,-35.4 477.14,-66.6 477.14,-66.6 477.14,-72.6 471.14,-78.6 465.14,-78.6"/>
+<text text-anchor="middle" x="423.15" y="-55.2" font-family="Helvetica,sans-Serif" font-size="14.00">Learning With</text>
+<text text-anchor="middle" x="423.15" y="-38.4" font-family="Helvetica,sans-Serif" font-size="14.00">Errors (LWE)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" d="M315.24,-71.47C329.37,-68.77 343.9,-65.98 357.51,-63.38"/>
+<polygon fill="#64748b" stroke="#64748b" points="358.05,-66.84 367.22,-61.52 356.74,-59.96 358.05,-66.84"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#e8f5e9" stroke="#22c55e" d="M730.86,-124.8C730.86,-124.8 579.66,-124.8 579.66,-124.8 573.66,-124.8 567.66,-118.8 567.66,-112.8 567.66,-112.8 567.66,-67.2 567.66,-67.2 567.66,-61.2 573.66,-55.2 579.66,-55.2 579.66,-55.2 730.86,-55.2 730.86,-55.2 736.86,-55.2 742.86,-61.2 742.86,-67.2 742.86,-67.2 742.86,-112.8 742.86,-112.8 742.86,-118.8 736.86,-124.8 730.86,-124.8"/>
+<text text-anchor="middle" x="655.26" y="-94.2" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">Post&#45;Quantum</text>
+<text text-anchor="middle" x="655.26" y="-77.4" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="14.00">Encryption &amp; Signatures</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" d="M482.51,-115.38C504.9,-112.07 531.1,-108.2 556.2,-104.49"/>
+<polygon fill="#64748b" stroke="#64748b" points="556.37,-108 565.75,-103.08 555.35,-101.08 556.37,-108"/>
+<text text-anchor="middle" x="527.42" y="-126.05" font-family="Helvetica,sans-Serif" font-size="10.00"> Quantum</text>
+<text text-anchor="middle" x="527.42" y="-114.05" font-family="Helvetica,sans-Serif" font-size="10.00"> Resistant</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#64748b" d="M477.52,-60.05C500.97,-64.02 529.28,-68.82 556.31,-73.4"/>
+<polygon fill="#64748b" stroke="#64748b" points="555.45,-76.8 565.89,-75.02 556.62,-69.9 555.45,-76.8"/>
+<text text-anchor="middle" x="527.42" y="-86.67" font-family="Helvetica,sans-Serif" font-size="10.00"> Quantum</text>
+<text text-anchor="middle" x="527.42" y="-74.67" font-family="Helvetica,sans-Serif" font-size="10.00"> Resistant</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide smaller" id="pqc-migration-in-blockchain-systems"><h2 class="slide-title">PQC Migration in Blockchain Systems</h2><div class="slide-body">
+<ul>
+<li><strong>The Targets (Where to upgrade):</strong> Public keys are exposed in wallets, consensus validators, cross-chain bridges, and light clients. These are the primary targets for migration.</li>
+<li><strong>The Strategy (How to upgrade):</strong> Deploy <strong>hybrid signatures</strong> (combining classical algorithms like ECDSA with a PQC algorithm) and introduce new address versions to allow a gradual, opt-in rollover without breaking legacy systems.</li>
+<li><strong>The Engineering Challenges:</strong> PQC algorithms typically require significantly <strong>larger key sizes</strong> and <strong>higher computational verification costs</strong>. In blockchains, this directly translates to larger block sizes, higher transaction fees, and increased user experience complexity.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="fully-homomorphic-encryption-fhe"><h2 class="slide-title">Fully Homomorphic Encryption (FHE)</h2><div class="slide-body">
+<ul>
+<li><strong>The Concept:</strong> FHE enables systems to perform arbitrary computations directly on encrypted data without ever needing a decryption key.</li>
+<li><strong>The Mechanism:</strong> When the owner decrypts the final ciphertext, the result perfectly matches the computation as if it had been performed on the plaintext.</li>
+<li><strong>The Mathematical Breakthrough:</strong> While theorized in 1978, Craig Gentry’s 2009 breakthrough used lattice-based cryptography and <strong>bootstrapping</strong> (a method to “clean” computational noise from ciphertexts) to make unlimited homomorphic operations possible.</li>
+<li><strong>Blockchain Relevance:</strong> FHE is the key to <strong>confidential smart contracts</strong>. It allows decentralized nodes to execute complex contract logic over entirely encrypted user data and account states, providing total privacy on a public ledger.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="fhe-at-a-glance"><h2 class="slide-title">FHE at a Glance</h2><div class="slide-body">
+<ul>
+<li><strong>Privacy by design:</strong> the server computes entirely on ciphertexts — it never sees any plaintext.</li>
+<li><strong>Correctness:</strong> Dec(Eval(f, Enc(x))) = f(x) — the math guarantees the right answer.</li>
+<li><strong>Bootstrapping:</strong> periodically refreshes noisy ciphertexts so unlimited operations remain possible.</li>
+<li><strong>Trade‑off:</strong> heavy computation and memory cost, improving with optimization and hardware support.</li>
+</ul>
+<div style="text-align: center; position:relative; z-index:-1; top:-100px;max-height:400px;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 1470.90 537.20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1961px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(21.6 515.6)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="#1a5276" stroke-dasharray="5,2" points="968.67,-8 968.67,-262 1145.33,-262 1145.33,-8 968.67,-8"/>
+<text text-anchor="middle" x="1057" y="-235.5" font-family="Helvetica,sans-Serif" font-size="25.00" fill="#1a5276">Data Owner</text>
+</g>
+<g id="clust2" class="cluster">
+<polygon fill="none" stroke="#7b241c" stroke-dasharray="5,2" points="337.52,-270 337.52,-486 1132.7,-486 1132.7,-270 337.52,-270"/>
+<text text-anchor="middle" x="735.11" y="-459.5" font-family="Helvetica,sans-Serif" font-size="25.00" fill="#7b241c">Untrusted Server / Cloud</text>
+</g>
+
+<g id="node1" class="node">
+<polygon fill="#d6eaf8" stroke="#1a5276" points="1099.8,-64 1014.2,-64 1014.2,-16 1099.8,-16 1099.8,-64"/>
+<text text-anchor="middle" x="1057" y="-44.2" font-family="Helvetica,sans-Serif" font-size="14.00">Plaintext</text>
+<text text-anchor="middle" x="1057" y="-27.4" font-family="Helvetica,sans-Serif" font-size="14.00">x1, x2, ...</text>
+</g>
+
+<g id="node4" class="node">
+<polygon fill="#eaf2ff" stroke="#2874a6" points="196.83,-208 40.27,-208 0,-112 156.55,-112 196.83,-208"/>
+<text text-anchor="middle" x="98.41" y="-164.2" font-family="Helvetica,sans-Serif" font-size="14.00">Encrypt</text>
+<text text-anchor="middle" x="98.41" y="-147.4" font-family="Helvetica,sans-Serif" font-size="14.00">Enc(xi, pk)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M1013.77,-45.3C867.74,-63.62 382.34,-124.51 184.48,-149.33"/>
+<polygon fill="black" stroke="black" points="184.27,-145.83 174.78,-150.55 185.14,-152.77 184.27,-145.83"/>
+<text text-anchor="middle" x="630.98" y="-99.45" font-family="Helvetica,sans-Serif" font-size="12.00">plaintext</text>
+</g>
+
+<g id="node2" class="node">
+<ellipse fill="#fdebd0" stroke="#b7770d" cx="1057" cy="-182" rx="80.33" ry="33.94"/>
+<text text-anchor="middle" x="1057" y="-186.2" font-family="Helvetica,sans-Serif" font-size="14.00">Secret Key</text>
+<text text-anchor="middle" x="1057" y="-169.4" font-family="Helvetica,sans-Serif" font-size="14.00">(decrypt only)</text>
+</g>
+
+<g id="node9" class="node">
+<polygon fill="#eaf2ff" stroke="#2874a6" points="1427.7,-230 1276.3,-230 1237.36,-134 1388.76,-134 1427.7,-230"/>
+<text text-anchor="middle" x="1332.53" y="-186.2" font-family="Helvetica,sans-Serif" font-size="14.00">Decrypt</text>
+<text text-anchor="middle" x="1332.53" y="-169.4" font-family="Helvetica,sans-Serif" font-size="14.00">Dec(c, sk)</text>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#b7770d" stroke-dasharray="5,2" d="M1137.48,-182C1171.21,-182 1210.61,-182 1245.07,-182"/>
+<polygon fill="#b7770d" stroke="#b7770d" points="1245.03,-185.5 1255.03,-182 1245.03,-178.5 1245.03,-185.5"/>
+<text text-anchor="middle" x="1187.34" y="-200" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#b7770d">only owner</text>
+<text text-anchor="middle" x="1187.34" y="-185.6" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#b7770d">holds key</text>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="#d5f5e3" stroke="#1e8449" points="1108.75,-130 1005.25,-130 1005.25,-82 1108.75,-82 1108.75,-130"/>
+<text text-anchor="middle" x="1057" y="-110.2" font-family="Helvetica,sans-Serif" font-size="14.00">Plain Result</text>
+<text text-anchor="middle" x="1057" y="-93.4" font-family="Helvetica,sans-Serif" font-size="14.00">f(x1, x2, ...)</text>
+</g>
+
+<g id="node5" class="node">
+<polygon fill="#f9ebea" stroke="#7b241c" points="540.83,-326 388.33,-326 388.33,-278 540.83,-278 540.83,-326"/>
+<text text-anchor="middle" x="464.58" y="-306.2" font-family="Helvetica,sans-Serif" font-size="14.00">Ciphertexts</text>
+<text text-anchor="middle" x="464.58" y="-289.4" font-family="Helvetica,sans-Serif" font-size="14.00">Enc(x1), Enc(x2), ...</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M192.25,-196.2C253.85,-220.22 333.55,-251.3 390.61,-273.55"/>
+<polygon fill="black" stroke="black" points="388.99,-276.67 399.58,-277.04 391.53,-270.15 388.99,-276.67"/>
+<text text-anchor="middle" x="271.18" y="-265.89" font-family="Helvetica,sans-Serif" font-size="12.00">send ciphertext</text>
+<text text-anchor="middle" x="271.18" y="-251.49" font-family="Helvetica,sans-Serif" font-size="12.00">(server never sees x)</text>
+</g>
+
+<g id="node7" class="node">
+<polygon fill="#f9ebea" stroke="#7b241c" points="894.67,-342.4 678.33,-342.4 678.33,-277.6 894.67,-277.6 894.67,-342.4"/>
+<text text-anchor="middle" x="786.5" y="-322.6" font-family="Helvetica,sans-Serif" font-size="14.00">Homomorphic Eval</text>
+<text text-anchor="middle" x="786.5" y="-305.8" font-family="Helvetica,sans-Serif" font-size="14.00">f(Enc(x1), Enc(x2), ...)</text>
+<text text-anchor="middle" x="786.5" y="-289" font-family="Helvetica,sans-Serif" font-size="14.00">adds, multiplies on ciphertexts</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M540.99,-303.89C578.39,-304.82 624.44,-305.97 666.45,-307.02"/>
+<polygon fill="black" stroke="black" points="666.3,-310.52 676.38,-307.27 666.47,-303.52 666.3,-310.52"/>
+</g>
+
+<g id="node6" class="node">
+<polygon fill="#f5cba7" stroke="#a04000" points="464.58,-440 345.52,-392 464.58,-344 583.63,-392 464.58,-440"/>
+<text text-anchor="middle" x="464.58" y="-396.2" font-family="Helvetica,sans-Serif" font-size="14.00">Bootstrapping</text>
+<text text-anchor="middle" x="464.58" y="-379.4" font-family="Helvetica,sans-Serif" font-size="14.00">(noise refresh)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#a04000" stroke-dasharray="5,2" d="M538.18,-373.39C576.24,-363.64 623.84,-351.44 667.08,-340.35"/>
+<polygon fill="#a04000" stroke="#a04000" points="667.69,-343.81 676.51,-337.94 665.95,-337.03 667.69,-343.81"/>
+<text text-anchor="middle" x="630.98" y="-373.91" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#a04000">periodic</text>
+<text text-anchor="middle" x="630.98" y="-359.51" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#a04000">noise reset</text>
+</g>
+
+<g id="node8" class="node">
+<polygon fill="#f9ebea" stroke="#7b241c" points="1124.7,-330 989.3,-330 989.3,-282 1124.7,-282 1124.7,-330"/>
+<text text-anchor="middle" x="1057" y="-310.2" font-family="Helvetica,sans-Serif" font-size="14.00">Encrypted Result</text>
+<text text-anchor="middle" x="1057" y="-293.4" font-family="Helvetica,sans-Serif" font-size="14.00">Enc(f(x))</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M895.16,-308.4C922.74,-307.99 951.88,-307.55 977.66,-307.17"/>
+<polygon fill="black" stroke="black" points="977.42,-310.67 987.36,-307.02 977.31,-303.67 977.42,-310.67"/>
+<text text-anchor="middle" x="935.67" y="-311.72" font-family="Helvetica,sans-Serif" font-size="12.00">Enc(f(x))</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M1112.04,-281.5C1153.73,-262.6 1211.84,-236.26 1257.8,-215.43"/>
+<polygon fill="black" stroke="black" points="1258.96,-218.74 1266.62,-211.42 1256.07,-212.36 1258.96,-218.74"/>
+<text text-anchor="middle" x="1187.34" y="-262.35" font-family="Helvetica,sans-Serif" font-size="12.00">return result</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="black" d="M1246.15,-156.81C1237.11,-154.21 1228.05,-151.63 1219.36,-149.2 1186.53,-140.01 1149.82,-130.15 1119.72,-122.17"/>
+<polygon fill="black" stroke="black" points="1120.98,-118.88 1110.41,-119.71 1119.19,-125.65 1120.98,-118.88"/>
+<text text-anchor="middle" x="1187.34" y="-167.2" font-family="Helvetica,sans-Serif" font-size="12.00">decrypts</text>
+<text text-anchor="middle" x="1187.34" y="-152.8" font-family="Helvetica,sans-Serif" font-size="12.00">correctly</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide smaller" id="zeroknowledge-proofs-prove-without-revealing"><h2 class="slide-title">Zero‑Knowledge Proofs: Prove Without Revealing</h2><div class="slide-body">
+<ul>
+<li><strong>Completeness:</strong> if the statement is true, an honest prover can always convince a verifier.</li>
+<li><strong>Soundness:</strong> a cheating prover cannot convince the verifier of a false statement (except with negligible probability).</li>
+<li><strong>Zero‑knowledge:</strong> the verifier learns <em>nothing</em> beyond the truth of the statement — no secrets, no witnesses.</li>
+<li><strong>Interactive vs. non‑interactive:</strong> classical ZK requires back-and-forth challenges; SNARKs/STARKs collapse this into a single short proof verifiable by anyone.</li>
+<li><strong>Blockchain relevance:</strong> ZK rollups (e.g., zkSync, StarkNet) use succinct proofs to compress thousands of transactions into one on-chain verification, preserving both scalability and correctness.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="ali-baba-cave-the-protocol"><h2 class="slide-title">Ali Baba Cave: The Protocol</h2><div class="slide-body">
+<div style="z-index:-1;position:relative; top:-25px; height:450px;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 779.60 750.72" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1040px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(28.8 721.92)">
+<g id="clust1" class="cluster">
+<polygon fill="#f5f0fa" stroke="#4a235a" points="8,-234.6 8,-685.12 313,-685.12 313,-234.6 8,-234.6"/>
+<text text-anchor="middle" x="160.5" y="-669.42" font-family="Helvetica,sans-Serif" font-size="13.00" fill="#4a235a">The Cave</text>
+</g>
+<g id="clust2" class="cluster">
+<polygon fill="none" stroke="#555555" stroke-dasharray="5,2" points="331,-100.6 331,-521 714,-521 714,-100.6 331,-100.6"/>
+<text text-anchor="middle" x="522.5" y="-505.3" font-family="Helvetica,sans-Serif" font-size="13.00">One Round (repeat n times)</text>
+</g>
+
+<g id="node1" class="node">
+<polygon fill="#d7bde2" stroke="#4a235a" points="72.9,-604.09 189,-578 305.1,-604.09 304.99,-646.31 73.01,-646.31 72.9,-604.09"/>
+<text text-anchor="middle" x="189" y="-619.36" font-family="Helvetica,sans-Serif" font-size="12.00">Entrance</text>
+<text text-anchor="middle" x="189" y="-604.96" font-family="Helvetica,sans-Serif" font-size="12.00">(Verifier waits here)</text>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="#d6eaf8" stroke="#1a5276" points="117.41,-478.6 52.59,-478.6 52.59,-442.6 117.41,-442.6 117.41,-478.6"/>
+<text text-anchor="middle" x="85" y="-457" font-family="Helvetica,sans-Serif" font-size="12.00">Path A</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M167.2,-582.65C148.18,-554.65 120.93,-514.51 103.1,-488.25"/>
+<polygon fill="black" stroke="black" points="106.13,-486.48 97.61,-480.17 100.34,-490.41 106.13,-486.48"/>
+<text text-anchor="middle" x="159.94" y="-538" font-family="Helvetica,sans-Serif" font-size="10.00">go left</text>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="#fdebd0" stroke="#b7770d" points="255.41,-478.6 190.59,-478.6 190.59,-442.6 255.41,-442.6 255.41,-478.6"/>
+<text text-anchor="middle" x="223" y="-457" font-family="Helvetica,sans-Serif" font-size="12.00">Path B</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M196.8,-579.62C202.83,-552.48 211.06,-515.4 216.68,-490.09"/>
+<polygon fill="black" stroke="black" points="220.05,-491.03 218.8,-480.51 213.22,-489.52 220.05,-491.03"/>
+<text text-anchor="middle" x="224.71" y="-538" font-family="Helvetica,sans-Serif" font-size="10.00">go right</text>
+</g>
+
+<g id="node5" class="node">
+<polygon fill="#e8f8e8" stroke="#2d6a4f" points="500.76,-489.4 355.24,-489.4 355.24,-431.8 500.76,-431.8 500.76,-489.4"/>
+<text text-anchor="middle" x="428" y="-471.4" font-family="Helvetica,sans-Serif" font-size="12.00">Step 1: Prover enters,</text>
+<text text-anchor="middle" x="428" y="-457" font-family="Helvetica,sans-Serif" font-size="12.00">chooses A or B</text>
+<text text-anchor="middle" x="428" y="-442.6" font-family="Helvetica,sans-Serif" font-size="12.00">Verifier looks away</text>
+</g>
+
+<g id="edge10" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="1,5" d="M313,-535.3C317.23,-532.59 321.45,-529.88 325.64,-527.19"/>
+<polygon fill="black" stroke="black" points="327.5,-530.16 334.03,-521.82 323.73,-524.26 327.5,-530.16"/>
+<text text-anchor="middle" x="336.98" y="-544" font-family="Helvetica,sans-Serif" font-size="10.00">prover</text>
+<text text-anchor="middle" x="336.98" y="-532" font-family="Helvetica,sans-Serif" font-size="10.00">enters</text>
+</g>
+
+<g id="node4" class="node">
+<polygon fill="#fadbd8" stroke="#922b21" points="151,-357.8 16.17,-300.2 151,-242.6 285.83,-300.2 151,-357.8"/>
+<text text-anchor="middle" x="151" y="-311" font-family="Helvetica,sans-Serif" font-size="12.00">Secret Door</text>
+<text text-anchor="middle" x="151" y="-296.6" font-family="Helvetica,sans-Serif" font-size="12.00">password&#45;gated</text>
+<text text-anchor="middle" x="151" y="-282.2" font-family="Helvetica,sans-Serif" font-size="12.00">(only Prover knows)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#922b21" stroke-dasharray="5,2" d="M75.99,-442.26C68.99,-426.32 61.7,-402.28 69.74,-382.8 76.84,-365.61 89.5,-350.15 102.75,-337.42"/>
+<text text-anchor="middle" x="108.37" y="-397.8" font-family="Helvetica,sans-Serif" font-size="10.00">dead end</text>
+<text text-anchor="middle" x="108.37" y="-385.8" font-family="Helvetica,sans-Serif" font-size="10.00">without password</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#922b21" stroke-dasharray="5,2" d="M215.16,-442.35C205.03,-420.06 186.98,-380.36 172.6,-348.73"/>
+<text text-anchor="middle" x="236.29" y="-397.8" font-family="Helvetica,sans-Serif" font-size="10.00">dead end</text>
+<text text-anchor="middle" x="236.29" y="-385.8" font-family="Helvetica,sans-Serif" font-size="10.00">without password</text>
+</g>
+
+<g id="node6" class="node">
+<polygon fill="#dae8fc" stroke="#1a5276" points="537.6,-321.8 350.4,-321.8 350.4,-278.6 537.6,-278.6 537.6,-321.8"/>
+<text text-anchor="middle" x="444" y="-303.8" font-family="Helvetica,sans-Serif" font-size="12.00">Step 2: Verifier shouts</text>
+<text text-anchor="middle" x="444" y="-289.4" font-family="Helvetica,sans-Serif" font-size="12.00">&quot;Exit from A!&quot; or &quot;Exit from B!&quot;</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M430.82,-431.65C433.6,-404.17 437.83,-362.27 440.75,-333.41"/>
+<polygon fill="black" stroke="black" points="444.19,-334.1 441.72,-323.8 437.23,-333.4 444.19,-334.1"/>
+</g>
+
+<g id="node7" class="node">
+<polygon fill="#d5f5e3" stroke="#1e8449" points="487.41,-173.4 338.59,-173.4 338.59,-115.8 487.41,-115.8 487.41,-173.4"/>
+<text text-anchor="middle" x="413" y="-155.4" font-family="Helvetica,sans-Serif" font-size="12.00">Prover KNOWS secret</text>
+<text text-anchor="middle" x="413" y="-141" font-family="Helvetica,sans-Serif" font-size="12.00">Use door if needed</text>
+<text text-anchor="middle" x="413" y="-126.6" font-family="Helvetica,sans-Serif" font-size="12.00">Always exits correctly</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#1e8449" d="M439.75,-278.16C434.92,-254.23 426.93,-214.61 420.93,-184.91"/>
+<polygon fill="#1e8449" stroke="#1e8449" points="424.37,-184.26 418.96,-175.15 417.51,-185.64 424.37,-184.26"/>
+<text text-anchor="middle" x="444.71" y="-208.6" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#1e8449">if knows</text>
+</g>
+
+<g id="node8" class="node">
+<polygon fill="#fadbd8" stroke="#922b21" points="705.76,-180.6 552.24,-180.6 552.24,-108.6 705.76,-108.6 705.76,-180.6"/>
+<text text-anchor="middle" x="629" y="-162.6" font-family="Helvetica,sans-Serif" font-size="12.00">Prover does NOT know</text>
+<text text-anchor="middle" x="629" y="-148.2" font-family="Helvetica,sans-Serif" font-size="12.00">Can only exit from</text>
+<text text-anchor="middle" x="629" y="-133.8" font-family="Helvetica,sans-Serif" font-size="12.00">the side they entered</text>
+<text text-anchor="middle" x="629" y="-119.4" font-family="Helvetica,sans-Serif" font-size="12.00">50% chance of failure</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#922b21" d="M469.34,-278.16C497.07,-255.14 542.28,-217.6 577.52,-188.34"/>
+<polygon fill="#922b21" stroke="#922b21" points="579.63,-191.14 585.09,-182.06 575.16,-185.75 579.63,-191.14"/>
+<text text-anchor="middle" x="573.08" y="-208.6" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#922b21">if bluffing</text>
+</g>
+
+<g id="node9" class="node">
+<polygon fill="#fef9e7" stroke="#b7770d" points="682.48,-57.6 351.52,-57.6 351.52,0 688.48,0 688.48,-51.6 682.48,-57.6"/>
+<polyline fill="none" stroke="#b7770d" points="682.48,-57.6 682.48,-51.6"/>
+<polyline fill="none" stroke="#b7770d" points="688.48,-51.6 682.48,-51.6"/>
+<text text-anchor="middle" x="520" y="-39.6" font-family="Helvetica,sans-Serif" font-size="12.00">After n rounds:</text>
+<text text-anchor="middle" x="520" y="-25.2" font-family="Helvetica,sans-Serif" font-size="12.00">P(undetected cheating) = (1/2)^n</text>
+<text text-anchor="middle" x="520" y="-10.8" font-family="Helvetica,sans-Serif" font-size="12.00">Verifier is convinced, yet learned zero about the password</text>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="#1e8449" d="M439.45,-115.47C453.47,-100.56 470.85,-82.08 485.87,-66.1"/>
+<polygon fill="#1e8449" stroke="#1e8449" points="488.15,-68.79 492.45,-59.1 483.05,-63.99 488.15,-68.79"/>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="#922b21" d="M595.11,-108.22C582.27,-94.82 567.65,-79.55 554.74,-66.07"/>
+<polygon fill="#922b21" stroke="#922b21" points="557.44,-63.83 548,-59.03 552.39,-68.68 557.44,-63.83"/>
+</g>
+</g>
+</svg></figure>
+</div>
+<ul>
+<li><strong>Key insight:</strong> if Prover can always exit from the <em>called</em> side, they must know the secret. After 30 rounds the probability of successful deception is less than 1 in a billion.</li>
+<li><strong>Digital analogy:</strong> replace the cave with a hash function or elliptic‑curve relation; replace shouting with a random challenge bit.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="zeroknowledge-in-blockchain-practice"><h2 class="slide-title">Zero‑Knowledge in Blockchain Practice</h2><div class="slide-body">
+<ul>
+<li><strong>Privacy — shielded transactions:</strong> protocols like Zcash use zk-SNARKs to prove that a transaction is valid (inputs balance outputs, sender is authorized) without revealing sender, receiver, or amount on-chain.</li>
+<li><strong>Privacy — selective disclosure:</strong> a user can prove a single attribute (“my balance exceeds $X”, “I am over 18”) derived from a private credential, sharing nothing else — enabled by ZK circuits over committed values.</li>
+<li><strong>Scalability — ZK rollups:</strong> zkSync, StarkNet, and Polygon zkEVM batch thousands of transactions off-chain, then post a single succinct validity proof on Ethereum. Verification costs roughly the same gas regardless of batch size, dramatically cutting per-transaction fees.</li>
+<li><strong>Scalability — light clients:</strong> a ZK proof of the chain’s consensus state lets a mobile wallet verify the latest block header without downloading the full chain history.</li>
+<li><strong>Compliance — private audits:</strong> a business can prove to a regulator that all transactions satisfy AML/KYC rules without exposing counterparties or amounts, satisfying legal obligations while preserving commercial confidentiality.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="when-good-crypto-goes-bad-milk-sad-cve-2023-39910"><h2 class="slide-title">When Good Crypto Goes Bad: Milk Sad (CVE-2023-39910)</h2><div class="slide-body">
+<ul>
+<li><strong>Rule one:</strong> never substitute a general-purpose PRNG for a cryptographically secure one — the resulting key space is trivially brute-forceable.</li>
+<li><strong>What happened:</strong> Libbitcoin Explorer’s <code>bx seed</code> command used <code>std::mt19937</code> (Mersenne Twister) seeded with only 32 bits from the system clock to generate 256-bit wallet seeds.</li>
+<li><strong>Consequence:</strong> users believed they had 2²⁵⁶ possible keys; in reality they had only ~4.3 billion (2³²) — enumerable in days on commodity hardware.</li>
+<li><strong>Impact (July 2023):</strong> attackers swept 2,600+ wallets across Bitcoin, Ethereum, Solana, and others; approximately $900,000 in losses in a single coordinated campaign.</li>
+<li><strong>Root cause:</strong> CWE-338 — wrong tool, wrong context. <code>mt19937</code> is designed for simulations, not secrets.</li>
+<li><strong>Lessons:</strong> use OS-provided CSPRNGs (<code>/dev/urandom</code>, <code>getrandom()</code>, <code>BCryptGenRandom</code>); treat key generation as a security boundary, not a convenience call; use audited libraries (libsodium, OpenSSL) that make the secure choice by default.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="case-study-linux.encoder-rng-failure"><h2 class="slide-title">Case Study: Linux.Encoder RNG Failure</h2><div class="slide-body">
+<ul>
+<li><strong>What it was:</strong> Linux.Encoder.1 (2015) — ransomware that encrypted web servers using AES keys derived from <code>srand(time())</code>, a clock-seeded PRNG with no real entropy.</li>
+<li><strong>Why it collapsed:</strong> file modification timestamps narrowed the candidate seed to a few seconds; Bitdefender brute-forced it and released a free decryptor within days — without ever touching AES.</li>
+<li><strong>The “fix” that wasn’t:</strong> a patched version iterated <code>srand(h(h(...h(time())...)))</code>. Hashing a weak seed does not add entropy — it only obscures a still-guessable value.</li>
+<li><strong>Blockchain relevance:</strong> smart contract randomness faces the same trap. <code>block.timestamp</code>, <code>blockhash</code>, or miner-controlled fields are observable and manipulable — using them as entropy sources for key generation, lotteries, or NFT reveals repeats this exact mistake on a public ledger.</li>
+<li><strong>Root cause:</strong> CWE-335. The cipher was sound; the entropy feeding it was not. Use <code>/dev/urandom</code>, <code>getrandom()</code>, or a verifiable on-chain randomness oracle (e.g., Chainlink VRF).</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="case-study-cryptodefense-keys-left-in-plain-sight"><h2 class="slide-title">Case Study: CryptoDefense — Keys Left in Plain Sight</h2><div class="slide-body">
+<ul>
+<li><strong>What it was:</strong> CryptoDefense (2014) — Windows ransomware that correctly used RSA-2048 to encrypt victim files, then demanded payment for the decryption key.</li>
+<li><strong>The mistake:</strong> the authors called the Windows CryptoAPI without understanding it. <code>CryptGenKey</code> stores generated keys in the user’s own key store under <code>%AppData%\Microsoft\Crypto\RSA</code> — fully accessible to the victim. The private key needed to decrypt was sitting on the machine the whole time.</li>
+<li><strong>Root cause:</strong> correct algorithm, catastrophic key handling. Strong math is irrelevant if the private key is not protected.</li>
+<li><strong>Blockchain relevance:</strong> this failure class is the leading cause of cryptocurrency losses. Exchange hot wallets storing private keys on internet-connected servers, developers hardcoding keys in deployed contracts, and users keeping seed phrases in plaintext cloud documents are all the same mistake — the cryptography is sound but the key boundary is not defended.</li>
+<li><strong>Lesson:</strong> treat private keys as the single most sensitive asset in any system. Use hardware security modules (HSMs), hardware wallets, or OS-protected keystores; never leave keys reachable by an adversary who has already compromised the adjacent environment.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="putting-it-together-threats-and-responses"><h2 class="slide-title">Putting It Together: Threats and Responses</h2><div class="slide-body">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 709.57 507.30" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:947px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(28.8 478.5)">
+<g id="node1" class="node">
+<polygon fill="#fadbd8" stroke="#922b21" points="137.18,-49.25 2.46,-49.25 2.46,-8.45 137.18,-8.45 137.18,-49.25"/>
+<text text-anchor="middle" x="69.82" y="-32.15" font-family="Helvetica,sans-Serif" font-size="11.00">Hash collisions</text>
+<text text-anchor="middle" x="69.82" y="-18.95" font-family="Helvetica,sans-Serif" font-size="11.00">(SHA&#45;1 / MD5 broken)</text>
+</g>
+
+<g id="node6" class="node">
+<ellipse fill="#fdebd0" stroke="#b7770d" cx="311.33" cy="-28.85" rx="90.96" ry="28.85"/>
+<text text-anchor="middle" x="311.33" y="-32.15" font-family="Helvetica,sans-Serif" font-size="11.00">Collision and</text>
+<text text-anchor="middle" x="311.33" y="-18.95" font-family="Helvetica,sans-Serif" font-size="11.00">pre&#45;image resistance</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M137.54,-28.85C160.45,-28.85 186.6,-28.85 211.5,-28.85"/>
+<polygon fill="black" stroke="black" points="211.24,-31.48 218.74,-28.85 211.24,-26.23 211.24,-31.48"/>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="#fadbd8" stroke="#922b21" points="132.31,-147.25 7.33,-147.25 7.33,-106.45 132.31,-106.45 132.31,-147.25"/>
+<text text-anchor="middle" x="69.82" y="-130.15" font-family="Helvetica,sans-Serif" font-size="11.00">Quantum computing</text>
+<text text-anchor="middle" x="69.82" y="-116.95" font-family="Helvetica,sans-Serif" font-size="11.00">(Shor / Grover)</text>
+</g>
+
+<g id="node7" class="node">
+<ellipse fill="#fdebd0" stroke="#b7770d" cx="311.33" cy="-126.85" rx="92.69" ry="28.85"/>
+<text text-anchor="middle" x="311.33" y="-130.15" font-family="Helvetica,sans-Serif" font-size="11.00">Factoring and</text>
+<text text-anchor="middle" x="311.33" y="-116.95" font-family="Helvetica,sans-Serif" font-size="11.00">discrete&#45;log hardness</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M132.5,-126.85C156.04,-126.85 183.52,-126.85 209.75,-126.85"/>
+<polygon fill="black" stroke="black" points="209.57,-129.48 217.07,-126.85 209.57,-124.23 209.57,-129.48"/>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="#fadbd8" stroke="#922b21" points="124.97,-245.25 14.67,-245.25 14.67,-204.45 124.97,-204.45 124.97,-245.25"/>
+<text text-anchor="middle" x="69.82" y="-228.15" font-family="Helvetica,sans-Serif" font-size="11.00">Confidentiality on</text>
+<text text-anchor="middle" x="69.82" y="-214.95" font-family="Helvetica,sans-Serif" font-size="11.00">public ledgers</text>
+</g>
+
+<g id="node8" class="node">
+<ellipse fill="#fdebd0" stroke="#b7770d" cx="311.33" cy="-224.85" rx="65.46" ry="28.85"/>
+<text text-anchor="middle" x="311.33" y="-228.15" font-family="Helvetica,sans-Serif" font-size="11.00">Data</text>
+<text text-anchor="middle" x="311.33" y="-214.95" font-family="Helvetica,sans-Serif" font-size="11.00">confidentiality</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M125.47,-224.85C158.44,-224.85 200.86,-224.85 236.75,-224.85"/>
+<polygon fill="black" stroke="black" points="236.71,-227.48 244.21,-224.85 236.71,-222.23 236.71,-227.48"/>
+</g>
+
+<g id="node4" class="node">
+<polygon fill="#fadbd8" stroke="#922b21" points="137.2,-343.25 2.44,-343.25 2.44,-302.45 137.2,-302.45 137.2,-343.25"/>
+<text text-anchor="middle" x="69.82" y="-326.15" font-family="Helvetica,sans-Serif" font-size="11.00">Verifiable computation</text>
+<text text-anchor="middle" x="69.82" y="-312.95" font-family="Helvetica,sans-Serif" font-size="11.00">without disclosure</text>
+</g>
+
+<g id="node9" class="node">
+<ellipse fill="#fdebd0" stroke="#b7770d" cx="311.33" cy="-322.85" rx="73.68" ry="28.85"/>
+<text text-anchor="middle" x="311.33" y="-326.15" font-family="Helvetica,sans-Serif" font-size="11.00">Soundness plus</text>
+<text text-anchor="middle" x="311.33" y="-312.95" font-family="Helvetica,sans-Serif" font-size="11.00">zero&#45;knowledge</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="black" d="M137.54,-322.85C165.76,-322.85 198.9,-322.85 228.57,-322.85"/>
+<polygon fill="black" stroke="black" points="228.24,-325.48 235.74,-322.85 228.24,-320.23 228.24,-325.48"/>
+</g>
+
+<g id="node5" class="node">
+<polygon fill="#fadbd8" stroke="#922b21" points="139.64,-441.25 0,-441.25 0,-400.45 139.64,-400.45 139.64,-441.25"/>
+<text text-anchor="middle" x="69.82" y="-424.15" font-family="Helvetica,sans-Serif" font-size="11.00">Implementation failures</text>
+<text text-anchor="middle" x="69.82" y="-410.95" font-family="Helvetica,sans-Serif" font-size="11.00">(RNG, key handling)</text>
+</g>
+
+<g id="node10" class="node">
+<ellipse fill="#fdebd0" stroke="#b7770d" cx="311.33" cy="-420.85" rx="75.83" ry="28.85"/>
+<text text-anchor="middle" x="311.33" y="-424.15" font-family="Helvetica,sans-Serif" font-size="11.00">Key secrecy and</text>
+<text text-anchor="middle" x="311.33" y="-410.95" font-family="Helvetica,sans-Serif" font-size="11.00">entropy quality</text>
+</g>
+
+<g id="edge9" class="edge">
+<path fill="none" stroke="black" d="M140.1,-420.85C167.14,-420.85 198.39,-420.85 226.68,-420.85"/>
+<polygon fill="black" stroke="black" points="226.34,-423.48 233.84,-420.85 226.34,-418.23 226.34,-423.48"/>
+</g>
+
+<g id="node11" class="node">
+<polygon fill="#d5f5e3" stroke="#1e8449" points="624.17,-49.25 510.83,-49.25 510.83,-8.45 624.17,-8.45 624.17,-49.25"/>
+<text text-anchor="middle" x="567.5" y="-32.15" font-family="Helvetica,sans-Serif" font-size="11.00">Hash agility</text>
+<text text-anchor="middle" x="567.5" y="-18.95" font-family="Helvetica,sans-Serif" font-size="11.00">(SHA&#45;3, BLAKE3)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M402.66,-28.85C435.38,-28.85 471.67,-28.85 501.76,-28.85"/>
+<polygon fill="black" stroke="black" points="501.46,-31.48 508.96,-28.85 501.46,-26.23 501.46,-31.48"/>
+</g>
+
+<g id="node12" class="node">
+<polygon fill="#d5f5e3" stroke="#1e8449" points="651.97,-147.25 483.03,-147.25 483.03,-106.45 651.97,-106.45 651.97,-147.25"/>
+<text text-anchor="middle" x="567.5" y="-130.15" font-family="Helvetica,sans-Serif" font-size="11.00">Post&#45;quantum crypto</text>
+<text text-anchor="middle" x="567.5" y="-116.95" font-family="Helvetica,sans-Serif" font-size="11.00">(CRYSTALS&#45;Kyber/Dilithium)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M404.45,-126.85C427.03,-126.85 451.2,-126.85 473.8,-126.85"/>
+<polygon fill="black" stroke="black" points="473.7,-129.48 481.2,-126.85 473.7,-124.23 473.7,-129.48"/>
+</g>
+
+<g id="node13" class="node">
+<polygon fill="#d5f5e3" stroke="#1e8449" points="635.79,-245.25 499.21,-245.25 499.21,-204.45 635.79,-204.45 635.79,-245.25"/>
+<text text-anchor="middle" x="567.5" y="-228.15" font-family="Helvetica,sans-Serif" font-size="11.00">FHE and ZK proofs</text>
+<text text-anchor="middle" x="567.5" y="-214.95" font-family="Helvetica,sans-Serif" font-size="11.00">(confidential contracts)</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M377.13,-224.85C411.43,-224.85 453.78,-224.85 489.72,-224.85"/>
+<polygon fill="black" stroke="black" points="489.7,-227.48 497.2,-224.85 489.7,-222.23 489.7,-227.48"/>
+</g>
+
+<g id="node14" class="node">
+<polygon fill="#d5f5e3" stroke="#1e8449" points="644.65,-343.25 490.35,-343.25 490.35,-302.45 644.65,-302.45 644.65,-343.25"/>
+<text text-anchor="middle" x="567.5" y="-326.15" font-family="Helvetica,sans-Serif" font-size="11.00">SNARKs / STARKs</text>
+<text text-anchor="middle" x="567.5" y="-312.95" font-family="Helvetica,sans-Serif" font-size="11.00">(ZK rollups, private audits)</text>
+</g>
+
+<g id="edge8" class="edge">
+<path fill="none" stroke="black" d="M385.51,-322.85C415.4,-322.85 450.18,-322.85 481.21,-322.85"/>
+<polygon fill="black" stroke="black" points="480.85,-325.48 488.35,-322.85 480.85,-320.23 480.85,-325.48"/>
+</g>
+
+<g id="node15" class="node">
+<polygon fill="#d5f5e3" stroke="#1e8449" points="624.77,-441.25 510.23,-441.25 510.23,-400.45 624.77,-400.45 624.77,-441.25"/>
+<text text-anchor="middle" x="567.5" y="-424.15" font-family="Helvetica,sans-Serif" font-size="11.00">CSPRNGs, HSMs</text>
+<text text-anchor="middle" x="567.5" y="-410.95" font-family="Helvetica,sans-Serif" font-size="11.00">Audited libraries</text>
+</g>
+
+<g id="edge10" class="edge">
+<path fill="none" stroke="black" d="M387.56,-420.85C423.73,-420.85 466.65,-420.85 501.4,-420.85"/>
+<polygon fill="black" stroke="black" points="501.03,-423.48 508.53,-420.85 501.03,-418.23 501.03,-423.48"/>
+</g>
+</g>
+</svg></figure>
+</div></section>
+<section class="slide" id="key-takeaways"><h2 class="slide-title">Key Takeaways</h2><div class="slide-body">
+<ul>
+<li><strong>Assumptions age—design for cryptographic agility.</strong><br />
+</li>
+<li><strong>Prepare for quantum:</strong> adopt PQC and strengthen symmetric parameters.<br />
+</li>
+<li><strong>Leverage privacy tools:</strong> FHE and ZK are moving from theory to practice.<br />
+</li>
+<li><strong>Avoid DIY:</strong> sound hygiene beats clever hacks.</li>
+</ul>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-katz_introductionmoderncryptography_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">J. Katz and Y. Lindell, <em>Introduction to <span>Modern Cryptography</span></em>, 3rd ed. <span>Chapman and Hall/CRC</span>, 2020. doi: <a href="https://doi.org/10.1201/9781351133036">10.1201/9781351133036</a>.</div>
+</div>
+<div id="ref-menezes_handbookappliedcryptography_2011" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">A. J. Menezes, P. C. van Oorschot, and S. A. Vanstone, <span>“Handbook of <span>Applied Cryptography</span>.”</span> CRC Press, Aug. 07, 2011. Accessed: Oct. 23, 2025. [Online]. Available: <a href="https://cacr.uwaterloo.ca/hac/">https://cacr.uwaterloo.ca/hac/</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

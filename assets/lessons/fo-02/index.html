@@ -1,0 +1,1476 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blockchain Forensics: Foundations, Obfuscation, and Tracing</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/forensics/02-FO-foundations_obfuscation_tracing.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="fo-02" data-code="02-FO" data-src="5f6583f34ca845b9" data-slides="40">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section VIII: Forensics · Lesson 02-FO</p><h1>Blockchain Forensics: Foundations, Obfuscation, and Tracing</h1></div></section>
+<section class="slide smaller" id="recall-utxo-vs.-account-model"><h2 class="slide-title">Recall: UTXO vs. Account Model</h2><div class="slide-body">
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th></th>
+<th><strong>Bitcoin (UTXO)</strong></th>
+<th><strong>Ethereum (Account)</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>How value moves</strong></td>
+<td>Outputs are created and consumed — each coin has a traceable history</td>
+<td>Balances update in place — accounts persist and change state</td>
+</tr>
+<tr>
+<td><strong>Tracing unit</strong></td>
+<td>Individual UTXOs (discrete coin fragments)</td>
+<td>Addresses and contract interactions</td>
+</tr>
+<tr>
+<td><strong>Where evidence lives</strong></td>
+<td>Transaction inputs and outputs</td>
+<td>Transaction record + event logs + internal call traces</td>
+</tr>
+<tr>
+<td><strong>Hidden value flows</strong></td>
+<td>Rare — the tx record is mostly complete</td>
+<td>Common — ERC-20 transfers and internal calls are invisible without parsing logs</td>
+</tr>
+<tr>
+<td><strong>Primary heuristic</strong></td>
+<td>Common-Input-Ownership (CIOH)</td>
+<td>Contract interaction clustering</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide" id="reminder-bitcoins-utxo-model"><h2 class="slide-title">Reminder: Bitcoin’s UTXO Model</h2><div class="slide-body">
+<p>Transactions <strong>consume</strong> old outputs and <strong>create</strong> new ones. Every satoshi has a traceable ancestry.</p>
+<div style="z-index: -1; position: relative; top: -75px; max-height: 440px; overflow: hidden;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 261.92 106.40" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:349px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 102.4)">
+<g id="node1" class="node">
+<path fill="#e6f7ff" stroke="black" d="M42,-94.2C42,-94.2 12,-94.2 12,-94.2 6,-94.2 0,-88.2 0,-82.2 0,-82.2 0,-70.2 0,-70.2 0,-64.2 6,-58.2 12,-58.2 12,-58.2 42,-58.2 42,-58.2 48,-58.2 54,-64.2 54,-70.2 54,-70.2 54,-82.2 54,-82.2 54,-88.2 48,-94.2 42,-94.2"/>
+<text text-anchor="middle" x="27" y="-78.9" font-family="Helvetica,sans-Serif" font-size="9.00">UTXO A</text>
+<text text-anchor="middle" x="27" y="-68.1" font-family="Helvetica,sans-Serif" font-size="9.00">0.6 BTC</text>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="#ffdddd" stroke="black" cx="126.95" cy="-49.2" rx="36.95" ry="18"/>
+<text text-anchor="middle" x="126.95" y="-46.5" font-family="Helvetica,sans-Serif" font-size="9.00">Transaction</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M54.25,-68.96C63.14,-66.51 73.32,-63.71 83.16,-61"/>
+<polygon fill="black" stroke="black" points="83.87,-64.43 92.58,-58.4 82.01,-57.68 83.87,-64.43"/>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e6f7ff" stroke="black" d="M42,-40.2C42,-40.2 12,-40.2 12,-40.2 6,-40.2 0,-34.2 0,-28.2 0,-28.2 0,-16.2 0,-16.2 0,-10.2 6,-4.2 12,-4.2 12,-4.2 42,-4.2 42,-4.2 48,-4.2 54,-10.2 54,-16.2 54,-16.2 54,-28.2 54,-28.2 54,-34.2 48,-40.2 42,-40.2"/>
+<text text-anchor="middle" x="27" y="-24.9" font-family="Helvetica,sans-Serif" font-size="9.00">UTXO B</text>
+<text text-anchor="middle" x="27" y="-14.1" font-family="Helvetica,sans-Serif" font-size="9.00">0.5 BTC</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M54.25,-29.44C63.14,-31.89 73.32,-34.69 83.16,-37.4"/>
+<polygon fill="black" stroke="black" points="82.01,-40.72 92.58,-40 83.87,-33.97 82.01,-40.72"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#e8f5e9" stroke="black" d="M241.91,-98.4C241.91,-98.4 211.91,-98.4 211.91,-98.4 205.91,-98.4 199.91,-92.4 199.91,-86.4 199.91,-86.4 199.91,-70 199.91,-70 199.91,-64 205.91,-58 211.91,-58 211.91,-58 241.91,-58 241.91,-58 247.91,-58 253.91,-64 253.91,-70 253.91,-70 253.91,-86.4 253.91,-86.4 253.91,-92.4 247.91,-98.4 241.91,-98.4"/>
+<text text-anchor="middle" x="226.91" y="-86.3" font-family="Helvetica,sans-Serif" font-size="9.00">Output 1</text>
+<text text-anchor="middle" x="226.91" y="-75.5" font-family="Helvetica,sans-Serif" font-size="9.00">1.0 BTC</text>
+<text text-anchor="middle" x="226.91" y="-64.7" font-family="Helvetica,sans-Serif" font-size="9.00">(Payee)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M159.21,-58.46C168.55,-61.22 178.88,-64.28 188.56,-67.14"/>
+<polygon fill="black" stroke="black" points="187.51,-70.48 198.09,-69.96 189.49,-63.77 187.51,-70.48"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#e6f7ff" stroke="black" d="M241.92,-40.4C241.92,-40.4 211.9,-40.4 211.9,-40.4 205.9,-40.4 199.9,-34.4 199.9,-28.4 199.9,-28.4 199.9,-12 199.9,-12 199.9,-6 205.9,0 211.9,0 211.9,0 241.92,0 241.92,0 247.92,0 253.92,-6 253.92,-12 253.92,-12 253.92,-28.4 253.92,-28.4 253.92,-34.4 247.92,-40.4 241.92,-40.4"/>
+<text text-anchor="middle" x="226.91" y="-28.3" font-family="Helvetica,sans-Serif" font-size="9.00">Output 2</text>
+<text text-anchor="middle" x="226.91" y="-17.5" font-family="Helvetica,sans-Serif" font-size="9.00">0.09 BTC</text>
+<text text-anchor="middle" x="226.91" y="-6.7" font-family="Helvetica,sans-Serif" font-size="9.00">(Change)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M159.21,-39.94C168.55,-37.18 178.88,-34.12 188.56,-31.26"/>
+<polygon fill="black" stroke="black" points="189.49,-34.63 198.09,-28.44 187.51,-27.92 189.49,-34.63"/>
+</g>
+</g>
+</svg></figure>
+</div>
+<div class="callout-note" data-appearance="minimal">
+<p><strong>Implication:</strong> If you know one input address, the Common-Input-Ownership Heuristic (CIOH) lets you cluster all co-spent inputs as the same owner. Outputs can be identified as payment vs. change using heuristics.</p>
+</div>
+</div></section>
+<section class="slide" id="reminder-ethereums-account-model"><h2 class="slide-title">Reminder: Ethereum’s Account Model</h2><div class="slide-body">
+<p>Accounts <strong>persist</strong>. Transactions update balances — and trigger contract code, which may move value through many more contracts in a single block.</p>
+<div style="z-index: -1; position: relative; top: -50px; max-height: 400px; overflow: hidden;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 644.06 44.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:859px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 40)">
+<g id="node1" class="node">
+<path fill="#e6f7ff" stroke="black" d="M62.34,-36C62.34,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 62.34,0 62.34,0 68.34,0 74.34,-6 74.34,-12 74.34,-12 74.34,-24 74.34,-24 74.34,-30 68.34,-36 62.34,-36"/>
+<text text-anchor="middle" x="37.17" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00">EOA</text>
+<text text-anchor="middle" x="37.17" y="-9" font-family="Helvetica,sans-Serif" font-size="10.00">(Your Wallet)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fff5cc" stroke="black" d="M242.72,-36C242.72,-36 183.47,-36 183.47,-36 177.47,-36 171.47,-30 171.47,-24 171.47,-24 171.47,-12 171.47,-12 171.47,-6 177.47,0 183.47,0 183.47,0 242.72,0 242.72,0 248.72,0 254.72,-6 254.72,-12 254.72,-12 254.72,-24 254.72,-24 254.72,-30 248.72,-36 242.72,-36"/>
+<text text-anchor="middle" x="213.1" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00">Smart Contract</text>
+<text text-anchor="middle" x="213.1" y="-9" font-family="Helvetica,sans-Serif" font-size="10.00">(e.g., Uniswap)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M74.63,-18C99.3,-18 132.26,-18 159.72,-18"/>
+<polygon fill="black" stroke="black" points="159.6,-21.5 169.6,-18 159.6,-14.5 159.6,-21.5"/>
+<text text-anchor="middle" x="122.91" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00">1. Call swap()</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e8f5e9" stroke="black" d="M425.34,-36C425.34,-36 364.97,-36 364.97,-36 358.97,-36 352.97,-30 352.97,-24 352.97,-24 352.97,-12 352.97,-12 352.97,-6 358.97,0 364.97,0 364.97,0 425.34,0 425.34,0 431.34,0 437.34,-6 437.34,-12 437.34,-12 437.34,-24 437.34,-24 437.34,-30 431.34,-36 425.34,-36"/>
+<text text-anchor="middle" x="395.16" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00">Token Contract</text>
+<text text-anchor="middle" x="395.16" y="-9" font-family="Helvetica,sans-Serif" font-size="10.00">(e.g., USDT)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M254.95,-18C280.47,-18 313.58,-18 341.11,-18"/>
+<polygon fill="black" stroke="black" points="341.01,-21.5 351.01,-18 341.01,-14.5 341.01,-21.5"/>
+<text text-anchor="middle" x="303.85" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00">2. Internal call</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#e6f7ff" stroke="black" d="M624.06,-36C624.06,-36 583.71,-36 583.71,-36 577.71,-36 571.71,-30 571.71,-24 571.71,-24 571.71,-12 571.71,-12 571.71,-6 577.71,0 583.71,0 583.71,0 624.06,0 624.06,0 630.06,0 636.06,-6 636.06,-12 636.06,-12 636.06,-24 636.06,-24 636.06,-30 630.06,-36 624.06,-36"/>
+<text text-anchor="middle" x="603.89" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00">EOA</text>
+<text text-anchor="middle" x="603.89" y="-9" font-family="Helvetica,sans-Serif" font-size="10.00">(Recipient)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#2ecc71" stroke-dasharray="5,2" d="M437.49,-18C473.11,-18 524.33,-18 560.3,-18"/>
+<polygon fill="#2ecc71" stroke="#2ecc71" points="559.89,-21.5 569.89,-18 559.89,-14.5 559.89,-21.5"/>
+<text text-anchor="middle" x="504.53" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#2ecc71">3. Transfer event (log)</text>
+</g>
+</g>
+</svg></figure>
+</div>
+<div class="callout-note" data-appearance="minimal">
+<p><strong>Implication:</strong> The top-level transaction may show $0 ETH transferred. All value movement is in the logs. You must parse every contract’s event log to follow the money.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="the-analysts-mindset-graph-thinking"><h2 class="slide-title">The Analyst’s Mindset: Graph Thinking</h2><div class="slide-body">
+<p>Blockchain forensics is fundamentally <strong>graph analysis</strong>. On-chain data is represented as a network of nodes and edges to uncover patterns of activity.</p>
+<ul>
+<li><strong>Nodes:</strong> Addresses, UTXOs, or <strong>entity clusters</strong> — a real-world actor assumed to control all addresses in the cluster.</li>
+<li><strong>Edges:</strong> Transactions or value flows between nodes.</li>
+</ul>
+<div style="position: relative; top: -140px; overflow: hidden; max-height: 410px; z-index: -1; padding: 0; margin: 0;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 468.02 131.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:624px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 127)">
+<g id="node1" class="node">
+<path fill="#f5f7fb" stroke="black" d="M54.75,-123C54.75,-123 12,-123 12,-123 6,-123 0,-117 0,-111 0,-111 0,-99 0,-99 0,-93 6,-87 12,-87 12,-87 54.75,-87 54.75,-87 60.75,-87 66.75,-93 66.75,-99 66.75,-99 66.75,-111 66.75,-111 66.75,-117 60.75,-123 54.75,-123"/>
+<text text-anchor="middle" x="33.37" y="-101.7" font-family="Helvetica,sans-Serif" font-size="11.00">Address A</text>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="#e8f5e9" stroke="black" cx="209.27" cy="-78" rx="60.37" ry="24.32"/>
+<text text-anchor="middle" x="209.27" y="-81.3" font-family="Helvetica,sans-Serif" font-size="11.00">Entity 1</text>
+<text text-anchor="middle" x="209.27" y="-68.1" font-family="Helvetica,sans-Serif" font-size="11.00">(Cluster: A+B)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M67.08,-99.92C87.99,-96.67 115.87,-92.35 141.33,-88.39"/>
+<polygon fill="black" stroke="black" points="141.6,-91.89 150.95,-86.9 140.53,-84.98 141.6,-91.89"/>
+<text text-anchor="middle" x="107.82" y="-100.02" font-family="Helvetica,sans-Serif" font-size="10.00">belongs to</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f5f7fb" stroke="black" d="M54.75,-69C54.75,-69 12,-69 12,-69 6,-69 0,-63 0,-57 0,-57 0,-45 0,-45 0,-39 6,-33 12,-33 12,-33 54.75,-33 54.75,-33 60.75,-33 66.75,-39 66.75,-45 66.75,-45 66.75,-57 66.75,-57 66.75,-63 60.75,-69 54.75,-69"/>
+<text text-anchor="middle" x="33.37" y="-47.7" font-family="Helvetica,sans-Serif" font-size="11.00">Address B</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M67.08,-56.08C87.99,-59.33 115.87,-63.65 141.33,-67.61"/>
+<polygon fill="black" stroke="black" points="140.53,-71.02 150.95,-69.1 141.6,-64.11 140.53,-71.02"/>
+</g>
+
+<g id="node5" class="node">
+<ellipse fill="#ffdddd" stroke="black" cx="408.95" cy="-35" rx="51.07" ry="24.32"/>
+<text text-anchor="middle" x="408.95" y="-38.3" font-family="Helvetica,sans-Serif" font-size="11.00">Entity 2</text>
+<text text-anchor="middle" x="408.95" y="-25.1" font-family="Helvetica,sans-Serif" font-size="11.00">(Cluster: C)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" stroke-width="2" d="M262.98,-66.53C289.64,-60.73 322.07,-53.68 349.5,-47.72"/>
+<polygon fill="black" stroke="black" stroke-width="2" points="350.12,-51.16 359.15,-45.62 348.63,-44.32 350.12,-51.16"/>
+<text text-anchor="middle" x="313.76" y="-63.35" font-family="Helvetica,sans-Serif" font-size="10.00">Transaction</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f5f7fb" stroke="black" d="M230.94,-36C230.94,-36 187.59,-36 187.59,-36 181.59,-36 175.59,-30 175.59,-24 175.59,-24 175.59,-12 175.59,-12 175.59,-6 181.59,0 187.59,0 187.59,0 230.94,0 230.94,0 236.94,0 242.94,-6 242.94,-12 242.94,-12 242.94,-24 242.94,-24 242.94,-30 236.94,-36 230.94,-36"/>
+<text text-anchor="middle" x="209.27" y="-14.7" font-family="Helvetica,sans-Serif" font-size="11.00">Address C</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M243.35,-20.85C271.6,-23.27 312.95,-26.83 347.14,-29.77"/>
+<polygon fill="black" stroke="black" points="346.66,-33.24 356.92,-30.61 347.26,-26.27 346.66,-33.24"/>
+<text text-anchor="middle" x="313.76" y="-32.02" font-family="Helvetica,sans-Serif" font-size="10.00">belongs to</text>
+</g>
+</g>
+</svg></figure>
+</div>
+<div class="callout-note" data-appearance="minimal" style="position:relative; top:-100px;">
+<p>By identifying recurring <strong>motifs</strong> — fan-outs, fan-ins, peeling chains — analysts can infer entity behavior and intent.</p>
+</div>
+</div></section>
+<section class="slide" id="graph-motif-the-fan-out"><h2 class="slide-title">Graph Motif: The “Fan-Out”</h2><div class="slide-body">
+<p>A <strong>Fan-Out</strong> occurs when a single source sends to many destinations.</p>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 292.54 206.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:391px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 202)">
+<g id="node1" class="node">
+<path fill="#e3f2fd" stroke="#0d6efd" d="M42,-117C42,-117 12,-117 12,-117 6,-117 0,-111 0,-105 0,-105 0,-93 0,-93 0,-87 6,-81 12,-81 12,-81 42,-81 42,-81 48,-81 54,-87 54,-93 54,-93 54,-105 54,-105 54,-111 48,-117 42,-117"/>
+<text text-anchor="middle" x="27" y="-95.7" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#0d6efd">Input</text>
+</g>
+
+<g id="node2" class="node">
+<ellipse fill="#ffdddd" stroke="black" cx="142.27" cy="-99" rx="52.27" ry="18"/>
+<text text-anchor="middle" x="142.27" y="-95.7" font-family="Helvetica,sans-Serif" font-size="11.00">Single Source</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M54.27,-99C61.63,-99 69.96,-99 78.49,-99"/>
+<polygon fill="black" stroke="black" points="78.22,-102.5 88.22,-99 78.22,-95.5 78.22,-102.5"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#f5f7fb" stroke="black" d="M272.54,-198C272.54,-198 242.54,-198 242.54,-198 236.54,-198 230.54,-192 230.54,-186 230.54,-186 230.54,-174 230.54,-174 230.54,-168 236.54,-162 242.54,-162 242.54,-162 272.54,-162 272.54,-162 278.54,-162 284.54,-168 284.54,-174 284.54,-174 284.54,-186 284.54,-186 284.54,-192 278.54,-198 272.54,-198"/>
+<text text-anchor="middle" x="257.54" y="-176.7" font-family="Helvetica,sans-Serif" font-size="11.00">Dest 1</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M166.19,-115.39C182.15,-126.81 203.74,-142.24 221.8,-155.16"/>
+<polygon fill="black" stroke="black" points="219.48,-157.8 229.65,-160.77 223.55,-152.11 219.48,-157.8"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f5f7fb" stroke="black" d="M272.54,-144C272.54,-144 242.54,-144 242.54,-144 236.54,-144 230.54,-138 230.54,-132 230.54,-132 230.54,-120 230.54,-120 230.54,-114 236.54,-108 242.54,-108 242.54,-108 272.54,-108 272.54,-108 278.54,-108 284.54,-114 284.54,-120 284.54,-120 284.54,-132 284.54,-132 284.54,-138 278.54,-144 272.54,-144"/>
+<text text-anchor="middle" x="257.54" y="-122.7" font-family="Helvetica,sans-Serif" font-size="11.00">Dest 2</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M186.09,-109.21C196.95,-111.8 208.53,-114.56 219.09,-117.07"/>
+<polygon fill="black" stroke="black" points="218.07,-120.43 228.61,-119.34 219.69,-113.62 218.07,-120.43"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#f5f7fb" stroke="black" d="M272.54,-90C272.54,-90 242.54,-90 242.54,-90 236.54,-90 230.54,-84 230.54,-78 230.54,-78 230.54,-66 230.54,-66 230.54,-60 236.54,-54 242.54,-54 242.54,-54 272.54,-54 272.54,-54 278.54,-54 284.54,-60 284.54,-66 284.54,-66 284.54,-78 284.54,-78 284.54,-84 278.54,-90 272.54,-90"/>
+<text text-anchor="middle" x="257.54" y="-68.7" font-family="Helvetica,sans-Serif" font-size="11.00">Dest 3</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M186.09,-88.79C196.95,-86.2 208.53,-83.44 219.09,-80.93"/>
+<polygon fill="black" stroke="black" points="219.69,-84.38 228.61,-78.66 218.07,-77.57 219.69,-84.38"/>
+</g>
+
+<g id="node6" class="node">
+<polygon fill="none" stroke="black" stroke-dasharray="1,5" points="284.54,-36 230.54,-36 230.54,0 284.54,0 284.54,-36"/>
+<text text-anchor="middle" x="257.54" y="-14.7" font-family="Helvetica,sans-Serif" font-size="11.00">...</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M166.19,-82.61C182.15,-71.19 203.74,-55.76 221.8,-42.84"/>
+<polygon fill="black" stroke="black" points="223.55,-45.89 229.65,-37.23 219.48,-40.2 223.55,-45.89"/>
+</g>
+</g>
+</svg></figure>
+</div></section>
+<section class="slide" id="graph-motif-the-fan-in"><h2 class="slide-title">Graph Motif: The “Fan-In”</h2><div class="slide-body">
+<p>A <strong>Fan-In</strong> consolidates many inputs into a single destination.</p>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 323.53 152.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:432px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 148)">
+<g id="node1" class="node">
+<path fill="#f5f7fb" stroke="black" d="M48.03,-144C48.03,-144 12,-144 12,-144 6,-144 0,-138 0,-132 0,-132 0,-120 0,-120 0,-114 6,-108 12,-108 12,-108 48.03,-108 48.03,-108 54.03,-108 60.03,-114 60.03,-120 60.03,-120 60.03,-132 60.03,-132 60.03,-138 54.03,-144 48.03,-144"/>
+<text text-anchor="middle" x="30.01" y="-122.7" font-family="Helvetica,sans-Serif" font-size="11.00">Source 1</text>
+</g>
+
+<g id="node4" class="node">
+<ellipse fill="#ffdddd" stroke="black" cx="160.78" cy="-72" rx="64.75" ry="18"/>
+<text text-anchor="middle" x="160.78" y="-68.7" font-family="Helvetica,sans-Serif" font-size="11.00">Single Destination</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M60.23,-113.75C75.99,-107.14 95.79,-98.83 113.58,-91.37"/>
+<polygon fill="black" stroke="black" points="114.51,-94.78 122.38,-87.68 111.81,-88.32 114.51,-94.78"/>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f5f7fb" stroke="black" d="M48.03,-90C48.03,-90 12,-90 12,-90 6,-90 0,-84 0,-78 0,-78 0,-66 0,-66 0,-60 6,-54 12,-54 12,-54 48.03,-54 48.03,-54 54.03,-54 60.03,-60 60.03,-66 60.03,-66 60.03,-78 60.03,-78 60.03,-84 54.03,-90 48.03,-90"/>
+<text text-anchor="middle" x="30.01" y="-68.7" font-family="Helvetica,sans-Serif" font-size="11.00">Source 2</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M60.23,-72C67.61,-72 75.88,-72 84.41,-72"/>
+<polygon fill="black" stroke="black" points="84.21,-75.5 94.21,-72 84.21,-68.5 84.21,-75.5"/>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="none" stroke="black" stroke-dasharray="1,5" points="57.01,-36 3.01,-36 3.01,0 57.01,0 57.01,-36"/>
+<text text-anchor="middle" x="30.01" y="-14.7" font-family="Helvetica,sans-Serif" font-size="11.00">...</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M57.38,-29.06C73.45,-35.8 94.44,-44.6 113.22,-52.48"/>
+<polygon fill="black" stroke="black" points="111.71,-55.64 122.29,-56.28 114.42,-49.18 111.71,-55.64"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#e3f2fd" stroke="#0d6efd" d="M303.53,-90C303.53,-90 273.53,-90 273.53,-90 267.53,-90 261.53,-84 261.53,-78 261.53,-78 261.53,-66 261.53,-66 261.53,-60 267.53,-54 273.53,-54 273.53,-54 303.53,-54 303.53,-54 309.53,-54 315.53,-60 315.53,-66 315.53,-66 315.53,-78 315.53,-78 315.53,-84 309.53,-90 303.53,-90"/>
+<text text-anchor="middle" x="288.53" y="-68.7" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#0d6efd">Output</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M225.76,-72C233.96,-72 242.14,-72 249.73,-72"/>
+<polygon fill="black" stroke="black" points="249.59,-75.5 259.59,-72 249.59,-68.5 249.59,-75.5"/>
+</g>
+</g>
+</svg></figure>
+</div></section>
+<section class="slide" id="ethereum-forensics-where-the-evidence-hides"><h2 class="slide-title">Ethereum Forensics: Where the Evidence Hides</h2><div class="slide-body">
+<p>A top-level Ethereum transaction tells you only part of the story.</p>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><strong>What the transaction record shows:</strong></p>
+<ul>
+<li><code>from</code> / <code>to</code> / <code>value</code> (ETH transferred)</li>
+<li>Gas used, status (success/fail)</li>
+</ul>
+<p><strong>What it <em>doesn’t</em> show:</strong></p>
+<ul>
+<li>ERC-20 / ERC-721 token transfers</li>
+<li>Internal calls between contracts</li>
+<li>Flash loan amounts</li>
+<li>DEX swap token flows</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 304.31 177.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:405px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 173.6)">
+<g id="node1" class="node">
+<path fill="#ffdddd" stroke="black" d="M191.7,-169.6C191.7,-169.6 101.66,-169.6 101.66,-169.6 95.66,-169.6 89.66,-163.6 89.66,-157.6 89.66,-157.6 89.66,-140 89.66,-140 89.66,-134 95.66,-128 101.66,-128 101.66,-128 191.7,-128 191.7,-128 197.7,-128 203.7,-134 203.7,-140 203.7,-140 203.7,-157.6 203.7,-157.6 203.7,-163.6 197.7,-169.6 191.7,-169.6"/>
+<text text-anchor="middle" x="146.68" y="-153" font-family="Helvetica,sans-Serif" font-size="14.00">Top&#45;Level Tx</text>
+<text text-anchor="middle" x="146.68" y="-136.2" font-family="Helvetica,sans-Serif" font-size="14.00">(value: $0 ETH)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e8f5e9" stroke="black" d="M125.36,-58.4C125.36,-58.4 12,-58.4 12,-58.4 6,-58.4 0,-52.4 0,-46.4 0,-46.4 0,-12 0,-12 0,-6 6,0 12,0 12,0 125.36,0 125.36,0 131.36,0 137.36,-6 137.36,-12 137.36,-12 137.36,-46.4 137.36,-46.4 137.36,-52.4 131.36,-58.4 125.36,-58.4"/>
+<text text-anchor="middle" x="68.68" y="-41.8" font-family="Helvetica,sans-Serif" font-size="14.00">Event Logs</text>
+<text text-anchor="middle" x="68.68" y="-25" font-family="Helvetica,sans-Serif" font-size="14.00">(ERC&#45;20 Transfers,</text>
+<text text-anchor="middle" x="68.68" y="-8.2" font-family="Helvetica,sans-Serif" font-size="14.00">Swap events)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M133.27,-127.58C122.42,-111.22 106.82,-87.71 93.68,-67.89"/>
+<polygon fill="black" stroke="black" points="96.74,-66.17 88.29,-59.77 90.9,-70.04 96.74,-66.17"/>
+<text text-anchor="middle" x="153.74" y="-97.4" font-family="Helvetica,sans-Serif" font-size="14.00">emitted by</text>
+<text text-anchor="middle" x="153.74" y="-80.6" font-family="Helvetica,sans-Serif" font-size="14.00">contracts</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fff5cc" stroke="black" d="M284.31,-58.4C284.31,-58.4 167.05,-58.4 167.05,-58.4 161.05,-58.4 155.05,-52.4 155.05,-46.4 155.05,-46.4 155.05,-12 155.05,-12 155.05,-6 161.05,0 167.05,0 167.05,0 284.31,0 284.31,0 290.31,0 296.31,-6 296.31,-12 296.31,-12 296.31,-46.4 296.31,-46.4 296.31,-52.4 290.31,-58.4 284.31,-58.4"/>
+<text text-anchor="middle" x="225.68" y="-41.8" font-family="Helvetica,sans-Serif" font-size="14.00">Internal Traces</text>
+<text text-anchor="middle" x="225.68" y="-25" font-family="Helvetica,sans-Serif" font-size="14.00">(contract&#45;to&#45;contract</text>
+<text text-anchor="middle" x="225.68" y="-8.2" font-family="Helvetica,sans-Serif" font-size="14.00">calls)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M173,-127.83C178.98,-122.48 184.95,-116.39 189.68,-110 198.73,-97.75 206.22,-82.87 211.97,-69.28"/>
+<polygon fill="black" stroke="black" points="215.16,-70.73 215.65,-60.15 208.67,-68.12 215.16,-70.73"/>
+<text text-anchor="middle" x="247.57" y="-97.4" font-family="Helvetica,sans-Serif" font-size="14.00">debug_trace</text>
+<text text-anchor="middle" x="247.57" y="-80.6" font-family="Helvetica,sans-Serif" font-size="14.00">Transaction</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+<div class="callout-warning" data-appearance="minimal">
+<p>A DeFi swap may show <strong>$0 ETH</strong> in the top-level transaction while moving <strong>$10M in stablecoins</strong> — all recorded only in event logs.</p>
+</div>
+</div></section>
+<section class="slide" id="following-token-flows-erc-20-transfers"><h2 class="slide-title">Following Token Flows: ERC-20 Transfers</h2><div class="slide-body">
+<p>ERC-20 tokens (USDT, USDC, WETH, etc.) are the dominant form of value in DeFi. Their transfers are <strong>invisible in the main transaction record</strong>.</p>
+<p>Every ERC-20 transfer emits a log event from the token contract:</p>
+<pre><code>Transfer(address indexed from, address indexed to, uint256 value)</code></pre>
+<div style="overflow: hidden; position: relative; max-height: 300px; top: -100px;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 644.11 50.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:859px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 46)">
+<g id="node1" class="node">
+<path fill="#f5f7fb" stroke="black" d="M46.8,-36C46.8,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 46.8,0 46.8,0 52.8,0 58.8,-6 58.8,-12 58.8,-12 58.8,-24 58.8,-24 58.8,-30 52.8,-36 46.8,-36"/>
+<text text-anchor="middle" x="29.4" y="-21.3" font-family="Helvetica,sans-Serif" font-size="11.00">EOA A</text>
+<text text-anchor="middle" x="29.4" y="-8.1" font-family="Helvetica,sans-Serif" font-size="11.00">(Sender)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fff5cc" stroke="black" d="M220.85,-36C220.85,-36 170.16,-36 170.16,-36 164.16,-36 158.16,-30 158.16,-24 158.16,-24 158.16,-12 158.16,-12 158.16,-6 164.16,0 170.16,0 170.16,0 220.85,0 220.85,0 226.85,0 232.85,-6 232.85,-12 232.85,-12 232.85,-24 232.85,-24 232.85,-30 226.85,-36 220.85,-36"/>
+<text text-anchor="middle" x="195.51" y="-21.3" font-family="Helvetica,sans-Serif" font-size="11.00">DEX Router</text>
+<text text-anchor="middle" x="195.51" y="-8.1" font-family="Helvetica,sans-Serif" font-size="11.00">(Contract)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M58.98,-18C83.12,-18 118.18,-18 146.59,-18"/>
+<polygon fill="black" stroke="black" points="146.4,-21.5 156.4,-18 146.4,-14.5 146.4,-21.5"/>
+<text text-anchor="middle" x="108.48" y="-33" font-family="Helvetica,sans-Serif" font-size="10.00">Tx: swap()</text>
+<text text-anchor="middle" x="108.48" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00">ETH value: $0</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e8f5e9" stroke="black" d="M449.67,-36C449.67,-36 383.1,-36 383.1,-36 377.1,-36 371.1,-30 371.1,-24 371.1,-24 371.1,-12 371.1,-12 371.1,-6 377.1,0 383.1,0 383.1,0 449.67,0 449.67,0 455.67,0 461.67,-6 461.67,-12 461.67,-12 461.67,-24 461.67,-24 461.67,-30 455.67,-36 449.67,-36"/>
+<text text-anchor="middle" x="416.38" y="-21.3" font-family="Helvetica,sans-Serif" font-size="11.00">USDT Contract</text>
+<text text-anchor="middle" x="416.38" y="-8.1" font-family="Helvetica,sans-Serif" font-size="11.00">(ERC&#45;20)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M233.14,-18C267.59,-18 319.65,-18 359.32,-18"/>
+<polygon fill="black" stroke="black" points="359.16,-21.5 369.16,-18 359.16,-14.5 359.16,-21.5"/>
+<text text-anchor="middle" x="301.97" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00">internal: transferFrom()</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f5f7fb" stroke="black" d="M624.11,-36C624.11,-36 581.38,-36 581.38,-36 575.38,-36 569.38,-30 569.38,-24 569.38,-24 569.38,-12 569.38,-12 569.38,-6 575.38,0 581.38,0 581.38,0 624.11,0 624.11,0 630.11,0 636.11,-6 636.11,-12 636.11,-12 636.11,-24 636.11,-24 636.11,-30 630.11,-36 624.11,-36"/>
+<text text-anchor="middle" x="602.74" y="-21.3" font-family="Helvetica,sans-Serif" font-size="11.00">EOA B</text>
+<text text-anchor="middle" x="602.74" y="-8.1" font-family="Helvetica,sans-Serif" font-size="11.00">(Receiver)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#2ecc71" stroke-dasharray="5,2" d="M462.01,-18C491.05,-18 528.75,-18 557.67,-18"/>
+<polygon fill="#2ecc71" stroke="#2ecc71" points="557.57,-21.5 567.57,-18 557.57,-14.5 557.57,-21.5"/>
+<text text-anchor="middle" x="515.52" y="-33" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#2ecc71">LOG: Transfer</text>
+<text text-anchor="middle" x="515.52" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#2ecc71">$500,000 USDT</text>
+</g>
+</g>
+</svg></figure>
+</div>
+<p><strong>Forensic implication:</strong> To trace USDT, USDC, or any token, you must query the <em>token contract’s</em> event logs — not the sending transaction.</p>
+</div></section>
+<section class="slide" id="smart-contract-forensics"><h2 class="slide-title">Smart Contract Forensics</h2><div class="slide-body">
+<p>Three patterns every Ethereum forensics analyst must recognize:</p>
+<dl>
+<dt><strong>Proxy Contracts (EIP-1967)</strong></dt>
+<dd>
+The address you see called on-chain is a thin shell that forwards all calls to a separate <em>implementation</em> contract. The code executing is NOT at the address you’re looking at. Analysts must resolve the proxy to understand what ran.
+</dd>
+<dt><strong>Flash Loans</strong></dt>
+<dd>
+Borrowed and repaid within a single transaction — creating a distinctive trace signature of a massive inflow immediately followed by repayment. Often the first step in price manipulation exploits. The entire attack can happen in one block.
+</dd>
+<dt><strong>Reentrancy</strong></dt>
+<dd>
+The same contract is called multiple times recursively within a single transaction trace. A classic exploit pattern (The DAO, 2016) — detectable in traces but invisible at the transaction level.
+</dd>
+</dl>
+<div class="callout-note" data-appearance="minimal">
+<p>These patterns are only visible in <strong>transaction traces</strong> (<code>debug_traceTransaction</code>). Etherscan’s UI parses some of this, but automated forensic investigation requires trace-level data from an archive node or a provider like Alchemy/Infura.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="address-clustering"><h2 class="slide-title">Address Clustering</h2><div class="slide-body">
+<p>The foundational rule for clustering Bitcoin addresses is the <strong>Common-Input-Ownership Heuristic (CIOH)</strong>: <em>If a transaction has multiple inputs, all inputs are controlled by the same user — because signing requires possession of all corresponding private keys.</em></p>
+<div style="position: relative; z-index: -1; top: -50px; margin: 0; max-height: 410px; padding: 0;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 256.86 226.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:343px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 222)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="8,-86 8,-210 240.86,-210 240.86,-86 8,-86"/>
+<text text-anchor="middle" x="124.43" y="-198.8" font-family="Helvetica,sans-Serif" font-size="8.00">Single Transaction</text>
+</g>
+<g id="clust2" class="cluster">
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="155.46,-8 155.46,-78 245.02,-78 245.02,-8 155.46,-8"/>
+<text text-anchor="middle" x="200.24" y="-66.8" font-family="Helvetica,sans-Serif" font-size="8.00">Analyst&#39;s Conclusion</text>
+</g>
+
+<g id="node1" class="node">
+<ellipse fill="#ffdddd" stroke="black" cx="199.74" cy="-139" rx="33.13" ry="18"/>
+<text text-anchor="middle" x="199.74" y="-136.6" font-family="Helvetica,sans-Serif" font-size="8.00">Transaction</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f5f7fb" stroke="black" d="M82.25,-184C82.25,-184 28,-184 28,-184 22,-184 16,-178 16,-172 16,-172 16,-160 16,-160 16,-154 22,-148 28,-148 28,-148 82.25,-148 82.25,-148 88.25,-148 94.25,-154 94.25,-160 94.25,-160 94.25,-172 94.25,-172 94.25,-178 88.25,-184 82.25,-184"/>
+<text text-anchor="middle" x="55.12" y="-163.6" font-family="Helvetica,sans-Serif" font-size="8.00">Address A (Input)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M94.72,-158.69C114.03,-155.04 137.42,-150.61 157.13,-146.88"/>
+<polygon fill="black" stroke="black" points="157.59,-150.35 166.76,-145.05 156.28,-143.48 157.59,-150.35"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#e8f5e9" stroke="black" d="M226.74,-48.73C226.74,-50.53 214.64,-52 199.74,-52 184.84,-52 172.74,-50.53 172.74,-48.73 172.74,-48.73 172.74,-19.27 172.74,-19.27 172.74,-17.47 184.84,-16 199.74,-16 214.64,-16 226.74,-17.47 226.74,-19.27 226.74,-19.27 226.74,-48.73 226.74,-48.73"/>
+<path fill="none" stroke="black" d="M226.74,-48.73C226.74,-46.92 214.64,-45.45 199.74,-45.45 184.84,-45.45 172.74,-46.92 172.74,-48.73"/>
+<text text-anchor="middle" x="199.74" y="-31.6" font-family="Helvetica,sans-Serif" font-size="8.00">Entity 1</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M83.23,-147.68C87.01,-144.87 90.78,-141.93 94.25,-139 123.72,-114.08 154.55,-82.29 175.01,-60.25"/>
+<polygon fill="black" stroke="black" points="177.36,-62.87 181.56,-53.14 172.21,-58.13 177.36,-62.87"/>
+<text text-anchor="middle" x="125.79" y="-127.83" font-family="Helvetica,sans-Serif" font-size="7.00">Belongs to</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#f5f7fb" stroke="black" d="M82.25,-130C82.25,-130 28,-130 28,-130 22,-130 16,-124 16,-118 16,-118 16,-106 16,-106 16,-100 22,-94 28,-94 28,-94 82.25,-94 82.25,-94 88.25,-94 94.25,-100 94.25,-106 94.25,-106 94.25,-118 94.25,-118 94.25,-124 88.25,-130 82.25,-130"/>
+<text text-anchor="middle" x="55.12" y="-109.6" font-family="Helvetica,sans-Serif" font-size="8.00">Address B (Input)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M94.72,-119.31C114.03,-122.96 137.42,-127.39 157.13,-131.12"/>
+<polygon fill="black" stroke="black" points="156.28,-134.52 166.76,-132.95 157.59,-127.65 156.28,-134.52"/>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M70.07,-93.71C79.85,-82.07 93.89,-67.56 109.25,-58.6 125.08,-49.36 144.51,-43.48 161.22,-39.79"/>
+<polygon fill="black" stroke="black" points="161.67,-43.27 170.78,-37.87 160.29,-36.41 161.67,-43.27"/>
+<text text-anchor="middle" x="125.79" y="-60.7" font-family="Helvetica,sans-Serif" font-size="7.00">Belongs to</text>
+</g>
+</g>
+</svg></figure>
+</div>
+<div class="callout-note" data-appearance="minimal">
+<p>By repeatedly applying CIOH, a single known address can expand into a large cluster — providing a complete picture of an entity’s activity.</p>
+</div>
+</div></section>
+<section class="slide" id="heuristic-2-change-address-detection"><h2 class="slide-title">Heuristic #2: Change Address Detection</h2><div class="slide-body">
+<p>In the UTXO model, transactions often have two outputs: one to the payee, one back to the sender as <strong>change</strong>. Identifying the change output expands an entity’s cluster.</p>
+<p><strong>Heuristic Indicators:</strong></p>
+<ul>
+<li><strong>New Address:</strong> Change address is brand new with no prior history.</li>
+<li><strong>Script Type Match:</strong> Change address script (e.g., P2WPKH) matches the input addresses.</li>
+<li><strong>No “Round” Number:</strong> Payees receive round amounts (e.g., 0.1 BTC); change is the un-round remainder.</li>
+<li><strong>Wallet Fingerprinting:</strong> Some wallets use a predictable output index for change (e.g., Electrum historically placed change at output index 1).</li>
+<li><strong>Address Reuse:</strong> If one output has appeared in prior transactions, it is likely the known payee — making the other output the change.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="heuristic-3-peeling-chains"><h2 class="slide-title">Heuristic #3: Peeling Chains</h2><div class="slide-body">
+<p>A <strong>peeling chain</strong> is a sequential pattern where an entity repeatedly “peels” small amounts off to destinations while sending the bulk to a new change address.</p>
+<div style="position: relative; z-index: -1; top: -50px; margin: 0; max-height: 410px; padding: 0;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 357.72 152.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:477px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 148)">
+<g id="node1" class="node">
+<path fill="#ffdddd" stroke="black" d="M42,-63C42,-63 12,-63 12,-63 6,-63 0,-57 0,-51 0,-51 0,-39 0,-39 0,-33 6,-27 12,-27 12,-27 42,-27 42,-27 48,-27 54,-33 54,-39 54,-39 54,-51 54,-51 54,-57 48,-63 42,-63"/>
+<text text-anchor="middle" x="27" y="-42" font-family="Helvetica,sans-Serif" font-size="10.00">10 BTC</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fff5cc" stroke="black" d="M136.06,-90C136.06,-90 106.06,-90 106.06,-90 100.06,-90 94.06,-84 94.06,-78 94.06,-78 94.06,-66 94.06,-66 94.06,-60 100.06,-54 106.06,-54 106.06,-54 136.06,-54 136.06,-54 142.06,-54 148.06,-60 148.06,-66 148.06,-66 148.06,-78 148.06,-78 148.06,-84 142.06,-90 136.06,-90"/>
+<text text-anchor="middle" x="121.06" y="-69" font-family="Helvetica,sans-Serif" font-size="10.00">9 BTC</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M54.14,-52.66C63.08,-55.29 73.26,-58.27 82.9,-61.1"/>
+<polygon fill="black" stroke="black" points="81.83,-64.43 92.41,-63.89 83.8,-57.72 81.83,-64.43"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#e8f5e9" stroke="black" d="M140.13,-36C140.13,-36 102,-36 102,-36 96,-36 90,-30 90,-24 90,-24 90,-12 90,-12 90,-6 96,0 102,0 102,0 140.13,0 140.13,0 146.13,0 152.13,-6 152.13,-12 152.13,-12 152.13,-24 152.13,-24 152.13,-30 146.13,-36 140.13,-36"/>
+<text text-anchor="middle" x="121.06" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00">1 BTC</text>
+<text text-anchor="middle" x="121.06" y="-9" font-family="Helvetica,sans-Serif" font-size="10.00">→ Darknet</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M54.14,-37.34C61.82,-35.08 70.43,-32.56 78.82,-30.1"/>
+<polygon fill="black" stroke="black" points="79.57,-33.52 88.18,-27.35 77.6,-26.81 79.57,-33.52"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fff5cc" stroke="black" d="M230.13,-117C230.13,-117 200.13,-117 200.13,-117 194.13,-117 188.13,-111 188.13,-105 188.13,-105 188.13,-93 188.13,-93 188.13,-87 194.13,-81 200.13,-81 200.13,-81 230.13,-81 230.13,-81 236.13,-81 242.13,-87 242.13,-93 242.13,-93 242.13,-105 242.13,-105 242.13,-111 236.13,-117 230.13,-117"/>
+<text text-anchor="middle" x="215.13" y="-96" font-family="Helvetica,sans-Serif" font-size="10.00">8 BTC</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M148.2,-79.66C157.14,-82.29 167.32,-85.27 176.96,-88.1"/>
+<polygon fill="black" stroke="black" points="175.89,-91.43 186.47,-90.89 177.86,-84.72 175.89,-91.43"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#e8f5e9" stroke="black" d="M230.13,-63C230.13,-63 200.13,-63 200.13,-63 194.13,-63 188.13,-57 188.13,-51 188.13,-51 188.13,-39 188.13,-39 188.13,-33 194.13,-27 200.13,-27 200.13,-27 230.13,-27 230.13,-27 236.13,-27 242.13,-33 242.13,-39 242.13,-39 242.13,-51 242.13,-51 242.13,-57 236.13,-63 230.13,-63"/>
+<text text-anchor="middle" x="215.13" y="-48" font-family="Helvetica,sans-Serif" font-size="10.00">1 BTC</text>
+<text text-anchor="middle" x="215.13" y="-36" font-family="Helvetica,sans-Serif" font-size="10.00">→ Mixer</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M148.2,-64.34C157.14,-61.71 167.32,-58.73 176.96,-55.9"/>
+<polygon fill="black" stroke="black" points="177.86,-59.28 186.47,-53.11 175.89,-52.57 177.86,-59.28"/>
+</g>
+
+<g id="node4" class="node">
+<polygon fill="none" stroke="black" stroke-dasharray="1,5" points="340.92,-144 286.92,-144 286.92,-108 340.92,-108 340.92,-144"/>
+<text text-anchor="middle" x="313.92" y="-123" font-family="Helvetica,sans-Serif" font-size="10.00">...</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M242.58,-106.38C252.71,-109.21 264.48,-112.49 275.46,-115.55"/>
+<polygon fill="black" stroke="black" points="274.47,-118.91 285.05,-118.22 276.36,-112.17 274.47,-118.91"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="#e8f5e9" stroke="black" d="M337.72,-90C337.72,-90 290.13,-90 290.13,-90 284.13,-90 278.13,-84 278.13,-78 278.13,-78 278.13,-66 278.13,-66 278.13,-60 284.13,-54 290.13,-54 290.13,-54 337.72,-54 337.72,-54 343.72,-54 349.72,-60 349.72,-66 349.72,-66 349.72,-78 349.72,-78 349.72,-84 343.72,-90 337.72,-90"/>
+<text text-anchor="middle" x="313.92" y="-75" font-family="Helvetica,sans-Serif" font-size="10.00">1 BTC</text>
+<text text-anchor="middle" x="313.92" y="-63" font-family="Helvetica,sans-Serif" font-size="10.00">→ Exchange</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M242.58,-91.62C250.13,-89.52 258.58,-87.16 266.94,-84.83"/>
+<polygon fill="black" stroke="black" points="267.64,-88.26 276.33,-82.21 265.76,-81.52 267.64,-88.26"/>
+</g>
+</g>
+</svg></figure>
+</div>
+<div class="callout-note" data-appearance="minimal">
+<p>Analogous to financial “structuring” — used to send funds to high-risk destinations in small increments. Tools like <strong>Chainalysis Reactor</strong> and <strong>Elliptic Investigator</strong> automate detection by traversing transaction graphs algorithmically.</p>
+</div>
+</div></section>
+<section class="slide" id="pitfalls-counter-heuristics"><h2 class="slide-title">Pitfalls &amp; Counter-Heuristics</h2><div class="slide-body">
+<p>Heuristics are educated guesses, not ground truth. Blind reliance leads to errors.</p>
+<ul>
+<li><strong>CIOH Fails:</strong> Deliberately broken by <strong>CoinJoin</strong> — multiple users co-sign a single transaction. Assuming common ownership here falsely merges distinct entities.</li>
+<li><strong>False Change:</strong> Not all two-output transactions have change. A user could simply be paying two people. Misidentifying the payee as change misdirects the investigation.</li>
+<li><strong>Wallet Variations:</strong> Different wallets — and versions of the same wallet — behave differently. A heuristic tuned to one wallet may fail silently on another.</li>
+<li><strong>Exchange UTXO Consolidation:</strong> Exchanges regularly sweep thousands of customer deposits into shared hot wallets. Applying CIOH to these sweeps falsely merges thousands of unrelated users into a single “entity” — a significant source of false positives in commercial tools.</li>
+</ul>
+<div class="callout-note" data-appearance="minimal">
+<p><strong>Key Point:</strong> Heuristic-based findings are <strong>probabilistic leads</strong>, not definitive proof. Always seek corroborating evidence.</p>
+</div>
+</div></section>
+<section class="slide" id="counter-heuristic-1-coinjoin"><h2 class="slide-title">Counter-Heuristic #1: CoinJoin</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:55%;">
+<p>CIOH works because <strong>only the owner of all private keys can create a valid multi-input transaction</strong>. This assumption is the foundation of most Bitcoin clustering.</p>
+<p><strong>CoinJoin</strong> pools multiple users’ inputs into a single transaction, deliberately breaking CIOH by severing the link between sender and receiver.</p>
+</div><div class="column" style="width:45%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 224.00 195.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:299px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 191.8)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="8,-8 8,-78.8 208,-78.8 208,-8 8,-8"/>
+<text text-anchor="middle" x="108" y="-66.7" font-family="Helvetica,sans-Serif" font-size="9.00">Anonymity Set</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#e6f7ff" stroke="black" d="M58,-187.8C58,-187.8 28,-187.8 28,-187.8 22,-187.8 16,-181.8 16,-175.8 16,-175.8 16,-163.8 16,-163.8 16,-157.8 22,-151.8 28,-151.8 28,-151.8 58,-151.8 58,-151.8 64,-151.8 70,-157.8 70,-163.8 70,-163.8 70,-175.8 70,-175.8 70,-181.8 64,-187.8 58,-187.8"/>
+<text text-anchor="middle" x="43" y="-167.1" font-family="Helvetica,sans-Serif" font-size="9.00">User A</text>
+</g>
+
+<g id="node4" class="node">
+<ellipse fill="#ffdddd" stroke="black" cx="108" cy="-104.8" rx="29.91" ry="18"/>
+<text text-anchor="middle" x="108" y="-102.1" font-family="Helvetica,sans-Serif" font-size="9.00">CoinJoin</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M52,-151.46C52,-134.14 52,-110.8 52,-110.8 52,-110.8 67.83,-110.8 67.83,-110.8"/>
+<polygon fill="black" stroke="black" points="67.83,-114.3 77.83,-110.8 67.83,-107.3 67.83,-114.3"/>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fff5cc" stroke="black" d="M123,-187.8C123,-187.8 93,-187.8 93,-187.8 87,-187.8 81,-181.8 81,-175.8 81,-175.8 81,-163.8 81,-163.8 81,-157.8 87,-151.8 93,-151.8 93,-151.8 123,-151.8 123,-151.8 129,-151.8 135,-157.8 135,-163.8 135,-163.8 135,-175.8 135,-175.8 135,-181.8 129,-187.8 123,-187.8"/>
+<text text-anchor="middle" x="108" y="-167.1" font-family="Helvetica,sans-Serif" font-size="9.00">User B</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M108,-151.35C108,-151.35 108,-134.59 108,-134.59"/>
+<polygon fill="black" stroke="black" points="111.5,-134.59 108,-124.59 104.5,-134.59 111.5,-134.59"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e8f5e9" stroke="black" d="M188,-187.8C188,-187.8 158,-187.8 158,-187.8 152,-187.8 146,-181.8 146,-175.8 146,-175.8 146,-163.8 146,-163.8 146,-157.8 152,-151.8 158,-151.8 158,-151.8 188,-151.8 188,-151.8 194,-151.8 200,-157.8 200,-163.8 200,-163.8 200,-175.8 200,-175.8 200,-181.8 194,-187.8 188,-187.8"/>
+<text text-anchor="middle" x="173" y="-167.1" font-family="Helvetica,sans-Serif" font-size="9.00">User C</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M182,-151.46C182,-134.14 182,-110.8 182,-110.8 182,-110.8 147.91,-110.8 147.91,-110.8"/>
+<polygon fill="black" stroke="black" points="147.91,-107.3 137.91,-110.8 147.91,-114.3 147.91,-107.3"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="lightgrey" stroke="black" d="M58,-52C58,-52 28,-52 28,-52 22,-52 16,-46 16,-40 16,-40 16,-28 16,-28 16,-22 22,-16 28,-16 28,-16 58,-16 58,-16 64,-16 70,-22 70,-28 70,-28 70,-40 70,-40 70,-46 64,-52 58,-52"/>
+<text text-anchor="middle" x="43" y="-31.3" font-family="Helvetica,sans-Serif" font-size="9.00">Output 1</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M79.6,-98.8C58.73,-98.8 34,-98.8 34,-98.8 34,-98.8 34,-63.91 34,-63.91"/>
+<polygon fill="black" stroke="black" points="37.5,-63.91 34,-53.91 30.5,-63.91 37.5,-63.91"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="lightgrey" stroke="black" d="M123,-52C123,-52 93,-52 93,-52 87,-52 81,-46 81,-40 81,-40 81,-28 81,-28 81,-22 87,-16 93,-16 93,-16 123,-16 123,-16 129,-16 135,-22 135,-28 135,-28 135,-40 135,-40 135,-46 129,-52 123,-52"/>
+<text text-anchor="middle" x="108" y="-31.3" font-family="Helvetica,sans-Serif" font-size="9.00">Output 2</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M108,-86.57C108,-86.57 108,-63.93 108,-63.93"/>
+<polygon fill="black" stroke="black" points="111.5,-63.93 108,-53.93 104.5,-63.93 111.5,-63.93"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="lightgrey" stroke="black" d="M188,-52C188,-52 158,-52 158,-52 152,-52 146,-46 146,-40 146,-40 146,-28 146,-28 146,-22 152,-16 158,-16 158,-16 188,-16 188,-16 194,-16 200,-22 200,-28 200,-28 200,-40 200,-40 200,-46 194,-52 188,-52"/>
+<text text-anchor="middle" x="173" y="-31.3" font-family="Helvetica,sans-Serif" font-size="9.00">Output 3</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M136.66,-98.8C150.43,-98.8 164,-98.8 164,-98.8 164,-98.8 164,-63.91 164,-63.91"/>
+<polygon fill="black" stroke="black" points="167.5,-63.91 164,-53.91 160.5,-63.91 167.5,-63.91"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+<div class="callout-warning" data-appearance="minimal">
+<p><strong>Legal Status (2024):</strong> Operators of <strong>Samourai Wallet</strong> were arrested on money laundering and unlicensed money transmission charges. Wasabi Wallet subsequently shut down its CoinJoin coordinator for U.S. users. Whether non-custodial CoinJoin coordination constitutes a crime is actively litigated.</p>
+</div>
+</div></section>
+<section class="slide" id="obfuscation-service-mixers-tumblers"><h2 class="slide-title">Obfuscation Service: Mixers &amp; Tumblers</h2><div class="slide-body">
+<p>A <strong>mixer</strong> breaks the chain of custody by pooling funds and redistributing them.</p>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 347.83 227.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:464px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 223)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="8,-8 8,-211 83.56,-211 83.56,-8 8,-8"/>
+<text text-anchor="middle" x="45.78" y="-194.4" font-family="Helvetica,sans-Serif" font-size="14.00">Deposits</text>
+</g>
+<g id="clust2" class="cluster">
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="221.69,-17 221.69,-202 331.83,-202 331.83,-17 221.69,-17"/>
+<text text-anchor="middle" x="276.76" y="-185.4" font-family="Helvetica,sans-Serif" font-size="14.00">Withdrawals</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#ffdddd" stroke="black" d="M63.17,-57.8C63.17,-57.8 28.39,-57.8 28.39,-57.8 22.39,-57.8 16.39,-51.8 16.39,-45.8 16.39,-45.8 16.39,-28.2 16.39,-28.2 16.39,-22.2 22.39,-16.2 28.39,-16.2 28.39,-16.2 63.17,-16.2 63.17,-16.2 69.17,-16.2 75.17,-22.2 75.17,-28.2 75.17,-28.2 75.17,-45.8 75.17,-45.8 75.17,-51.8 69.17,-57.8 63.17,-57.8"/>
+<text text-anchor="middle" x="45.78" y="-41.2" font-family="Helvetica,sans-Serif" font-size="14.00">User A</text>
+<text text-anchor="middle" x="45.78" y="-24.4" font-family="Helvetica,sans-Serif" font-size="14.00">(Illicit)</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f5f7fb" stroke="black" d="M193.69,-141.18C193.69,-146.6 175.28,-151 152.62,-151 129.96,-151 111.56,-146.6 111.56,-141.18 111.56,-141.18 111.56,-52.82 111.56,-52.82 111.56,-47.4 129.96,-43 152.62,-43 175.28,-43 193.69,-47.4 193.69,-52.82 193.69,-52.82 193.69,-141.18 193.69,-141.18"/>
+<path fill="none" stroke="black" d="M193.69,-141.18C193.69,-135.76 175.28,-131.36 152.62,-131.36 129.96,-131.36 111.56,-135.76 111.56,-141.18"/>
+<text text-anchor="middle" x="152.62" y="-92.8" font-family="Helvetica,sans-Serif" font-size="14.00">Mixer Pool</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M75.43,-53.4C83.45,-57.98 92.4,-63.11 101.28,-68.19"/>
+<polygon fill="black" stroke="black" points="99.49,-71.2 109.91,-73.13 102.97,-65.12 99.49,-71.2"/>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e8f5e9" stroke="black" d="M63.17,-117.8C63.17,-117.8 28.39,-117.8 28.39,-117.8 22.39,-117.8 16.39,-111.8 16.39,-105.8 16.39,-105.8 16.39,-88.2 16.39,-88.2 16.39,-82.2 22.39,-76.2 28.39,-76.2 28.39,-76.2 63.17,-76.2 63.17,-76.2 69.17,-76.2 75.17,-82.2 75.17,-88.2 75.17,-88.2 75.17,-105.8 75.17,-105.8 75.17,-111.8 69.17,-117.8 63.17,-117.8"/>
+<text text-anchor="middle" x="45.78" y="-101.2" font-family="Helvetica,sans-Serif" font-size="14.00">User B</text>
+<text text-anchor="middle" x="45.78" y="-84.4" font-family="Helvetica,sans-Serif" font-size="14.00">(Licit)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M75.43,-97C83.01,-97 91.44,-97 99.85,-97"/>
+<polygon fill="black" stroke="black" points="99.71,-100.5 109.71,-97 99.71,-93.5 99.71,-100.5"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e8f5e9" stroke="black" d="M63.56,-177.8C63.56,-177.8 28,-177.8 28,-177.8 22,-177.8 16,-171.8 16,-165.8 16,-165.8 16,-148.2 16,-148.2 16,-142.2 22,-136.2 28,-136.2 28,-136.2 63.56,-136.2 63.56,-136.2 69.56,-136.2 75.56,-142.2 75.56,-148.2 75.56,-148.2 75.56,-165.8 75.56,-165.8 75.56,-171.8 69.56,-177.8 63.56,-177.8"/>
+<text text-anchor="middle" x="45.78" y="-161.2" font-family="Helvetica,sans-Serif" font-size="14.00">User C</text>
+<text text-anchor="middle" x="45.78" y="-144.4" font-family="Helvetica,sans-Serif" font-size="14.00">(Licit)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M75.98,-140.29C83.91,-135.75 92.72,-130.71 101.45,-125.71"/>
+<polygon fill="black" stroke="black" points="102.96,-128.88 109.9,-120.88 99.48,-122.81 102.96,-128.88"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#ffdddd" stroke="black" d="M311.44,-61C311.44,-61 242.08,-61 242.08,-61 236.08,-61 230.08,-55 230.08,-49 230.08,-49 230.08,-37 230.08,-37 230.08,-31 236.08,-25 242.08,-25 242.08,-25 311.44,-25 311.44,-25 317.44,-25 323.44,-31 323.44,-37 323.44,-37 323.44,-49 323.44,-49 323.44,-55 317.44,-61 311.44,-61"/>
+<text text-anchor="middle" x="276.76" y="-38.8" font-family="Helvetica,sans-Serif" font-size="14.00">New Addr A&#39;</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M193.95,-79.17C203.55,-74.93 213.91,-70.34 223.94,-65.91"/>
+<polygon fill="black" stroke="black" points="225.1,-69.22 232.83,-61.98 222.27,-62.82 225.1,-69.22"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#e8f5e9" stroke="black" d="M311.44,-115C311.44,-115 242.08,-115 242.08,-115 236.08,-115 230.08,-109 230.08,-103 230.08,-103 230.08,-91 230.08,-91 230.08,-85 236.08,-79 242.08,-79 242.08,-79 311.44,-79 311.44,-79 317.44,-79 323.44,-85 323.44,-91 323.44,-91 323.44,-103 323.44,-103 323.44,-109 317.44,-115 311.44,-115"/>
+<text text-anchor="middle" x="276.76" y="-92.8" font-family="Helvetica,sans-Serif" font-size="14.00">New Addr B&#39;</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M193.95,-97C201.88,-97 210.34,-97 218.7,-97"/>
+<polygon fill="black" stroke="black" points="218.47,-100.5 228.47,-97 218.46,-93.5 218.47,-100.5"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="#e8f5e9" stroke="black" d="M311.83,-169C311.83,-169 241.69,-169 241.69,-169 235.69,-169 229.69,-163 229.69,-157 229.69,-157 229.69,-145 229.69,-145 229.69,-139 235.69,-133 241.69,-133 241.69,-133 311.83,-133 311.83,-133 317.83,-133 323.83,-139 323.83,-145 323.83,-145 323.83,-157 323.83,-157 323.83,-163 317.83,-169 311.83,-169"/>
+<text text-anchor="middle" x="276.76" y="-146.8" font-family="Helvetica,sans-Serif" font-size="14.00">New Addr C&#39;</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M193.95,-114.83C203.55,-119.07 213.91,-123.66 223.94,-128.09"/>
+<polygon fill="black" stroke="black" points="222.27,-131.18 232.83,-132.02 225.1,-124.78 222.27,-131.18"/>
+</g>
+</g>
+</svg></figure>
+<p>Mixers can be centralized services or decentralized smart contracts (e.g., <strong>Tornado Cash</strong>, sanctioned by OFAC in 2022 for laundering funds for North Korean state actors).</p>
+</div></section>
+<section class="slide" id="breaking-mixers-investigative-countermeasures"><h2 class="slide-title">Breaking Mixers: Investigative Countermeasures</h2><div class="slide-body">
+<p>Despite their obfuscation, mixers have exploitable weaknesses:</p>
+<ul>
+<li><strong>Timing Analysis:</strong> If the pool has low volume, a deposit at time <em>T</em> can be correlated with a withdrawal at <em>T + δ</em>. Many mixers use insufficient time delays.</li>
+<li><strong>Amount Correlation:</strong> Mixers that don’t standardize output denominations leak information. A deposit of 3.47 BTC with a subsequent withdrawal of 3.44 BTC (minus fee) is a strong candidate.</li>
+<li><strong>Graph Clustering:</strong> The mixer’s own deposit and withdrawal infrastructure can be clustered. Investigators label the mixer, then focus on post-withdrawal behavior.</li>
+<li><strong>Operational Security Failures:</strong> Users reuse addresses, withdraw directly to KYC exchanges, or leave OSINT trails — collapsing anonymity at the human endpoint.</li>
+</ul>
+<div class="callout-tip" data-appearance="minimal">
+<p><strong>Investigator’s Principle:</strong> You rarely break the mixer cryptographically. The chain of custody almost always fails at the <strong>human endpoints</strong>, not the protocol.</p>
+</div>
+</div></section>
+<section class="slide" id="the-next-generation-privacy-pools"><h2 class="slide-title">The Next Generation: Privacy Pools</h2><div class="slide-body">
+<p>In response to Tornado Cash sanctions, <strong>Privacy Pools</strong> attempts to balance privacy with compliance.</p>
+<ul>
+<li><strong>Like a mixer:</strong> Uses <strong>zero-knowledge proofs</strong> (ZKPs) to break the deposit-withdrawal link. A ZKP proves a statement is true without revealing the underlying data — like proving you’re over 18 without showing your birthdate.</li>
+<li><strong>Compliance twist:</strong> Users can generate a ZKP proving their funds did <em>not</em> originate from a known illicit source (a public blocklist) — without revealing which deposit is theirs.</li>
+</ul>
+<blockquote>
+<p>“My withdrawal is one of 100 in this pool, and it is NOT from the 5 known illicit deposits.”</p>
+</blockquote>
+<div class="callout-note" data-appearance="minimal">
+<p>Privacy Pools is still experimental (co-authored by Vitalik Buterin). It represents a broader trend: cryptographic tools that provide privacy to legitimate users while <em>reducing</em> the utility of the system for illicit actors — rather than treating privacy and compliance as opposites.</p>
+</div>
+</div></section>
+<section class="slide" id="the-shift-in-strategy-privacy-preserving-blockchains"><h2 class="slide-title">The Shift in Strategy: Privacy-Preserving Blockchains</h2><div class="slide-body">
+<p>While CoinJoin and mixing add obfuscation <em>on top of</em> transparent ledgers, some cryptocurrencies are designed with privacy as their default, primary feature.</p>
+<ul>
+<li><strong>Transparent Ledgers (Bitcoin, Ethereum):</strong> The entire transaction graph is public. Forensics is about <strong>analyzing</strong> the graph.</li>
+<li><strong>Privacy-Preserving Ledgers (Monero, Zcash):</strong> The graph is intentionally <strong>hidden or broken</strong>. Forensics shifts to metadata, endpoints, and voluntary disclosures.</li>
+</ul>
+</div></section>
+<section class="slide" id="monero-xmr-privacy-by-default"><h2 class="slide-title">Monero (XMR): Privacy by Default</h2><div class="slide-body">
+<p>Monero hides the sender, receiver, and amount of every transaction by default via three technologies:</p>
+<ol type="1">
+<li><strong>Ring Signatures:</strong> Hides the <strong>sender</strong>. The true input is mixed with “decoy” UTXOs — an observer cannot determine which was spent.</li>
+<li><strong>Stealth Addresses:</strong> Hides the <strong>receiver</strong>. A new one-time address is created per transaction; the recipient’s public address is never recorded on-chain.</li>
+<li><strong>RingCT:</strong> Hides the <strong>amount</strong>. Amounts are encrypted, but miners can verify no new money was created.</li>
+</ol>
+</div></section>
+<section class="slide" id="monero-known-forensic-weaknesses"><h2 class="slide-title">Monero: Known Forensic Weaknesses</h2><div class="slide-body">
+<p>Despite strong privacy, Monero has known investigative attack surfaces:</p>
+<ul>
+<li><strong>Historical ring size failures:</strong> Pre-2017 Monero used ring size 1 — making those transactions fully traceable. Older outputs on the chain retain this weakness.</li>
+<li><strong>Endpoint correlation:</strong> Monero must be bought and sold at exchanges. Correlating a XMR purchase (known amount, known time) with a subsequent sale of similar value and timing remains a viable approach — even without touching the chain.</li>
+<li><strong>IRS bounty program:</strong> In 2020, the IRS awarded contracts to <strong>Chainalysis</strong> and <strong>CipherTrace</strong> to develop Monero tracing capabilities — indicating the government believes partial tracing is achievable under specific conditions, though the results remain classified.</li>
+</ul>
+<div style="position: relative; z-index: -1; top: -150px; max-height: 200px;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 357.20 93.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:476px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 89.8)">
+<g id="node1" class="node">
+<path fill="#ffdddd" stroke="black" d="M65.16,-47.6C65.16,-47.6 12,-47.6 12,-47.6 6,-47.6 0,-41.6 0,-35.6 0,-35.6 0,-12 0,-12 0,-6 6,0 12,0 12,0 65.16,0 65.16,0 71.16,0 77.16,-6 77.16,-12 77.16,-12 77.16,-35.6 77.16,-35.6 77.16,-41.6 71.16,-47.6 65.16,-47.6"/>
+<text text-anchor="middle" x="38.58" y="-33.7" font-family="Helvetica,sans-Serif" font-size="11.00">Buy XMR</text>
+<text text-anchor="middle" x="38.58" y="-20.5" font-family="Helvetica,sans-Serif" font-size="11.00">at Exchange</text>
+<text text-anchor="middle" x="38.58" y="-7.3" font-family="Helvetica,sans-Serif" font-size="11.00">(KYC)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e8e8e8" stroke="black" stroke-dasharray="5,2" d="M208.48,-85.8C208.48,-85.8 147.39,-85.8 147.39,-85.8 141.39,-85.8 135.39,-79.8 135.39,-73.8 135.39,-73.8 135.39,-61.8 135.39,-61.8 135.39,-55.8 141.39,-49.8 147.39,-49.8 147.39,-49.8 208.48,-49.8 208.48,-49.8 214.48,-49.8 220.48,-55.8 220.48,-61.8 220.48,-61.8 220.48,-73.8 220.48,-73.8 220.48,-79.8 214.48,-85.8 208.48,-85.8"/>
+<text text-anchor="middle" x="177.93" y="-71.1" font-family="Helvetica,sans-Serif" font-size="11.00">Monero Chain</text>
+<text text-anchor="middle" x="177.93" y="-57.9" font-family="Helvetica,sans-Serif" font-size="11.00">(opaque)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M77.47,-35.94C92.06,-40.61 108.97,-46.03 124.67,-51.06"/>
+<polygon fill="black" stroke="black" points="123.27,-54.28 133.86,-54 125.4,-47.62 123.27,-54.28"/>
+<text text-anchor="middle" x="106.27" y="-51.43" font-family="Helvetica,sans-Serif" font-size="10.00">entry</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#ffdddd" stroke="black" d="M337.2,-47.6C337.2,-47.6 284.04,-47.6 284.04,-47.6 278.04,-47.6 272.04,-41.6 272.04,-35.6 272.04,-35.6 272.04,-12 272.04,-12 272.04,-6 278.04,0 284.04,0 284.04,0 337.2,0 337.2,0 343.2,0 349.2,-6 349.2,-12 349.2,-12 349.2,-35.6 349.2,-35.6 349.2,-41.6 343.2,-47.6 337.2,-47.6"/>
+<text text-anchor="middle" x="310.62" y="-33.7" font-family="Helvetica,sans-Serif" font-size="11.00">Sell XMR</text>
+<text text-anchor="middle" x="310.62" y="-20.5" font-family="Helvetica,sans-Serif" font-size="11.00">at Exchange</text>
+<text text-anchor="middle" x="310.62" y="-7.3" font-family="Helvetica,sans-Serif" font-size="11.00">(KYC)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#e74c3c" stroke-dasharray="5,2" d="M77.31,-20.41C94.94,-18.98 116.22,-17.5 135.39,-16.8 173.18,-15.42 182.69,-15.32 220.48,-16.8 233.56,-17.31 247.69,-18.25 260.76,-19.27"/>
+<polygon fill="#e74c3c" stroke="#e74c3c" points="260.16,-22.73 270.42,-20.06 260.73,-15.76 260.16,-22.73"/>
+<text text-anchor="middle" x="177.93" y="-31.8" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#e74c3c">correlate:</text>
+<text text-anchor="middle" x="177.93" y="-19.8" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#e74c3c">amount + timing</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M220.64,-53.76C233.48,-49.43 247.73,-44.64 260.99,-40.17"/>
+<polygon fill="black" stroke="black" points="262.05,-43.51 270.41,-37 259.82,-36.88 262.05,-43.51"/>
+<text text-anchor="middle" x="246.26" y="-50.12" font-family="Helvetica,sans-Serif" font-size="10.00">exit</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide" id="moneros-ring-signature-visualized"><h2 class="slide-title">Monero’s Ring Signature, Visualized</h2><div class="slide-body">
+<p>The true input is hidden among several decoys. The signature proves <em>one</em> is spent, but not <em>which</em>.</p>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 475.96 269.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:635px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 265)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="0,-8 0,-253 160.76,-253 160.76,-8 0,-8"/>
+<text text-anchor="middle" x="80.38" y="-236.4" font-family="Helvetica,sans-Serif" font-size="14.00">Ring of Potential Inputs</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#ffdddd" stroke="black" d="M121.55,-57.8C121.55,-57.8 38.21,-57.8 38.21,-57.8 32.21,-57.8 26.21,-51.8 26.21,-45.8 26.21,-45.8 26.21,-28.2 26.21,-28.2 26.21,-22.2 32.21,-16.2 38.21,-16.2 38.21,-16.2 121.55,-16.2 121.55,-16.2 127.55,-16.2 133.55,-22.2 133.55,-28.2 133.55,-28.2 133.55,-45.8 133.55,-45.8 133.55,-51.8 127.55,-57.8 121.55,-57.8"/>
+<text text-anchor="middle" x="79.88" y="-41.2" font-family="Helvetica,sans-Serif" font-size="14.00">True Input</text>
+<text text-anchor="middle" x="79.88" y="-24.4" font-family="Helvetica,sans-Serif" font-size="14.00">(User&#39;s UTXO)</text>
+</g>
+
+<g id="node5" class="node">
+<ellipse fill="#e8f5e9" stroke="black" cx="245.95" cy="-121" rx="57.19" ry="18"/>
+<text text-anchor="middle" x="245.95" y="-116.8" font-family="Helvetica,sans-Serif" font-size="14.00">Monero Tx</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M133.98,-55.14C143.05,-58.75 152.28,-62.75 160.76,-67 178.46,-75.87 197.09,-87.56 212.32,-97.78"/>
+<polygon fill="black" stroke="black" points="210.3,-100.65 220.54,-103.4 214.25,-94.87 210.3,-100.65"/>
+</g>
+
+<g id="node2" class="node">
+<path fill="#f5f7fb" stroke="black" d="M101.56,-112C101.56,-112 58.2,-112 58.2,-112 52.2,-112 46.2,-106 46.2,-100 46.2,-100 46.2,-88 46.2,-88 46.2,-82 52.2,-76 58.2,-76 58.2,-76 101.56,-76 101.56,-76 107.56,-76 113.56,-82 113.56,-88 113.56,-88 113.56,-100 113.56,-100 113.56,-106 107.56,-112 101.56,-112"/>
+<text text-anchor="middle" x="79.88" y="-89.8" font-family="Helvetica,sans-Serif" font-size="14.00">Decoy 1</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M113.69,-99.4C133.54,-102.67 159.49,-106.94 183.07,-110.82"/>
+<polygon fill="black" stroke="black" points="182.49,-114.27 192.93,-112.44 183.63,-107.36 182.49,-114.27"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#f5f7fb" stroke="black" d="M101.56,-166C101.56,-166 58.2,-166 58.2,-166 52.2,-166 46.2,-160 46.2,-154 46.2,-154 46.2,-142 46.2,-142 46.2,-136 52.2,-130 58.2,-130 58.2,-130 101.56,-130 101.56,-130 107.56,-130 113.56,-136 113.56,-142 113.56,-142 113.56,-154 113.56,-154 113.56,-160 107.56,-166 101.56,-166"/>
+<text text-anchor="middle" x="79.88" y="-143.8" font-family="Helvetica,sans-Serif" font-size="14.00">Decoy 2</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M113.69,-142.6C133.54,-139.33 159.49,-135.06 183.07,-131.18"/>
+<polygon fill="black" stroke="black" points="183.63,-134.64 192.93,-129.56 182.49,-127.73 183.63,-134.64"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f5f7fb" stroke="black" d="M101.56,-220C101.56,-220 58.2,-220 58.2,-220 52.2,-220 46.2,-214 46.2,-208 46.2,-208 46.2,-196 46.2,-196 46.2,-190 52.2,-184 58.2,-184 58.2,-184 101.56,-184 101.56,-184 107.56,-184 113.56,-190 113.56,-196 113.56,-196 113.56,-208 113.56,-208 113.56,-214 107.56,-220 101.56,-220"/>
+<text text-anchor="middle" x="79.88" y="-197.8" font-family="Helvetica,sans-Serif" font-size="14.00">Decoy 3</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M113.85,-192.85C128.54,-188.27 145.85,-182.17 160.76,-175 178.73,-166.36 197.52,-154.6 212.78,-144.27"/>
+<polygon fill="black" stroke="black" points="214.77,-147.15 221.01,-138.59 210.79,-141.39 214.77,-147.15"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#f5f7fb" stroke="black" d="M455.96,-141.8C455.96,-141.8 351.14,-141.8 351.14,-141.8 345.14,-141.8 339.14,-135.8 339.14,-129.8 339.14,-129.8 339.14,-112.2 339.14,-112.2 339.14,-106.2 345.14,-100.2 351.14,-100.2 351.14,-100.2 455.96,-100.2 455.96,-100.2 461.96,-100.2 467.96,-106.2 467.96,-112.2 467.96,-112.2 467.96,-129.8 467.96,-129.8 467.96,-135.8 461.96,-141.8 455.96,-141.8"/>
+<text text-anchor="middle" x="403.55" y="-125.2" font-family="Helvetica,sans-Serif" font-size="14.00">Stealth Address</text>
+<text text-anchor="middle" x="403.55" y="-108.4" font-family="Helvetica,sans-Serif" font-size="14.00">(Receiver Hidden)</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M303.56,-121C311.36,-121 319.46,-121 327.53,-121"/>
+<polygon fill="black" stroke="black" points="327.35,-124.5 337.35,-121 327.35,-117.5 327.35,-124.5"/>
+</g>
+</g>
+</svg></figure>
+<p>An outside observer sees 4 plausible senders. The transaction graph is broken.</p>
+</div></section>
+<section class="slide" id="zcash-zec-optional-privacy"><h2 class="slide-title">Zcash (ZEC): Optional Privacy</h2><div class="slide-body">
+<p>Zcash supports both transparent and fully shielded transactions in the same chain.</p>
+<ul>
+<li><strong>Transparent (t-addr):</strong> Identical to Bitcoin — fully public and traceable.</li>
+<li><strong>Shielded (z-addr):</strong> Sender, receiver, and amount hidden via <strong>zk-SNARKs</strong>.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Transaction Type</th>
+<th>Privacy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>t-addr → t-addr</td>
+<td>None — fully traceable</td>
+</tr>
+<tr>
+<td>t-addr → z-addr</td>
+<td>Shielding (entry visible, exit hidden)</td>
+</tr>
+<tr>
+<td>z-addr → z-addr</td>
+<td>Full privacy</td>
+</tr>
+<tr>
+<td>z-addr → t-addr</td>
+<td>De-shielding (exit visible, entry hidden)</td>
+</tr>
+</tbody>
+</table>
+<p>The level of privacy depends on shielded pool activity. In practice, <strong>the majority of ZEC transactions have historically used transparent addresses</strong> — the anonymity set of the shielded pool remains small, making shielded-to-transparent correlation easier than Zcash’s design implies in theory.</p>
+</div></section>
+<section class="slide" id="forensic-limitations-voluntary-disclosure"><h2 class="slide-title">Forensic Limitations &amp; Voluntary Disclosure</h2><div class="slide-body">
+<p>On-chain analysis of privacy coins is often a dead end. Investigations pivot to:</p>
+<ul>
+<li><strong>Endpoint Analysis:</strong> Focus on exchanges where privacy coins are bought or sold — the on-ramps and off-ramps remain the weakest link.</li>
+<li><strong>Off-Chain Intelligence:</strong> Server logs, informant tips, wallet files from seized devices.</li>
+<li><strong>View Keys:</strong> Both Monero and Zcash have view keys — read-only keys that grant a third party access to transaction history without spending capability. Useful for compliance audits; rarely available in criminal investigations.</li>
+<li><strong>Subpoenas &amp; MLATs:</strong> Domestic KYC records via subpoena. International records require a <strong>Mutual Legal Assistance Treaty (MLAT)</strong> — a formal government-to-government evidence-sharing process that can take months to years, making rapid asset freezing nearly impossible in cross-border cases.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="quantum-computing-future-impact-on-privacy-coin-forensics"><h2 class="slide-title">Quantum Computing: Future Impact on Privacy Coin Forensics</h2><div class="slide-body">
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Protocol</th>
+<th>Vulnerable Primitive</th>
+<th>Quantum Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Bitcoin / Ethereum</strong></td>
+<td>ECDSA / secp256k1</td>
+<td>Shor’s algorithm could derive private keys from <em>spent</em> addresses, retroactively linking wallets</td>
+</tr>
+<tr>
+<td><strong>Monero</strong></td>
+<td>Ed25519 ring signatures + EC-based RingCT</td>
+<td>Ring signatures could be cracked, exposing the true sender in historical transactions</td>
+</tr>
+<tr>
+<td><strong>Zcash (shielded)</strong></td>
+<td>zk-SNARKs over BLS12-381 curves</td>
+<td>Proofs could be broken, revealing shielded sender, receiver, and amount</td>
+</tr>
+</tbody>
+</table>
+<div class="callout-note" data-appearance="minimal">
+<p><strong>“Harvest now, decrypt later”:</strong> Adversaries may already be archiving privacy coin transaction data, betting on future quantum capability to retroactively de-anonymize it. Privacy used today may not be private forever.</p>
+</div>
+</div></section>
+<section class="slide" id="the-modern-launderer-chain-hopping"><h2 class="slide-title">The Modern Launderer: “Chain Hopping”</h2><div class="slide-body">
+<p>Illicit actors rarely stay on one chain. <strong>Chain hopping</strong> exploits the fact that blockchains are separate, siloed ecosystems.</p>
+<p><strong>Typical pattern:</strong></p>
+<ol type="1">
+<li><strong>Exploit/Crime</strong> on Chain A (e.g., Ethereum).</li>
+<li><strong>Swap</strong> into a liquid or privacy-preserving asset.</li>
+<li><strong>Bridge</strong> to Chain B (e.g., TRON, Solana).</li>
+<li><strong>Obfuscate</strong> on Chain B via local mixers or DEXs.</li>
+<li><strong>Bridge</strong> to Chain C or <strong>cash out</strong> at a high-risk exchange.</li>
+</ol>
+<div class="callout-note" data-appearance="minimal">
+<p><strong>TRON</strong> has become the dominant chain for illicit fund movement due to near-zero transaction fees and widespread USDT liquidity. UN and Chainalysis reports consistently flag TRON-based USDT transfers as the preferred mechanism for sanctions evasion, ransomware cashouts, and North Korean laundering operations.</p>
+</div>
+</div></section>
+<section class="slide" id="mechanisms-for-chain-hopping"><h2 class="slide-title">Mechanisms for Chain Hopping</h2><div class="slide-body">
+<p>Two primary technologies enable chain hopping:</p>
+<ul>
+<li><strong>Cross-Chain Bridges:</strong> Lock an asset on the source chain; mint a wrapped equivalent on the destination chain. Many are decentralized and operate without KYC — prime targets for abuse. (e.g., RenBridge was heavily used for laundering before being shut down.)</li>
+<li><strong>Atomic Swaps / DEXs:</strong> Trade assets from different chains directly, without a centralized intermediary — severs a clear custody trail with no shared record.</li>
+</ul>
+</div></section>
+<section class="slide" id="following-the-hop-cross-chain-forensics"><h2 class="slide-title">Following the Hop: Cross-Chain Forensics</h2><div class="slide-body">
+<p>An investigator correlates the “exit” on one chain with the “entry” on another.</p>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 169.84 404.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:227px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 400.8)">
+<g id="clust1" class="cluster">
+<polygon fill="#fef9e7" stroke="#f0c419" points="21.92,-234.4 21.92,-388.8 139.92,-388.8 139.92,-234.4 21.92,-234.4"/>
+<text text-anchor="middle" x="80.92" y="-372.2" font-family="Helvetica,sans-Serif" font-size="14.00">Bitcoin</text>
+</g>
+<g id="clust2" class="cluster">
+<polygon fill="#eaf2f8" stroke="#5bc0de" points="21.92,-8 21.92,-162.4 139.92,-162.4 139.92,-8 21.92,-8"/>
+<text text-anchor="middle" x="80.92" y="-145.8" font-family="Helvetica,sans-Serif" font-size="14.00">Ethereum</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#f5f7fb" stroke="black" d="M118.54,-356C118.54,-356 43.29,-356 43.29,-356 37.29,-356 31.29,-350 31.29,-344 31.29,-344 31.29,-332 31.29,-332 31.29,-326 37.29,-320 43.29,-320 43.29,-320 118.54,-320 118.54,-320 124.54,-320 130.54,-326 130.54,-332 130.54,-332 130.54,-344 130.54,-344 130.54,-350 124.54,-356 118.54,-356"/>
+<text text-anchor="middle" x="80.92" y="-333.8" font-family="Helvetica,sans-Serif" font-size="14.00">BTC Address</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#ffdddd" stroke="black" d="M119.82,-284C119.82,-284 42.02,-284 42.02,-284 36.02,-284 30.02,-278 30.02,-272 30.02,-272 30.02,-254.4 30.02,-254.4 30.02,-248.4 36.02,-242.4 42.02,-242.4 42.02,-242.4 119.82,-242.4 119.82,-242.4 125.82,-242.4 131.82,-248.4 131.82,-254.4 131.82,-254.4 131.82,-272 131.82,-272 131.82,-278 125.82,-284 119.82,-284"/>
+<text text-anchor="middle" x="80.92" y="-267.4" font-family="Helvetica,sans-Serif" font-size="14.00">&#45;10.1 BTC</text>
+<text text-anchor="middle" x="80.92" y="-250.6" font-family="Helvetica,sans-Serif" font-size="14.00">@ 14:02 UTC</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M80.92,-319.75C80.92,-312.55 80.92,-303.95 80.92,-295.69"/>
+<polygon fill="black" stroke="black" points="84.42,-295.94 80.92,-285.94 77.42,-295.94 84.42,-295.94"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#f5f7fb" stroke="black" d="M150.87,-193.28C150.87,-193.28 132.34,-201.52 132.34,-201.52 126.86,-203.96 115.38,-206.4 109.38,-206.4 109.38,-206.4 52.46,-206.4 52.46,-206.4 46.46,-206.4 34.98,-203.96 29.49,-201.52 29.49,-201.52 10.96,-193.28 10.96,-193.28 5.48,-190.84 5.48,-185.96 10.96,-183.52 10.96,-183.52 29.49,-175.28 29.49,-175.28 34.98,-172.84 46.46,-170.4 52.46,-170.4 52.46,-170.4 109.38,-170.4 109.38,-170.4 115.38,-170.4 126.86,-172.84 132.34,-175.28 132.34,-175.28 150.87,-183.52 150.87,-183.52 156.35,-185.96 156.35,-190.84 150.87,-193.28"/>
+<text text-anchor="middle" x="80.92" y="-184.2" font-family="Helvetica,sans-Serif" font-size="14.00">Swap Service</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M80.92,-241.92C80.92,-234.55 80.92,-226.06 80.92,-218.1"/>
+<polygon fill="black" stroke="black" points="84.42,-218.13 80.92,-208.13 77.42,-218.13 84.42,-218.13"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#f5f7fb" stroke="black" d="M118.54,-52C118.54,-52 43.29,-52 43.29,-52 37.29,-52 31.29,-46 31.29,-40 31.29,-40 31.29,-28 31.29,-28 31.29,-22 37.29,-16 43.29,-16 43.29,-16 118.54,-16 118.54,-16 124.54,-16 130.54,-22 130.54,-28 130.54,-28 130.54,-40 130.54,-40 130.54,-46 124.54,-52 118.54,-52"/>
+<text text-anchor="middle" x="80.92" y="-29.8" font-family="Helvetica,sans-Serif" font-size="14.00">ETH Address</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#e8f5e9" stroke="black" d="M119.82,-129.6C119.82,-129.6 42.02,-129.6 42.02,-129.6 36.02,-129.6 30.02,-123.6 30.02,-117.6 30.02,-117.6 30.02,-100 30.02,-100 30.02,-94 36.02,-88 42.02,-88 42.02,-88 119.82,-88 119.82,-88 125.82,-88 131.82,-94 131.82,-100 131.82,-100 131.82,-117.6 131.82,-117.6 131.82,-123.6 125.82,-129.6 119.82,-129.6"/>
+<text text-anchor="middle" x="80.92" y="-113" font-family="Helvetica,sans-Serif" font-size="14.00">+3.0 ETH</text>
+<text text-anchor="middle" x="80.92" y="-96.2" font-family="Helvetica,sans-Serif" font-size="14.00">@ 14:05 UTC</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M80.92,-87.52C80.92,-80.15 80.92,-71.66 80.92,-63.7"/>
+<polygon fill="black" stroke="black" points="84.42,-63.73 80.92,-53.73 77.42,-63.73 84.42,-63.73"/>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M80.92,-170.18C80.92,-161.73 80.92,-151.29 80.92,-141.48"/>
+<polygon fill="black" stroke="black" points="84.42,-141.51 80.92,-131.51 77.42,-141.51 84.42,-141.51"/>
+</g>
+</g>
+</svg></figure>
+<p>Correlation signal: timing (Δt = 3 min) + approximate value match (~$500k).</p>
+</div></section>
+<section class="slide" id="not-all-hops-are-equally-opaque"><h2 class="slide-title">Not All Hops Are Equally Opaque</h2><div class="slide-body">
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Hop Type</th>
+<th>Traceability</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Smart contract bridge (e.g., Wormhole)</td>
+<td><strong>High</strong> — lock and mint events are on-chain on both sides</td>
+</tr>
+<tr>
+<td>Centralized exchange swap</td>
+<td><strong>Medium</strong> — traceable with legal process (KYC subpoena)</td>
+</tr>
+<tr>
+<td>DEX / atomic swap</td>
+<td><strong>Low</strong> — only timing and value correlation available</td>
+</tr>
+<tr>
+<td>Privacy coin intermediary (e.g., XMR)</td>
+<td><strong>Very low</strong> — middle leg is cryptographically hidden</td>
+</tr>
+</tbody>
+</table>
+<div class="callout-tip" data-appearance="minimal">
+<p>Smart contract bridges are actually the <strong>most traceable</strong> hop type — both the locking event and the minting event appear in on-chain logs and can be directly correlated. Privacy coin hops are the hardest: the middle leg leaves no on-chain record at all.</p>
+</div>
+</div></section>
+<section class="slide" id="the-final-step-attribution"><h2 class="slide-title">The Final Step: Attribution</h2><div class="slide-body">
+<p><strong>Attribution</strong> links a pseudonymous on-chain cluster to a real-world entity.</p>
+<ul>
+<li><strong>OSINT:</strong> Search for addresses on social media, forums, code repositories, paste sites. Many services and individuals post crypto addresses openly.</li>
+<li><strong>Labeled Datasets:</strong> Chainalysis, Elliptic, and community sites (Etherscan, BitcoinAbuse) maintain vast databases of labeled addresses for exchanges, mixers, darknet markets, and sanctioned entities.</li>
+<li><strong>Direct Interaction (Undercover):</strong> Create an account or transact with a target service to obtain a fresh, investigator-controlled address — a technique analogous to a controlled buy in drug investigations. That address becomes a confident graph seed.</li>
+<li><strong>Exchange Subpoena (Most Common Final Step):</strong> Trace funds to an exchange deposit address, then compel the exchange via legal process to reveal the KYC identity behind that account. This is the single most common mechanism linking blockchain activity to a real-world arrest.</li>
+</ul>
+</div></section>
+<section class="slide" id="attribution-standards-of-evidence-and-known-pitfalls"><h2 class="slide-title">Attribution: Standards of Evidence and Known Pitfalls</h2><div class="slide-body">
+<p>Attribution is <strong>inferential</strong>. Quality and legal admissibility vary significantly by source.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Source</th>
+<th>Strength</th>
+<th>Limitation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OSINT (forum post)</td>
+<td>Weak lead</td>
+<td>Self-reported, easily faked</td>
+</tr>
+<tr>
+<td>Analytics firm label</td>
+<td>Strong indicator</td>
+<td>Proprietary — methodology not always disclosed</td>
+</tr>
+<tr>
+<td>Undercover interaction</td>
+<td>Strong</td>
+<td>Requires legal authority and operational resources</td>
+</tr>
+<tr>
+<td>KYC subpoena</td>
+<td>Court-admissible</td>
+<td>Requires jurisdiction; MLAT delays for foreign exchanges</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide" id="attribution-from-cluster-to-identity"><h2 class="slide-title">Attribution: From Cluster to Identity</h2><div class="slide-body">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 421.84 209.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:563px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 205)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="128.98,-8 128.98,-193 261.71,-193 261.71,-8 128.98,-8"/>
+<text text-anchor="middle" x="195.34" y="-176.4" font-family="Helvetica,sans-Serif" font-size="14.00">Intelligence Fusion</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#f5f7fb" stroke="black" d="M100.98,-102.73C100.98,-104.53 78.35,-106 50.49,-106 22.63,-106 0,-104.53 0,-102.73 0,-102.73 0,-73.27 0,-73.27 0,-71.47 22.63,-70 50.49,-70 78.35,-70 100.98,-71.47 100.98,-73.27 100.98,-73.27 100.98,-102.73 100.98,-102.73"/>
+<path fill="none" stroke="black" d="M100.98,-102.73C100.98,-100.92 78.35,-99.45 50.49,-99.45 22.63,-99.45 0,-100.92 0,-102.73"/>
+<text text-anchor="middle" x="50.49" y="-84.7" font-family="Helvetica,sans-Serif" font-size="11.00">On&#45;Chain Cluster</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e8f5e9" stroke="black" d="M209.84,-52C209.84,-52 179.84,-52 179.84,-52 173.84,-52 167.84,-46 167.84,-40 167.84,-40 167.84,-28 167.84,-28 167.84,-22 173.84,-16 179.84,-16 179.84,-16 209.84,-16 209.84,-16 215.84,-16 221.84,-22 221.84,-28 221.84,-28 221.84,-40 221.84,-40 221.84,-46 215.84,-52 209.84,-52"/>
+<text text-anchor="middle" x="194.84" y="-30.7" font-family="Helvetica,sans-Serif" font-size="11.00">OSINT</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M96.92,-70.77C116.28,-63.42 138.59,-54.96 156.91,-48.01"/>
+<polygon fill="black" stroke="black" points="157.94,-51.36 166.05,-44.54 155.46,-44.82 157.94,-51.36"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#e8f5e9" stroke="black" d="M219.57,-106C219.57,-106 170.11,-106 170.11,-106 164.11,-106 158.11,-100 158.11,-94 158.11,-94 158.11,-82 158.11,-82 158.11,-76 164.11,-70 170.11,-70 170.11,-70 219.57,-70 219.57,-70 225.57,-70 231.57,-76 231.57,-82 231.57,-82 231.57,-94 231.57,-94 231.57,-100 225.57,-106 219.57,-106"/>
+<text text-anchor="middle" x="194.84" y="-91.3" font-family="Helvetica,sans-Serif" font-size="11.00">Analytics</text>
+<text text-anchor="middle" x="194.84" y="-78.1" font-family="Helvetica,sans-Serif" font-size="11.00">Firm Labels</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M101.28,-88C115.96,-88 131.97,-88 146.49,-88"/>
+<polygon fill="black" stroke="black" points="146.25,-91.5 156.25,-88 146.25,-84.5 146.25,-91.5"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fff5cc" stroke="black" d="M228.76,-160C228.76,-160 160.93,-160 160.93,-160 154.93,-160 148.93,-154 148.93,-148 148.93,-148 148.93,-136 148.93,-136 148.93,-130 154.93,-124 160.93,-124 160.93,-124 228.76,-124 228.76,-124 234.76,-124 240.76,-130 240.76,-136 240.76,-136 240.76,-148 240.76,-148 240.76,-154 234.76,-160 228.76,-160"/>
+<text text-anchor="middle" x="194.84" y="-145.3" font-family="Helvetica,sans-Serif" font-size="11.00">KYC Subpoena</text>
+<text text-anchor="middle" x="194.84" y="-132.1" font-family="Helvetica,sans-Serif" font-size="11.00">(Exchange)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" stroke-dasharray="5,2" d="M96.92,-105.23C110.02,-110.2 124.46,-115.68 138.11,-120.86"/>
+<polygon fill="black" stroke="black" points="136.84,-124.12 147.43,-124.39 139.32,-117.57 136.84,-124.12"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#ffdddd" stroke="black" d="M403.22,-100.85C403.22,-100.85 362.4,-114.51 362.4,-114.51 357.09,-116.29 346.47,-116.29 341.15,-114.51 341.15,-114.51 300.34,-100.85 300.34,-100.85 295.03,-99.07 289.72,-91.69 289.73,-86.09 289.73,-86.09 289.75,-74.88 289.75,-74.88 289.76,-69.28 295.37,-63.68 300.98,-63.68 300.98,-63.68 402.58,-63.68 402.58,-63.68 408.18,-63.68 413.8,-69.28 413.81,-74.88 413.81,-74.88 413.83,-86.09 413.83,-86.09 413.84,-91.69 408.53,-99.07 403.22,-100.85"/>
+<text text-anchor="middle" x="351.78" y="-91.3" font-family="Helvetica,sans-Serif" font-size="11.00">Real&#45;World</text>
+<text text-anchor="middle" x="351.78" y="-78.1" font-family="Helvetica,sans-Serif" font-size="11.00">Identity</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M222.13,-43.16C237.79,-48.62 258.5,-55.84 278.72,-62.88"/>
+<polygon fill="black" stroke="black" points="277.52,-66.17 288.11,-66.16 279.82,-59.56 277.52,-66.17"/>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M231.78,-88C245.65,-88 262.05,-88 278.16,-88"/>
+<polygon fill="black" stroke="black" points="277.73,-91.5 287.73,-88 277.73,-84.5 277.73,-91.5"/>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="black" d="M241.07,-126.24C258.24,-120.25 277.98,-113.37 295.94,-107.11"/>
+<polygon fill="black" stroke="black" points="296.84,-110.51 305.13,-103.91 294.54,-103.9 296.84,-110.51"/>
+</g>
+</g>
+</svg></figure>
+<div class="callout-warning">
+<p><strong>Known Error Cases:</strong> Analytics firm labels have been challenged in court. In <em>United States v. Roman Sterlingov</em> (Bitcoin Fog operator), defense experts disputed Chainalysis attribution methodology. Treat probabilistic findings as <strong>investigative leads</strong>, not proof.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="conclusion-a-cat-and-mouse-game"><h2 class="slide-title">Conclusion: A Cat-and-Mouse Game</h2><div class="slide-body">
+<p>Blockchain forensics is a dynamic, adversarial field.</p>
+<ul>
+<li><strong>Analysts</strong> develop sophisticated graph algorithms, cross-chain tracking tools, and court-admissible attribution methodologies.</li>
+<li><strong>Illicit actors</strong> adopt privacy coins, decentralized bridges, and novel obfuscation patterns to stay ahead.</li>
+</ul>
+<p>The transparency of most blockchains provides a permanent, immutable record. The challenge lies in reading that record when it has been intentionally obscured.</p>
+<p><strong>Analyst’s Working Principles:</strong></p>
+<ol type="1">
+<li><strong>Follow the endpoints.</strong> Mixers and privacy chains obscure the middle — but funds almost always enter and exit at identifiable services. Start and end there.</li>
+<li><strong>Heuristics are leads, not proof.</strong> Probabilistic clustering is an investigative tool, not court-admissible evidence. Corroborate before asserting attribution.</li>
+<li><strong>Opsec fails before cryptography does.</strong> The vast majority of de-anonymizations happen because of human mistakes — reused addresses, KYC exchanges, OSINT trails — not because a cryptographic protocol was broken.</li>
+</ol>
+</div></section>
+<section class="slide" id="case-study-the-bitfinex-hack-2016"><h2 class="slide-title">Case Study: The Bitfinex Hack (2016)</h2><div class="slide-body">
+<p>In August 2016, a hacker breached the Bitfinex cryptocurrency exchange, stealing approximately <strong>119,754 BTC</strong> (worth ~$71 million at the time, but billions later).</p>
+<p>For five years, the funds barely moved. Then, a highly sophisticated laundering operation began.</p>
+<p><strong>The Launderer’s Playbook:</strong></p>
+<ol type="1">
+<li>Automated <strong>peeling chains</strong> to slowly siphon funds.</li>
+<li>Depositing funds into <strong>darknet markets</strong> (like AlphaBay) to use them as makeshift mixers.</li>
+<li><strong>Chain hopping</strong> into Monero (XMR) to break the public ledger trail.</li>
+<li>Using fictitious shell companies to justify cash-outs to traditional bank accounts.</li>
+</ol>
+</div></section>
+<section class="slide smaller" id="live-trace-following-the-peeling-chains"><h2 class="slide-title">Live Trace: Following the Peeling Chains</h2><div class="slide-body">
+<p>The launderers used automated scripts to move the stolen BTC through thousands of small, rapid transactions. This is a classic <strong>peeling chain</strong>.</p>
+<ul>
+<li><strong>The Input:</strong> A large chunk of stolen BTC.</li>
+<li><strong>The Peel:</strong> A small fraction sent to a darknet market or exchange.</li>
+<li><strong>The Change:</strong> The remaining balance sent to a new, fresh address controlled by the launderers.</li>
+<li><strong>The Pattern:</strong> 1 input <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> 2 outputs. Repeated thousands of times.</li>
+</ul>
+<div class="callout-tip" data-appearance="minimal">
+<p><strong>Interactive Walkthrough:</strong> Let’s look at the actual chain.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="breaking-the-obfuscation-account-clustering"><h2 class="slide-title">Breaking the Obfuscation: Account Clustering</h2><div class="slide-body">
+<p>The launderers sent thousands of “peels” into virtual currency exchanges (VCEs) using dozens of different user accounts, hoping to look like many unrelated users.</p>
+<p><strong>How investigators clustered the accounts:</strong></p>
+<ol type="1">
+<li><strong>On-Chain Clustering (CIOH):</strong> The launderers occasionally swept funds from multiple deposit addresses into a single transaction to pay for network fees, accidentally proving they owned all of them.</li>
+<li><strong>The AlphaBay Seizure:</strong> The launderers used the AlphaBay darknet market to mix funds. But in 2017, law enforcement seized AlphaBay’s servers. The “mixer” suddenly became a giant, unencrypted database of the launderers’ internal transfers.</li>
+</ol>
+<div class="callout-tip" data-appearance="minimal">
+<p><strong>Interactive Walkthrough:</strong> Viewing exchange consolidation on-chain.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="the-fatal-flaw-kyc-subpoenas"><h2 class="slide-title">The Fatal Flaw: KYC Subpoenas</h2><div class="slide-body">
+<p>Once investigators traced the funds exiting the mixers and entering legitimate exchanges, they hit the <strong>chokepoint</strong>. They served legal subpoenas to the exchanges.</p>
+<p><strong>The Subpoena Returns:</strong></p>
+<ul>
+<li><strong>Fake Identities:</strong> Accounts were registered to fictitious names and stolen Russian passports.</li>
+<li><strong>The OpSec Failure:</strong> The accounts logged in using IP addresses associated with a specific cloud hosting provider in New York.</li>
+<li><strong>The Gift Cards:</strong> One of the exchange accounts was used to purchase a $500 Walmart gift card. The subpoena revealed the gift card was delivered to a personal email address.</li>
+<li><strong>The PlayStation:</strong> Another portion of the funds was traced to the purchase of a PlayStation, shipped to a physical apartment address in Manhattan.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="osint-the-crocodile-of-wall-street"><h2 class="slide-title">OSINT: “The Crocodile of Wall Street”</h2><div class="slide-body">
+<p>The email addresses and physical shipping addresses from the subpoenas led investigators to a married couple: <strong>Ilya Lichtenstein</strong> and <strong>Heather Morgan</strong>.</p>
+<p>Investigators immediately pivoted to <strong>Open Source Intelligence (OSINT)</strong> to build the profile:</p>
+<ul>
+<li><strong>LinkedIn/Forbes:</strong> Morgan was a regular contributor to Forbes, writing articles about “protecting your business from cybercriminals.”</li>
+<li><strong>Social Media:</strong> Morgan had a highly public alter-ego as a comedic rapper named “Razzlekhan,” self-described as the “Crocodile of Wall Street.”</li>
+<li><strong>Business Records:</strong> They operated several tech startups, which were used to justify the sudden influx of cash entering their traditional bank accounts.</li>
+</ul>
+<div class="callout-note" data-appearance="minimal">
+<p><strong>The Intelligence Fusion:</strong> The on-chain cluster of stolen Bitfinex funds was now irrevocably tied to two real, highly visible people living in New York City.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="the-takedown-and-the-cloud-seizure"><h2 class="slide-title">The Takedown and The Cloud Seizure</h2><div class="slide-body">
+<p>With the identity confirmed, law enforcement obtained a search warrant for Lichtenstein’s cloud storage accounts (linked to the IP addresses from the exchange logins).</p>
+<p><strong>The Final Evidence:</strong></p>
+<ul>
+<li>Inside the cloud storage, agents found an encrypted spreadsheet.</li>
+<li>Upon decryption, the spreadsheet contained a list of <strong>2,000 virtual currency addresses and their corresponding private keys</strong>.</li>
+<li>These keys perfectly matched the addresses holding the unspent, stolen Bitfinex funds.</li>
+</ul>
+<p><strong>February 2022:</strong> Lichtenstein and Morgan were arrested. Using the recovered private keys, the DOJ executed the largest financial seizure in U.S. history, recovering approximately <strong>94,000 BTC</strong> (valued at <strong>$3.6 billion</strong>).</p>
+
+<div class="callout-note" data-appearance="minimal">
+<p><strong>Key Lesson:</strong> Six years of sophisticated laundering — peeling chains, privacy coin hops, DeFi layering — ultimately failed because of a single KYC link at an exchange, a Walmart gift card, and a cloud storage account. OpSec fails before cryptography does.</p>
+</div>
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-gjorgjev_blockchainforensicsunmasking_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">J. Gjorgjev, M. F. Ramadhan, and S. Dhamayana, <span>“Blockchain forensics - unmasking anonymity in dark web transactions,”</span> <em>International Journal of Criminology and Sociology</em>, vol. 14, pp. 68–75, Mar. 2025, doi: <a href="https://doi.org/10.6000/1929-4409.2025.14.07">10.6000/1929-4409.2025.14.07</a>.</div>
+</div>
+<div id="ref-salisu_blockchainforensicsmodern_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">S. Salisu and V. Filipov, <span>“Blockchain forensics: A modern approach to investigating cybercrime in the age of decentralisation,”</span> <em>International Conference on Cyber Warfare and Security</em>, vol. 18, pp. 338–347, Feb. 2023, doi: <a href="https://doi.org/10.34190/iccws.18.1.947">10.34190/iccws.18.1.947</a>.</div>
+</div>
+<div id="ref-frowis_safeguardingevidentialvalue_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">M. Fröwis, T. Gottschalk, B. Haslhofer, C. Rückert, and P. Pesch, <span>“Safeguarding the evidential value of forensic cryptocurrency investigations,”</span> <em>Forensic Science International: Digital Investigation</em>, vol. 33, p. 200902, 2020, doi: <a href="https://doi.org/10.1016/j.fsidi.2019.200902">10.1016/j.fsidi.2019.200902</a>.</div>
+</div>
+<div id="ref-chainalysis_reports_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">Chainalysis, <span>“Chainalysis reports.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.chainalysis.com/reports/">https://www.chainalysis.com/reports/</a></div>
+</div>
+<div id="ref-trmlabs_trmlabsreports_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">TRM Labs, <span>“<span>TRM Labs Reports</span> and <span>White Papers</span>: <span>Blockchain Intelligence</span> and <span>Crypto Risk Insights</span>.”</span> 2025. Available: <a href="https://www.trmlabs.com/reports">https://www.trmlabs.com/reports</a></div>
+</div>
+<div id="ref-atlam_blockchainforensicssystematic_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">H. F. Atlam, N. Ekuri, M. A. Azad, and H. S. Lallie, <span>“Blockchain <span>Forensics</span>: <span>A Systematic Literature Review</span> of <span>Techniques</span>, <span>Applications</span>, <span>Challenges</span>, and <span>Future Directions</span>,”</span> <em>Electronics</em>, vol. 13, no. 17, p. 3568, Jan. 2024, doi: <a href="https://doi.org/10.3390/electronics13173568">10.3390/electronics13173568</a>.</div>
+</div>
+<div id="ref-gmaxwell_coinjoinbitcoinprivacy_2013" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline"><span class="nocase">gmaxwell</span>, <span>“<span>CoinJoin</span>: <span>Bitcoin</span> privacy for the real world.”</span> Accessed: Oct. 21, 2025. [Online]. Available: <a href="https://bitcointalk.org/index.php?topic=279249.0">https://bitcointalk.org/index.php?topic=279249.0</a></div>
+</div>
+<div id="ref-departmentofjustice_operatorscryptocurrencymixers_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">Department of Justice, <span>“Operators of <span>Cryptocurrency Mixers Charged</span> with <span>Money Laundering</span>,”</span> U.S. Dept. of Justice, Washington, D.C., Press Release, Jan. 2025. Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://www.justice.gov/archives/opa/pr/operators-cryptocurrency-mixers-charged-money-laundering">https://www.justice.gov/archives/opa/pr/operators-cryptocurrency-mixers-charged-money-laundering</a></div>
+</div>
+<div id="ref-sykes_virtualcurrenciesmoney_2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">J. B. Sykes and N. Vanatko, <span>“Virtual <span>Currencies</span> and <span>Money Laundering</span>: <span>Legal Background</span>, <span>Enforcement Actions</span>, and <span>Legislative Proposals</span>,”</span> Congressional Research Service, Washington, D.C., CRS Report R45664.2, Mar. 2019. Available: <a href="https://www.congress.gov/crs_external_products/R/PDF/R45664/R45664.2.pdf">https://www.congress.gov/crs_external_products/R/PDF/R45664/R45664.2.pdf</a></div>
+</div>
+<div id="ref-u.s.dept.oftreasury_ustreasurysanctions_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">U.S. Dept. of Treasury, <span>“U.<span>S</span>. <span>Treasury Sanctions Notorious Virtual Currency Mixer Tornado Cash</span>,”</span> United States Government, Washington, D.C., Press Release, Aug. 2022. Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://home.treasury.gov/news/press-releases/jy0916">https://home.treasury.gov/news/press-releases/jy0916</a></div>
+</div>
+<div id="ref-l35_privacy_pools_docs_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">Privacy Pools Documentation, <span>“What is privacy pools?”</span> Accessed: Mar. 28, 2026. [Online]. Available: <a href="https://docs.privacypools.com/">https://docs.privacypools.com/</a></div>
+</div>
+<div id="ref-boneh_zeroknowledgeproofs_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">D. Boneh and V. Shoup, <span>“Zero <span>Knowledge Proofs</span> — <span>Introduction</span>.”</span> 2020. Available: <a href="https://intensecrypto.org/public/lec_14_zero_knowledge.html">https://intensecrypto.org/public/lec_14_zero_knowledge.html</a></div>
+</div>
+<div id="ref-koe_zeromonerosecond_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">Koe, K. M. Alonso, and S. Noether, <span>“Zero to <span>Monero</span>: <span>Second Edition</span>.”</span> Apr. 04, 2020. Available: <a href="https://web.getmonero.org/library/Zero-to-Monero-2-0-0.pdf">https://web.getmonero.org/library/Zero-to-Monero-2-0-0.pdf</a></div>
+</div>
+<div id="ref-electriccoincompany_zcashbasicszcash_2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">Electric Coin Company, <span>“Zcash <span>Basics</span> — <span>Zcash Documentation</span> 6.10.0.”</span> Accessed: Oct. 20, 2025. [Online]. Available: <a href="https://zcash.readthedocs.io/en/latest/rtd_pages/basics.html">https://zcash.readthedocs.io/en/latest/rtd_pages/basics.html</a></div>
+</div>
+<div id="ref-monero_stealthaddress_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline">Monero, <span>“Stealth <span>Address</span>.”</span> Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://web.archive.org/web/20250926150048/https://www.getmonero.org/resources/moneropedia/stealthaddress.html">https://web.archive.org/web/20250926150048/https://www.getmonero.org/resources/moneropedia/stealthaddress.html</a></div>
+</div>
+<div id="ref-monerocommunityundermit_moneroprivatekey_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[16] </div><div class="csl-right-inline">Monero Community under MIT, <span>“Monero <span>Private Key Image</span>.”</span> Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://web.archive.org/web/20250831132436/https://docs.getmonero.org/cryptography/asymmetric/key-image/">https://web.archive.org/web/20250831132436/https://docs.getmonero.org/cryptography/asymmetric/key-image/</a></div>
+</div>
+<div id="ref-l35_ciphertrace_monero_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[17] </div><div class="csl-right-inline">CipherTrace, <span>“CipherTrace announces world’s first monero tracing capabilities for law enforcement, government, and virtual asset service providers.”</span> Accessed: Mar. 28, 2026. [Online]. Available: <a href="https://www.prweb.com/releases/ciphertrace-announces-world-s-first-monero-tracing-capabilities-for-law-enforcement-government-and-virtual-asset-service-providers-871893438.html">https://www.prweb.com/releases/ciphertrace-announces-world-s-first-monero-tracing-capabilities-for-law-enforcement-government-and-virtual-asset-service-providers-871893438.html</a></div>
+</div>
+<div id="ref-hopwood_zcashnu5protocol_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[18] </div><div class="csl-right-inline">D. E. Hopwood, S. Bowe, T. Hornby, and N. Wilcox, <span>“Zcash [<span>NU5</span>] <span>Protocol Specification</span>.”</span> Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://web.archive.org/web/20241006021657/https://zips.z.cash/protocol/nu5.pdf">https://web.archive.org/web/20241006021657/https://zips.z.cash/protocol/nu5.pdf</a></div>
+</div>
+<div id="ref-avice_linkingcryptoassetattribution_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[19] </div><div class="csl-right-inline">R. Avice, B. Haslhofer, Z. Li, and J. Zhou, <span>“Linking cryptoasset attribution tags to knowledge graph entities: <span class="nocase">An LLM-based</span> approach.”</span> 2025. Available: <a href="https://arxiv.org/abs/2502.10453">https://arxiv.org/abs/2502.10453</a></div>
+</div>
+<div id="ref-lin_tracktraceautomatically_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[20] </div><div class="csl-right-inline">D. Lin <em>et al.</em>, <span>“Track and trace: <span>Automatically</span> uncovering cross-chain transactions in the multi-blockchain ecosystems.”</span> 2025. Available: <a href="https://arxiv.org/abs/2504.01822">https://arxiv.org/abs/2504.01822</a></div>
+</div>
+<div id="ref-departmentofjustice_bitfinexhackerwife_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[21] </div><div class="csl-right-inline">Department of Justice, <span>“Bitfinex hacker and wife plead guilty to money laundering conspiracy involving billions in cryptocurrency,”</span> U.S. Dept. of Justice, Washington, D.C., Press Release, Aug. 2023. Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://www.justice.gov/archives/opa/pr/bitfinex-hacker-and-wife-plead-guilty-money-laundering-conspiracy-involving-billions">https://www.justice.gov/archives/opa/pr/bitfinex-hacker-and-wife-plead-guilty-money-laundering-conspiracy-involving-billions</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

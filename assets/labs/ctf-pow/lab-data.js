@@ -1,3 +1,4 @@
+/* Built by tools/build.py from blockchain-course/modules/consensus_primitives/labs/ctf-pow/lab-data.js. Edit that file, not this copy. */
 /* "Check the work": real Bitcoin block headers, 80 bytes each. Nothing is stored but the headers:
    the block hash and the target are computed from them, which is the challenge. Needs kit.js and kit/lab.js. */
 (function (root) {
@@ -59,6 +60,7 @@
   }
   Kit.defineLab({
     id: 'ctf-pow', rev: 1,
+    covers: ['cm-02'],   // the lessons this builds on: the plan checker warns if it is scheduled before them
     title: 'Check the work', tags: ['Consensus', 'Proof of work'], minutes: 10, crumbs: 'Consensus · Challenge',
     lede: 'Miners spend enormous effort finding a block. Everyone else needs almost none to check that they did. You are about to check a real block\'s proof of work the way every node on the network does.',
     real: 'This is the header of a real block from Bitcoin\'s main network, byte for byte. The hash you compute is the block\'s real ID and will find it in any block explorer. The only shortcut: we handed you the header instead of pulling it from a node.',

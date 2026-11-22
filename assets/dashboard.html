@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Instructor dashboard</title>
 <link rel="icon" href="kit/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="kit/house.css?v=19f128b1bf96">
+<link rel="stylesheet" href="kit/house.css?v=2e0e1e97d948">
 <script src="kit/class.js"></script>
-<script src="items.js?v=19f128b1bf96"></script>
-<script src="kit/kit.js?v=19f128b1bf96"></script>
-<script src="kit/lib/wallet-lib.js?v=19f128b1bf96"></script>
-<script src="kit/lib/course-words.js?v=19f128b1bf96"></script>
-<script src="kit/wallet.js?v=19f128b1bf96"></script>
-<script src="kit/btc.js?v=19f128b1bf96"></script>
-<script src="kit/lab.js?v=19f128b1bf96"></script>
+<script src="items.js?v=2e0e1e97d948"></script>
+<script src="kit/kit.js?v=2e0e1e97d948"></script>
+<script src="kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="kit/btc.js?v=2e0e1e97d948"></script>
+<script src="kit/lab.js?v=2e0e1e97d948"></script>
 </head>
 <body>
 <main class="page wide">
@@ -95,9 +95,14 @@
   var state = { staff: null, token: '', raw: [], seen: {}, last: null, opened: {}, pubJson: null, publishing: false, again: false };
   /* The class state (which days are unlocked, which quizzes are closed) and where it and the published results are kept. */
   var CS = { open: {}, closed: {}, at: '' }, csRef = null, stateQ = Promise.resolve(), POLL = 30000;
+  /* The newest class state this computer has accepted is also kept on this computer, and the dashboard never goes
+     back behind it: if the class later shows an older state (someone has put an old record back), the class is put
+     right, not this page. */
+  function remember() { Kit.mine.set('dash-state', { open: CS.open, closed: CS.closed, at: CS.at }); }
+  (function () { var k = Kit.mine.get('dash-state', null); if (k && typeof k.at === 'string' && k.at) CS = { open: k.open || {}, closed: k.closed || {}, at: k.at }; })();
   /* Published results: one small record per student account and one for the class. Where each one is, what was last
      sent to it, and the newest change seen in the class (so a check asks only for what is new). */
-  var resRefs = {}, sentJson = {}, sentAt = {}, haveMark = {}, markMemo = {}, repaired = 0, newest = '', polls = 0, urgent = true, lastBatch = 0, lastParts = 0, later = null;
+  var resRefs = {}, resAt = {}, sentJson = {}, sentAt = {}, haveMark = {}, markMemo = {}, stuck = {}, stuckWhy = '', repaired = 0, newest = '', polls = 0, urgent = true, lastBatch = 0, lastParts = 0, later = null;
   function auto(st, msg) { var a = $('auto-status'); a.setAttribute('data-state', st); if (msg != null) a.textContent = msg; }
   function clock() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
   function status(msg, cls2) { $('load-status').replaceChildren(el('div', { class: 'callout ' + (cls2 || 'info'), text: msg })); }
@@ -151,24 +156,53 @@
       } catch (e) { ok(null); }
     }));
   }
-  function keep(rec) { db().then(function (d) { if (d) try { d.transaction('records', 'readwrite').objectStore('records').put({ token: rec.token, source: rec.source || '', time: rec.time || rec.when || null }); } catch (e) { /* storage full or blocked: the class still has it */ } }); }
+  function keep(rec) { db().then(function (d) { if (d) try { d.transaction('records', 'readwrite').objectStore('records').put({ token: rec.token, source: rec.source || '', time: rec.time || null, sure: rec.sure || 0, why: rec.why || '' }); } catch (e) { /* storage full or blocked: the class still has it */ } }); }
   function kept() {
     return db().then(function (d) {
       return !d ? [] : new Promise(function (ok) { try { var q = d.transaction('records').objectStore('records').getAll(); q.onsuccess = function () { ok(q.result || []); }; q.onerror = function () { ok([]); }; } catch (e) { ok([]); } });
     });
   }
-  function loadKept(list) { var n = 0; list.forEach(function (r) { if (!r || !r.token || state.seen[r.token]) return; state.seen[r.token] = 1; n++; state.raw.push({ token: r.token, source: r.source || 'this browser\'s copy', time: r.time || null }); }); return n; }
+  /* ---- When a record was made ----
+     The platform says when an issue was created, and anyone holding the class token can change an issue afterwards.
+     So an issue's creation time is the time of the records in it only if the issue has not been changed since
+     (`sure` 2). If it has, all that is certain is that the record was there by the last change, so that is its time
+     (`sure` 1) and the instructor is told. A copy kept by an older version of this page, which could not tell the
+     two apart, is `sure` 0: used only when there is nothing better.
+     One record can be seen many times: in more than one issue, in this browser's own copy, in a record an instructor
+     put back. Every sighting is a time by which the record certainly existed, so the earliest one counts, not
+     the first one read. Nobody can make a sighting earlier than the truth: that would take an untouched issue older
+     than the record that nevertheless contains it. */
+  var sight = Kit.table(), sightChanged = false, SLACK = 5000;   // SLACK: platforms stamp "created" and "updated" a moment apart
+  function iso(t) { var d = Date.parse(t); return isFinite(d) ? new Date(d).toISOString() : ''; }
+  function see(tok, s) {
+    s = { time: iso(s.time), sure: s.sure || 0, source: s.source || '', why: s.why || '' };
+    var cur = sight[tok];
+    if (cur && (!s.time || (cur.time && ((cur.sure > 0) !== (s.sure > 0) ? cur.sure > 0 : cur.time < s.time || (cur.time === s.time && cur.sure >= s.sure))))) return;
+    if (!s.time) { s.time = stamp(); s.sure = 0; s.why = 'old'; }   // no time at all: never the student's own word for it
+    sight[tok] = s; sightChanged = true;
+  }
+  function meet(tok, s) { see(tok, s); if (state.seen[tok]) return 0; state.seen[tok] = 1; state.raw.push({ token: tok }); return 1; }
+  function loadKept(list) {
+    var n = 0;
+    list.forEach(function (r) { if (r && typeof r.token === 'string') n += meet(r.token, { time: r.time, sure: r.sure === 2 || r.sure === 1 ? r.sure : 0, why: r.sure === 2 ? '' : r.sure === 1 ? (r.why === 'hand' ? 'hand' : 'edited') : 'old', source: r.source || 'this browser\'s copy' }); });
+    return n;
+  }
 
   /* fromClass: this text was just read from the class itself, so the class holds these records right now. */
   function addRaw(text, meta, fromClass) {
     var found = String(text).match(Kit.TOKEN_RE) || [], added = 0;
     found.forEach(function (tok) {
       if (present && fromClass) present[tok] = 1;
-      if (state.seen[tok]) return; state.seen[tok] = 1; added++;
-      state.raw.push(Object.assign({ token: tok }, meta));
+      added += meet(tok, meta);
     });
     return added;
   }
+  /* The sighting an issue gives the records in it. */
+  function seenIn(it) {
+    var made = Date.parse(it.time), changed = Date.parse(it.updated || it.time), same = isFinite(made) && !(changed - made > SLACK);
+    return { source: it.ref, time: same ? it.time : it.updated, sure: same ? 2 : 1, why: same ? '' : 'edited' };
+  }
+  function hasLabel(it, names) { return names.some(function (n) { return (it.labels || []).indexOf(n) >= 0; }); }
   /* quiet: a background check. It says nothing unless something is wrong, and redraws only if something changed. */
   function fetchInbox(quiet) {
     quiet = quiet === true;
@@ -178,23 +212,24 @@
        behind, so a record can show up after a newer one has already been seen: each check therefore reaches back five
        minutes before the newest record seen (anything already loaded is skipped), and every tenth check reads everything. */
     polls = quiet ? polls + 1 : 0;
-    var added = 0, n = 0, newState = null, mine = [], stateSeen = null, since = quiet && newest && polls % 10 ? new Date(Date.parse(newest) - 300000).toISOString().replace(/\.\d+Z$/, 'Z') : null, full = !since;
+    var added = 0, n = 0, states = [], results = [], mineBad = false, mend = false, since = quiet && newest && polls % 10 ? new Date(Date.parse(newest) - 300000).toISOString().replace(/\.\d+Z$/, 'Z') : null, full = !since;
     if (!quiet) status('Fetching the class\'s records…');
-    var seenNow = full ? {} : null, wasPresent = present; present = seenNow || present;
+    var seenNow = full ? {} : null, wasPresent = present; present = seenNow || present; sightChanged = false;
     return (function page(p) {
       return Kit.listInbox(cfg, token(), { page: p, since: since }).then(function (list) {
         list.forEach(function (it) {   // newest first
           if (it.updated > newest) newest = it.updated;
           if (/^\[state\]/.test(it.title)) {
-            var st = newState ? null : Kit.readState(it.body); if (st && st.classId === (cls.classId || null)) newState = { ref: it.ref, st: st };
-            if (it.ref === csRef) stateSeen = st && st.classId === (cls.classId || null) ? st : 'bad';
-            return;
+            var st = Kit.readState(it.body), good = !!st && st.classId === (cls.classId || null);
+            if (good) states.push({ ref: it.ref, st: st });
+            /* The record this dashboard keeps must still be what it wrote, and still carry a label students' pages find it by. */
+            if (it.ref === csRef && (!good || st.at < CS.at || !hasLabel(it, ['class', 'state']))) mineBad = true;
           }
           var m = /^\[results\] (class|part (\w))$/.exec(it.title);
-          if (m) { var key = m[2] || 'class'; if (!resRefs[key]) resRefs[key] = it.ref; if (resRefs[key] === it.ref) mine.push({ key: key, body: it.body }); return; }
-          /* Everything else is read for records whatever its title or labels say: those are conveniences for
-             filtering, and anyone holding the class token could change them. Only what is sealed inside counts. */
-          var got = addRaw(it.body, { source: it.ref, time: it.time }, true);
+          if (m) results.push({ key: m[2] || 'class', ref: it.ref, body: it.body, labelled: hasLabel(it, [m[2] ? 'r-' + m[2] : 'class']) });
+          /* Every issue is read for records whatever its title or labels say: those are conveniences for filtering,
+             and anyone holding the class token could change them. Only what is sealed inside counts. */
+          var got = addRaw(it.body, seenIn(it), true);
           if (got || Kit.TOKEN_RE.test(it.body)) n++;
           Kit.TOKEN_RE.lastIndex = 0; added += got;
         });
@@ -204,22 +239,41 @@
       state.count = full ? n : (state.count || 0) + added;
       if (!full && !wasPresent) present = null;   // only a complete read says what the class holds
     }).then(function () {
-      /* The records this dashboard keeps up to date must still be what it wrote. If one has been damaged, or put back
-         to an older version, write it again. */
-      return Promise.all(mine.map(function (m) {
-        return Kit.readResults(m.body).then(function (r) {
-          if (!r || r.classId !== (cls.classId || null) || (sentAt[m.key] && r.at < sentAt[m.key])) { delete sentJson[m.key]; delete haveMark[m.key]; urgent = true; repaired++; }
-          else haveMark[m.key] = r.mark || null;
+      /* Published results. Each kind (the class record, each part) may turn up in more than one issue: a classmate
+         can post an old one again. The genuine one the class signed last is the one this dashboard keeps up to date.
+         It must still be what was written, and still carry the label students' pages find it by: if not, write it again. */
+      return Promise.all(results.map(function (x) {
+        return Kit.readResults(x.body).then(function (r) { x.r = r && r.classId === (cls.classId || null) ? r : null; });
+      })).then(function () {
+        var byKey = Kit.table();
+        results.forEach(function (x) { (byKey[x.key] = byKey[x.key] || []).push(x); });
+        Object.keys(byKey).forEach(function (key) {
+          var best = null, ours = null;
+          byKey[key].forEach(function (x) { if (x.ref === resRefs[key]) ours = x; if (x.r && (!best || x.r.at > best.r.at || (x.r.at === best.r.at && x.ref === resRefs[key]))) best = x; });
+          if (ours && ours.r && !(resAt[key] > ours.r.at)) resAt[key] = ours.r.at;
+          /* Another issue holds a newer genuine one (a second instructor's dashboard, perhaps): keep that one from now on. */
+          if (best && best.ref !== resRefs[key] && (!resRefs[key] || best.r.at > (resAt[key] || ''))) { if (resRefs[key]) mend = true; resRefs[key] = best.ref; resAt[key] = best.r.at; ours = best; }
+          if (!resRefs[key]) { ours = byKey[key][byKey[key].length - 1]; resRefs[key] = ours.ref; }   // none is genuine: reuse the oldest issue of that name
+          if (!ours) return;   // the one this dashboard keeps was not in this read
+          if (!ours.r || !ours.labelled || (sentAt[key] && ours.r.at < sentAt[key])) { delete sentJson[key]; delete haveMark[key]; urgent = true; repaired++; mend = true; }
+          else haveMark[key] = ours.r.mark || null;
         });
-      }));
+      });
     }).then(function () {
-      if (stateSeen && csRef && (stateSeen === 'bad' || stateSeen.at < CS.at) && CS.at) { repaired++; saveState(function () {}); }
-      var changed = false;
-      if (newState) { csRef = newState.ref; if (newState.st.at > CS.at) { CS = { open: newState.st.open || {}, closed: newState.st.closed || {}, at: newState.st.at }; changed = true; } }
+      /* The class state: of every genuine one in the class, the one signed last counts. Then three cases. The class is
+         ahead of this page (another instructor changed something): take it. The class is behind what this computer
+         has already accepted, or this dashboard's own record is damaged or has lost its labels: write it again. */
+      var changed = false, best = null;
+      states.forEach(function (x) { if (!best || x.st.at > best.st.at || (x.st.at === best.st.at && x.ref === csRef)) best = x; });
+      if (best && best.st.at > CS.at) { CS = { open: best.st.open, closed: best.st.closed, at: best.st.at }; csRef = best.ref; changed = true; mineBad = false; remember(); }
+      else if (best && best.st.at === CS.at && !csRef) csRef = best.ref;
+      else if (CS.at && full && (!best || best.st.at < CS.at)) { if (!csRef && best) csRef = best.ref; mineBad = true; }
+      /* Only ever into this class's own repo: a different repo typed under "Other ways to load records" is read, not written to. */
+      if (mineBad && CS.at && state.staff && token() && (csRef ? true : !cls.inbox || cfg.repo === cls.inbox.repo)) { repaired++; saveState(function () {}); }
       if (!quiet) status(n + ' records in the class, ' + added + ' new.', 'ok');
       else if (added) status(state.count + ' records in the class, ' + added + ' new.', 'ok');
       else if (/callout bad/.test($('load-status').innerHTML)) status('Connected again.', 'ok');
-      if (!quiet || added || changed || !state.last) return render();
+      if (!quiet || added || changed || sightChanged || mend || !state.last) return render();
       auto($('auto-status').getAttribute('data-state'), $('auto-status').textContent.replace(/Last checked [^.]+\./, 'Last checked ' + clock() + '.'));
     }, function (e) { present = wasPresent; status('Couldn\'t fetch the records: ' + e.message + (/ 404$/.test(e.message) ? ' (wrong repo, or a token is needed to see it)' : / 401$/.test(e.message) ? ' (the token was refused: it may have expired)' : '') + (state.raw.length ? ' Showing this browser\'s own copy of the class.' : ''), 'bad'); if (!quiet) return render(); });
   }
@@ -260,7 +314,7 @@
       /* The first write of a session is how we learn the platform's time. If this computer's clock turned out to be
          off, the times just recorded were wrong by that much: record them again, correctly. */
       if (!knew && Math.abs(skew - used) > 2000) { CS = copyState(base); change(CS, stamp()); CS.at = stamp(); return write(); }
-    }).then(function () { status('Saved. Students see it the next time their page checks (within three minutes) or when they reload.', 'ok'); },
+    }).then(function () { remember(); status('Saved. Students see it the next time their page checks (within three minutes) or when they reload.', 'ok'); },
       function (e) { status('That change was NOT saved to the class (' + e.message + '), so students won\'t see it. Try again.', 'bad'); }).then(function () { paintDays(); return render(); });
     return stateQ;
   }
@@ -288,23 +342,33 @@
                 el('button', { class: 'icon-btn', type: 'button', 'data-close': it.id, text: closed ? 'Reopen' : 'Close and send scores',
                   onclick: function () { saveState(function (c, now) { if (closed) delete c.closed[it.id]; else c.closed[it.id] = now; }); } }));
             }
+            if (it.kind === 'lesson') {
+              return el('li', { 'data-item': it.id }, el('span', { class: 'tag', text: 'Lesson' }), el('a', { href: it.href, text: it.title }),
+                el('a', { class: 'icon-btn', href: it.href + '?present', target: '_blank', rel: 'noopener', 'data-present': it.id, text: 'Present' }));
+            }
             var fl = Object.keys(it.flags || {});
             return el('li', { 'data-item': it.id }, el('span', { class: 'tag', text: 'Challenge' }), el('a', { href: it.href, text: it.title }),
               el('span', { class: 'muted small', text: fl.map(function (f, i) { return 'flag ' + (i + 1) + ': ' + list.filter(function (s) { return s.flags[it.id + ':' + f]; }).length + ' captured'; }).join(' · ') }));
-          })) : el('p', { class: 'muted small dayempty', text: 'No quizzes or challenges yet.' }));
+          })) : el('p', { class: 'muted small dayempty', text: 'Nothing scheduled.' }));
       })));
   }
   /* Codes handed in by hand are saved into the class too, so they are there for every instructor, every later
-     session and every published result. Only genuine student records are saved: anything else stays in this tab. */
+     session and every published result. Only genuine student records are saved: anything else stays in this tab.
+     A code is timed when the instructor takes it, never by the time written inside it: that is the student's own
+     computer's word, and anyone can set a clock back. */
   function takeHandIns(text, source) {
-    var before = state.raw.length, n = addRaw(text, { source: source, time: null });
+    var before = state.raw.length, n = addRaw(text, { source: source, time: stamp(), sure: 1, why: 'hand' });
     var fresh = state.raw.slice(before), cfg = inboxCfg();
     if (!n || !state.staff || !cfg || !token()) return Promise.resolve({ n: n, stored: 0, can: false });
     return fresh.reduce(function (p, r) {
       return p.then(function (k) {
-        return openRecord(r).then(function (rec) {
+        return openRecord(r.token).then(function (rec) {
           if (!rec.p) return k;
-          return Kit.postToInbox(cfg, token(), '[submit] ' + rec.p.item + ' · handed in by hand', 'Handed in by hand; stored by an instructor.\n\n```\n' + r.token + '\n```\n').then(function () { if (present) present[r.token] = 1; return k + 1; }, function () { return k; });
+          return Kit.postToInbox(cfg, token(), '[submit] ' + String(rec.p.item).slice(0, 60) + ' · handed in by hand', 'Handed in by hand; stored by an instructor.\n\n```\n' + r.token + '\n```\n').then(function (res) {
+            if (present) present[r.token] = 1;
+            if (res.time && iso(res.time)) { sight[r.token] = { source: res.ref, time: iso(res.time), sure: 2, why: '' }; sightChanged = true; }   // saved: from here on its time is the one every dashboard reads
+            return k + 1;
+          }, function () { return k; });
         });
       });
     }, Promise.resolve(0)).then(function (stored) { return { n: n, stored: stored, can: true }; });
@@ -325,23 +389,31 @@
     this.value = '';
   });
   $('addpaste').addEventListener('click', function () { var t = $('paste').value; $('paste').value = ''; takeHandIns(t, 'handed in (pasted)').then(function (r) { reportHandIns(r, 'codes'); }); });
-  $('clear').addEventListener('click', function () { state.raw = []; state.seen = {}; state.opened = {}; state.last = null; render(); status('Cleared.'); });
+  $('clear').addEventListener('click', function () { state.raw = []; state.seen = {}; state.opened = {}; sight = Kit.table(); state.last = null; render(); status('Cleared.'); });
 
+  /* A record is put back as a copy signed by the class account, and what an instructor signs every dashboard
+     believes. So the copy states a time only when this dashboard is sure of it (it read the record in an issue
+     nobody had changed, or in an earlier signed copy). A record it only ever saw in a changed issue is put back
+     with no time: other dashboards then time it from the moment it was put back, and this one keeps what it knows. */
   function putBack(list) {
-    var cfg = inboxCfg(), pace = cls.inbox && cls.inbox.pace != null ? +cls.inbox.pace : 1000, done = 0, failed = null;
+    var cfg = inboxCfg(), pace = cls.inbox && cls.inbox.pace != null ? +cls.inbox.pace : 1000, done = 0, untimed = 0, failed = null;
     $('put-back').disabled = true;
     return list.reduce(function (chain, r, i) {
       return chain.then(function () {
         if (failed) return;
         status('Putting records back: ' + (i + 1) + ' of ' + list.length + '…');
+        var sure = r.sure === 2 && !!r.when;
         return (i && pace ? new Promise(function (ok) { setTimeout(ok, pace); }) : Promise.resolve()).then(function () {
-          return Kit.staffRecord({ action: 'copy', token: r.token, time: r.time || r.when || null, source: r.source || '', at: stamp() }, state.staff);
+          return Kit.staffRecord({ action: 'copy', token: r.token, time: sure ? r.when : null, source: r.source || '', at: stamp() }, state.staff);
         }).then(function (code) {
-          return Kit.postToInbox(cfg, token(), '[admin] copy of ' + (r.source || 'a record'), 'A record put back by an instructor from their own copy. Do not edit.\n\n```\n' + code + '\n```\n').then(function () { addRaw(code, { source: 'put back', time: null }); if (present) present[code] = 1; restored[r.token] = 1; done++; });
+          return Kit.postToInbox(cfg, token(), '[admin] copy of ' + (r.source || 'a record'), 'A record put back by an instructor from their own copy. Do not edit.\n\n```\n' + code + '\n```\n').then(function (res) {
+            addRaw(code, { source: res.ref || 'put back', time: res.time || stamp(), sure: res.time ? 2 : 1 }); if (present) present[code] = 1; restored[r.token] = 1; done++; if (!sure) untimed++;
+          });
         }).catch(function (e) { failed = e; });
       });
     }, Promise.resolve()).then(function () {
-      status(failed ? 'Put back ' + done + ' of ' + list.length + ', then the class could not be reached (' + failed.message + '). The rest still count here; try again.' : 'Put ' + done + (done === 1 ? ' record' : ' records') + ' back in the class.', failed ? 'warn' : 'ok');
+      status(failed ? 'Put back ' + done + ' of ' + list.length + ', then the class could not be reached (' + failed.message + '). The rest still count here; try again.'
+        : 'Put ' + done + (done === 1 ? ' record' : ' records') + ' back in the class.' + (untimed ? ' ' + untimed + (untimed === 1 ? ' was' : ' were') + ' put back without a time, because this dashboard only ever saw ' + (untimed === 1 ? 'it' : 'them') + ' in an issue that had been changed: other dashboards will time ' + (untimed === 1 ? 'it' : 'them') + ' from now.' : ''), failed ? 'warn' : 'ok');
       return render();
     });
   }
@@ -378,7 +450,7 @@
   /* Record an instructor decision about an account, and save it to the class so it lasts and other instructors see it. */
   function decide(action, address, handle) {
     return Kit.staffRecord({ action: action, address: address, handle: handle, at: new Date().toISOString() }, state.staff).then(function (code) {
-      addRaw(code, { source: 'this session', time: null }); urgent = true;
+      addRaw(code, { source: 'this session', time: stamp(), sure: 1 }); urgent = true;
       var cfg = inboxCfg();
       if (!cfg || !token()) { status('Decision applied in this tab only. It could not be saved to the class: there is no token to write with.', 'warn'); return; }
       return Kit.postToInbox(cfg, token(), '[admin] ' + action + ' ' + handle, 'Instructor decision. Do not edit.\n\n```\n' + code + '\n```\n')
@@ -386,56 +458,73 @@
           function (e) { status('Decision applied in this tab but NOT saved to the class (' + e.message + ').', 'warn'); });
     }).then(render);
   }
-  function openRecord(r) { return state.opened[r.token] || (state.opened[r.token] = openRecord1(r)); }
-  function openRecord1(r) {
-    return state.staff.open(r.token).then(function (env) {
-      if (env && env.admin) return Kit.openStaffRecord(env).then(function (rec) {
-        /* A record an instructor put back after it went missing from the class: the original, with its original time. */
-        if (rec.action === 'copy' && rec.token) return openRecord1({ token: rec.token, time: rec.time || null, source: (rec.source || 'a record') + ', put back as ' + r.source }).then(function (o) { return Object.assign(o, { copyOf: rec.token, outer: r.token }); });
-        return Object.assign({}, r, { admin: rec });
-      });
+  /* What a sealed record holds, once opened and checked: { token, p, address, pub } for a student's record,
+     { token, admin } for an instructor's, { token, err } for anything else. When it was made is a separate
+     question (see "When a record was made"), so this is worked out once per record however often it is seen. */
+  function openRecord(tok) {
+    return state.opened[tok] || (state.opened[tok] = state.staff.open(tok).then(function (env) {
+      if (env && env.admin) return Kit.openStaffRecord(env).then(function (rec) { return { token: tok, admin: rec }; });
       return Kit.checkSubmission(env).then(function (c) {
-        return Object.assign({}, r, { p: c.p, address: c.address, when: r.time || c.p.at, pub: Kit.wallet.recoverPub(env.siwe.message, env.siwe.signature) });
+        return { token: tok, p: c.p, address: c.address, pub: Kit.wallet.recoverPub(env.siwe.message, env.siwe.signature) };
       });
     }).catch(function (e) {
-      return Object.assign({}, r, { err: e && e.message && !/operation/i.test(e.name + e.message) ? e.message : 'cannot be opened (made for a different class, or edited)' });
+      return { token: tok, err: e && e.message && !/operation/i.test(e.name + e.message) ? e.message : 'cannot be opened (made for a different class, or edited)' };
+    }));
+  }
+  /* Every record, and the record inside each copy an instructor put back. A copy that states a time is the class
+     account's word for when the original was received. One that states none says only that the record is genuine:
+     it is then timed like anything else, by where the copy itself was seen. */
+  function openAll() {
+    var n = state.raw.length;
+    return Promise.all(state.raw.map(function (r) { return openRecord(r.token); })).then(function (list) {
+      list.forEach(function (c) {
+        if (!c.admin || c.admin.action !== 'copy' || typeof c.admin.token !== 'string' || !Kit.TOKEN_RE.test(c.admin.token)) { Kit.TOKEN_RE.lastIndex = 0; return; }
+        Kit.TOKEN_RE.lastIndex = 0;
+        var outer = sight[c.token] || {}, timed = typeof c.admin.time === 'string' && !!iso(c.admin.time);
+        meet(c.admin.token, { time: timed ? c.admin.time : outer.time, sure: timed ? 2 : outer.sure, why: timed ? '' : outer.why,
+          source: String(c.admin.source || 'a record') + ', put back as ' + (outer.source || 'a record') });
+        restored[c.admin.token] = 1;
+      });
+      return state.raw.length > n ? openAll() : list;
     });
   }
+  function shortTime(t) { return String(t).replace('T', ' ').slice(0, 16); }
 
   function render() {
     var out = $('results');
     if (!state.staff) { out.replaceChildren(state.raw.length ? el('section', { class: 'panel' }, el('div', { class: 'callout warn', text: state.raw.length + ' codes loaded. Sign in to read them.' })) : ''); return Promise.resolve(); }
     auto('busy');
     if (!state.raw.length) { out.replaceChildren(); state.last = null; paintDays(); auto('idle', 'Nothing handed in yet. This page checks for new work every 30 seconds. Last checked ' + clock() + '.'); return Promise.resolve(); }
-    var closedAt = {}; Object.keys(CS.closed).forEach(function (q) { closedAt[q] = Date.parse(CS.closed[q]); });
-    return ready.then(function () { return Promise.all(state.raw.map(openRecord)); }).then(function (recs) {
-      /* One of each: a record and a put-back copy of it are the same record. Keep every genuine one in this browser. */
-      var one = {}; restored = {};
-      recs.forEach(function (r) { if (r.copyOf) restored[r.copyOf] = 1; });
-      recs = recs.filter(function (r) { var t = r.copyOf || r.token; if (one[t]) return false; one[t] = 1; return true; });
-      recs.forEach(function (r) { if (r.p || r.admin) keep({ token: r.copyOf || r.token, source: r.source, time: r.time || r.when }); });
-      state.missing = present ? recs.filter(function (r) { return !r.copyOf && (r.p || r.admin) && !present[r.token] && !restored[r.token]; }) : [];
-      var problems = [], students = {}, quizzes = {}, stale = {}, builds = {}, nokey = {}, pubOf = {};
-      recs.filter(function (r) { return r.p; }).forEach(function (r) { builds[r.p.build || 'unknown'] = 1; pubOf[r.address] = r.pub; });
+    var closedAt = Kit.table(); Object.keys(CS.closed).forEach(function (q) { closedAt[q] = Date.parse(CS.closed[q]); });
+    restored = {};
+    return ready.then(openAll).then(function (opened) {
+      /* Each record with the time that counts for it. Keep every genuine one in this browser, with how sure its time is. */
+      var recs = opened.map(function (c) { var s = sight[c.token] || {}; return Object.assign({}, c, { source: s.source || '', when: s.time || '', sure: s.sure || 0, why: s.why || '' }); });
+      var real = function (r) { return !!r.p || (!!r.admin && r.admin.action !== 'copy'); };   // a put-back copy stands for the record inside it
+      recs.forEach(function (r) { if (real(r)) keep({ token: r.token, source: r.source, time: r.when, sure: r.sure, why: r.why }); });
+      state.missing = present ? recs.filter(function (r) { return real(r) && !present[r.token] && !restored[r.token]; }) : [];
+      /* Tables keyed by something a record says (an item, a quiz, a handle) hold only what is put in them: see Kit.table. */
+      var problems = [], students = Kit.table(), quizzes = Kit.table(), stale = Kit.table(), builds = Kit.table(), nokey = Kit.table(), pubOf = Kit.table();
+      recs.filter(function (r) { return r.p; }).forEach(function (r) { builds[String(r.p.build || 'unknown').slice(0, 40)] = 1; pubOf[r.address] = r.pub; });
       recs.filter(function (r) { return r.err; }).forEach(function (r) { problems.push([r.source, r.err]); });
       var byTime = function (a, b) { return a.when < b.when ? -1 : a.when > b.when ? 1 : 0; };
       var good = recs.filter(function (r) { return r.p; }).sort(byTime);
-      var admin = recs.filter(function (r) { return r.admin; }).sort(function (a, b) { return a.admin.at < b.admin.at ? -1 : 1; });
+      var admin = recs.filter(function (r) { return r.admin; }).sort(function (a, b) { return String(a.admin.at) < String(b.admin.at) ? -1 : 1; });
 
       /* Answer keys: the ones stored in the class (latest per quiz). */
-      var keys = {}, stored = 0;
-      admin.forEach(function (r) { if (r.admin.action === 'keys' && r.admin.quiz) { if (!keys[r.admin.quiz]) stored++; keys[r.admin.quiz] = r.admin.key; } });
+      var keys = Kit.table(), stored = 0;
+      admin.forEach(function (r) { if (r.admin.action === 'keys' && typeof r.admin.quiz === 'string' && r.admin.key && r.admin.key.questions) { if (!keys[r.admin.quiz]) stored++; keys[r.admin.quiz] = r.admin.key; } });
 
       /* Registrations: an account keeps the first handle it registered. A handle lists its accounts in the order they registered. */
-      var nameOf = {}, regAt = {}, accountsOf = {}, subs = {}, reasonOf = {};
+      var nameOf = Kit.table(), regAt = Kit.table(), accountsOf = Kit.table(), subs = Kit.table(), reasonOf = Kit.table();
       good.forEach(function (r) {
         if (r.p.kind !== 'register') { subs[r.address] = (subs[r.address] || 0) + 1; return; }
-        var h = Kit.normHandle((r.p.data || {}).handle);
+        var d = r.p.data && typeof r.p.data === 'object' ? r.p.data : {}, h = Kit.normHandle(d.handle);
         if (!h || nameOf[r.address]) return;
-        nameOf[r.address] = h; regAt[r.address] = r.when; reasonOf[r.address] = (r.p.data || {}).reason || 'new'; (accountsOf[h] = accountsOf[h] || []).push(r.address);
+        nameOf[r.address] = h; regAt[r.address] = r.when; reasonOf[r.address] = d.reason === 'lost' ? 'lost' : 'new'; (accountsOf[h] = accountsOf[h] || []).push(r.address);
       });
       /* Instructor decisions, latest wins. */
-      var decision = {};
+      var decision = Kit.table();
       admin.forEach(function (r) { if (r.admin.action === 'accept' || r.admin.action === 'reject') decision[r.admin.address] = r.admin.action; });
       function statusOf(addr) {
         var h = nameOf[addr];
@@ -443,59 +532,74 @@
         return decision[addr] || (accountsOf[h][0] === addr ? 'accept' : 'pending');
       }
       /* A replacement takes over from the moment it registered: after that, the account before it no longer counts.
-         Otherwise whoever holds a lost seed phrase could keep submitting as the student. */
-      var cutoff = {};
+         Otherwise whoever holds a lost seed phrase could keep submitting as the student. The last accepted account
+         of a handle is its current one: results are sealed to that one only. */
+      var cutoff = Kit.table(), current = Kit.table();
       Object.keys(accountsOf).forEach(function (h) {
         var acc = accountsOf[h].filter(function (a) { return statusOf(a) === 'accept'; });
-        acc.forEach(function (a, i) { if (acc[i + 1]) cutoff[a] = regAt[acc[i + 1]]; });
+        acc.forEach(function (a, i) { if (acc[i + 1]) cutoff[a] = regAt[acc[i + 1]]; else current[a] = 1; });
       });
-      var late = {};
-      function stu(key, handle) { return students[key] || (students[key] = { handle: handle, accounts: {}, quiz: {}, flags: {}, last: '' }); }
+      var late = Kit.table(), never = Kit.table(), neverN = 0, neverSrc = '';
+      function stu(key, handle) { return students[key] || (students[key] = { handle: handle, accounts: {}, quiz: Kit.table(), flags: Kit.table(), last: '' }); }
+      /* A time this dashboard is not sure of is said so: the instructor may know better than the page does. */
+      good.forEach(function (r) {
+        if (r.sure === 2 || r.why === 'hand') return;
+        problems.push([r.source, (nameOf[r.address] || Kit.short(r.address)) + ': ' + (r.why === 'edited'
+          ? 'this record\'s issue was edited after it was made, so the record is timed by the edit (' + shortTime(r.when) + '), not by when the issue was created'
+          : 'the time of this record comes from an older copy of the class and is not certain (' + shortTime(r.when) + ')')]);
+      });
 
       var jobs = good.map(function (r) {
-        var p = r.p, when = r.when, st = statusOf(r.address);
-        if (p.kind === 'register' || st === 'pending' || st === 'reject') return null;
-        if (cutoff[r.address] && when >= cutoff[r.address]) { late[r.address] = (late[r.address] || 0) + 1; return null; }
-        var s = st === 'unregistered' ? stu(r.address, '(unregistered)') : stu('h:' + nameOf[r.address], nameOf[r.address]);
-        s.accounts[r.address] = 1;
-        if (when > s.last) s.last = when;
-        if (p.kind === 'quiz') {
-          var key = keys[p.item];
-          if (!key) { nokey[p.item] = 1; return null; }
-          if (closedAt[p.item] && Date.parse(when) >= closedAt[p.item]) { problems.push([r.source, s.handle + ': handed in ' + p.item + ' after it was closed (not counted)']); return null; }
-          if ((p.data || {}).rev !== key.rev) { stale[p.item] = 1; return null; }
-          var g = gradeQuiz(key, (p.data || {}).answers || {});
-          var prev = s.quiz[p.item];
-          if (!prev || when < prev.when) s.quiz[p.item] = { when: when, g: g, source: r.source };   // a quiz is handed in once: the first one counts
-          quizzes[p.item] = key;
+        /* One record that cannot be graded, whatever is in it, is one line under "Needs a look". It never stops the rest. */
+        function bad(e) { problems.push([r.source, (nameOf[r.address] || Kit.short(r.address)) + ': this record could not be graded (' + String(e && e.message || e).slice(0, 120) + ')']); return null; }
+        try {
+          var p = r.p, when = r.when, st = statusOf(r.address);
+          if (p.kind === 'register' || st === 'pending' || st === 'reject') return null;
+          /* An account that never registered belongs to nobody in the class: nothing it hands in is graded. */
+          if (st === 'unregistered') { if (!never[r.address]) never[r.address] = 1; neverN++; neverSrc = neverSrc || r.source; return null; }
+          if (cutoff[r.address] && when >= cutoff[r.address]) { late[r.address] = (late[r.address] || 0) + 1; return null; }
+          var s = stu('h:' + nameOf[r.address], nameOf[r.address]), item = String(p.item), d0 = p.data && typeof p.data === 'object' ? p.data : {};
+          s.accounts[r.address] = 1;
+          if (when > s.last) s.last = when;
+          if (p.kind === 'quiz') {
+            var key = keys[item];
+            if (!key) { nokey[item.slice(0, 60)] = 1; return null; }
+            if (closedAt[item] && Date.parse(when) >= closedAt[item]) { problems.push([r.source, s.handle + ': handed in ' + item + ' after it was closed (not counted)']); return null; }
+            if (d0.rev !== key.rev) { stale[item] = 1; return null; }
+            var g = gradeQuiz(key, d0.answers && typeof d0.answers === 'object' ? d0.answers : {});
+            var prev = s.quiz[item];
+            if (!prev || when < prev.when) s.quiz[item] = { when: when, g: g, source: r.source };   // a quiz is handed in once: the first one counts
+            quizzes[item] = key;
+            return null;
+          }
+          if (p.kind === 'flag') {
+            var lab = Kit.has(window.BC_LABS, item) ? window.BC_LABS[item] : null;
+            if (!lab || typeof lab.grade !== 'function') { problems.push([r.source, 'no grader for lab ' + item.slice(0, 60)]); return null; }
+            /* One record can hand in one flag, or a whole step's flags together. Each is graded on its own, as this
+               class's variant for the account that signed: the room is the class's, whatever the record says. */
+            var each = d0.flags && typeof d0.flags === 'object' ? Object.keys(d0.flags).map(function (f) { return { rev: d0.rev, flag: f, value: d0.flags[f] }; }) : [d0];
+            return Promise.all(each.map(function (d1) {
+              return lab.grade(Object.assign({}, p, { room: Kit.room(), data: d1 })).then(function (res) {
+                var fk = item + ':' + res.flag;
+                if (res.ok) { var cur = s.flags[fk]; if (!cur || when < cur.when) s.flags[fk] = { when: when, points: res.points }; }
+                else if (res.stale) stale[item] = 1;
+                else problems.push([r.source, s.handle + ': wrong flag for ' + fk.slice(0, 80)]);
+              });
+            })).catch(bad);
+          }
+          problems.push([r.source, 'unknown submission kind']);
           return null;
-        }
-        if (p.kind === 'flag') {
-          var lab = (window.BC_LABS || {})[p.item];
-          if (!lab) { problems.push([r.source, 'no grader for lab ' + p.item]); return null; }
-          var d0 = p.data || {};
-          /* One record can hand in one flag, or a whole step's flags together. Each is graded on its own. */
-          var each = d0.flags ? Object.keys(d0.flags).map(function (f) { return { rev: d0.rev, flag: f, value: d0.flags[f] }; }) : [d0];
-          return Promise.all(each.map(function (d1) {
-            return lab.grade(Object.assign({}, p, { data: d1 })).then(function (res) {
-              var fk = p.item + ':' + res.flag;
-              if (res.ok) { var cur = s.flags[fk]; if (!cur || when < cur.when) s.flags[fk] = { when: when, points: res.points }; }
-              else if (res.stale) stale[p.item] = 1;
-              else problems.push([r.source, s.handle + ': wrong flag for ' + fk]);
-            });
-          }));
-        }
-        problems.push([r.source, 'unknown submission kind']);
-        return null;
+        } catch (e) { return bad(e); }
       });
+      if (neverN) problems.push([neverSrc, neverN + (neverN === 1 ? ' record' : ' records') + ' from ' + Object.keys(never).length + (Object.keys(never).length === 1 ? ' account that has' : ' accounts that have') + ' not registered in this class: not graded. A student whose registration was lost can send it again from "Your course identity".']);
       /* Registered accounts with no work yet still appear, so the instructor can see who has signed up. */
       Object.keys(nameOf).forEach(function (a) { if (statusOf(a) === 'accept') stu('h:' + nameOf[a], nameOf[a]).accounts[a] = 1; });
       var contested = Object.keys(accountsOf).filter(function (h) { return accountsOf[h].length > 1; }).map(function (h) {
         return { handle: h, accounts: accountsOf[h].map(function (a) { return { address: a, at: regAt[a], status: statusOf(a), subs: subs[a] || 0, reason: reasonOf[a], replaced: !!cutoff[a], late: late[a] || 0 }; }) };
       });
       return Promise.all(jobs).then(function () {
-        return { students: students, quizzes: quizzes, problems: problems, contested: contested, n: recs.length, stale: Object.keys(stale), builds: Object.keys(builds),
-          nokey: Object.keys(nokey), pubOf: pubOf, stored: stored, missing: state.missing || [] };
+        return { students: students, quizzes: quizzes, problems: problems, contested: contested, n: recs.filter(function (r) { return !(r.admin && r.admin.action === 'copy'); }).length, stale: Object.keys(stale), builds: Object.keys(builds),
+          nokey: Object.keys(nokey), pubOf: pubOf, current: current, stored: stored, missing: state.missing || [] };
       });
     }).then(paint).catch(function (e) { auto('idle'); status('Something went wrong reading the records: ' + e.message, 'bad'); });
   }
@@ -563,15 +667,17 @@
     quizIds.forEach(function (qid) {
       var key = R.quizzes[qid], subs = list.map(function (s) { return s.quiz[qid]; }).filter(Boolean);
       var rowsQ = Object.keys(key.questions).map(function (k, i) {
-        var Q = key.questions[k], right = 0, wrong = {};
+        var Q = key.questions[k], right = 0, wrong = Kit.table();
+        var name = function (x) { return Kit.has(Q.labels, x) ? Q.labels[x] : String(typeof x === 'string' ? x : JSON.stringify(x)).slice(0, 60); };   // an answer is whatever the record said: show it, never look it up blindly
         subs.forEach(function (s) {
-          var r = s.g.per[k]; if (r.ok) { right++; return; }
-          var lab = r.answer == null ? '(blank)' : Q.type === 'short' ? String(r.answer) : Q.type === 'single' ? (Q.labels[r.answer] || r.answer) : Q.type === 'multi' ? [].concat(r.answer).map(function (x) { return Q.labels[x] || x; }).join(' + ') : 'wrong order';
+          var r = s.g.per[k]; if (!r || r.ok) { if (r) right++; return; }
+          var lab = r.answer == null ? '(blank)' : Q.type === 'short' ? String(r.answer).slice(0, 60) : Q.type === 'single' ? name(r.answer) : Q.type === 'multi' ? [].concat(r.answer).slice(0, 12).map(name).join(' + ') : 'wrong order';
           wrong[lab] = (wrong[lab] || 0) + 1;
         });
         var top = Object.keys(wrong).sort(function (a, b) { return wrong[b] - wrong[a]; })[0];
         var pct = subs.length ? Math.round(100 * right / subs.length) : 0;
-        return [String(i + 1), Q.prompt.length > 70 ? Q.prompt.slice(0, 68) + '…' : Q.prompt, pct + '%', top ? top + ' (' + wrong[top] + ')' : '·'];
+        var prompt = String(Q.prompt || '');
+        return [String(i + 1), prompt.length > 70 ? prompt.slice(0, 68) + '…' : prompt, pct + '%', top ? top + ' (' + wrong[top] + ')' : '·'];
       });
       sections.push(el('section', { class: 'panel' },
         el('div', { class: 'panel-head' }, el('h2', { text: key.title }), el('span', { class: 'muted small', text: subs.length + ' submitted' })),
@@ -593,7 +699,7 @@
     if (!L || !L.list.length) return auto('idle', 'Nothing to send to students yet. Last checked ' + clock() + '.');
     if (!cfg || !token()) return auto('off', 'Graded here, but students can\'t be sent their results: that needs the class\'s inbox token, which signing in normally unlocks.');
     var list = L.list, R = L.R, quizIds = L.quizIds.filter(function (q) { return CS.closed[q]; });
-    var named = list.filter(function (s) { return s.handle !== '(unregistered)'; }), n = named.length || 1;
+    var named = list, n = named.length || 1;   // only registered, accepted accounts are graded, so everyone here is a student of the class
     var clsQ = {}, clsF = {}, ctfTotal = 0;
     quizIds.forEach(function (q) {
       var got = list.map(function (s) { return s.quiz[q]; }).filter(Boolean);
@@ -606,29 +712,55 @@
       var mine = { handle: s.handle, quizzes: {}, flags: {}, ctf: s.ctfPts };
       quizIds.forEach(function (q) { if (s.quiz[q]) { var per = {}; Object.keys(s.quiz[q].g.per).forEach(function (k) { per[k] = s.quiz[q].g.per[k].ok; }); mine.quizzes[q] = { score: s.quiz[q].g.score, max: s.quiz[q].g.max, per: per }; } });
       Object.keys(s.flags).sort().forEach(function (f) { mine.flags[f] = s.flags[f].points; });
-      return { mine: mine, to: Object.keys(s.accounts).filter(function (a) { return R.pubOf[a]; }).sort() };
+      /* to: the student's current account. An account that was replaced (a lost seed phrase) gets nothing more:
+         whoever holds the lost words must not go on reading the student's results. was: every accepted account,
+         which is who an earlier version of this page sent to (see `old` below). */
+      var all = Object.keys(s.accounts).filter(function (a) { return R.pubOf[a]; }).sort();
+      return { mine: mine, to: all.filter(function (a) { return R.current[a]; }), was: all };
     });
     /* What each record should say now: one for the class, and up to 16 parts holding the accounts whose address
        starts with the same hex digit. Only the ones that changed are sent, one at a time. */
-    var want = [{ key: 'class', json: JSON.stringify(shared), title: '[results] class', labels: ['class', 'results-class'],
+    var classJson = JSON.stringify(shared);
+    var want = [{ key: 'class', json: classJson, old: classJson, title: '[results] class', labels: ['class', 'results-class'],
       make: function () { return Kit.classSeal(shared, token()).then(function (box) { return { shared: box }; }); } }];
-    var parts = {};
-    people.forEach(function (p) { p.to.forEach(function (addr) { var k = Kit.resultsPart(addr); (parts[k] = parts[k] || []).push([addr.toLowerCase(), p.mine]); }); });
-    Object.keys(parts).sort().forEach(function (k) {
-      var rows = parts[k].sort(function (a, b) { return a[0] < b[0] ? -1 : 1; });
-      want.push({ key: k, json: JSON.stringify(rows), title: '[results] part ' + k, labels: ['r-' + k, 'results'],
+    var parts = Kit.table(), partsWas = Kit.table(), pubLower = Kit.table();
+    Object.keys(R.pubOf).forEach(function (a) { pubLower[a.toLowerCase()] = R.pubOf[a]; });
+    function byAddress(a, b) { return a[0] < b[0] ? -1 : 1; }
+    people.forEach(function (p) {
+      p.to.forEach(function (addr) { var k = Kit.resultsPart(addr); (parts[k] = parts[k] || []).push([addr.toLowerCase(), p.mine]); });
+      p.was.forEach(function (addr) { var k = Kit.resultsPart(addr); (partsWas[k] = partsWas[k] || []).push([addr.toLowerCase(), p.mine]); });
+    });
+    /* On GitLab there is no class scoreboard: each student sees only their own results. Every published change is a
+       commit, and every commit rebuilds the class site, so fewer, larger updates are better there. */
+    var gl = cfg.platform === 'gitlab';
+    if (gl) want = [];
+    Object.keys(partsWas).sort().forEach(function (k) {
+      var rows = (parts[k] || []).sort(byAddress);
+      if (!rows.length && !resRefs[k]) return;   // nobody current in this part, and no record of it to empty
+      want.push({ key: k, json: JSON.stringify(rows), old: JSON.stringify(partsWas[k].sort(byAddress)), title: '[results] part ' + k, labels: ['r-' + k, 'results'],
         make: function () {
           var e = {};
-          return Promise.all(rows.map(function (r) { return Kit.wallet.sealTo(R.pubOf[Object.keys(R.pubOf).filter(function (a) { return a.toLowerCase() === r[0]; })[0]], { mine: r[1] }).then(function (blob) { e[r[0]] = blob; }); }))
+          return Promise.all(rows.map(function (r) { return Kit.wallet.sealTo(pubLower[r[0]], { mine: r[1] }).then(function (blob) { e[r[0]] = blob; }); }))
             .then(function () { return { entries: e }; });
         } });
     });
     /* Has a record already got exactly this content? Each one carries a mark only an instructor can compute (it is
        made from the class key's signature over the content), so any instructor's dashboard, on any computer, can
-       tell without being able to read the students' sealed entries, and writes nothing when nothing has changed. */
-    function mark(w) { return markMemo[w.json] || (markMemo[w.json] = Kit.hash32(state.staff.sign('bc-results-mark|' + w.key + '|' + w.json)).toString(16) + '.' + w.json.length); }
-    var todo = want.filter(function (w) { return sentJson[w.key] !== w.json && !(resRefs[w.key] && haveMark[w.key] === mark(w)); });
-    want.forEach(function (w) { if (todo.indexOf(w) < 0) sentJson[w.key] = w.json; });
+       tell without being able to read the students' sealed entries, and writes nothing when nothing has changed.
+       The mark says nothing about the content, not even its length.
+       `old`: the mark an earlier version of this page gave the same results. It was made a different way, ended in
+       the content's length, and covered every accepted account of a student, replaced ones included. A record that
+       carries it is one that version wrote and that still says what it would say: it is left exactly as it is (a
+       class is frozen; reading an old class writes nothing). The first time anything in it changes, it is rewritten
+       this version's way. This version never writes an old mark, so in a class it runs, a change in who is current
+       always shows. */
+    function mark(w) { var k = '2|' + w.key + '|' + w.json; return markMemo[k] || (markMemo[k] = (function (sig) { return Kit.hash32(sig).toString(16) + '-' + Kit.hash32('mark|' + sig).toString(16); })(state.staff.sign('bc-results-mark-2|' + w.key + '|' + w.json))); }
+    function markWas(w) { var k = '1|' + w.key + '|' + w.old; return markMemo[k] || (markMemo[k] = Kit.hash32(state.staff.sign('bc-results-mark|' + w.key + '|' + w.old)).toString(16) + '.' + w.old.length); }
+    function upToDate(w) { return !!resRefs[w.key] && (haveMark[w.key] === mark(w) || haveMark[w.key] === markWas(w)); }
+    /* A part that could not be made (it would be too large for one record) is not tried again until it changes. */
+    var todo = want.filter(function (w) { return sentJson[w.key] !== w.json && stuck[w.key] !== w.json && !upToDate(w); });
+    want.forEach(function (w) { if (todo.indexOf(w) < 0 && stuck[w.key] !== w.json) sentJson[w.key] = w.json; });
+    Object.keys(stuck).forEach(function (k) { if (!want.some(function (w) { return w.key === k && stuck[k] === w.json; })) delete stuck[k]; });
     if (!todo.length) { urgent = false; return auto('idle', sentLine()); }   // an instructor's change that alters no results uses up its turn
     if (state.publishing) { state.again = true; return; }
     /* Every write counts against the same hourly limit as the students' own hand-ins (about 500 an hour on
@@ -636,8 +768,8 @@
        Changes from work arriving go out on a cadence: the class scoreboard every three minutes, and the students'
        own records every fifteen, since a student's page already counts a flag from the moment they hand it in.
        At most that is 20 + 4 x 16 writes an hour. */
-    var cadence = cls.inbox && cls.inbox.cadence != null ? +cls.inbox.cadence : 180000, now = Date.now();
-    var due = { cls: lastBatch + cadence, parts: lastParts + 5 * cadence };
+    var cadence = cls.inbox && cls.inbox.cadence != null ? +cls.inbox.cadence : gl ? 300000 : 180000, now = Date.now();
+    var due = { cls: lastBatch + cadence, parts: lastParts + (gl ? 1 : 5) * cadence };   // GitLab: students' results every five minutes
     if (!urgent) {
       var all = todo.length;
       todo = todo.filter(function (w) { return (w.key === 'class' ? due.cls : due.parts) <= now; });
@@ -653,7 +785,7 @@
     urgent = false; if (later) { clearTimeout(later); later = null; }
 
     state.publishing = true;
-    var at = stamp(), failed = null, done = 0;
+    var at = stamp(), failed = null, done = 0;   // failed: the class could not be written to, so stop; a part that cannot be made is skipped (stuck) and the rest go on
     /* One write a second: the platform asks automated clients not to create or change content faster than that. */
     var pace = cls.inbox && cls.inbox.pace != null ? +cls.inbox.pace : 1000;
     return todo.reduce(function (chain, w, i) {
@@ -666,21 +798,25 @@
         }).then(function (signed) {
           var body = (w.key === 'class' ? 'The class scoreboard and averages. Readable by members of the class.' : 'Results for some of the class. Each student can read only their own.')
             + ' Kept up to date by the instructor dashboard. Do not edit.\n\n```\n' + signed + '\n```\n';
-          if (body.length > 60000) throw new Error('the results for part ' + w.key + ' are too large for one record');
+          if (body.length > 60000) throw new Error('the results for ' + (w.key === 'class' ? 'the class' : 'part ' + w.key) + ' are too large for one record');
+          return body;
+        }).then(function (body) {
           t0 = Date.now();
-          return resRefs[w.key] ? Kit.updateInbox(cfg, token(), resRefs[w.key], body, w.labels) : Kit.postToInbox(cfg, token(), w.title, body, w.labels).then(function (r) { resRefs[w.key] = r.ref; return r; });
-        }).then(function (r) { learn(r, t0); sentJson[w.key] = w.json; sentAt[w.key] = at; haveMark[w.key] = mark(w); done++; }, function (e) { failed = e; });
+          return (resRefs[w.key] ? Kit.updateInbox(cfg, token(), resRefs[w.key], body, w.labels) : Kit.postToInbox(cfg, token(), w.title, body, w.labels).then(function (r) { resRefs[w.key] = r.ref; return r; }))
+            .then(function (r) { learn(r, t0); sentJson[w.key] = w.json; sentAt[w.key] = resAt[w.key] = at; haveMark[w.key] = mark(w); done++; }, function (e) { failed = e; });
+        }, function (e) { stuck[w.key] = w.json; stuckWhy = e.message; });   // this one cannot be made: the others still go
       });
     }, Promise.resolve()).then(function () {
       if (done) { state.sentAt = clock(); $('auto-status').setAttribute('data-n', String(+$('auto-status').getAttribute('data-n') + done)); }
       state.publishing = false;
       if (failed) { state.again = false; return auto('idle', 'Graded here, but sending results to students failed (' + failed.message + '). It will try again at the next check.'); }
+      if (Object.keys(stuck).length) status('Some students\' results could not be sent: ' + stuckWhy + '. Everyone else\'s were. It happens when very many accounts share the first digit of their address.', 'warn');
       if (state.again) { state.again = false; return publish(); }
       return publish();   // anything held back for the cadence gets its timer; with nothing left this just reports
     });
   }
   function budgetNote() { var b = Kit.budget; return b && Date.now() - b.at < 600000 && b.left < 800 ? ' The class has ' + b.left + ' requests left this hour: if it runs out, everything waits and then catches up by itself.' : ''; }
-  function sentLine() { return budgetNote() + '✓ Live. New work is graded and each student\'s results are sent to them as it arrives' + (state.sentAt ? ' (last sent ' + state.sentAt + ')' : '') + '. Last checked ' + clock() + '.'; }
+  function sentLine() { return budgetNote() + (Object.keys(stuck).length ? 'Results for ' + Object.keys(stuck).map(function (k) { return k === 'class' ? 'the class' : 'part ' + k; }).join(', ') + ' could not be sent (' + stuckWhy + '). ' : '') + '✓ Live. New work is graded and each student\'s results are sent to them as it arrives' + (state.sentAt ? ' (last sent ' + state.sentAt + ')' : '') + '. Last checked ' + clock() + '.'; }
 
   function table(head, rows, numCols) {
     numCols = numCols || [];

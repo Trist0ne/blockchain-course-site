@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ethereum — A Distributed Computer</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/ethereum/01-EF-ethereum_intro.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="ef-01" data-code="01-EF" data-src="dff0b659930241a3" data-slides="30">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section VII: Ethereum Framework · Lesson 01-EF</p><h1>Ethereum — A Distributed Computer</h1></div></section>
+<section class="slide smaller" id="beyond-cryptocurrency-buterins-vision"><h2 class="slide-title">Beyond Cryptocurrency: Buterin’s Vision</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:62%;">
+<ul>
+<li>By 2013, Bitcoin had shown that a decentralized network could maintain digital money without a central bank, but its scripting model was intentionally narrow and not designed for general applications.</li>
+<li>Vitalik Buterin envisioned something broader: <em>a blockchain that could run arbitrary application logic</em>, so developers would not need to build a new chain for every new use case.</li>
+</ul>
+</div><div class="column" style="width:38%;">
+<p><img src="../img/vitalik-buterin-profile.jpg" style="width:85.0%" data-fig-alt="Portrait of Vitalik Buterin" /></p>
+<div style="font-size: 0.52em; margin-top: 0.35em;">
+<p>Photo: Romanpoet, <em>Vitalik Buterin Profile Photo</em>, Wikimedia Commons (CC BY-SA 4.0).</p>
+</div>
+</div>
+</div>
+<ul>
+<li>In the whitepaper, Ethereum aimed to provide a general-purpose platform for smart contracts and decentralized applications that could execute the same rules on every node.</li>
+<li>Smart contracts are on-chain programs that can hold value, update state, and enforce rules automatically.</li>
+<li>Deterministic execution across many nodes provides credible neutrality for all of those applications.</li>
+</ul>
+</div></section>
+<section class="slide" id="ethereums-history"><h2 class="slide-title">Ethereum’s History</h2><div class="slide-body">
+<div style="font-size: 0.76em;">
+<div style="background:#eaf4fb; color:#1f2937; border:1px solid #c7dceb; border-radius:10px; padding:0.45em 0.7em; margin-bottom:0.38em;">
+<p><strong>2013:</strong> Buterin publishes the <a href="https://ethereum.org/en/whitepaper/"><em>Ethereum Whitepaper</em></a>.</p>
+</div>
+<div style="background:#deeff9; color:#1f2937; border:1px solid #b8d5e8; border-radius:10px; padding:0.45em 0.7em; margin-bottom:0.38em;">
+<p><strong>2014:</strong> <a href="https://blog.ethereum.org/2014/08/08/ether-sale-a-statistical-overview">Crowdsale raises ~31,000 BTC</a>; Foundation established.</p>
+</div>
+<div style="background:#d2e9f7; color:#1f2937; border:1px solid #a9cee3; border-radius:10px; padding:0.45em 0.7em; margin-bottom:0.38em;">
+<p><strong>2015:</strong> <a href="https://blog.ethereum.org/2015/07/22/frontier-is-coming-what-to-expect-and-how-to-prepare">Mainnet launches</a> with smart contracts and mining.</p>
+</div>
+<div style="background:#c6e2f4; color:#1f2937; border:1px solid #9bc6dd; border-radius:10px; padding:0.45em 0.7em; margin-bottom:0.38em;">
+<p><strong>2016:</strong> <a href="https://blog.ethereum.org/2016/07/20/hard-fork-completed">DAO hack and hard fork</a> split ETH and ETC.</p>
+</div>
+<div style="background:#b8daf1; color:#1f2937; border:1px solid #8cbcd6; border-radius:10px; padding:0.45em 0.7em; margin-bottom:0.38em;">
+<p><strong>2017–2021:</strong> <a href="https://ethereum.org/en/history/">Upgrades improve gas, tooling, and the ecosystem</a>.</p>
+</div>
+<div style="background:#a9d1ed; color:#1f2937; border:1px solid #7db2cf; border-radius:10px; padding:0.45em 0.7em;">
+<p><strong>2022:</strong> <a href="https://ethereum.org/en/upgrades/merge/">The Merge</a>. Ethereum shifts from PoW to PoS.</p>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="governance-ethereum-improvement-proposals-eips"><h2 class="slide-title">Governance &amp; Ethereum Improvement Proposals (EIPs)</h2><div class="slide-body">
+<p>Bitcoin governance is relatively conservative and informal: changes emerge through rough social consensus among developers, node operators, miners, and users, with a strong bias against frequent protocol change. Ethereum is also governed socially, but it uses a more explicit proposal culture and public upgrade process to coordinate faster protocol and standards evolution.</p>
+<div style="font-size: 1.08em;">
+<ul>
+<li>Ethereum changes through <strong>Ethereum Improvement Proposals (EIPs)</strong>, which are the public specifications for protocol and standards updates.</li>
+<li><strong>Core EIPs</strong> change protocol rules; <strong>ERCs</strong> define shared application standards such as token and wallet interfaces.</li>
+<li><code>ERC</code> stands for <strong>Ethereum Request for Comment</strong>.</li>
+<li>Adoption still depends on <strong>social consensus</strong>: there is no binding on-chain vote that forces Ethereum L1 upgrades.</li>
+</ul>
+</div>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Examples:</strong> <code>EIP-1559</code> changed the fee market; <code>ERC-20</code> standardized fungible tokens.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="eip-workflow"><h2 class="slide-title">EIP Workflow</h2><div class="slide-body">
+<div style="font-size: 1.18em;">
+<ul>
+<li>A proposal typically moves from <strong>idea</strong> to <strong>draft</strong>, then through <strong>review</strong> and, if accepted, toward a stable final form.</li>
+<li>Editors check format and clarity, while developers and researchers debate feasibility, risks, and tradeoffs in public.</li>
+<li>For protocol changes, client teams implement and test the change on devnets and testnets before mainnet activation.</li>
+<li>The important point is that Ethereum upgrades are <strong>specified, implemented, tested, and adopted</strong> in stages rather than changed by decree.</li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="stakeholders-decision-making"><h2 class="slide-title">Stakeholders &amp; Decision Making</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:52%;">
+<ul>
+<li><strong>Client teams</strong> implement software and therefore shape what is realistically deployable.</li>
+<li><strong>Researchers and contributors</strong> propose designs and analyze security, incentives, and tradeoffs.</li>
+<li>The <strong>Ethereum Foundation</strong> helps coordinate, but it does not unilaterally command upgrades.</li>
+<li><strong>Validators, node operators, exchanges, wallets, and application teams</strong> all matter because they decide what software to run and support.</li>
+<li>In the end, Ethereum governance is <strong>opt-in</strong>: if enough people disagree, they can refuse an upgrade or follow a different chain.</li>
+</ul>
+</div><div class="column" style="width:48%;">
+<p><img src="../img/eth_governance.png" style="width:90.0%" data-fig-alt="Ethereum governance ecosystem graphic." /></p>
+</div>
+</div>
+</div></section>
+<section class="slide" id="the-ethereum-virtual-machine-evm"><h2 class="slide-title">The Ethereum Virtual Machine (EVM)</h2><div class="slide-body">
+<div style="font-size: 0.82em;">
+<p>A <strong>stack-based virtual machine</strong> executed by every node for each transaction or contract call. Contracts are compiled from languages (such as Solidity) into bytecode that the EVM runs.</p>
+<ul>
+<li><strong>Deterministic</strong>: the same input and prior state must produce the same result.</li>
+<li><strong>Isolation</strong>: contracts run in a sandboxed environment with tightly limited external access.</li>
+<li><strong>Gas metering</strong>: opcodes charge gas to bound computation and prevent infinite loops.</li>
+<li><strong>State updates</strong> persist through Ethereum’s account and contract-storage model.</li>
+<li><strong>Native asset</strong>: Ether (<code>ETH</code>); <code>gwei</code> is a common subunit, where <code>1 ETH = 1 billion gwei</code>.</li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="the-halting-problem"><h2 class="slide-title">The Halting Problem</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:58%;">
+<div style="font-size: 0.72em;">
+<p>Can an algorithm decide whether <em>any arbitrary program</em> will eventually halt or run forever?</p>
+<div class="fragment">
+<p><strong>No.</strong> In the general case, the problem is undecidable.</p>
+</div>
+<div class="fragment">
+<p>“there can be no general process” that decides this for every possible program.</p>
+<p><em>–Alan Turing (1936)</em></p>
+</div>
+<div class="fragment">
+<p>Ethereum wants to run expressive programs, but every node must be able to stop and agree on the result. How can we solve this?</p>
+</div>
+<div class="fragment">
+<p><strong>Solution:</strong> <em>Gas metering charges for computation</em> and halt execution when prepaid gas runs out.</p>
+</div>
+</div>
+</div><div class="column" style="width:42%;">
+<p><img src="../img/halting_problem.png" style="width:100.0%" data-fig-alt="Illustration for the halting problem used as a visual anchor across the slide builds." /></p>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="gas-metering-computation-and-storage"><h2 class="slide-title">Gas: Metering Computation and Storage</h2><div class="slide-body">
+<ul>
+<li><strong>Every EVM operation has a gas cost</strong>, and operations that write <strong>permanent state</strong> are priced especially high.</li>
+<li><strong>Users choose</strong> how much gas a transaction may consume and how much they are willing to pay for each unit of gas.
+<ul>
+<li><strong>Total fee = gas used × effective gas price</strong>, which combines the <strong>base fee</strong> and any <strong>tip</strong>.</li>
+</ul></li>
+<li><strong>If execution runs out of gas</strong>, Ethereum reverts the state changes but still charges for the computation nodes already performed.</li>
+<li><strong>Each block has a gas limit</strong>, which caps how much total computation and storage-changing activity can fit into that block.</li>
+<li>Under <strong>EIP-1559</strong>, the <strong>base fee is burned</strong> and the <strong>tip goes to the block proposer</strong>.
+<ul>
+<li>If part of every transaction fee is <strong>permanently destroyed</strong>, what does that imply about <strong>ETH supply over time</strong>?</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="determinism-execution-constraints"><h2 class="slide-title">Determinism &amp; Execution Constraints</h2><div class="slide-body">
+<ul>
+<li><strong>Every node must reach the same result</strong> when executing the same transactions.
+<ul>
+<li>Consensus depends on <em>identical state transitions</em> across all nodes.<br />
+</li>
+</ul></li>
+<li>Contracts execute in a <strong>sandboxed EVM</strong>:
+<ul>
+<li>No access to the file system, network, clock, or OS randomness.<br />
+</li>
+<li>Execution must be <em>purely deterministic</em> given on-chain state and input.<br />
+</li>
+</ul></li>
+<li><strong>Implication:</strong>
+<ul>
+<li>Smart contracts cannot directly query off-chain information or trigger external actions.<br />
+</li>
+<li>Randomness, time, and I/O require careful design (e.g., block hash entropy, commit–reveal schemes).</li>
+</ul></li>
+</ul>
+<div class="callout-important">
+<p>If even one node computes a different result, consensus breaks, so the EVM <strong>forbids</strong> nondeterministic behavior.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="oracles-bridging-blockchains-and-reality"><h2 class="slide-title">Oracles: Bridging Blockchains and Reality</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:44%;">
+<p><img src="../img/oracle_toon.png" style="width:100.0%" data-fig-alt="Cartoon illustration for blockchain oracles." /></p>
+</div><div class="column" style="width:56%;">
+<ul>
+<li><strong>Problem:</strong> Smart contracts cannot directly observe off-chain facts such as prices, weather, or election outcomes.<br />
+</li>
+<li><strong>Oracle:</strong> an external system that brings outside data on-chain so contracts can use it in their logic.<br />
+</li>
+<li><strong>Common models:</strong> a single trusted data source, or a decentralized oracle network that aggregates multiple sources.<br />
+</li>
+<li><strong>Trade-off:</strong> oracles solve the information gap, but they add new trust assumptions around data quality, honesty, and liveness.</li>
+</ul>
+</div>
+</div>
+</div></section>
+<section class="slide" id="accounts-global-state-eoa-vs-contract"><h2 class="slide-title">Accounts &amp; Global State (EOA vs Contract)</h2><div class="slide-body">
+<div style="font-size: 0.86em;">
+<ul>
+<li><strong>Externally Owned Accounts (EOAs):</strong> controlled by private keys; initiate transactions and pay gas. (wallet)<br />
+</li>
+<li><strong>Contract accounts:</strong> hold code and storage, and run only when another transaction or contract call activates them. (program)</li>
+<li>Ethereum’s global state keeps track of each account’s balance, nonce, code, and storage.<br />
+</li>
+<li>Contract addresses are deterministic: under <code>CREATE</code>, they come from the creator and nonce; under <code>CREATE2</code>, they come from the creator, a salt, and the bytecode hash.<br />
+</li>
+<li>That predictability lets developers plan deployments, coordinate contracts, and support upgrade patterns.</li>
+</ul>
+</div>
+<div class="callout-note" data-appearance="simple">
+<p><a href="/assets/labs/ether_evm/index.html">Interactive Ether EVM lab</a>.</p>
+</div>
+</div></section>
+<section class="slide" id="transaction-models-utxo-vs-accounts"><h2 class="slide-title">Transaction Models: UTXO vs Accounts</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:50%;">
+<div style="text-align: center; font-size: 1.0em; font-weight: 700; margin-bottom: 0.25em;">
+<p>Bitcoin UTXO Model</p>
+</div>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 468.00 496.51" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:624px">
+<g id="graph0" class="graph" transform="scale(0.983193 0.983193) rotate(0) translate(4 501)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-501 472,-501 472,4 -4,4"/>
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="#bdbdbd" points="9,-8.63 9,-488.37 459,-488.37 459,-8.63 9,-8.63"/>
+</g>
+
+<g id="node1" class="node">
+<path fill="#fff9c4" stroke="black" d="M138.01,-477.51C138.01,-477.51 43.99,-477.51 43.99,-477.51 37.99,-477.51 31.99,-471.51 31.99,-465.51 31.99,-465.51 31.99,-435.75 31.99,-435.75 31.99,-429.75 37.99,-423.75 43.99,-423.75 43.99,-423.75 138.01,-423.75 138.01,-423.75 144.01,-423.75 150.01,-429.75 150.01,-435.75 150.01,-435.75 150.01,-465.51 150.01,-465.51 150.01,-471.51 144.01,-477.51 138.01,-477.51"/>
+<text text-anchor="middle" x="91" y="-454.83" font-family="Helvetica,sans-Serif" font-size="14.00">UTXO: 8 BTC</text>
+<text text-anchor="middle" x="91" y="-438.03" font-family="Helvetica,sans-Serif" font-size="14.00">(Alice Addr 1)</text>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="#e3f2fd" stroke="black" stroke-width="2" cx="171" cy="-248.63" rx="74.12" ry="74.12"/>
+<text text-anchor="middle" x="171" y="-244.43" font-family="Helvetica,sans-Serif" font-size="14.00">Transaction</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M123.45,-423.39C123.45,-423.39 123.45,-317.53 123.45,-317.53"/>
+<polygon fill="black" stroke="black" points="126.95,-317.53 123.45,-307.53 119.95,-317.53 126.95,-317.53"/>
+<text text-anchor="middle" x="121.35" y="-371.03" font-family="Helvetica,sans-Serif" font-size="12.00">input #1</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#ffe0b2" stroke="black" d="M352.01,-477.51C352.01,-477.51 257.99,-477.51 257.99,-477.51 251.99,-477.51 245.99,-471.51 245.99,-465.51 245.99,-465.51 245.99,-435.75 245.99,-435.75 245.99,-429.75 251.99,-423.75 257.99,-423.75 257.99,-423.75 352.01,-423.75 352.01,-423.75 358.01,-423.75 364.01,-429.75 364.01,-435.75 364.01,-435.75 364.01,-465.51 364.01,-465.51 364.01,-471.51 358.01,-477.51 352.01,-477.51"/>
+<text text-anchor="middle" x="305" y="-454.83" font-family="Helvetica,sans-Serif" font-size="14.00">UTXO: 5 BTC</text>
+<text text-anchor="middle" x="305" y="-438.03" font-family="Helvetica,sans-Serif" font-size="14.00">(Alice Addr 2)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M245.63,-450.63C220.78,-450.63 197.57,-450.63 197.57,-450.63 197.57,-450.63 197.57,-329.66 197.57,-329.66"/>
+<polygon fill="black" stroke="black" points="201.07,-329.66 197.57,-319.66 194.07,-329.66 201.07,-329.66"/>
+<text text-anchor="middle" x="291.35" y="-371.03" font-family="Helvetica,sans-Serif" font-size="12.00">input #2</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#e8f5e9" stroke="black" d="M139.91,-73.51C139.91,-73.51 38.09,-73.51 38.09,-73.51 32.09,-73.51 26.09,-67.51 26.09,-61.51 26.09,-61.51 26.09,-31.75 26.09,-31.75 26.09,-25.75 32.09,-19.75 38.09,-19.75 38.09,-19.75 139.91,-19.75 139.91,-19.75 145.91,-19.75 151.91,-25.75 151.91,-31.75 151.91,-31.75 151.91,-61.51 151.91,-61.51 151.91,-67.51 145.91,-73.51 139.91,-73.51"/>
+<text text-anchor="middle" x="89" y="-50.83" font-family="Helvetica,sans-Serif" font-size="14.00">UTXO: 10 BTC</text>
+<text text-anchor="middle" x="89" y="-34.03" font-family="Helvetica,sans-Serif" font-size="14.00">(to Bob)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M124.39,-190.48C124.39,-190.48 124.39,-85.44 124.39,-85.44"/>
+<polygon fill="black" stroke="black" points="127.89,-85.44 124.39,-75.44 120.89,-85.44 127.89,-85.44"/>
+<text text-anchor="middle" x="160.02" y="-118.03" font-family="Helvetica,sans-Serif" font-size="12.00">output #1</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#d1c4e9" stroke="black" d="M425.88,-73.51C425.88,-73.51 264.12,-73.51 264.12,-73.51 258.12,-73.51 252.12,-67.51 252.12,-61.51 252.12,-61.51 252.12,-31.75 252.12,-31.75 252.12,-25.75 258.12,-19.75 264.12,-19.75 264.12,-19.75 425.88,-19.75 425.88,-19.75 431.88,-19.75 437.88,-25.75 437.88,-31.75 437.88,-31.75 437.88,-61.51 437.88,-61.51 437.88,-67.51 431.88,-73.51 425.88,-73.51"/>
+<text text-anchor="middle" x="345" y="-50.83" font-family="Helvetica,sans-Serif" font-size="14.00">UTXO: 3 BTC</text>
+<text text-anchor="middle" x="345" y="-34.03" font-family="Helvetica,sans-Serif" font-size="14.00">(to Alice, change Addr 3)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M198.51,-179.4C198.51,-120.92 198.51,-46.63 198.51,-46.63 198.51,-46.63 240.3,-46.63 240.3,-46.63"/>
+<polygon fill="black" stroke="black" points="240.3,-50.13 250.3,-46.63 240.3,-43.13 240.3,-50.13"/>
+<text text-anchor="middle" x="337.02" y="-118.03" font-family="Helvetica,sans-Serif" font-size="12.00">output #2</text>
+</g>
+</g>
+</svg></figure>
+</div><div class="column" style="width:50%;">
+<div style="text-align: center; font-size: 1.0em; font-weight: 700; margin-bottom: 0.25em;">
+<p>Ethereum Account Model</p>
+</div>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 468.00 496.51" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:624px">
+<g id="graph0" class="graph" transform="scale(0.983193 0.983193) rotate(0) translate(4 501)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-501 472,-501 472,4 -4,4"/>
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="#bdbdbd" points="9.45,-17.6 9.45,-479.4 458.55,-479.4 458.55,-17.6 9.45,-17.6"/>
+</g>
+
+<g id="node1" class="node">
+<path fill="#fff9c4" stroke="black" d="M260.76,-429.48C260.76,-429.48 147.24,-429.48 147.24,-429.48 141.24,-429.48 135.24,-423.48 135.24,-417.48 135.24,-417.48 135.24,-387.72 135.24,-387.72 135.24,-381.72 141.24,-375.72 147.24,-375.72 147.24,-375.72 260.76,-375.72 260.76,-375.72 266.76,-375.72 272.76,-381.72 272.76,-387.72 272.76,-387.72 272.76,-417.48 272.76,-417.48 272.76,-423.48 266.76,-429.48 260.76,-429.48"/>
+<text text-anchor="middle" x="204" y="-406.8" font-family="Helvetica,sans-Serif" font-size="14.00">Alice Account</text>
+<text text-anchor="middle" x="204" y="-390" font-family="Helvetica,sans-Serif" font-size="14.00">Balance: 13 ETH</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#e8f5e9" stroke="black" d="M165.84,-121.48C165.84,-121.48 44.16,-121.48 44.16,-121.48 38.16,-121.48 32.16,-115.48 32.16,-109.48 32.16,-109.48 32.16,-79.72 32.16,-79.72 32.16,-73.72 38.16,-67.72 44.16,-67.72 44.16,-67.72 165.84,-67.72 165.84,-67.72 171.84,-67.72 177.84,-73.72 177.84,-79.72 177.84,-79.72 177.84,-109.48 177.84,-109.48 177.84,-115.48 171.84,-121.48 165.84,-121.48"/>
+<text text-anchor="middle" x="105" y="-98.8" font-family="Helvetica,sans-Serif" font-size="14.00">Bob Account</text>
+<text text-anchor="middle" x="105" y="-82" font-family="Helvetica,sans-Serif" font-size="14.00">Balance: +10 ETH</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M156.54,-375.27C156.54,-375.27 156.54,-133.38 156.54,-133.38"/>
+<polygon fill="black" stroke="black" points="160.04,-133.38 156.54,-123.38 153.04,-133.38 160.04,-133.38"/>
+<text text-anchor="middle" x="142.34" y="-245" font-family="Helvetica,sans-Serif" font-size="12.00">−10 ETH</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#d1c4e9" stroke="black" d="M424.03,-121.48C424.03,-121.48 301.97,-121.48 301.97,-121.48 295.97,-121.48 289.97,-115.48 289.97,-109.48 289.97,-109.48 289.97,-79.72 289.97,-79.72 289.97,-73.72 295.97,-67.72 301.97,-67.72 301.97,-67.72 424.03,-67.72 424.03,-67.72 430.03,-67.72 436.03,-73.72 436.03,-79.72 436.03,-79.72 436.03,-109.48 436.03,-109.48 436.03,-115.48 430.03,-121.48 424.03,-121.48"/>
+<text text-anchor="middle" x="363" y="-98.8" font-family="Helvetica,sans-Serif" font-size="14.00">Alice Account</text>
+<text text-anchor="middle" x="363" y="-82" font-family="Helvetica,sans-Serif" font-size="14.00">Remaining: 3 ETH</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M225.3,-375.27C225.3,-299.89 225.3,-94.6 225.3,-94.6 225.3,-94.6 278.2,-94.6 278.2,-94.6"/>
+<polygon fill="black" stroke="black" points="278.2,-98.1 288.2,-94.6 278.2,-91.1 278.2,-98.1"/>
+<text text-anchor="middle" x="353.52" y="-245" font-family="Helvetica,sans-Serif" font-size="12.00">= 3 ETH (post&#45;transfer)</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="the-merge-sept-15-2022"><h2 class="slide-title">The Merge (Sept 15, 2022)</h2><div class="slide-body">
+<ul>
+<li>Ethereum originally launched with <strong>Proof of Work</strong>; The Merge changed block production to <strong>Proof of Stake</strong>.</li>
+<li>In simple terms, Ethereum kept the same application layer while swapping out the mechanism that decides who gets to add the next block.</li>
+<li>Mining ended, and block production moved from miners using hardware and electricity to validators participating under the new consensus model.</li>
+<li>Users, balances, and smart contracts carried forward without resetting the chain, so the change was structural rather than a brand-new network launch.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="pow-vs-pos-security-model-review"><h2 class="slide-title">PoW vs PoS: Security Model (Review)</h2><div class="slide-body">
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 38%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Proof of Work (PoW)</th>
+<th>Proof of Stake (PoS)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Security resource</strong></td>
+<td>Energy + hardware</td>
+<td>Staked ETH (capital)</td>
+</tr>
+<tr>
+<td><strong>Who proposes blocks</strong></td>
+<td>Miners, proportional to hashpower</td>
+<td>Validators, pseudorandomly selected from stakers</td>
+</tr>
+<tr>
+<td><strong>Attack cost</strong></td>
+<td>Continuous energy expenditure</td>
+<td>Large bonded stake at risk of being slashed</td>
+</tr>
+<tr>
+<td><strong>Punishment for misbehavior</strong></td>
+<td>Wasted electricity, orphaned blocks</td>
+<td><strong>Slashing:</strong> loss of staked ETH</td>
+</tr>
+<tr>
+<td><strong>Consensus rule</strong></td>
+<td>Longest-chain by cumulative work</td>
+<td>Finalized checkpoints by ≥2/3 stake attestations</td>
+</tr>
+<tr>
+<td><strong>Finality</strong></td>
+<td>Probabilistic (more confirmations → safer)</td>
+<td>Economic and explicit (irreversible after finalization)</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide smaller" id="impact-of-the-merge"><h2 class="slide-title">Impact of The Merge</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:44%;">
+<p><img src="../img/ethereum_merge_bbc_chart.png" style="width:100.0%" data-fig-alt="BBC News chart illustrating Ethereum&#39;s pre- and post-Merge energy consumption." /></p>
+<div style="font-size: 0.58em; text-align: center; margin-top: 0.35em;">
+<p>Chart: BBC News, Joe Tidy, <em>Ethereum Merge: How One Big Cryptocurrency Is Going Green</em> (Sept. 14, 2022).</p>
+</div>
+</div><div class="column" style="width:56%;">
+<ul>
+<li><strong>~99.9% reduction in energy use</strong>, because <strong>mining hardware no longer secures the network</strong>.</li>
+<li><strong>ETH issuance fell</strong> relative to the PoW era, while <strong>EIP-1559 base-fee burn</strong> continued.
+<ul>
+<li><strong>Supply dynamics</strong> shifted away from heavy issuance and toward <strong>network activity</strong>.</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<ul>
+<li><strong>Some mining hardware moved to other PoW chains</strong> after Ethereum stopped mining, changing the economics and security mix of those networks.</li>
+<li><strong>Users and applications continued through the transition</strong> without restarting the chain, which showed that Ethereum could change its consensus system without wiping balances or contracts.</li>
+<li><strong>The Merge set up Ethereum’s next phase</strong> by letting the roadmap focus on <strong>rollups</strong> and <strong>data availability</strong> instead of maintaining a mining-based base layer.</li>
+</ul>
+</div></section>
+<section class="slide" id="transaction-lifecycle-pos-era"><h2 class="slide-title">Transaction Lifecycle (PoS Era)</h2><div class="slide-body">
+<div style="font-size: 0.92em;">
+<ul>
+<li>A wallet <strong>creates and signs</strong> the transaction, and peers relay it through the <strong>mempool</strong>.<br />
+</li>
+<li>A validator can <strong>include</strong> it in a block, then every node <strong>re-executes</strong> it in the EVM.<br />
+</li>
+<li><strong>Gas meters execution</strong>: successful calls update state and emit logs; failed calls revert state but still consume gas.<br />
+</li>
+<li><strong>Inclusion is not finality</strong>: a transaction can appear in a block quickly, but PoS finality comes later through validator attestations.<br />
+</li>
+<li>The core <strong>execution logic stayed the same</strong> after the Merge; what changed was the <strong>consensus and finality mechanism</strong>.</li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="from-evm-to-programs-smart-contracts"><h2 class="slide-title">From EVM to Programs — Smart Contracts</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:47%;">
+<div style="font-size: 0.74em;">
+<ul>
+<li><p>Ethereum can deploy programs at their own contract addresses with <strong>persistent state</strong>.</p></li>
+<li><p>These are <strong>smart contracts</strong>: code plus storage that follow on-chain rules.</p>
+<ul>
+<li>Once deployed, the code determines how calls are handled.</li>
+</ul></li>
+<li><p>Contracts run only when called; there are <strong>no background tasks</strong>.</p></li>
+<li><p>Contracts can call other contracts, enabling <strong>composability</strong> and atomic workflows.<br />
+</p></li>
+</ul>
+</div>
+</div><div class="column" style="width:53%;">
+<div style="font-size:0.4em; line-height:1.18; color:#374151; font-family:SFMono-Regular, Menlo, Monaco, Consolas, &#39;Liberation Mono&#39;, &#39;Courier New&#39;, monospace;">
+<p><span style="color:#6b7280;">// SPDX-License-Identifier: MIT // License identifier</span><br> <span style="color:#7c3aed;">pragma</span> <span style="color:#1d4ed8;">solidity</span> <span style="color:#b45309;">^0.8.20</span>; <span style="color:#6b7280;">// Solidity version</span><br> <br> <span style="color:#7c3aed;">contract</span> <span style="color:#0f766e;">SimpleCounter</span> { <span style="color:#6b7280;">// Define contract</span><br>     <span style="color:#1d4ed8;">uint256</span> <span style="color:#7c3aed;">private</span> count; <span style="color:#6b7280;">// Stored counter value</span><br>     <span style="color:#1d4ed8;">address</span> <span style="color:#7c3aed;">public</span> owner; <span style="color:#6b7280;">// Address of deployer</span><br> <br>     <span style="color:#7c3aed;">constructor</span>(<span style="color:#1d4ed8;">uint256</span> startingValue) { <span style="color:#6b7280;">// Runs once on deployment</span><br>         owner = <span style="color:#be185d;">msg.sender</span>; <span style="color:#6b7280;">// Set deployer as owner</span><br>         count = startingValue; <span style="color:#6b7280;">// Initialize counter</span><br>     }<br> <br>     <span style="color:#7c3aed;">function</span> <span style="color:#0f766e;">increment</span>() <span style="color:#7c3aed;">public</span> { <span style="color:#6b7280;">// Anyone can increase count</span><br>         count += <span style="color:#b45309;">1</span>; <span style="color:#6b7280;">// Add 1 to counter</span><br>     }<br> <br>     <span style="color:#7c3aed;">function</span> <span style="color:#0f766e;">reset</span>() <span style="color:#7c3aed;">public</span> { <span style="color:#6b7280;">// Reset function</span><br>         <span style="color:#b45309;">require</span>(<span style="color:#be185d;">msg.sender</span> == owner, <span style="color:#047857;">“Only owner can reset”</span>); <span style="color:#6b7280;">// Access control</span><br>         count = <span style="color:#b45309;">0</span>; <span style="color:#6b7280;">// Reset counter to zero</span><br>     }<br> <br>     <span style="color:#7c3aed;">function</span> <span style="color:#0f766e;">getCount</span>() <span style="color:#7c3aed;">public</span> <span style="color:#7c3aed;">view</span> <span style="color:#7c3aed;">returns</span> (<span style="color:#1d4ed8;">uint256</span>) { <span style="color:#6b7280;">// Read-only function</span><br>         <span style="color:#7c3aed;">return</span> count; <span style="color:#6b7280;">// Return current value</span><br>     }<br> }<br></p>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide" id="dapp-architecture"><h2 class="slide-title">DApp Architecture</h2><div class="slide-body">
+<ul>
+<li>A <strong>DApp (Decentralized Application, also dApp, Dapp, or dapp)</strong> = user interface + wallet + one or more on-chain smart contracts.<br />
+</li>
+<li>The UI (web or mobile) connects to a wallet, which holds keys, signs, and sends transactions.<br />
+</li>
+<li>Contracts execute deterministically on Ethereum, replacing traditional backends and intermediaries.<br />
+</li>
+<li><strong>Purpose:</strong> remove centralized control, enable trust-minimized coordination and asset ownership.<br />
+</li>
+<li>Security and usability hinge on standards, permission design, and cautious composability.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="how-most-users-touch-ethereum"><h2 class="slide-title">How Most Users Touch Ethereum</h2><div class="slide-body">
+<div style="font-size: 0.74em; margin-top: -0.35em;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 753.20 44.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1004px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 40)">
+<g id="node1" class="node">
+<path fill="#dbeafe" stroke="black" d="M49.55,-36C49.55,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 49.55,0 49.55,0 55.55,0 61.55,-6 61.55,-12 61.55,-12 61.55,-24 61.55,-24 61.55,-30 55.55,-36 49.55,-36"/>
+<text text-anchor="middle" x="30.78" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00">Exchange /</text>
+<text text-anchor="middle" x="30.78" y="-9" font-family="Helvetica,sans-Serif" font-size="10.00">On&#45;ramp</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#dcfce7" stroke="black" d="M207.85,-36C207.85,-36 156.69,-36 156.69,-36 150.69,-36 144.69,-30 144.69,-24 144.69,-24 144.69,-12 144.69,-12 144.69,-6 150.69,0 156.69,0 156.69,0 207.85,0 207.85,0 213.85,0 219.85,-6 219.85,-12 219.85,-12 219.85,-24 219.85,-24 219.85,-30 213.85,-36 207.85,-36"/>
+<text text-anchor="middle" x="182.27" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00">Wallet</text>
+<text text-anchor="middle" x="182.27" y="-9" font-family="Helvetica,sans-Serif" font-size="10.00">keys + signing</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M62.03,-18C83.32,-18 112.19,-18 136.19,-18"/>
+<polygon fill="black" stroke="black" points="135.94,-20.45 142.94,-18 135.94,-15.55 135.94,-20.45"/>
+<text text-anchor="middle" x="103.12" y="-20.4" font-family="Helvetica,sans-Serif" font-size="8.00">buy / withdraw</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fde68a" stroke="black" d="M365.15,-36C365.15,-36 315.67,-36 315.67,-36 309.67,-36 303.67,-30 303.67,-24 303.67,-24 303.67,-12 303.67,-12 303.67,-6 309.67,0 315.67,0 315.67,0 365.15,0 365.15,0 371.15,0 377.15,-6 377.15,-12 377.15,-12 377.15,-24 377.15,-24 377.15,-30 371.15,-36 365.15,-36"/>
+<text text-anchor="middle" x="340.41" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00">dApp</text>
+<text text-anchor="middle" x="340.41" y="-9" font-family="Helvetica,sans-Serif" font-size="10.00">UI + contracts</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M220.27,-18C242.6,-18 271.2,-18 294.77,-18"/>
+<polygon fill="black" stroke="black" points="294.7,-20.45 301.7,-18 294.7,-15.55 294.7,-20.45"/>
+<text text-anchor="middle" x="261.76" y="-20.4" font-family="Helvetica,sans-Serif" font-size="8.00">connect + sign</text>
+</g>
+
+<g id="node4" class="node">
+<path fill="#f3e8ff" stroke="black" d="M499.85,-36C499.85,-36 469.85,-36 469.85,-36 463.85,-36 457.85,-30 457.85,-24 457.85,-24 457.85,-12 457.85,-12 457.85,-6 463.85,0 469.85,0 469.85,0 499.85,0 499.85,0 505.85,0 511.85,-6 511.85,-12 511.85,-12 511.85,-24 511.85,-24 511.85,-30 505.85,-36 499.85,-36"/>
+<text text-anchor="middle" x="484.85" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00">RPC /</text>
+<text text-anchor="middle" x="484.85" y="-9" font-family="Helvetica,sans-Serif" font-size="10.00">Indexer</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M377.35,-18C399.33,-18 427.29,-18 449.05,-18"/>
+<polygon fill="black" stroke="black" points="448.84,-20.45 455.84,-18 448.84,-15.55 448.84,-20.45"/>
+<text text-anchor="middle" x="417.5" y="-20.4" font-family="Helvetica,sans-Serif" font-size="8.00">read + submit</text>
+</g>
+
+<g id="node5" class="node">
+<path fill="#fecaca" stroke="black" d="M621.85,-36C621.85,-36 590.98,-36 590.98,-36 584.98,-36 578.98,-30 578.98,-24 578.98,-24 578.98,-12 578.98,-12 578.98,-6 584.98,0 590.98,0 590.98,0 621.85,0 621.85,0 627.85,0 633.85,-6 633.85,-12 633.85,-12 633.85,-24 633.85,-24 633.85,-30 627.85,-36 621.85,-36"/>
+<text text-anchor="middle" x="606.42" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00">Ethereum</text>
+<text text-anchor="middle" x="606.42" y="-9" font-family="Helvetica,sans-Serif" font-size="10.00">or L2</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M512.09,-18C529.26,-18 551.88,-18 570.56,-18"/>
+<polygon fill="black" stroke="black" points="570.31,-20.45 577.31,-18 570.31,-15.55 570.31,-20.45"/>
+<text text-anchor="middle" x="545.41" y="-20.4" font-family="Helvetica,sans-Serif" font-size="8.00">broadcast</text>
+</g>
+
+<g id="node6" class="node">
+<path fill="#e5e7eb" stroke="black" d="M733.2,-36C733.2,-36 703.2,-36 703.2,-36 697.2,-36 691.2,-30 691.2,-24 691.2,-24 691.2,-12 691.2,-12 691.2,-6 697.2,0 703.2,0 703.2,0 733.2,0 733.2,0 739.2,0 745.2,-6 745.2,-12 745.2,-12 745.2,-24 745.2,-24 745.2,-30 739.2,-36 733.2,-36"/>
+<text text-anchor="middle" x="718.2" y="-21" font-family="Helvetica,sans-Serif" font-size="10.00">Explorer</text>
+<text text-anchor="middle" x="718.2" y="-9" font-family="Helvetica,sans-Serif" font-size="10.00">verify</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="black" d="M634.27,-18C648.84,-18 667.01,-18 682.63,-18"/>
+<polygon fill="black" stroke="black" points="682.49,-20.45 689.49,-18 682.49,-15.55 682.49,-20.45"/>
+<text text-anchor="middle" x="662.53" y="-20.4" font-family="Helvetica,sans-Serif" font-size="8.00">inspect</text>
+</g>
+</g>
+</svg></figure>
+</div>
+<div style="font-size: .72em;">
+<ul>
+<li>Common actions: buy ETH for gas, hold or send stablecoins, mint, swap, bridge, and approve token spending.</li>
+<li>Wallets are the user’s signing layer; examples include MetaMask, Rabby, Rainbow, Trust Wallet, Coinbase Wallet, and Ledger.</li>
+<li>Exchanges/on-ramps are entry and exit services; examples include Coinbase, Kraken, Robinhood Crypto, and Binance.US.</li>
+<li>RPC providers, indexers, and explorers make apps usable, but they are not the chain itself.</li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="state-growth-storage-pressure"><h2 class="slide-title">State Growth &amp; Storage Pressure</h2><div class="slide-body">
+<div style="font-size: 0.78em;">
+<ul>
+<li><strong>Core problem:</strong> every new piece of on-chain state makes Ethereum a little heavier for future nodes to store and verify.<br />
+</li>
+<li><strong>State persists by default:</strong> contract storage stays on-chain unless someone explicitly clears it; there is no automatic expiry.<br />
+</li>
+<li><strong>This creates pressure over time:</strong> larger state means higher disk, memory, and sync costs for nodes, which can make full participation harder.<br />
+</li>
+<li><strong>Why it matters:</strong> if running a node becomes too expensive, validation concentrates in fewer hands and decentralization weakens.<br />
+</li>
+<li><strong>Research directions:</strong> Ethereum researchers are exploring pruning old history, lighter state structures, and ideas like state rent or re-genesis to manage long-term growth.<br />
+</li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="the-scaling-problem"><h2 class="slide-title">The Scaling Problem</h2><div class="slide-body">
+<div style="font-size: 0.84em;">
+<p><strong>Why not bigger blocks?</strong> If a block can carry more transactions, it is natural to think the network should process more activity per block and therefore scale more easily.</p>
+<ul>
+<li><strong>Bigger blocks</strong> raise <strong>hardware and bandwidth requirements</strong>, pushing validation toward data centers.<br />
+</li>
+<li>Ethereum prioritizes <strong>broad verifiability at L1</strong>, because that supports both <strong>security</strong> and <strong>decentralization</strong>.<br />
+</li>
+<li>The strategy is to keep <strong>L1 minimal</strong> for <strong>ordering and data availability</strong>, while scaling most execution elsewhere.<br />
+</li>
+<li>This is the <strong>scalability trilemma</strong>: <strong>security, decentralization, and scalability</strong> pull against one another.<br />
+</li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="introducing-l2"><h2 class="slide-title">Introducing L2</h2><div class="slide-body">
+<ul>
+<li><strong>Layer 1 (L1)</strong> is the base blockchain, such as Ethereum itself, which provides consensus, ordering, and data availability, which you are familiar with.</li>
+<li><strong>Layer 2 (L2)</strong> is a <strong>separate execution environment</strong> built on top of a L1 that processes transactions off the main chain and then posts data or proofs back to that L1.</li>
+<li>Several L2s can exist on top of the same L1 because different teams can build separate systems with different performance, cost, and trust tradeoffs while still inheriting settlement from the underlying chain.</li>
+</ul>
+</div></section>
+<section class="slide" id="modular-scaling"><h2 class="slide-title">Modular Scaling</h2><div class="slide-body">
+<ul>
+<li>L1 focuses on consensus, ordering, and data availability.<br />
+</li>
+<li>L2s handle execution and post the data needed to verify their state transitions.<br />
+</li>
+<li>Security comes from L1: if data is available on L1, anyone can reconstruct and verify L2 state.<br />
+</li>
+<li>Increasing L1 data availability capacity scales the entire ecosystem without inflating L1 execution or state.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="l2-operator-models"><h2 class="slide-title">L2 Operator Models</h2><div class="slide-body">
+<ul>
+<li>L2 operators order transactions and post results to L1.
+<ul>
+<li><strong>Sequencer:</strong> orders user transactions into batches for the L2.</li>
+<li><strong>Prover:</strong> produces the proof or claim that Ethereum will later check.</li>
+</ul></li>
+<li>L1 does not “trust” them — it enforces verification rules deterministically.<br />
+</li>
+<li>These are two models for how an entire L2 proves correctness back to Ethereum:
+<ul>
+<li><strong>Optimistic rollups:</strong> Ethereum accepts the result <em>unless someone challenges it</em> during a dispute window with a fraud proof.<br />
+</li>
+<li><strong>Zero Knowledge (ZK) rollups:</strong> Ethereum checks a <em>cryptographic proof showing the state transition was correct</em>.</li>
+</ul></li>
+</ul>
+<p><strong>Security comes from data availability and L1 verification, not from trusting L2 operators.</strong></p>
+</div></section>
+<section class="slide smaller" id="rollups-optimistic-vs-zk"><h2 class="slide-title">Rollups — Optimistic vs ZK</h2><div class="slide-body">
+<table>
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 29%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature / Tradeoff</th>
+<th><strong>Optimistic Rollups</strong></th>
+<th><strong>ZK (Validity) Rollups</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Verification Model</strong></td>
+<td>Assume correct, can be challenged</td>
+<td>Prove correctness up front</td>
+</tr>
+<tr>
+<td><strong>Security Basis</strong></td>
+<td>Fraud proofs; at least one honest challenger</td>
+<td>Cryptographic validity proofs</td>
+</tr>
+<tr>
+<td><strong>Finality &amp; Withdrawals</strong></td>
+<td>Delayed (challenge window)</td>
+<td>Near-instant after proof verification</td>
+</tr>
+<tr>
+<td><strong>Cost / Complexity</strong></td>
+<td>Simple, lower proving cost</td>
+<td>Complex circuits, high proving cost</td>
+</tr>
+<tr>
+<td><strong>EVM Compatibility</strong></td>
+<td>Natively EVM-compatible</td>
+<td>Emulation or zkEVM required</td>
+</tr>
+<tr>
+<td><strong>Throughput &amp; Latency</strong></td>
+<td>High throughput, delayed finality</td>
+<td>Moderate throughput, instant finality</td>
+</tr>
+<tr>
+<td><strong>Examples</strong></td>
+<td>Optimism, Arbitrum, Base</td>
+<td>zkSync, StarkNet, Scroll, Polygon zkEVM</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide smaller" id="proto-danksharding-eip-4844-blob-data-for-l2s"><h2 class="slide-title">Proto-Danksharding (EIP-4844) — Blob Data for L2s</h2><div class="slide-body">
+<ul>
+<li>Introduces <em>blobs</em>: large, cheap, temporary data attachments to blocks.<br />
+</li>
+<li>Blobs store raw rollup batch data needed for verification, but are <strong>not executed</strong> by the EVM.<br />
+</li>
+<li>Nodes ensure blobs are available for a limited time (~weeks), then prune them.<br />
+</li>
+<li>Decoupling execution from data availability reduces L2 costs and keeps L1 state small.<br />
+</li>
+<li>Called “proto-danksharding” because it implements the blob system <em>without full sharding yet</em>—a stepping stone to the final design.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>Sharding</strong> splits a workload across parallel pieces of the system so the network can handle more data or computation without forcing all nodes to process everything.</p>
+</div>
+</div></section>
+<section class="slide" id="summary"><h2 class="slide-title">Summary</h2><div class="slide-body">
+<div style="font-size: 0.86em;">
+<ul>
+<li><p>Ethereum extends the blockchain idea from <strong>digital money</strong> to a <strong>shared computer</strong> that can run general-purpose programs.</p></li>
+<li><p>The EVM, <strong>deterministic execution</strong>, and <strong>gas metering</strong> are what make that shared computer verifiable across many nodes.</p></li>
+<li><p><strong>Smart contracts</strong> are on-chain programs with persistent state, which enables DApps, composability, and new trust assumptions around code and oracles.</p></li>
+<li><p>Ethereum’s long-term scaling path keeps <strong>L1 broadly verifiable</strong> while moving more execution to <strong>L2s</strong> and improving <strong>data availability</strong>.<br />
+</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-nakamoto_bitcoinpeertopeerelectronic_2008" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">S. Nakamoto, <span>“Bitcoin: <span class="nocase">A Peer-to-Peer Electronic Cash System</span>.”</span> Satoshi Nakamoto Institute, Oct. 31, 2008. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf">https://cdn.nakamotoinstitute.org/docs/bitcoin.pdf</a></div>
+</div>
+<div id="ref-buterin_ethereumnextgenerationsmart_2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">V. Buterin, <span>“Ethereum: <span>A Next-Generation Smart Contract</span> and <span>Decentralized Application Platform</span>.”</span> Ethereum.org, 2014. Available: <a href="https://ethereum.org/content/whitepaper/whitepaper-pdf/Ethereum_Whitepaper_-_Buterin_2014.pdf">https://ethereum.org/content/whitepaper/whitepaper-pdf/Ethereum_Whitepaper_-_Buterin_2014.pdf</a></div>
+</div>
+<div id="ref-romanpoet_vitalikbuterinprofile_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">Romanpoet, <span>“Vitalik <span>Buterin</span> profile photo.”</span> Accessed: Mar. 27, 2026. [Online]. Available: <a href="https://commons.wikimedia.org/wiki/File:VitalikButerinProfile.jpg">https://commons.wikimedia.org/wiki/File:VitalikButerinProfile.jpg</a></div>
+</div>
+<div id="ref-buterin_ethersalestatistical_2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">V. Buterin, <span>“Ether sale: A statistical overview.”</span> Accessed: Mar. 27, 2026. [Online]. Available: <a href="https://blog.ethereum.org/2014/08/08/ether-sale-a-statistical-overview">https://blog.ethereum.org/2014/08/08/ether-sale-a-statistical-overview</a></div>
+</div>
+<div id="ref-l34_ethereum_launches_2015" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">Ethereum Foundation, <span>“Ethereum launches.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://blog.ethereum.org/2015/07/30/ethereum-launches">https://blog.ethereum.org/2015/07/30/ethereum-launches</a></div>
+</div>
+<div id="ref-l34_ethereum_hard_fork_completed_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">Ethereum Foundation, <span>“Hard fork completed.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://blog.ethereum.org/2016/07/20/hard-fork-completed">https://blog.ethereum.org/2016/07/20/hard-fork-completed</a></div>
+</div>
+<div id="ref-ethereumorg_history_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline"><span class="nocase">ethereum.org</span>, <span>“Ethereum history.”</span> Accessed: Mar. 27, 2026. [Online]. Available: <a href="https://ethereum.org/en/history/">https://ethereum.org/en/history/</a></div>
+</div>
+<div id="ref-l34_ethereumorg_merge_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline"><span class="nocase">ethereum.org</span>, <span>“The merge.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://ethereum.org/roadmap/merge/">https://ethereum.org/roadmap/merge/</a></div>
+</div>
+<div id="ref-becze_eip1eippurpose_2015" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">M. Becze and H. Jameson, <span>“<span>EIP-1</span>: <span>EIP Purpose</span> and <span>Guidelines</span>.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://eips.ethereum.org/EIPS/eip-1">https://eips.ethereum.org/EIPS/eip-1</a></div>
+</div>
+<div id="ref-wood_ethereumsecuredecentralised_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">G. Wood, <span>“Ethereum: <span>A Secure Decentralised Generalised Transaction Ledger</span>, <span>EIP-150 Revision</span>.”</span> 2016. Available: <a href="https://ethereum.github.io/yellowpaper/paper.pdf">https://ethereum.github.io/yellowpaper/paper.pdf</a></div>
+</div>
+<div id="ref-ethereum.org_smartcontractsdeveloper_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">Ethereum.org, <span>“Smart <span>Contracts</span> — <span>Developer Docs</span>.”</span> 2025. Available: <a href="https://ethereum.org/en/developers/docs/smart-contracts/">https://ethereum.org/en/developers/docs/smart-contracts/</a></div>
+</div>
+<div id="ref-ethereum.org_gasfeesdeveloper_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">Ethereum.org, <span>“Gas and <span>Fees</span> — <span>Developer Docs</span>.”</span> 2025. Available: <a href="https://ethereum.org/en/developers/docs/gas/">https://ethereum.org/en/developers/docs/gas/</a></div>
+</div>
+<div id="ref-turing_computablenumbersapplication_1937" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">A. M. Turing, <span>“On <span>Computable Numbers</span>, with an <span>Application</span> to the <span>Entscheidungsproblem</span>,”</span> <em>Proceedings of the London Mathematical Society</em>, vol. s2–42, no. 1, pp. 230–265, 1937, doi: <a href="https://doi.org/10.1112/plms/s2-42.1.230">10.1112/plms/s2-42.1.230</a>.</div>
+</div>
+<div id="ref-buterin_eip1559feemarket_2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">V. Buterin, E. Conner, R. Dudley, M. Slipper, I. Norden, and A. Bakhta, <span>“<span>EIP-1559</span>: <span>Fee</span> market change for <span>ETH</span> 1.0 chain.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://eips.ethereum.org/EIPS/eip-1559">https://eips.ethereum.org/EIPS/eip-1559</a></div>
+</div>
+<div id="ref-ellis_chainlinkdecentralizedoracle_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline">S. Ellis, A. Juels, and S. Nazarov, <span>“<span>ChainLink</span>: <span>A Decentralized Oracle Network</span>.”</span> Apr. 09, 2017. Accessed: Oct. 21, 2025. [Online]. Available: <a href="https://research.chain.link/whitepaper-v1.pdf">https://research.chain.link/whitepaper-v1.pdf</a></div>
+</div>
+<div id="ref-eskandari_sokoraclesground_2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[16] </div><div class="csl-right-inline">S. Eskandari, M. Salehi, W. C. Gu, and J. Clark, <span>“<span>SoK</span>: <span>Oracles</span> from the <span>Ground Truth</span> to <span>Market Manipulation</span>,”</span> in <em>Proceedings of the 3rd <span>ACM Conference</span> on <span>Advances</span> in <span>Financial Technologies</span></em>, Sept. 2021, pp. 127–141. doi: <a href="https://doi.org/10.1145/3479722.3480994">10.1145/3479722.3480994</a>.</div>
+</div>
+<div id="ref-ethereum.org_accountsdeveloperdocs_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[17] </div><div class="csl-right-inline">Ethereum.org, <span>“Accounts — <span>Developer Docs</span>.”</span> 2025. Available: <a href="https://ethereum.org/en/developers/docs/accounts/">https://ethereum.org/en/developers/docs/accounts/</a></div>
+</div>
+<div id="ref-garratt_tokenaccountbaseddigital_2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[18] </div><div class="csl-right-inline">R. Garratt, M. Lee, B. Malone, and A. Martin, <span>“Token‑ or <span>Account</span>‑<span>Based</span>? <span>A Digital Currency Can Be Both</span>,”</span> <em>Liberty Street Economics</em>, Aug. 2020, Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://libertystreeteconomics.newyorkfed.org/2020/08/token-or-account-based-a-digital-currency-can-be-both/">https://libertystreeteconomics.newyorkfed.org/2020/08/token-or-account-based-a-digital-currency-can-be-both/</a></div>
+</div>
+<div id="ref-ethereumdevelopers_proofofstakepos_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[19] </div><div class="csl-right-inline">Ethereum Developers, <span>“Proof-of-stake (<span>PoS</span>).”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://ethereum.org/developers/docs/consensus-mechanisms/pos/">https://ethereum.org/developers/docs/consensus-mechanisms/pos/</a></div>
+</div>
+<div id="ref-ccri_ccriindicesethereums_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[20] </div><div class="csl-right-inline">CCRI, <span>“<span>CCRI Indices</span> for <span>Ethereum</span>’s <span>Merge</span>.”</span> Accessed: Oct. 28, 2025. [Online]. Available: <a href="https://indices.carbon-ratings.com/ethereum-merge">https://indices.carbon-ratings.com/ethereum-merge</a></div>
+</div>
+<div id="ref-ethereum.org_transactionsdeveloperdocs_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[21] </div><div class="csl-right-inline">Ethereum.org, <span>“Transactions — <span>Developer Docs</span>.”</span> 2025. Available: <a href="https://ethereum.org/en/developers/docs/transactions/">https://ethereum.org/en/developers/docs/transactions/</a></div>
+</div>
+<div id="ref-ethereumdevelopers_blockproposal_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[22] </div><div class="csl-right-inline">Ethereum Developers, <span>“Block proposal.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://ethereum.org/developers/docs/consensus-mechanisms/pos/block-proposal/">https://ethereum.org/developers/docs/consensus-mechanisms/pos/block-proposal/</a></div>
+</div>
+<div id="ref-ethereumorg_guides_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[23] </div><div class="csl-right-inline">Ethereum.org, <span>“Ethereum guides.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://ethereum.org/en/guides/">https://ethereum.org/en/guides/</a></div>
+</div>
+<div id="ref-l34_ethereum_scaling_docs_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[24] </div><div class="csl-right-inline"><span class="nocase">ethereum.org</span>, <span>“Scaling ethereum.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://ethereum.org/en/developers/docs/scaling/">https://ethereum.org/en/developers/docs/scaling/</a></div>
+</div>
+<div id="ref-l31_arbitrum_rollup_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[25] </div><div class="csl-right-inline">Arbitrum, <span>“Arbitrum rollup protocol.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://arbitrum.io/rollup">https://arbitrum.io/rollup</a></div>
+</div>
+<div id="ref-eip4844_shardblobtransactions_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[26] </div><div class="csl-right-inline">V. Buterin <em>et al.</em>, <span>“EIP-4844: Shard blob transactions.”</span> Accessed: Mar. 27, 2026. [Online]. Available: <a href="https://eips.ethereum.org/EIPS/eip-4844">https://eips.ethereum.org/EIPS/eip-4844</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

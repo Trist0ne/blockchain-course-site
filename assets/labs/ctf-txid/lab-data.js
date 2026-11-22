@@ -1,3 +1,4 @@
+/* Built by tools/build.py from blockchain-course/modules/bitcoin/labs/ctf-txid/lab-data.js. Edit that file, not this copy. */
 /* "Name that transaction": real Bitcoin mainnet transactions, raw bytes only.
    The answers are not stored here: they are computed from these bytes, which is the challenge.
    Needs kit.js, kit/lab.js and kit/btc.js. */
@@ -38,6 +39,7 @@
   var L = Kit.defineLab({
     id: 'ctf-txid',
     rev: 1, // raise this whenever the transaction lists, pick() or an answer change: old classes are graded with their own version
+    covers: ['bf-02'],   // the lessons this builds on: the plan checker warns if it is scheduled before them
     title: 'Name that transaction', tags: ['Bitcoin', '02-BF'], minutes: 10, crumbs: 'Bitcoin Framework · Challenge',
     lede: 'Explorers, wallets and court exhibits all refer to a Bitcoin transaction by its ID, the <b>txid</b>. No registry hands txids out. Anyone holding a transaction\'s raw bytes can compute it, and so can you.',
     real: 'The bytes are a real mainnet transaction. The hashing is your browser\'s own SHA-256. The txid you compute will find this exact transaction in any public block explorer. The only shortcut: we handed you the bytes instead of pulling them from a node.',

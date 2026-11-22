@@ -1,3 +1,4 @@
+/* Built by tools/build.py from blockchain-course/modules/primitives/labs/ctf-signer/lab-data.js. Edit that file, not this copy. */
 /* "Who signed it?": recover the signer of a message from its signature (secp256k1, EIP-191 personal_sign).
    The key holders and their keys are made up per class from the room code; the answers are computed, never stored.
    Needs kit.js, kit/wallet.js and kit/lab.js. */
@@ -33,6 +34,7 @@
   }
   Kit.defineLab({
     id: 'ctf-signer', rev: 1,
+    covers: ['cp-04'],   // the lessons this builds on: the plan checker warns if it is scheduled before them
     title: 'Who signed it?', tags: ['Cryptography', 'Signatures'], minutes: 10, crumbs: 'Cryptography · Challenge',
     lede: 'A digital signature doesn\'t carry a name. It carries just enough for anyone to work out which key made it, for one exact message. That is how every Ethereum transaction says who sent it.',
     real: 'The signatures are real: secp256k1 ECDSA over the "personal message" hash (EIP-191), exactly what a wallet produces when a site asks you to sign text. The shortcut: the four key holders and their keys are made up for this class.',

@@ -17,15 +17,23 @@
     Kit.signIn().then(function () { return Kit.gateItem(Q.id); }).then(function (gate) {
       if (gate === 'locked') return null;
       /* A quiz is handed in once. If this student already has, on this computer or any other, show what they gave. */
-      return Kit.myRecords().then(function (m) { return { gate: gate, prior: m.items[Q.id + ':'] || null }; });
+      return Kit.myRecords().then(function (m) {
+        /* What this browser itself handed in, from its own sealed copy: used when the class can't be asked. */
+        return Kit.ownCopy(Q.id, '').then(function (own) { return { gate: gate, prior: m.items[Q.id + ':'] || null, own: own }; });
+      });
     }).then(function (start) {
       if (!start) return;
       var storeKey = 'quiz:' + Q.id + ':' + Kit.who(), sentKey = 'sent:' + Q.id + '::' + Kit.who();
       var local = Kit.mine.get(sentKey, null), prior = start.prior;
       var waiting = Kit.outbox().filter(function (e) { return e.item === Q.id; })[0] || null;   // handed in here, not yet received by the class
       var locked = !!(prior || local || waiting);
-      var answers = prior && prior.data && prior.data.answers ? JSON.parse(JSON.stringify(prior.data.answers)) : Kit.mine.get(storeKey, {});
-      var unknown = !!(prior && !(prior.data && prior.data.answers) && !Object.keys(Kit.mine.get(storeKey, {})).length);   // handed in, but no copy we can read
+      /* Answers in progress are kept on this computer only until the quiz is handed in (or the student signs out):
+         after that they are read from the hand-in itself, which only the student's own key opens. On a shared
+         computer, the next person finds nothing. */
+      var handed = prior && prior.data && prior.data.answers ? prior.data.answers : start.own && start.own.answers ? start.own.answers : null;
+      if (locked) Kit.mine.del(storeKey);
+      var answers = handed ? JSON.parse(JSON.stringify(handed)) : locked ? {} : Kit.mine.get(storeKey, {});
+      var unknown = locked && !handed;   // handed in, but no copy this browser can read
       function save() { if (!locked) Kit.mine.set(storeKey, answers); }
       var rand = Kit.rng(Kit.seedFor(Q.id));
       var panel = el('section', { class: 'panel' });
@@ -92,6 +100,7 @@
       function send(btn) {
         btn.disabled = true; lock();
         return Kit.submit(out, payload(), Q.title).then(function (r) {
+          if (r && (r.sent || r.queued)) Kit.mine.del(storeKey);   // handed in: the answers no longer sit on this computer in the clear
           if (r && r.sent) { btn.remove(); review({ ref: r.ref, time: new Date().toISOString() }, true); }
           else if (r && r.queued) { btn.remove(); pending(true); }
           else btn.disabled = false;
@@ -108,7 +117,7 @@
         var when = rec && rec.time ? new Date(rec.time) : null;
         var head = el('div', { class: 'callout ok', id: 'quiz-handed-in' }, el('b', { text: 'Handed in ✓ ' }),
           (rec && rec.ref && rec.ref !== 'by hand' ? 'Received as ' + rec.ref : 'Handed in by hand') + (when && !isNaN(when) ? ', ' + when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' on ' + when.toLocaleDateString([], { day: 'numeric', month: 'short' }) : '') +
-          '. A quiz is handed in once. ' + (unknown ? 'Your answers were handed in from another computer before copies were kept, so they can\'t be shown here.' : 'Above are the answers you gave.'));
+          '. A quiz is handed in once. ' + (unknown ? 'Your answers can\'t be shown on this computer right now.' : 'Above are the answers you gave.'));
         var score = el('p', { class: 'muted small', id: 'quiz-score', text: 'Your score appears here once your instructor closes the quiz.' });
         box.replaceChildren(el('h2', { text: 'Your hand-in' }), head, score, justNow ? out : el('div', { class: 'btn-row' }, el('a', { class: 'btn', href: Kit.base + '../start.html', text: '← Back to your course home' })));
         Kit.myResults().then(function (r) {
@@ -139,7 +148,7 @@
       } });
       box.replaceChildren(
         el('h2', { text: 'Submit' }),
-        el('p', { class: 'muted small', text: 'Your answers are saved in this browser as you go. Handing in signs them with your course key and encrypts them for your instructor. You hand a quiz in once.' + (start.gate === 'closed' ? ' This quiz is closed, so handing in now won\'t count.' : '') }),
+        el('p', { class: 'muted small', text: 'Your answers are saved in this browser as you go, until you hand in or sign out. Handing in signs them with your course key and encrypts them for your instructor. You hand a quiz in once.' + (start.gate === 'closed' ? ' This quiz is closed, so handing in now won\'t count.' : '') }),
         el('div', { class: 'btn-row' }, btn), warn, confirmRow, out);
     });
   };

@@ -1,0 +1,1053 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Permissioned Distributed Ledgers For Blockchain</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/permissioned_ledger/01-PC-permissioned_distributed_ledgers.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="pc-01" data-code="01-PC" data-src="879690798b6efe22" data-slides="27">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section V: Permissioned Chains · Lesson 01-PC</p><h1>Permissioned Distributed Ledgers For Blockchain</h1></div></section>
+<section class="slide" id="scenario"><h2 class="slide-title">Scenario</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:58%;">
+<ul>
+<li>A number of different groups all need access to records of cargo handoffs.</li>
+<li>They must coordinate on:
+<ul>
+<li>Who transferred custody.</li>
+<li>When the handoff occurred.</li>
+<li>Which documents were approved.</li>
+</ul></li>
+<li>They cooperate, but they are not all on the same team:
+<ul>
+<li>Some are competitors.</li>
+<li>Some are regulators.</li>
+<li>Some should see only part of the data.</li>
+</ul></li>
+<li>Do the systems we’ve been discussing work here?
+<ul>
+<li>What are key aspects of an ideal system in this scenario?</li>
+</ul></li>
+</ul>
+</div><div class="column" style="width:42%;">
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.7rem;margin:0 auto;width:100%;min-height:24rem;padding-top:2.2rem;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.45rem;width:100%;max-width:340px;">
+    <div style="padding:0.42rem 0.45rem;border:1px solid #93c5fd;border-radius:10px;background:#dbeafe;text-align:center;font-size:0.77em;">Item Sender</div>
+    <div style="padding:0.42rem 0.45rem;border:1px solid #60a5fa;border-radius:10px;background:#bfdbfe;text-align:center;font-size:0.77em;">Item Recipient</div>
+    <div style="padding:0.42rem 0.45rem;border:1px solid #38bdf8;border-radius:10px;background:#e0f2fe;text-align:center;font-size:0.77em;">Shipper</div>
+    <div style="padding:0.42rem 0.45rem;border:1px solid #2563eb;border-radius:10px;background:#dbeafe;text-align:center;font-size:0.77em;">Trucker</div>
+  </div>
+  <div style="font-size:1.2em;line-height:1;">↑</div>
+  <div style="padding:0.6rem 0.7rem;border:1px solid #fca5a5;border-radius:12px;background:#fee2e2;text-align:center;font-size:0.82em;max-width:240px;">
+    Shared Handoff Record
+  </div>
+  <div style="font-size:1.2em;line-height:1;">↓</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.45rem;width:100%;max-width:340px;">
+    <div style="padding:0.42rem 0.45rem;border:1px solid #86efac;border-radius:10px;background:#dcfce7;text-align:center;font-size:0.77em;">Port</div>
+    <div style="padding:0.42rem 0.45rem;border:1px solid #fcd34d;border-radius:10px;background:#fef3c7;text-align:center;font-size:0.77em;">Insurer</div>
+    <div style="padding:0.42rem 0.45rem;border:1px solid #c4b5fd;border-radius:10px;background:#ede9fe;text-align:center;font-size:0.77em;">Auditor</div>
+    <div style="padding:0.42rem 0.45rem;border:1px solid #4ade80;border-radius:10px;background:#bbf7d0;text-align:center;font-size:0.77em;">Customs</div>
+  </div>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide" id="agenda"><h2 class="slide-title">Agenda</h2><div class="slide-body">
+<ol type="1">
+<li>Why permissioned ledgers/systems</li>
+<li>What changes when participation is centrally controlled</li>
+<li>Identity, membership, and policy as core mechanisms</li>
+<li>Consensus and finality under known membership</li>
+<li>Governance</li>
+<li>Operational risk</li>
+<li>Problem fit</li>
+</ol>
+</div></section>
+<section class="slide" id="why-not-a-shared-database"><h2 class="slide-title">Why Not A Shared Database?</h2><div class="slide-body">
+<ul>
+<li>If one company runs the database, everyone else must trust that company not to:
+<ul>
+<li>Edit or hide history.</li>
+<li>Expose competitor data.</li>
+<li>Lock others out during a dispute.</li>
+</ul></li>
+<li>If everyone gets broad administrative access, the system becomes hard to govern and easy to misuse.</li>
+<li>Simple replication helps availability, but it does not solve authority, visibility, or finality.</li>
+<li>An append-only shared ledger also helps with audit:
+<ul>
+<li>History is preserved across organizations instead of overwritten.</li>
+<li>Sensitive data can remain off-chain while hashes or commitments support later verification.</li>
+</ul></li>
+</ul>
+<div class="fragment fade-in">
+<p><strong>Key idea:</strong> permissioned ledgers fit when multiple known organizations need a shared record without a single administrative owner.</p>
+</div>
+</div></section>
+<section class="slide" id="what-changes"><h2 class="slide-title">What Changes</h2><div class="slide-body">
+<ul>
+<li>The hard problem shifts from “how do we let anyone join safely?” to “how do we control participation and authority safely?”</li>
+</ul>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Dimension</th>
+<th style="text-align: left;">Permissionless</th>
+<th style="text-align: left;">Permissioned</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Participation</td>
+<td style="text-align: left;">Open</td>
+<td style="text-align: left;">Curated</td>
+</tr>
+<tr>
+<td style="text-align: left;">Identity</td>
+<td style="text-align: left;">Pseudonymous / economic</td>
+<td style="text-align: left;">Named / authenticated</td>
+</tr>
+<tr>
+<td style="text-align: left;">Sybil resistance</td>
+<td style="text-align: left;">Resource cost</td>
+<td style="text-align: left;">Admission control</td>
+</tr>
+<tr>
+<td style="text-align: left;">Ordering</td>
+<td style="text-align: left;">Chosen by miner / proposer selection</td>
+<td style="text-align: left;">Often handled by explicit leaders or ordering services</td>
+</tr>
+<tr>
+<td style="text-align: left;">Finality</td>
+<td style="text-align: left;">Often probabilistic</td>
+<td style="text-align: left;">Often deterministic</td>
+</tr>
+<tr>
+<td style="text-align: left;">Governance</td>
+<td style="text-align: left;">Social + economic</td>
+<td style="text-align: left;">Administrative + policy-driven</td>
+</tr>
+<tr>
+<td style="text-align: left;">Failure Concentration</td>
+<td style="text-align: left;">Broadly distributed influence</td>
+<td style="text-align: left;">More risk from small control-plane failures</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide smaller" id="key-components"><h2 class="slide-title">Key Components</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:68%;">
+<ul>
+<li><strong>Identity And Membership:</strong> The mechanisms that decide who a participant is and what standing they have in the network.
+<ul>
+<li>A permissioned system only works if every action can be tied back to a recognized participant with the right role.</li>
+</ul></li>
+<li><strong>Policy And Governance:</strong> The rules that decide who may act, what approvals are required, and who can change the network itself.
+<ul>
+<li>Good consensus does not help if weak rules let the wrong people approve transactions.</li>
+</ul></li>
+<li><strong>Core Operation:</strong> The day-to-day transaction path that moves requests from proposal to shared committed history.
+<ul>
+<li>Turns approved requests into one shared history that authorized participants can rely on.</li>
+</ul></li>
+</ul>
+</div><div class="column" style="width:32%;">
+<div style="display:flex;flex-direction:column;justify-content:center;gap:0.5rem;min-height:24rem;max-width:285px;margin:0 auto;">
+  <div style="border:2px solid #93c5fd;border-radius:16px;background:#eff6ff;padding:0.58rem 0.65rem;">
+    <div style="font-weight:700;font-size:0.9em;text-align:center;color:#1d4ed8;margin-bottom:0.32rem;">Identity And Membership</div>
+    <div style="display:flex;flex-direction:column;gap:0.24rem;">
+      <div style="padding:0.28rem 0.38rem;border-radius:10px;background:#dbeafe;border:1px solid #93c5fd;font-size:0.74em;text-align:center;">Verify Identity</div>
+      <div style="padding:0.28rem 0.38rem;border-radius:10px;background:#bfdbfe;border:1px solid #60a5fa;font-size:0.74em;text-align:center;">Assign Role</div>
+      <div style="padding:0.28rem 0.38rem;border-radius:10px;background:#93c5fd;border:1px solid #3b82f6;font-size:0.74em;text-align:center;">Issue / Revoke Credentials</div>
+    </div>
+  </div>
+  <div style="border:2px solid #86efac;border-radius:16px;background:#f0fdf4;padding:0.58rem 0.65rem;">
+    <div style="font-weight:700;font-size:0.9em;text-align:center;color:#15803d;margin-bottom:0.32rem;">Policy And Governance</div>
+    <div style="display:flex;flex-direction:column;gap:0.24rem;">
+      <div style="padding:0.28rem 0.38rem;border-radius:10px;background:#dcfce7;border:1px solid #86efac;font-size:0.74em;text-align:center;">Transaction Policy</div>
+      <div style="padding:0.28rem 0.38rem;border-radius:10px;background:#bbf7d0;border:1px solid #4ade80;font-size:0.74em;text-align:center;">Access Policy</div>
+      <div style="padding:0.28rem 0.38rem;border-radius:10px;background:#86efac;border:1px solid #22c55e;font-size:0.74em;text-align:center;">Membership Policy</div>
+    </div>
+  </div>
+  <div style="border:2px solid #fcd34d;border-radius:16px;background:#fffbeb;padding:0.58rem 0.65rem;">
+    <div style="font-weight:700;font-size:0.9em;text-align:center;color:#b45309;margin-bottom:0.32rem;">Core Operation</div>
+    <div style="display:flex;flex-direction:column;gap:0.24rem;">
+      <div style="padding:0.28rem 0.38rem;border-radius:10px;background:#fef3c7;border:1px solid #fcd34d;font-size:0.74em;text-align:center;">Submit</div>
+      <div style="padding:0.28rem 0.38rem;border-radius:10px;background:#fde68a;border:1px solid #f59e0b;font-size:0.74em;text-align:center;">Approve</div>
+      <div style="padding:0.28rem 0.38rem;border-radius:10px;background:#fcd34d;border:1px solid #d97706;font-size:0.74em;text-align:center;">Order</div>
+      <div style="padding:0.28rem 0.38rem;border-radius:10px;background:#facc15;border:1px solid #ca8a04;font-size:0.74em;text-align:center;">Validate / Commit</div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide" id="open-vs-curated-admission"><h2 class="slide-title">Open vs Curated Admission</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:42%;">
+<ul>
+<li>Open systems ask:
+<ul>
+<li>How do we stop one actor from creating many identities?</li>
+</ul></li>
+<li>Permissioned systems ask:
+<ul>
+<li>Who is allowed in, and who decides?</li>
+</ul></li>
+<li>Permissioned admission adds overhead up front:
+<ul>
+<li>In return, it enables stronger accountability, traceability, and role-based trust later.</li>
+</ul></li>
+</ul>
+</div><div class="column" style="width:58%;">
+<div style="display:flex;justify-content:center;align-items:flex-start;gap:1rem;max-width:520px;margin:0 auto;">
+  <div style="flex:1;max-width:200px;border:2px solid #93c5fd;border-radius:16px;background:#eff6ff;padding:0.7rem 0.75rem;">
+    <div style="font-weight:700;font-size:0.9em;text-align:center;color:#1d4ed8;margin-bottom:0.45rem;">Permissionless Join Path</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.28rem;">
+      <div style="width:100%;padding:0.38rem 0.45rem;border-radius:10px;background:#dbeafe;border:1px solid #93c5fd;font-size:0.75em;text-align:center;">Generate Keypair</div>
+      <div style="font-size:1.05em;line-height:1;color:#64748b;">↓</div>
+      <div style="width:100%;padding:0.38rem 0.45rem;border-radius:10px;background:#bfdbfe;border:1px solid #60a5fa;font-size:0.75em;text-align:center;">Connect To Network</div>
+      <div style="font-size:1.05em;line-height:1;color:#64748b;">↓</div>
+      <div style="width:100%;padding:0.38rem 0.45rem;border-radius:10px;background:#93c5fd;border:1px solid #3b82f6;font-size:0.75em;text-align:center;">Participate Under Public Rules</div>
+    </div>
+  </div>
+  <div style="flex:1;max-width:220px;border:2px solid #86efac;border-radius:16px;background:#f0fdf4;padding:0.7rem 0.75rem;">
+    <div style="font-weight:700;font-size:0.9em;text-align:center;color:#15803d;margin-bottom:0.45rem;">Permissioned Join Path</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.28rem;">
+      <div style="width:100%;padding:0.38rem 0.45rem;border-radius:10px;background:#dcfce7;border:1px solid #86efac;font-size:0.75em;text-align:center;">Identify Applicant</div>
+      <div style="font-size:1.05em;line-height:1;color:#64748b;">↓</div>
+      <div style="width:100%;padding:0.38rem 0.45rem;border-radius:10px;background:#bbf7d0;border:1px solid #4ade80;font-size:0.75em;text-align:center;">Vet And Approve</div>
+      <div style="font-size:1.05em;line-height:1;color:#64748b;">↓</div>
+      <div style="width:100%;padding:0.38rem 0.45rem;border-radius:10px;background:#86efac;border:1px solid #22c55e;font-size:0.75em;text-align:center;">Issue Credential</div>
+      <div style="font-size:1.05em;line-height:1;color:#64748b;">↓</div>
+      <div style="width:100%;padding:0.38rem 0.45rem;border-radius:10px;background:#4ade80;border:1px solid #16a34a;font-size:0.75em;text-align:center;">Assign Role</div>
+      <div style="font-size:1.05em;line-height:1;color:#64748b;">↓</div>
+      <div style="width:100%;padding:0.38rem 0.45rem;border-radius:10px;background:#22c55e;border:1px solid #15803d;font-size:0.75em;text-align:center;color:#052e16;">Connect To Network</div>
+      <div style="font-size:1.05em;line-height:1;color:#64748b;">↓</div>
+      <div style="width:100%;padding:0.38rem 0.45rem;border-radius:10px;background:#22c55e;border:1px solid #15803d;font-size:0.75em;text-align:center;color:#052e16;">Participate Under Tracked Identity</div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+</div></section>
+<section class="slide" id="trust-shifts"><h2 class="slide-title">Trust Shifts</h2><div class="slide-body">
+<ul>
+<li>In PoW, security relies on <strong>costly work</strong>:
+<ul>
+<li>Hardware investment and electricity expenditure impose real-world cost to influence block production.</li>
+</ul></li>
+<li>In PoS, security relies on <strong>stake and penalties</strong>:
+<ul>
+<li>Locked capital and slashing expose participants to direct financial loss for misbehavior.</li>
+</ul></li>
+<li>In permissioned systems, security relies on <strong>identity, policy, and governance</strong>:
+<ul>
+<li>Vetted participants, assigned roles, and revocable access replace open-admission economics.</li>
+</ul></li>
+<li>Intuition: in an ongoing consortium, bad behavior damages future cooperation, contracts, reputation, and access in ways that pseudonymous open networks cannot rely on.</li>
+</ul>
+<div class="fragment fade-in">
+<p><strong>Key idea:</strong> a permissioned ledger still distributes trust, but it distributes it through institutions and policy instead of open economic competition.</p>
+</div>
+</div></section>
+<section class="slide" id="identity"><h2 class="slide-title">Identity</h2><div class="slide-body">
+<ul>
+<li>Identity is not just convenience; it defines who the system recognizes and what their actions mean.</li>
+<li>In this setting:
+<ul>
+<li>An <strong>Organization</strong> is a consortium member such as a carrier, port, regulator, or insurer</li>
+<li>A <strong>User / Operator</strong> is a person or service acting on behalf of that organization</li>
+<li>A <strong>Node</strong> is a software instance run by an organization to submit, approve, order, or store ledger activity</li>
+<li>A <strong>Credential</strong> is the cryptographic proof tying those actions to an organization and role</li>
+</ul></li>
+<li>Messages, approvals, and administrative actions are meaningful only if identities are verifiable.</li>
+<li>If identity is weak, all later policy checks become weak too.</li>
+<li>Example: a “Port Operator reviewer” and a “Port Operator admin” should not be treated as the same authority.</li>
+</ul>
+</div></section>
+<section class="slide" id="membership-lifecycle"><h2 class="slide-title">Membership Lifecycle</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:62%;">
+<ul>
+<li>Permissioned membership is not a one-time setup. Implementations must decide
+<ul>
+<li><strong>How new members are verified:</strong> usually some combination of identity proofing, organizational approval, and role assignment before any credential is issued.</li>
+<li><strong>How often credentials expire:</strong> often measured in months, not decades; short-lived operational certificates and longer-lived organizational roots are both common.</li>
+<li><strong>How quickly revocation propagates:</strong> ideally minutes to hours; stale admin access is a major threat in a permissioned network.</li>
+<li><strong>How audits and periodic reviews are conducted:</strong> many organizations review access quarterly or at least annually, and high-risk roles are often checked more often.</li>
+</ul></li>
+</ul>
+</div><div class="column" style="width:38%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 164.46 404.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:219px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 400)">
+<g id="node1" class="node">
+<path fill="#dbeafe" stroke="#94a3b8" d="M94.65,-396C94.65,-396 44.28,-396 44.28,-396 38.28,-396 32.28,-390 32.28,-384 32.28,-384 32.28,-372 32.28,-372 32.28,-366 38.28,-360 44.28,-360 44.28,-360 94.65,-360 94.65,-360 100.65,-360 106.65,-366 106.65,-372 106.65,-372 106.65,-384 106.65,-384 106.65,-390 100.65,-396 94.65,-396"/>
+<text text-anchor="middle" x="69.46" y="-375" font-family="Helvetica,sans-Serif" font-size="10.00">Join Request</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#bfdbfe" stroke="#94a3b8" d="M84.46,-324C84.46,-324 54.46,-324 54.46,-324 48.46,-324 42.46,-318 42.46,-312 42.46,-312 42.46,-300 42.46,-300 42.46,-294 48.46,-288 54.46,-288 54.46,-288 84.46,-288 84.46,-288 90.46,-288 96.46,-294 96.46,-300 96.46,-300 96.46,-312 96.46,-312 96.46,-318 90.46,-324 84.46,-324"/>
+<text text-anchor="middle" x="69.46" y="-303" font-family="Helvetica,sans-Serif" font-size="10.00">Verify</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M69.46,-359.7C69.46,-352.49 69.46,-343.93 69.46,-335.82"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="72.96,-336.07 69.46,-326.07 65.96,-336.07 72.96,-336.07"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#93c5fd" stroke="#94a3b8" d="M84.46,-252C84.46,-252 54.46,-252 54.46,-252 48.46,-252 42.46,-246 42.46,-240 42.46,-240 42.46,-228 42.46,-228 42.46,-222 48.46,-216 54.46,-216 54.46,-216 84.46,-216 84.46,-216 90.46,-216 96.46,-222 96.46,-228 96.46,-228 96.46,-240 96.46,-240 96.46,-246 90.46,-252 84.46,-252"/>
+<text text-anchor="middle" x="69.46" y="-231" font-family="Helvetica,sans-Serif" font-size="10.00">Issue</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M69.46,-287.7C69.46,-280.49 69.46,-271.93 69.46,-263.82"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="72.96,-264.07 69.46,-254.07 65.96,-264.07 72.96,-264.07"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#bbf7d0" stroke="#94a3b8" d="M84.46,-180C84.46,-180 54.46,-180 54.46,-180 48.46,-180 42.46,-174 42.46,-168 42.46,-168 42.46,-156 42.46,-156 42.46,-150 48.46,-144 54.46,-144 54.46,-144 84.46,-144 84.46,-144 90.46,-144 96.46,-150 96.46,-156 96.46,-156 96.46,-168 96.46,-168 96.46,-174 90.46,-180 84.46,-180"/>
+<text text-anchor="middle" x="69.46" y="-159" font-family="Helvetica,sans-Serif" font-size="10.00">Use</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M69.46,-215.7C69.46,-208.49 69.46,-199.93 69.46,-191.82"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="72.96,-192.07 69.46,-182.07 65.96,-192.07 72.96,-192.07"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#fde68a" stroke="#94a3b8" d="M112.46,-108C112.46,-108 82.46,-108 82.46,-108 76.46,-108 70.46,-102 70.46,-96 70.46,-96 70.46,-84 70.46,-84 70.46,-78 76.46,-72 82.46,-72 82.46,-72 112.46,-72 112.46,-72 118.46,-72 124.46,-78 124.46,-84 124.46,-84 124.46,-96 124.46,-96 124.46,-102 118.46,-108 112.46,-108"/>
+<text text-anchor="middle" x="97.46" y="-87" font-family="Helvetica,sans-Serif" font-size="10.00">Review</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M76.38,-143.7C79.37,-136.24 82.93,-127.32 86.28,-118.97"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="89.43,-120.52 89.89,-109.93 82.93,-117.92 89.43,-120.52"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#fcd34d" stroke="#94a3b8" d="M72.93,-36C72.93,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 72.93,0 72.93,0 78.93,0 84.93,-6 84.93,-12 84.93,-12 84.93,-24 84.93,-24 84.93,-30 78.93,-36 72.93,-36"/>
+<text text-anchor="middle" x="42.46" y="-15" font-family="Helvetica,sans-Serif" font-size="10.00">Renew / Rotate</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M83.87,-71.7C77.61,-63.73 70.04,-54.1 63.1,-45.26"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="66.05,-43.35 57.12,-37.65 60.54,-47.68 66.05,-43.35"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="#fecaca" stroke="#94a3b8" d="M144.46,-36C144.46,-36 114.46,-36 114.46,-36 108.46,-36 102.46,-30 102.46,-24 102.46,-24 102.46,-12 102.46,-12 102.46,-6 108.46,0 114.46,0 114.46,0 144.46,0 144.46,0 150.46,0 156.46,-6 156.46,-12 156.46,-12 156.46,-24 156.46,-24 156.46,-30 150.46,-36 144.46,-36"/>
+<text text-anchor="middle" x="129.46" y="-15" font-family="Helvetica,sans-Serif" font-size="10.00">Revoke</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#dc2626" stroke-width="1.3" d="M105.37,-71.7C108.78,-64.24 112.86,-55.32 116.68,-46.97"/>
+<polygon fill="#dc2626" stroke="#dc2626" stroke-width="1.3" points="119.85,-48.44 120.83,-37.89 113.48,-45.53 119.85,-48.44"/>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#64748b" stroke-width="1.3" d="M45.72,-36.11C50.22,-59.82 58.43,-102.98 63.92,-131.83"/>
+<polygon fill="#64748b" stroke="#64748b" stroke-width="1.3" points="60.48,-132.48 65.78,-141.66 67.35,-131.18 60.48,-132.48"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="roles-and-duties"><h2 class="slide-title">Roles and Duties</h2><div class="slide-body">
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Role</th>
+<th style="text-align: left;">Responsibility</th>
+<th style="text-align: left;">Why Separate?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Client / app</td>
+<td style="text-align: left;">Submit business requests</td>
+<td style="text-align: left;">Business activity ≠ admin control</td>
+</tr>
+<tr>
+<td style="text-align: left;">Validator / endorser</td>
+<td style="text-align: left;">Approve transactions</td>
+<td style="text-align: left;">Requesters can’t self-approve</td>
+</tr>
+<tr>
+<td style="text-align: left;">Orderer / sequencer</td>
+<td style="text-align: left;">Establish order</td>
+<td style="text-align: left;">Sequencing ≠ business logic</td>
+</tr>
+<tr>
+<td style="text-align: left;">Administrator</td>
+<td style="text-align: left;">Manage config &amp; membership</td>
+<td style="text-align: left;">Power isn’t concentrated in one team</td>
+</tr>
+<tr>
+<td style="text-align: left;">Auditor / observer</td>
+<td style="text-align: left;">Review history &amp; compliance</td>
+<td style="text-align: left;">Oversight stays independent</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide" id="consensus"><h2 class="slide-title">Consensus</h2><div class="slide-body">
+<ul>
+<li>Because participants are known, permissioned systems can use classical CFT or BFT techniques.</li>
+<li>That usually means:
+<ul>
+<li>Leaders or coordinators.</li>
+<li>Quorums.</li>
+<li>Signed approvals.</li>
+<li>Deterministic commit rules.</li>
+</ul></li>
+<li>The system counts <strong>approved signatures from known members</strong>.
+<ul>
+<li>It no longer needs mining or staking at all; access control and transaction policies replace them.</li>
+</ul></li>
+<li>Usually not everyone votes:
+<ul>
+<li>Read-only or audit-only participants typically do not.</li>
+<li>A designated subset of approving members usually does.</li>
+<li>Governance committees may be the same as, or different from, transaction approvers.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="deterministic-finality"><h2 class="slide-title">Deterministic Finality</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:70%;">
+<ul>
+<li><strong>Deterministic finality:</strong> because CFT/BFT algorithms work with known participants, once the required signatures are collected and the quorum rule is met, the transaction is final: no waiting, no probability, no risk of reordering.</li>
+<li><strong>Contrast with PoW:</strong> PoW finality is probabilistic. Confidence grows as computing investment accumulates on top of a block. Permissioned systems avoid mining, forking, and longest-chain races entirely.
+<ul>
+<li>You <em>could</em> build a permissioned PoW ledger, but it creates extra overhead for no benefit.</li>
+</ul></li>
+<li><strong>Contrast with PoS:</strong> permissioned approaches have more overlap with PoS, but PoS must handle unknown validators. It relies on staking, randomness, and economic penalties to make misbehavior costly. Permissioned systems replace these with identity and policy.</li>
+</ul>
+</div><div class="column" style="width:30%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 145.74 260.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:195px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 256)">
+<g id="node1" class="node">
+<path fill="#dbeafe" stroke="black" d="M84.61,-252C84.61,-252 53.14,-252 53.14,-252 47.14,-252 41.14,-246 41.14,-240 41.14,-240 41.14,-228 41.14,-228 41.14,-222 47.14,-216 53.14,-216 53.14,-216 84.61,-216 84.61,-216 90.61,-216 96.61,-222 96.61,-228 96.61,-228 96.61,-240 96.61,-240 96.61,-246 90.61,-252 84.61,-252"/>
+<text text-anchor="middle" x="68.87" y="-231" font-family="Helvetica,sans-Serif" font-size="10.00">Proposal</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#dcfce7" stroke="black" d="M125.74,-180C125.74,-180 12,-180 12,-180 6,-180 0,-174 0,-168 0,-168 0,-156 0,-156 0,-150 6,-144 12,-144 12,-144 125.74,-144 125.74,-144 131.74,-144 137.74,-150 137.74,-156 137.74,-156 137.74,-168 137.74,-168 137.74,-174 131.74,-180 125.74,-180"/>
+<text text-anchor="middle" x="68.87" y="-159" font-family="Helvetica,sans-Serif" font-size="10.00">Required Signed Approvals</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" d="M68.87,-215.7C68.87,-208.41 68.87,-199.73 68.87,-191.54"/>
+<polygon fill="#64748b" stroke="#64748b" points="72.37,-191.62 68.87,-181.62 65.37,-191.62 72.37,-191.62"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fef3c7" stroke="black" d="M104.33,-108C104.33,-108 33.41,-108 33.41,-108 27.41,-108 21.41,-102 21.41,-96 21.41,-96 21.41,-84 21.41,-84 21.41,-78 27.41,-72 33.41,-72 33.41,-72 104.33,-72 104.33,-72 110.33,-72 116.33,-78 116.33,-84 116.33,-84 116.33,-96 116.33,-96 116.33,-102 110.33,-108 104.33,-108"/>
+<text text-anchor="middle" x="68.87" y="-87" font-family="Helvetica,sans-Serif" font-size="10.00">Quorum Rule Met</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" d="M68.87,-143.7C68.87,-136.41 68.87,-127.73 68.87,-119.54"/>
+<polygon fill="#64748b" stroke="#64748b" points="72.37,-119.62 68.87,-109.62 65.37,-119.62 72.37,-119.62"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fee2e2" stroke="black" d="M99.6,-36C99.6,-36 38.15,-36 38.15,-36 32.15,-36 26.15,-30 26.15,-24 26.15,-24 26.15,-12 26.15,-12 26.15,-6 32.15,0 38.15,0 38.15,0 99.6,0 99.6,0 105.6,0 111.6,-6 111.6,-12 111.6,-12 111.6,-24 111.6,-24 111.6,-30 105.6,-36 99.6,-36"/>
+<text text-anchor="middle" x="68.87" y="-15" font-family="Helvetica,sans-Serif" font-size="10.00">Commit Is Final</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" d="M68.87,-71.7C68.87,-64.41 68.87,-55.73 68.87,-47.54"/>
+<polygon fill="#64748b" stroke="#64748b" points="72.37,-47.62 68.87,-37.62 65.37,-47.62 72.37,-47.62"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="transaction-path"><h2 class="slide-title">Transaction Path</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:55%;">
+<ul>
+<li><strong>Identity check:</strong> Does the requester have a valid role and credential?</li>
+<li><strong>Proposal / submission:</strong> A participant submits a business event, such as a cargo handoff.</li>
+<li><strong>Required approvals:</strong> Policy determines which organizations or nodes must approve; sometimes one organization, sometimes several.</li>
+<li><strong>Ordering / sequencing:</strong> An ordering service or leader-based cluster places accepted requests into a consistent order.</li>
+<li><strong>Validation against policy:</strong> Committing or validating nodes check that the ordered request still satisfies policy and state rules.</li>
+<li><strong>Commit:</strong> The record is written to the shared ledger.</li>
+</ul>
+</div><div class="column" style="width:45%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 205.93 404.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:275px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 400)">
+<g id="node1" class="node">
+<path fill="#dbeafe" stroke="black" d="M128.31,-396C128.31,-396 69.62,-396 69.62,-396 63.62,-396 57.62,-390 57.62,-384 57.62,-384 57.62,-372 57.62,-372 57.62,-366 63.62,-360 69.62,-360 69.62,-360 128.31,-360 128.31,-360 134.31,-360 140.31,-366 140.31,-372 140.31,-372 140.31,-384 140.31,-384 140.31,-390 134.31,-396 128.31,-396"/>
+<text text-anchor="middle" x="98.96" y="-375" font-family="Helvetica,sans-Serif" font-size="10.00">Submitting Org</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#bfdbfe" stroke="black" d="M126.65,-324C126.65,-324 71.28,-324 71.28,-324 65.28,-324 59.28,-318 59.28,-312 59.28,-312 59.28,-300 59.28,-300 59.28,-294 65.28,-288 71.28,-288 71.28,-288 126.65,-288 126.65,-288 132.65,-288 138.65,-294 138.65,-300 138.65,-300 138.65,-312 138.65,-312 138.65,-318 132.65,-324 126.65,-324"/>
+<text text-anchor="middle" x="98.96" y="-303" font-family="Helvetica,sans-Serif" font-size="10.00">Identity Check</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" d="M98.96,-359.7C98.96,-352.41 98.96,-343.73 98.96,-335.54"/>
+<polygon fill="#64748b" stroke="#64748b" points="102.46,-335.62 98.96,-325.62 95.46,-335.62 102.46,-335.62"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#dcfce7" stroke="black" d="M77.93,-252C77.93,-252 12,-252 12,-252 6,-252 0,-246 0,-240 0,-240 0,-228 0,-228 0,-222 6,-216 12,-216 12,-216 77.93,-216 77.93,-216 83.93,-216 89.93,-222 89.93,-228 89.93,-228 89.93,-240 89.93,-240 89.93,-246 83.93,-252 77.93,-252"/>
+<text text-anchor="middle" x="44.96" y="-231" font-family="Helvetica,sans-Serif" font-size="10.00">Approving Org A</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" d="M85.61,-287.7C79.4,-279.64 71.88,-269.89 65.01,-260.98"/>
+<polygon fill="#64748b" stroke="#64748b" points="67.96,-259.08 59.08,-253.3 62.42,-263.36 67.96,-259.08"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#bbf7d0" stroke="black" d="M185.93,-252C185.93,-252 120,-252 120,-252 114,-252 108,-246 108,-240 108,-240 108,-228 108,-228 108,-222 114,-216 120,-216 120,-216 185.93,-216 185.93,-216 191.93,-216 197.93,-222 197.93,-228 197.93,-228 197.93,-240 197.93,-240 197.93,-246 191.93,-252 185.93,-252"/>
+<text text-anchor="middle" x="152.96" y="-231" font-family="Helvetica,sans-Serif" font-size="10.00">Approving Org B</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" d="M112.31,-287.7C118.52,-279.64 126.04,-269.89 132.92,-260.98"/>
+<polygon fill="#64748b" stroke="#64748b" points="135.51,-263.36 138.84,-253.3 129.96,-259.08 135.51,-263.36"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#fef3c7" stroke="black" d="M162.49,-180C162.49,-180 35.44,-180 35.44,-180 29.44,-180 23.44,-174 23.44,-168 23.44,-168 23.44,-156 23.44,-156 23.44,-150 29.44,-144 35.44,-144 35.44,-144 162.49,-144 162.49,-144 168.49,-144 174.49,-150 174.49,-156 174.49,-156 174.49,-168 174.49,-168 174.49,-174 168.49,-180 162.49,-180"/>
+<text text-anchor="middle" x="98.96" y="-165" font-family="Helvetica,sans-Serif" font-size="10.00">Ordering Service</text>
+<text text-anchor="middle" x="98.96" y="-153" font-family="Helvetica,sans-Serif" font-size="10.00">(Single Node or Small Cluster)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" d="M58.31,-215.7C64.52,-207.64 72.04,-197.89 78.92,-188.98"/>
+<polygon fill="#64748b" stroke="#64748b" points="81.51,-191.36 84.84,-181.3 75.96,-187.08 81.51,-191.36"/>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#64748b" d="M139.61,-215.7C133.4,-207.64 125.88,-197.89 119.01,-188.98"/>
+<polygon fill="#64748b" stroke="#64748b" points="121.96,-187.08 113.08,-181.3 116.42,-191.36 121.96,-187.08"/>
+</g>
+
+<g id="node6" class="node">
+<path fill="#fde68a" stroke="black" d="M162.22,-108C162.22,-108 35.71,-108 35.71,-108 29.71,-108 23.71,-102 23.71,-96 23.71,-96 23.71,-84 23.71,-84 23.71,-78 29.71,-72 35.71,-72 35.71,-72 162.22,-72 162.22,-72 168.22,-72 174.22,-78 174.22,-84 174.22,-84 174.22,-96 174.22,-96 174.22,-102 168.22,-108 162.22,-108"/>
+<text text-anchor="middle" x="98.96" y="-87" font-family="Helvetica,sans-Serif" font-size="10.00">Validating / Committing Nodes</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#64748b" d="M98.96,-143.7C98.96,-136.41 98.96,-127.73 98.96,-119.54"/>
+<polygon fill="#64748b" stroke="#64748b" points="102.46,-119.62 98.96,-109.62 95.46,-119.62 102.46,-119.62"/>
+</g>
+
+<g id="node7" class="node">
+<path fill="#fee2e2" stroke="black" d="M128.04,-36C128.04,-36 69.88,-36 69.88,-36 63.88,-36 57.88,-30 57.88,-24 57.88,-24 57.88,-12 57.88,-12 57.88,-6 63.88,0 69.88,0 69.88,0 128.04,0 128.04,0 134.04,0 140.04,-6 140.04,-12 140.04,-12 140.04,-24 140.04,-24 140.04,-30 134.04,-36 128.04,-36"/>
+<text text-anchor="middle" x="98.96" y="-15" font-family="Helvetica,sans-Serif" font-size="10.00">Shared Ledger</text>
+</g>
+
+<g id="edge7" class="edge">
+<path fill="none" stroke="#64748b" d="M98.96,-71.7C98.96,-64.41 98.96,-55.73 98.96,-47.54"/>
+<polygon fill="#64748b" stroke="#64748b" points="102.46,-47.62 98.96,-37.62 95.46,-47.62 102.46,-47.62"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="policy-layers"><h2 class="slide-title">Policy Layers</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:54%;">
+<ul>
+<li>In <strong>permissionless systems</strong>, security often rests on economics.</li>
+<li>In permissioned systems, much of the security story lives in <strong>policy</strong>:
+<ul>
+<li>Which organization may submit a shipment handoff.</li>
+<li>Which organizations must approve that handoff.</li>
+<li>Who may change consortium configuration.</li>
+<li>Who may add or remove members.</li>
+</ul></li>
+<li>These are not side documents; they are part of the system’s effective trust model.</li>
+<li>A participant may be allowed to read without writing, submit without approving, or approve without controlling policy.</li>
+</ul>
+</div><div class="column" style="width:46%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 209.60 260.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:280px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 256)">
+<g id="node1" class="node">
+<path fill="#fef3c7" stroke="black" d="M141,-252C141,-252 60.6,-252 60.6,-252 54.6,-252 48.6,-246 48.6,-240 48.6,-240 48.6,-228 48.6,-228 48.6,-222 54.6,-216 60.6,-216 60.6,-216 141,-216 141,-216 147,-216 153,-222 153,-228 153,-228 153,-240 153,-240 153,-246 147,-252 141,-252"/>
+<text text-anchor="middle" x="100.8" y="-236.7" font-family="Helvetica,sans-Serif" font-size="9.00">May Change</text>
+<text text-anchor="middle" x="100.8" y="-225.9" font-family="Helvetica,sans-Serif" font-size="9.00">Members / Policy</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#86efac" stroke="black" d="M157.2,-180C157.2,-180 44.4,-180 44.4,-180 38.4,-180 32.4,-174 32.4,-168 32.4,-168 32.4,-156 32.4,-156 32.4,-150 38.4,-144 44.4,-144 44.4,-144 157.2,-144 157.2,-144 163.2,-144 169.2,-150 169.2,-156 169.2,-156 169.2,-168 169.2,-168 169.2,-174 163.2,-180 157.2,-180"/>
+<text text-anchor="middle" x="100.8" y="-164.7" font-family="Helvetica,sans-Serif" font-size="9.00">May Approve</text>
+<text text-anchor="middle" x="100.8" y="-153.9" font-family="Helvetica,sans-Serif" font-size="9.00">Transactions</text>
+</g>
+
+
+<g id="node3" class="node">
+<path fill="#bfdbfe" stroke="black" d="M173.4,-108C173.4,-108 28.2,-108 28.2,-108 22.2,-108 16.2,-102 16.2,-96 16.2,-96 16.2,-84 16.2,-84 16.2,-78 22.2,-72 28.2,-72 28.2,-72 173.4,-72 173.4,-72 179.4,-72 185.4,-78 185.4,-84 185.4,-84 185.4,-96 185.4,-96 185.4,-102 179.4,-108 173.4,-108"/>
+<text text-anchor="middle" x="100.8" y="-92.7" font-family="Helvetica,sans-Serif" font-size="9.00">May Submit</text>
+<text text-anchor="middle" x="100.8" y="-81.9" font-family="Helvetica,sans-Serif" font-size="9.00">Transactions</text>
+</g>
+
+
+<g id="node4" class="node">
+<path fill="#dbeafe" stroke="black" d="M189.6,-36C189.6,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 189.6,0 189.6,0 195.6,0 201.6,-6 201.6,-12 201.6,-12 201.6,-24 201.6,-24 201.6,-30 195.6,-36 189.6,-36"/>
+<text text-anchor="middle" x="100.8" y="-20.7" font-family="Helvetica,sans-Serif" font-size="9.00">May Read /</text>
+<text text-anchor="middle" x="100.8" y="-9.9" font-family="Helvetica,sans-Serif" font-size="9.00">Audit</text>
+</g>
+
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="governance-boundary"><h2 class="slide-title">Governance Boundary</h2><div class="slide-body">
+<ul>
+<li>Governance decides who can change the people, rules, and thresholds.</li>
+<li>That makes governance part of the attack surface.</li>
+<li>In a permissioned system, “consensus” usually means some known set of members approves transactions and some service orders them under policy.</li>
+<li>Even if that transaction-approval and ordering path is sound, the system can still fail if governance is weak.</li>
+<li>Strong transaction consensus cannot compensate for:
+<ul>
+<li>Weak admission decisions.</li>
+<li>Poor key management.</li>
+<li>Ambiguous authority.</li>
+<li>Unsafe upgrade procedures.</li>
+</ul></li>
+<li>Typical failure pattern: the ledger software works as designed, but the wrong people are allowed to change the rules.</li>
+</ul>
+<div class="callout-warning" data-appearance="simple">
+<p>Blockchain does not protect a permissioned network from bad governance.</p>
+</div>
+</div></section>
+<section class="slide" id="governance-actions"><h2 class="slide-title">Governance Actions</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:65%;">
+<ul>
+<li><p>Governance is a critical component of any blockchain, and it has substantial ramifications for the differences between permissioned and permissionless networks.</p>
+<ul>
+<li><em>Permissionless networks</em> upgrades depend on adoption decisions by each node.
+<ul>
+<li>Disagreements can result in hard forks, splitting into two separate blockchains or ledgers.</li>
+</ul></li>
+<li><em>Permissioned networks:</em> authorized governance members decide according to policy first, and then all managed members implement their instructions.
+<ul>
+<li>Forks are avoided, governance processes coordinate a single outcome across nodes.</li>
+</ul></li>
+</ul></li>
+</ul>
+</div><div class="column" style="width:35%;">
+<div style="display:flex;flex-direction:column;gap:0.9rem;max-width:520px;margin:0 auto;">
+  <div style="border:2px solid #93c5fd;border-radius:16px;background:#eff6ff;padding:0.7rem 0.8rem;">
+    <div style="font-weight:700;font-size:0.9em;color:#1d4ed8;text-align:center;margin-bottom:0.45rem;">Permissionless Upgrade</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0.28rem;margin-bottom:0.35rem;">
+      <div style="display:flex;justify-content:center;gap:0.38rem;flex-wrap:wrap;max-width:270px;">
+        <div style="width:17px;height:17px;border-radius:999px;background:#22c55e;border:2px solid #15803d;"></div>
+        <div style="width:17px;height:17px;border-radius:999px;background:#22c55e;border:2px solid #15803d;"></div>
+        <div style="width:17px;height:17px;border-radius:999px;background:#22c55e;border:2px solid #15803d;"></div>
+        <div style="width:17px;height:17px;border-radius:999px;background:#22c55e;border:2px solid #15803d;"></div>
+        <div style="width:17px;height:17px;border-radius:999px;background:#22c55e;border:2px solid #15803d;"></div>
+        <div style="width:17px;height:17px;border-radius:999px;background:#22c55e;border:2px solid #15803d;"></div>
+        <div style="width:17px;height:17px;border-radius:999px;background:#ef4444;border:2px solid #b91c1c;"></div>
+        <div style="width:17px;height:17px;border-radius:999px;background:#ef4444;border:2px solid #b91c1c;"></div>
+        <div style="width:17px;height:17px;border-radius:999px;background:#ef4444;border:2px solid #b91c1c;"></div>
+        <div style="width:17px;height:17px;border-radius:999px;background:#ef4444;border:2px solid #b91c1c;"></div>
+      </div>
+      <div style="width:86%;height:2px;background:linear-gradient(90deg,#22c55e 0%,#22c55e 58%,#64748b 58%,#64748b 42%,#ef4444 42%,#ef4444 100%);border-radius:999px;"></div>
+      <div style="display:flex;justify-content:space-between;width:86%;font-size:0.68em;color:#475569;">
+        <div>New chain</div>
+        <div>Old chain</div>
+      </div>
+    </div>
+    
+  </div>
+  <div style="border:2px solid #86efac;border-radius:16px;background:#f0fdf4;padding:0.7rem 0.8rem;">
+    <div style="font-weight:700;font-size:0.9em;color:#15803d;text-align:center;margin-bottom:0.45rem;">Permissioned Upgrade</div>
+    <div style="font-size:0.75em;text-align:center;color:#166534;margin-bottom:0.22rem;">Governance committee vote</div>
+    <div style="display:flex;justify-content:center;gap:0.42rem;flex-wrap:wrap;margin-bottom:0.16rem;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.08rem;"><div style="width:18px;height:18px;border-radius:999px;background:#22c55e;border:2px solid #15803d;"></div><div style="font-size:0.62em;color:#166534;">Yes</div></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.08rem;"><div style="width:18px;height:18px;border-radius:999px;background:#22c55e;border:2px solid #15803d;"></div><div style="font-size:0.62em;color:#166534;">Yes</div></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.08rem;"><div style="width:18px;height:18px;border-radius:999px;background:#22c55e;border:2px solid #15803d;"></div><div style="font-size:0.62em;color:#166534;">Yes</div></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.08rem;"><div style="width:18px;height:18px;border-radius:999px;background:#ef4444;border:2px solid #b91c1c;"></div><div style="font-size:0.62em;color:#991b1b;">No</div></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.08rem;"><div style="width:18px;height:18px;border-radius:999px;background:#ef4444;border:2px solid #b91c1c;"></div><div style="font-size:0.62em;color:#991b1b;">No</div></div>
+    </div>
+    <div style="font-size:1.0em;line-height:1;text-align:center;color:#64748b;margin-bottom:0.28rem;">↓</div>
+    <div style="font-size:0.75em;text-align:center;color:#166534;margin-bottom:0.28rem;">Managed network members</div>
+    <div style="display:flex;justify-content:center;gap:0.42rem;flex-wrap:wrap;margin-bottom:0.35rem;">
+      <div style="width:16px;height:16px;border-radius:999px;background:#22c55e;border:2px solid #15803d;"></div>
+      <div style="width:16px;height:16px;border-radius:999px;background:#22c55e;border:2px solid #15803d;"></div>
+      <div style="width:16px;height:16px;border-radius:999px;background:#22c55e;border:2px solid #15803d;"></div>
+      <div style="width:16px;height:16px;border-radius:999px;background:#22c55e;border:2px solid #15803d;"></div>
+      <div style="width:16px;height:16px;border-radius:999px;background:#22c55e;border:2px solid #15803d;"></div>
+      <div style="width:16px;height:16px;border-radius:999px;background:#22c55e;border:2px solid #15803d;"></div>
+      <div style="width:16px;height:16px;border-radius:999px;background:#22c55e;border:2px solid #15803d;"></div>
+      <div style="width:16px;height:16px;border-radius:999px;background:#22c55e;border:2px solid #15803d;"></div>
+    </div>
+    
+  </div>
+ </div>
+</div>
+</div>
+</div></section>
+<section class="slide" id="threats-to-permissioned-systems"><h2 class="slide-title">Threats to Permissioned Systems</h2><div class="slide-body">
+<ul>
+<li>In <strong>permissionless systems</strong>, the biggest threats often target the consensus mechanism itself.</li>
+<li>In <strong>permissioned systems</strong>, the attack surface shifts toward a smaller set of high-impact roles and services.</li>
+<li>Important threats include:
+<ul>
+<li>Credential or admin compromise, which can change membership, policy, or trust relationships.</li>
+<li>DDoS or simple downtime on orderers, membership providers, or governance voters.</li>
+<li>Network and timing attacks on small clusters that coordinate ordering or approval.</li>
+<li>Disrupting a few approvers and preventing quorum or targeted transaction flow.</li>
+</ul></li>
+<li>Not all nodes are equal; a handful may matter far more than the rest.</li>
+<li>Defenses therefore shift toward hardening critical services, protecting credentials, building redundancy, and planning failover and incident response.</li>
+</ul>
+</div></section>
+<section class="slide" id="identity-theft-risks"><h2 class="slide-title">Identity Theft Risks</h2><div class="slide-body">
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Compromised Target</th>
+<th style="text-align: left;">Ability</th>
+<th style="text-align: left;">Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Read / Audit Identity</td>
+<td style="text-align: left;">Observe permitted records</td>
+<td style="text-align: left;">Confidentiality loss, minimal control impact</td>
+</tr>
+<tr>
+<td style="text-align: left;">Submit / Write Identity</td>
+<td style="text-align: left;">Submit to blockchain</td>
+<td style="text-align: left;">Fraudulent submissions, subversion of trust</td>
+</tr>
+<tr>
+<td style="text-align: left;">Approval / Voting Identity</td>
+<td style="text-align: left;">Approve transactions</td>
+<td style="text-align: left;">Direct influence over commits to ledger</td>
+</tr>
+<tr>
+<td style="text-align: left;">Ordering Service Identity / Role</td>
+<td style="text-align: left;">Sequence accepted transactions</td>
+<td style="text-align: left;">Availability loss or ordering disruption</td>
+</tr>
+<tr>
+<td style="text-align: left;">Membership / Admin Identity</td>
+<td style="text-align: left;">Add members, change policy, alter configuration</td>
+<td style="text-align: left;">Highest level of concern; rules of the system can change</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide" id="sybil-resistance"><h2 class="slide-title">Sybil Resistance</h2><div class="slide-body">
+<ul>
+<li>Permissioned systems do not ignore Sybil risk.</li>
+<li>They prevent it differently:
+<ul>
+<li><em>Admission control</em>: only specified people are allowed to interact with the network.</li>
+<li><em>Organizational sponsorship:</em> known organizations are responsible for ensuring appropriate representatives can participate in their name, and they can be held accountable.</li>
+<li><em>Certificate issuance and revocation:</em> revoking the credentials and access from identified malicious actors and those who no longer have a need to use the system minimizes the risk profile.</li>
+</ul></li>
+<li>The goal is the same as in public chains:
+<ul>
+<li>One real actor should not cheaply obtain disproportionate influence.</li>
+</ul></li>
+<li>Hypothetical failure:
+<ul>
+<li>If identity administration is weak, a fired administrator or careless sponsor could flood the network with fake or unauthorized users.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide" id="privacy"><h2 class="slide-title">Privacy</h2><div class="slide-body">
+<ul>
+<li>Permissioned does <strong>not</strong> mean “everything is private.”</li>
+<li>It usually means the system can separate:
+<ul>
+<li>Who participates.</li>
+<li>Who sees which data.</li>
+<li>Who can verify which proofs.</li>
+</ul></li>
+<li>Common mechanisms include:
+<ul>
+<li>Channels or partitions.</li>
+<li>Private data collections.</li>
+<li>Role-based access control.</li>
+<li>Audit-visible metadata with restricted payloads.</li>
+</ul></li>
+<li>Example: shipping companies may see detailed cargo documents, while customs or insurers see only the records and proofs they are entitled to inspect.</li>
+</ul>
+</div></section>
+<section class="slide" id="case-study-fabric-lockout"><h2 class="slide-title">Case Study: <a href="https://lists.lfdecentralizedtrust.org/g/fabric/topic/criticial_admin_certificate/71743922">Fabric Lockout</a></h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:38%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 238.59 332.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:319px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 328)">
+<g id="node1" class="node">
+<path fill="#fee2e2" stroke="black" d="M172.98,-324C172.98,-324 57.61,-324 57.61,-324 51.61,-324 45.61,-318 45.61,-312 45.61,-312 45.61,-300 45.61,-300 45.61,-294 51.61,-288 57.61,-288 57.61,-288 172.98,-288 172.98,-288 178.98,-288 184.98,-294 184.98,-300 184.98,-300 184.98,-312 184.98,-312 184.98,-318 178.98,-324 172.98,-324"/>
+<text text-anchor="middle" x="115.29" y="-303" font-family="Helvetica,sans-Serif" font-size="10.00">1. Admin Certificates Expire</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fecaca" stroke="black" d="M176.88,-252C176.88,-252 53.71,-252 53.71,-252 47.71,-252 41.71,-246 41.71,-240 41.71,-240 41.71,-228 41.71,-228 41.71,-222 47.71,-216 53.71,-216 53.71,-216 176.88,-216 176.88,-216 182.88,-216 188.88,-222 188.88,-228 188.88,-228 188.88,-240 188.88,-240 188.88,-246 182.88,-252 176.88,-252"/>
+<text text-anchor="middle" x="115.29" y="-231" font-family="Helvetica,sans-Serif" font-size="10.00">2. Admin Actions Start Failing</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#64748b" d="M115.29,-287.7C115.29,-279.22 115.29,-268.86 115.29,-259.58"/>
+<polygon fill="#64748b" stroke="#64748b" points="117.4,-259.62 115.29,-253.62 113.2,-259.62 117.4,-259.62"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fef3c7" stroke="black" d="M218.59,-180C218.59,-180 12,-180 12,-180 6,-180 0,-174 0,-168 0,-168 0,-156 0,-156 0,-150 6,-144 12,-144 12,-144 218.59,-144 218.59,-144 224.59,-144 230.59,-150 230.59,-156 230.59,-156 230.59,-168 230.59,-168 230.59,-174 224.59,-180 218.59,-180"/>
+<text text-anchor="middle" x="115.29" y="-159" font-family="Helvetica,sans-Serif" font-size="10.00">3. Config / Channel Changes Cannot Be Applied</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#64748b" d="M115.29,-215.7C115.29,-207.22 115.29,-196.86 115.29,-187.58"/>
+<polygon fill="#64748b" stroke="#64748b" points="117.4,-187.62 115.29,-181.62 113.2,-187.62 117.4,-187.62"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fde68a" stroke="black" d="M190.78,-108C190.78,-108 39.81,-108 39.81,-108 33.81,-108 27.81,-102 27.81,-96 27.81,-96 27.81,-84 27.81,-84 27.81,-78 33.81,-72 39.81,-72 39.81,-72 190.78,-72 190.78,-72 196.78,-72 202.78,-78 202.78,-84 202.78,-84 202.78,-96 202.78,-96 202.78,-102 196.78,-108 190.78,-108"/>
+<text text-anchor="middle" x="115.29" y="-87" font-family="Helvetica,sans-Serif" font-size="10.00">4. Network Enters Lockout Situation</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#64748b" d="M115.29,-143.7C115.29,-135.22 115.29,-124.86 115.29,-115.58"/>
+<polygon fill="#64748b" stroke="#64748b" points="117.4,-115.62 115.29,-109.62 113.2,-115.62 117.4,-115.62"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#fecdd3" stroke="black" d="M202.44,-36C202.44,-36 28.15,-36 28.15,-36 22.15,-36 16.15,-30 16.15,-24 16.15,-24 16.15,-12 16.15,-12 16.15,-6 22.15,0 28.15,0 28.15,0 202.44,0 202.44,0 208.44,0 214.44,-6 214.44,-12 214.44,-12 214.44,-24 214.44,-24 214.44,-30 208.44,-36 202.44,-36"/>
+<text text-anchor="middle" x="115.29" y="-15" font-family="Helvetica,sans-Serif" font-size="10.00">5. Recovery Requires Out&#45;Of&#45;Band Fixes</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#64748b" d="M115.29,-71.7C115.29,-63.22 115.29,-52.86 115.29,-43.58"/>
+<polygon fill="#64748b" stroke="#64748b" points="117.4,-43.62 115.29,-37.62 113.2,-43.62 117.4,-43.62"/>
+</g>
+</g>
+</svg></figure>
+</div><div class="column" style="width:62%;">
+<ul>
+<li><strong>1. Admin certificates expire:</strong> In a reported Hyperledger Fabric production network, organization admin certificates expired.</li>
+<li><strong>2. Admin actions start failing:</strong> The network could still exist, but critical administrative actions no longer authenticated cleanly.</li>
+<li><strong>3. Config / channel changes cannot be applied:</strong> Because admin identity is part of the control plane, expired credentials blocked the ability to manage the system normally.</li>
+<li><strong>4. Network enters lockout situation:</strong> Not a malicious takeover; it was an operational failure caused by poor credential lifecycle management.</li>
+<li><strong>5. Recovery requires out-of-band fixes:</strong> The lesson is that permissioned systems can fail hard if identity, renewal, and revocation are treated as secondary concerns.</li>
+</ul>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="recap-three-approaches-compared"><h2 class="slide-title">Recap: Three Approaches Compared</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:33%;">
+<p><strong>Permissioned Ledger</strong></p>
+<p>Benefits:</p>
+<ul>
+<li>Deterministic finality</li>
+<li>Known participants, enforceable policy</li>
+<li>Auditability with privacy controls</li>
+</ul>
+<p>Challenges:</p>
+<ul>
+<li>Governance capture risk</li>
+<li>Credential and admin lifecycle failures</li>
+<li>Small validator sets create high-value targets</li>
+</ul>
+</div><div class="column" style="width:33%;">
+<p><strong>Permissionless Ledger</strong></p>
+<p>Benefits:</p>
+<ul>
+<li>Open participation, no gatekeeper</li>
+<li>Censorship resistance</li>
+<li>No single point of administrative failure</li>
+</ul>
+<p>Challenges:</p>
+<ul>
+<li>Probabilistic finality (PoW) or complex staking economics (PoS)</li>
+<li>Sybil resistance depends on economic cost</li>
+<li>Limited throughput and high latency</li>
+</ul>
+</div><div class="column" style="width:33%;">
+<p><strong>Mutable Database</strong></p>
+<p>Benefits:</p>
+<ul>
+<li>Highest throughput and lowest latency</li>
+<li>Mature tooling, simple operations</li>
+<li>Full control for the owning organization</li>
+</ul>
+<p>Challenges:</p>
+<ul>
+<li>Single operator must be trusted</li>
+<li>No built-in tamper evidence</li>
+<li>Cross-org disputes rely on legal agreements</li>
+</ul>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="when-to-use-what"><h2 class="slide-title">When To Use What?</h2><div class="slide-body">
+<p>For each scenario, decide as a class: <strong>permissioned ledger</strong>, <strong>permissionless ledger</strong>, or <strong>mutable database</strong>?</p>
+<table style="font-size: 0.7em; width: 100%;">
+<thead>
+<tr>
+<th style="width: 82%;">
+Scenario
+</th>
+<th style="width: 18%;">
+Best Fit
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+A hospital system tracks patient consent records internally; one IT department controls all access.
+</td>
+<td class="fragment" data-fragment-index="1">
+Mutable DB
+</td>
+</tr>
+<tr>
+<td>
+An open-source project wants anyone to verify that released binaries match audited source, with no central authority.
+</td>
+<td class="fragment" data-fragment-index="2">
+Permissionless
+</td>
+</tr>
+<tr>
+<td>
+Competing shipping companies need a shared system to record cargo handoffs and provide tamper-evident records for customs audits.
+</td>
+<td class="fragment" data-fragment-index="3">
+Permissioned
+</td>
+</tr>
+<tr>
+<td>
+A social media platform wants users to own their identity and post history even if the platform shuts down.
+</td>
+<td class="fragment" data-fragment-index="4">
+Permissionless
+</td>
+</tr>
+<tr>
+<td>
+Three allied nations want a joint logistics ledger where no single country controls finality, restricted to vetted military units.
+</td>
+<td class="fragment" data-fragment-index="5">
+Permissioned
+</td>
+</tr>
+<tr>
+<td>
+A retail chain needs a high-speed inventory system for one warehouse, managed by a single operations team.
+</td>
+<td class="fragment" data-fragment-index="6">
+Mutable DB
+</td>
+</tr>
+<tr>
+<td>
+A consortium of banks needs to settle cross-border payments with shared finality; regulators can audit but not alter transactions.
+</td>
+<td class="fragment" data-fragment-index="7">
+Permissioned
+</td>
+</tr>
+<tr>
+<td>
+A volunteer disaster-relief network wants any NGO to join and log aid distributions without a central coordinator.
+</td>
+<td class="fragment" data-fragment-index="8">
+Permissionless
+</td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class="slide" id="wrap-up"><h2 class="slide-title">Wrap-Up</h2><div class="slide-body">
+<ul>
+<li>Permissioned ledgers solve coordination among <strong>known</strong> participants.</li>
+<li>Their security depends heavily on <strong>identity, policy, and governance</strong>.</li>
+<li>They often deliver <strong>deterministic finality</strong> without open-admission mechanisms like PoW or PoS.</li>
+<li>The next step is to see how these ideas appear in a real platform: Hyperledger Fabric.</li>
+</ul>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-yaga_blockchaintechnologyoverview_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">D. Yaga, P. Mell, N. Roby, and K. Scarfone, <span>“Blockchain technology overview,”</span> <span>National Institute of Standards and Technology</span>, Gaithersburg, MD, NIST IR 8202, Oct. 2018. doi: <a href="https://doi.org/10.6028/NIST.IR.8202">10.6028/NIST.IR.8202</a>.</div>
+</div>
+<div id="ref-ukgovernmentchiefscientificadviser_distributedledgertechnology_2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">UK Government Chief Scientific Adviser, <span>“Distributed <span>Ledger Technology</span>: <span>Beyond Block Chain</span>.”</span> 2016. Available: <a href="https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/492972/gs-16-1-distributed-ledger-technology.pdf">https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/492972/gs-16-1-distributed-ledger-technology.pdf</a></div>
+</div>
+<div id="ref-bano_consensusageblockchains_2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">S. Bano <em>et al.</em>, <span>“Consensus in the <span>Age</span> of <span>Blockchains</span>.”</span> 2017. Available: <a href="https://arxiv.org/abs/1711.03936">https://arxiv.org/abs/1711.03936</a></div>
+</div>
+<div id="ref-androulaki_hyperledgerfabricdistributed_2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">E. Androulaki <em>et al.</em>, <span>“Hyperledger fabric: A distributed operating system for permissioned blockchains,”</span> in <em>Proceedings of the <span>Thirteenth EuroSys Conference</span></em>, Porto Portugal: ACM, Apr. 2018, pp. 1–15. doi: <a href="https://doi.org/10.1145/3190508.3190538">10.1145/3190508.3190538</a>.</div>
+</div>
+<div id="ref-hyperledger_blockchainplatformenterprise_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">Hyperledger, <span>“A <span>Blockchain Platform</span> for the <span>Enterprise</span> — <span>Hyperledger Fabric Docs</span> main documentation.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://hyperledger-fabric.readthedocs.io/en/release-2.5/">https://hyperledger-fabric.readthedocs.io/en/release-2.5/</a></div>
+</div>
+<div id="ref-castro_practicalbyzantinefault_1999" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">M. Castro and B. Liskov, <span>“Practical <span>Byzantine Fault Tolerance</span>,”</span> in <em>Proceedings of the <span>Third Symposium</span> on <span>Operating Systems Design</span> and <span>Implementation</span></em>, New Orleans, LA, USA, Feb. 1999, pp. 173–186. Available: <a href="http://pmg.csail.mit.edu/papers/osdi99.pdf">http://pmg.csail.mit.edu/papers/osdi99.pdf</a></div>
+</div>
+<div id="ref-ongaro_searchunderstandableconsensus_2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">D. Ongaro and J. Ousterhout, <span>“In <span>Search</span> of an <span>Understandable Consensus Algorithm</span>,”</span> in <em>2014 <span>USENIX Annual Technical Conference</span> (<span>USENIX ATC</span> 14)</em>, Philadelphia, PA: USENIX Association, June 2014, pp. 305–319. Available: <a href="https://www.usenix.org/conference/atc14/technical-sessions/presentation/ongaro">https://www.usenix.org/conference/atc14/technical-sessions/presentation/ongaro</a></div>
+</div>
+<div id="ref-pishdar_denialofserviceattackspermissioned_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">M. Pishdar, Y. Lei, K. Harfoush, and J. Manzoor, <span>“Denial-of-<span>Service Attacks</span> on <span>Permissioned Blockchains</span>: <span>A Practical Study</span>,”</span> <em>Journal of Cybersecurity and Privacy</em>, vol. 5, no. 3, p. 39, Sept. 2025, doi: <a href="https://doi.org/10.3390/jcp5030039">10.3390/jcp5030039</a>.</div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

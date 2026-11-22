@@ -1,0 +1,1515 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token-Based Communities &amp; NFTs in Practice</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/ethereum/06-EF-token_based_communities_and_nfts_in_practice.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="ef-06" data-code="06-EF" data-src="f699dee1f6e40796" data-slides="32">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section VII: Ethereum Framework · Lesson 06-EF</p><h1>Token-Based Communities &amp; NFTs in Practice</h1></div></section>
+<section class="slide smaller" id="agenda"><h2 class="slide-title">Agenda</h2><div class="slide-body">
+<ol type="1">
+<li><p><strong>Foundations</strong> — What is a token? The on-chain primitive, its anatomy, and the fungible vs. non-fungible distinction.</p></li>
+<li><p><strong>Token-Based Communities</strong> — How token ownership enforces membership, access, and governance — with real-world case studies.</p></li>
+<li><p><strong>Minting</strong> — How tokens are created on-chain, contract patterns, metadata storage, soulbound credentials, and the permissioned contrast.</p></li>
+<li><p><strong>Adversarial &amp; Failure Cases</strong> — Rug pull forensics, the Decentralized Autonomous Organization (DAO)s re-entrancy attack, and centralisation chokepoints hiding inside decentralised systems.</p></li>
+<li><p><strong>Operational Implications</strong> — Five capabilities this infrastructure enables — and why each one cuts in two directions.</p></li>
+</ol>
+</div></section>
+<section class="slide" id="what-is-a-token"><h2 class="slide-title">What Is a Token?</h2><div class="slide-body" style="font-size: 0.90em;">
+<div style="font-size: 0.70em;">
+<ul>
+<li>A <strong>token</strong> is a programmable claim enforced by code on a shared ledger — not a coin, not an image.</li>
+<li>Three properties every token carries: <strong>unique or fungible ID</strong>, <strong>verifiable ownership</strong>, <strong>immutable transfer history</strong>.</li>
+<li>The ledger enforces the rules; humans and institutions supply the <strong>meaning behind those rules</strong>.</li>
+<li>Same primitive, radically different applications: stablecoin, supply chain record, membership pass.</li>
+</ul>
+<div style="margin-top: -5em;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 1598.95 359.53" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:2132px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(21.6 337.93)">
+<g id="node1" class="node">
+<ellipse fill="#1a3a4a" stroke="black" stroke-width="3" cx="777.38" cy="-256.36" rx="223.45" ry="59.96"/>
+<text text-anchor="middle" x="777.38" y="-280.36" font-family="Arial Bold" font-size="16.00" fill="white">TOKEN</text>
+<text text-anchor="middle" x="777.38" y="-261.16" font-family="Arial Bold" font-size="16.00" fill="white">─────────────────────────</text>
+<text text-anchor="middle" x="777.38" y="-241.96" font-family="Arial Bold" font-size="16.00" fill="white">A programmable claim on</text>
+<text text-anchor="middle" x="777.38" y="-222.76" font-family="Arial Bold" font-size="16.00" fill="white">a shared ledger</text>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="#1e6e42" stroke="black" stroke-width="1.5" points="334.75,-110 0,-110 0,0 334.75,0 334.75,-110"/>
+<text text-anchor="middle" x="167.38" y="-90.7" font-family="Arial Bold" font-size="17.00" fill="white">Identifier</text>
+<text text-anchor="middle" x="167.38" y="-70.3" font-family="Arial Bold" font-size="17.00" fill="white">─────────────────────────</text>
+<text text-anchor="middle" x="167.38" y="-49.9" font-family="Arial Bold" font-size="17.00" fill="white">Unique (NFT) or fungible</text>
+<text text-anchor="middle" x="167.38" y="-29.5" font-family="Arial Bold" font-size="17.00" fill="white">(interchangeable units)</text>
+<text text-anchor="middle" x="167.38" y="-9.1" font-family="Arial Bold" font-size="17.00" fill="white">Enforced by the contract</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#2ecc71" stroke-width="1.5" d="M635.13,-208.87C548.69,-180.62 437.6,-144.32 345.37,-114.17"/>
+<polygon fill="#2ecc71" stroke="#2ecc71" stroke-width="1.5" points="346.68,-110.92 336.09,-111.14 344.51,-117.57 346.68,-110.92"/>
+<text text-anchor="middle" x="512.14" y="-148.1" font-family="Arial Bold" font-size="17.00" fill="#2ecc71"> &#160;has a</text>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="#1e6e42" stroke="black" stroke-width="1.5" points="741.75,-110 407,-110 407,0 741.75,0 741.75,-110"/>
+<text text-anchor="middle" x="574.38" y="-90.7" font-family="Arial Bold" font-size="17.00" fill="white">Owner</text>
+<text text-anchor="middle" x="574.38" y="-70.3" font-family="Arial Bold" font-size="17.00" fill="white">─────────────────────────</text>
+<text text-anchor="middle" x="574.38" y="-49.9" font-family="Arial Bold" font-size="17.00" fill="white">A wallet address</text>
+<text text-anchor="middle" x="574.38" y="-29.5" font-family="Arial Bold" font-size="17.00" fill="white">Verifiable by anyone</text>
+<text text-anchor="middle" x="574.38" y="-9.1" font-family="Arial Bold" font-size="17.00" fill="white">Immutably recorded</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#2ecc71" stroke-width="1.5" d="M718.11,-197.16C692.98,-172.48 663.65,-143.68 638.06,-118.54"/>
+<polygon fill="#2ecc71" stroke="#2ecc71" stroke-width="1.5" points="640.74,-116.27 631.16,-111.76 635.84,-121.27 640.74,-116.27"/>
+<text text-anchor="middle" x="707.69" y="-148.1" font-family="Arial Bold" font-size="17.00" fill="#2ecc71"> &#160;has an</text>
+</g>
+
+<g id="node4" class="node">
+<polygon fill="#1e6e42" stroke="black" stroke-width="1.5" points="1148.75,-110 814,-110 814,0 1148.75,0 1148.75,-110"/>
+<text text-anchor="middle" x="981.38" y="-90.7" font-family="Arial Bold" font-size="17.00" fill="white">Transfer History</text>
+<text text-anchor="middle" x="981.38" y="-70.3" font-family="Arial Bold" font-size="17.00" fill="white">─────────────────────────</text>
+<text text-anchor="middle" x="981.38" y="-49.9" font-family="Arial Bold" font-size="17.00" fill="white">Every prior owner</text>
+<text text-anchor="middle" x="981.38" y="-29.5" font-family="Arial Bold" font-size="17.00" fill="white">Timestamped on&#45;chain</text>
+<text text-anchor="middle" x="981.38" y="-9.1" font-family="Arial Bold" font-size="17.00" fill="white">Cannot be altered</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#2ecc71" stroke-width="1.5" d="M836.93,-197.16C862.18,-172.48 891.66,-143.68 917.38,-118.54"/>
+<polygon fill="#2ecc71" stroke="#2ecc71" stroke-width="1.5" points="919.61,-121.25 924.32,-111.76 914.72,-116.25 919.61,-121.25"/>
+<text text-anchor="middle" x="918.49" y="-148.1" font-family="Arial Bold" font-size="17.00" fill="#2ecc71"> &#160;carries</text>
+</g>
+
+<g id="node5" class="node">
+<polygon fill="#6b1a1a" stroke="black" stroke-width="1.5" points="1555.75,-110 1221,-110 1221,0 1555.75,0 1555.75,-110"/>
+<text text-anchor="middle" x="1388.38" y="-90.7" font-family="Arial Bold" font-size="17.00" fill="white">Meaning</text>
+<text text-anchor="middle" x="1388.38" y="-70.3" font-family="Arial Bold" font-size="17.00" fill="white">─────────────────────────</text>
+<text text-anchor="middle" x="1388.38" y="-49.9" font-family="Arial Bold" font-size="17.00" fill="white">Art · Deed · Vote · Key</text>
+<text text-anchor="middle" x="1388.38" y="-29.5" font-family="Arial Bold" font-size="17.00" fill="white">Credential · Currency</text>
+<text text-anchor="middle" x="1388.38" y="-9.1" font-family="Arial Bold" font-size="17.00" fill="white">NOT enforced by the chain</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#e74c3c" stroke-width="2" stroke-dasharray="5,2" d="M919.86,-208.87C1006.17,-180.71 1117.03,-144.54 1209.24,-114.45"/>
+<polygon fill="#e74c3c" stroke="#e74c3c" stroke-width="2" points="1210.24,-117.8 1218.67,-111.37 1208.07,-111.15 1210.24,-117.8"/>
+<text text-anchor="middle" x="1152.02" y="-148.1" font-family="Arial Bold" font-size="17.00" fill="#e74c3c"> &#160;acquires</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="fungible-vs.-non-fungible"><h2 class="slide-title">Fungible vs. Non-Fungible</h2><div class="slide-body">
+<div style="font-size: 0.55em;">
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Standard</th>
+<th>Token Type</th>
+<th>What the contract tracks</th>
+<th>Transfer unit</th>
+<th>Typical use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ERC-20</strong></td>
+<td>Fungible</td>
+<td>Balances per address</td>
+<td>Any amount</td>
+<td>Governance token, stablecoin, social currency</td>
+</tr>
+<tr>
+<td><strong>ERC-721</strong></td>
+<td>Non-Fungible</td>
+<td>Owner per token ID</td>
+<td>One whole token</td>
+<td>Art, deed, membership pass, supply chain record</td>
+</tr>
+<tr>
+<td><strong>ERC-1155</strong></td>
+<td>Multi-token</td>
+<td>Balance per (address, ID) pair</td>
+<td>Amounts per ID</td>
+<td>Gaming inventory, enterprise asset catalogue</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><p>Standards are <strong>social and technical contracts</strong> — wallets, markets, and indexers all speak them.</p></li>
+<li><p>Choosing the wrong standard is an <strong>architectural decision</strong> — it constrains what the system can ever do.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="token-standard-design-considerations"><h2 class="slide-title">Token Standard Design Considerations</h2><div class="slide-body" style="font-size: 0.90em;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 1263.55 856.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1685px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(50.4 806.2)">
+<g id="node1" class="node">
+<polygon fill="#1a2a4a" stroke="black" stroke-width="2" points="749.88,-755.8 618.73,-707 749.88,-658.2 881.02,-707 749.88,-755.8"/>
+<text text-anchor="middle" x="749.88" y="-712.1" font-family="Arial Bold" font-size="17.00" fill="white">Are all instances</text>
+<text text-anchor="middle" x="749.88" y="-691.7" font-family="Arial Bold" font-size="17.00" fill="white">interchangeable?</text>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="#1a2a4a" stroke="black" stroke-width="2" points="531.88,-551.8 366.2,-482.6 531.88,-413.4 697.55,-482.6 531.88,-551.8"/>
+<text text-anchor="middle" x="531.88" y="-497.9" font-family="Arial Bold" font-size="17.00" fill="white">Do you need both</text>
+<text text-anchor="middle" x="531.88" y="-477.5" font-family="Arial Bold" font-size="17.00" fill="white">fungible and unique</text>
+<text text-anchor="middle" x="531.88" y="-457.1" font-family="Arial Bold" font-size="17.00" fill="white">tokens in one system?</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#e74c3c" stroke-width="1.5" d="M714.85,-670.27C680.69,-635.42 628.18,-581.85 588.16,-541.02"/>
+<polygon fill="#e74c3c" stroke="#e74c3c" stroke-width="1.5" points="590.91,-538.82 581.41,-534.13 585.91,-543.72 590.91,-538.82"/>
+<text text-anchor="middle" x="675.04" y="-599.9" font-family="Arial Bold" font-size="17.00" fill="#e74c3c"> &#160;No</text>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="#1e6e42" stroke="black" stroke-width="1.5" points="1162.75,-547.8 777,-547.8 777,-417.4 1162.75,-417.4 1162.75,-547.8"/>
+<text text-anchor="middle" x="969.88" y="-528.5" font-family="Arial Bold" font-size="17.00" fill="white">ERC&#45;20 &#160;— &#160;Fungible</text>
+<text text-anchor="middle" x="969.88" y="-508.1" font-family="Arial Bold" font-size="17.00" fill="white">─────────────────────────────</text>
+<text text-anchor="middle" x="969.88" y="-487.7" font-family="Arial Bold" font-size="17.00" fill="white">Tracks: balance per address</text>
+<text text-anchor="middle" x="969.88" y="-467.3" font-family="Arial Bold" font-size="17.00" fill="white">Transfer unit: any amount</text>
+<text text-anchor="middle" x="969.88" y="-446.9" font-family="Arial Bold" font-size="17.00" fill="white">Constraint: no individual identity</text>
+<text text-anchor="middle" x="969.88" y="-426.5" font-family="Arial Bold" font-size="17.00" fill="white">Use: governance, stablecoin, currency</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#2ecc71" stroke-width="1.5" d="M784.73,-670.76C814.92,-640.24 859.57,-595.11 897.46,-556.8"/>
+<polygon fill="#2ecc71" stroke="#2ecc71" stroke-width="1.5" points="899.79,-559.42 904.34,-549.85 894.81,-554.5 899.79,-559.42"/>
+<text text-anchor="middle" x="877.34" y="-599.9" font-family="Arial Bold" font-size="17.00" fill="#2ecc71"> &#160;Yes</text>
+</g>
+
+<g id="node4" class="node">
+<polygon fill="#1a3a5a" stroke="black" stroke-width="1.5" points="385.75,-307 0,-307 0,-176.6 385.75,-176.6 385.75,-307"/>
+<text text-anchor="middle" x="192.88" y="-287.7" font-family="Arial Bold" font-size="17.00" fill="white">ERC&#45;721 &#160;— &#160;Non&#45;Fungible</text>
+<text text-anchor="middle" x="192.88" y="-267.3" font-family="Arial Bold" font-size="17.00" fill="white">─────────────────────────────</text>
+<text text-anchor="middle" x="192.88" y="-246.9" font-family="Arial Bold" font-size="17.00" fill="white">Tracks: one owner per token ID</text>
+<text text-anchor="middle" x="192.88" y="-226.5" font-family="Arial Bold" font-size="17.00" fill="white">Transfer unit: one whole token</text>
+<text text-anchor="middle" x="192.88" y="-206.1" font-family="Arial Bold" font-size="17.00" fill="white">Constraint: no batch efficiency</text>
+<text text-anchor="middle" x="192.88" y="-185.7" font-family="Arial Bold" font-size="17.00" fill="white">Use: art, deed, membership, credential</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#3498db" stroke-width="1.5" d="M470.48,-438.36C421.42,-403.8 351.63,-354.63 294.29,-314.24"/>
+<polygon fill="#3498db" stroke="#3498db" stroke-width="1.5" points="296.52,-311.53 286.33,-308.63 292.49,-317.25 296.52,-311.53"/>
+<text text-anchor="middle" x="438.17" y="-355.1" font-family="Arial Bold" font-size="17.00" fill="#3498db"> &#160;No — unique only</text>
+</g>
+
+<g id="node5" class="node">
+<polygon fill="#4a3500" stroke="black" stroke-width="1.5" points="850.75,-307 465,-307 465,-176.6 850.75,-176.6 850.75,-307"/>
+<text text-anchor="middle" x="657.88" y="-287.7" font-family="Arial Bold" font-size="17.00" fill="white">ERC&#45;1155 &#160;— &#160;Multi&#45;Token</text>
+<text text-anchor="middle" x="657.88" y="-267.3" font-family="Arial Bold" font-size="17.00" fill="white">─────────────────────────────</text>
+<text text-anchor="middle" x="657.88" y="-246.9" font-family="Arial Bold" font-size="17.00" fill="white">Tracks: balance per (address, ID) pair</text>
+<text text-anchor="middle" x="657.88" y="-226.5" font-family="Arial Bold" font-size="17.00" fill="white">Transfer unit: amounts per ID</text>
+<text text-anchor="middle" x="657.88" y="-206.1" font-family="Arial Bold" font-size="17.00" fill="white">Constraint: larger attack surface</text>
+<text text-anchor="middle" x="657.88" y="-185.7" font-family="Arial Bold" font-size="17.00" fill="white">Use: gaming inventory, enterprise catalogue</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#f39c12" stroke-width="1.5" d="M561.74,-425.01C578.62,-393.01 599.94,-352.6 618.21,-317.97"/>
+<polygon fill="#f39c12" stroke="#f39c12" stroke-width="1.5" points="621.15,-319.91 622.72,-309.43 614.96,-316.64 621.15,-319.91"/>
+<text text-anchor="middle" x="647.99" y="-355.1" font-family="Arial Bold" font-size="17.00" fill="#f39c12"> &#160;Yes — mixed</text>
+</g>
+
+<g id="node6" class="node">
+<polygon fill="#5a1a1a" stroke="black" stroke-width="2" points="772.08,-89.6 543.67,-89.6 543.67,0 772.08,0 772.08,-89.6"/>
+<text text-anchor="middle" x="657.88" y="-70.3" font-family="Arial Bold" font-size="17.00" fill="white">Standard choice is</text>
+<text text-anchor="middle" x="657.88" y="-49.9" font-family="Arial Bold" font-size="17.00" fill="white">an architectural commitment —</text>
+<text text-anchor="middle" x="657.88" y="-29.5" font-family="Arial Bold" font-size="17.00" fill="white">it constrains every downstream</text>
+<text text-anchor="middle" x="657.88" y="-9.1" font-family="Arial Bold" font-size="17.00" fill="white">wallet, market, and indexer.</text>
+</g>
+
+
+
+</g>
+</svg></figure>
+</div></section>
+<section class="slide" id="what-tokens-dont-guarantee"><h2 class="slide-title">What Tokens Don’t Guarantee</h2><div class="slide-body" style="font-size: 0.85em;">
+<ul>
+<li><p>The chain verifies: <strong>signatures</strong>, <strong>balance changes</strong>, <strong>contract execution</strong>, <strong>event logs</strong>.</p></li>
+<li><p>The chain does <strong>not</strong> verify: file contents, legal ownership, identity of the wallet holder, or meaning of metadata.</p></li>
+<li><p><code>tokenURI</code> points to a JSON file — that file lives <strong>somewhere else</strong>, with its own integrity model.</p></li>
+<li><p>A token on an immutable chain pointing to a <strong>mutable server</strong> is only as trustworthy as the server operator.</p></li>
+</ul>
+</div></section>
+<section class="slide" id="on-chain-vs.-off-chain"><h2 class="slide-title">On-Chain vs. Off-Chain</h2><div class="slide-body" style="font-size: 0.90em;">
+<div style="margin-top: -5em;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 904.13 465.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1205px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(36 429)">
+<g id="clust1" class="cluster">
+<polygon fill="#1a3a2a" stroke="#2ecc71" stroke-width="2" points="0,-8 0,-261 234.94,-261 234.94,-8 0,-8"/>
+<text text-anchor="middle" x="117.47" y="-245.3" font-family="Arial" font-size="13.00" fill="white">On&#45;Chain &#160;— &#160;Enforced by Consensus</text>
+</g>
+<g id="clust2" class="cluster">
+<polygon fill="#3a1a1a" stroke="#e74c3c" stroke-width="2" points="377.01,-170 377.01,-385 824.13,-385 824.13,-170 377.01,-170"/>
+<text text-anchor="middle" x="494.46" y="-369.3" font-family="Arial" font-size="13.00" fill="white">Off&#45;Chain &#160;— &#160;NOT Enforced by Chain</text>
+</g>
+
+<g id="node1" class="node">
+<polygon fill="#1e6e42" stroke="black" stroke-width="1.5" points="161.49,-52 72.46,-52 72.46,-16 161.49,-16 161.49,-52"/>
+<text text-anchor="middle" x="116.97" y="-28.6" font-family="Arial" font-size="18.00" fill="white">Token ID</text>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="#1e6e42" stroke="black" stroke-width="1.5" points="187,-106 46.95,-106 46.95,-70 187,-70 187,-106"/>
+<text text-anchor="middle" x="116.97" y="-82.6" font-family="Arial" font-size="18.00" fill="white">Owner Address</text>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="#1e6e42" stroke="black" stroke-width="1.5" points="188.98,-160 44.96,-160 44.96,-124 188.98,-124 188.98,-160"/>
+<text text-anchor="middle" x="116.97" y="-136.6" font-family="Arial" font-size="18.00" fill="white">Transfer History</text>
+</g>
+
+<g id="node4" class="node">
+<polygon fill="#2d7a50" stroke="black" stroke-width="1.5" points="162.49,-229.6 71.46,-229.6 71.46,-178.4 162.49,-178.4 162.49,-229.6"/>
+<text text-anchor="middle" x="116.97" y="-209.4" font-family="Arial" font-size="18.00" fill="white">tokenURI</text>
+<text text-anchor="middle" x="116.97" y="-187.8" font-family="Arial" font-size="18.00" fill="white">(pointer)</text>
+</g>
+
+<g id="node5" class="node">
+<polygon fill="#8b2020" stroke="black" stroke-width="1.5" points="604.08,-229.6 385.01,-229.6 385.01,-178.4 604.08,-178.4 604.08,-229.6"/>
+<text text-anchor="middle" x="494.54" y="-209.4" font-family="Arial" font-size="18.00" fill="white">Metadata JSON</text>
+<text text-anchor="middle" x="494.54" y="-187.8" font-family="Arial" font-size="18.00" fill="white">(name, description, traits)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#e74c3c" stroke-width="2" stroke-dasharray="5,2" d="M162.89,-204C162.89,-204 371.65,-204 371.65,-204"/>
+<polygon fill="#e74c3c" stroke="#e74c3c" stroke-width="2" points="371.65,-207.5 381.65,-204 371.65,-200.5 371.65,-207.5"/>
+<text text-anchor="middle" x="305.97" y="-231" font-family="Arial" font-size="18.00" fill="#e74c3c"> &#160;points to</text>
+<text text-anchor="middle" x="305.97" y="-209.4" font-family="Arial" font-size="18.00" fill="#e74c3c"> &#160;(not enforced)</text>
+</g>
+
+<g id="node6" class="node">
+<polygon fill="#8b2020" stroke="black" stroke-width="1.5" points="816.13,-222 706.1,-222 706.1,-186 816.13,-186 816.13,-222"/>
+<text text-anchor="middle" x="761.12" y="-198.6" font-family="Arial" font-size="18.00" fill="white">Image / File</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#e74c3c" stroke-width="1.5" stroke-dasharray="5,2" d="M604.51,-204C604.51,-204 693.44,-204 693.44,-204"/>
+<polygon fill="#e74c3c" stroke="#e74c3c" stroke-width="1.5" points="693.44,-207.5 703.44,-204 693.44,-200.5 693.44,-207.5"/>
+<text text-anchor="middle" x="655.09" y="-209.4" font-family="Arial" font-size="18.00" fill="#e74c3c"> &#160;links to</text>
+</g>
+
+<g id="node7" class="node">
+<polygon fill="#6b1a1a" stroke="black" stroke-width="1.5" points="552.57,-284 436.51,-284 436.51,-248 552.57,-248 552.57,-284"/>
+<text text-anchor="middle" x="494.54" y="-260.6" font-family="Arial" font-size="18.00" fill="white">Legal Rights</text>
+</g>
+
+<g id="node8" class="node">
+<polygon fill="#6b1a1a" stroke="black" stroke-width="1.5" points="579.07,-353.6 410.02,-353.6 410.02,-302.4 579.07,-302.4 579.07,-353.6"/>
+<text text-anchor="middle" x="494.54" y="-333.4" font-family="Arial" font-size="18.00" fill="white">Real&#45;World Identity</text>
+<text text-anchor="middle" x="494.54" y="-311.8" font-family="Arial" font-size="18.00" fill="white">of Wallet Holder</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide" id="token-based-communities"><h2 class="slide-title">Token-Based Communities</h2><div class="slide-body" style="font-size: 0.88em;">
+<ul>
+<li><p>A <strong>token-based community</strong> enforces membership, access, and/or governance through token ownership.</p></li>
+<li><p>Three things token ownership can gate: <strong>who gets in</strong>, <strong>who gets to speak</strong>, <strong>who gets to decide</strong>.</p></li>
+<li><p>The chain enforces the gate; humans supply the <strong>community, culture, and purpose</strong> behind it.</p></li>
+<li><p>Key question: what exactly does the token <em>enforce</em> — and what does it merely <em>signal</em>?</p></li>
+</ul>
+</div></section>
+<section class="slide" id="two-layer-community-architecture"><h2 class="slide-title">Two-Layer Community Architecture</h2><div class="slide-body" style="font-size: 0.90em;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 879.88 484.40" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1173px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(43.2 441.2)">
+<g id="clust1" class="cluster">
+<polygon fill="#1a3a2a" stroke="#2ecc71" stroke-width="2.5" points="8,-203 8,-390 538.77,-390 538.77,-203 8,-203"/>
+<text text-anchor="middle" x="67.08" y="-374.3" font-family="Arial Bold" font-size="13.00" fill="white">Enforced On&#45;Chain</text>
+</g>
+<g id="clust2" class="cluster">
+<polygon fill="#1a2a3a" stroke="#3498db" stroke-width="2.5" points="327.61,-8 327.61,-195 785.48,-195 785.48,-8 327.61,-8"/>
+<text text-anchor="middle" x="406.73" y="-179.3" font-family="Arial Bold" font-size="13.00" fill="white">Social Layer &#160;— &#160;Off&#45;Chain</text>
+</g>
+
+<g id="node1" class="node">
+<polygon fill="#1e6e42" stroke="black" stroke-width="1.5" points="147.19,-259.4 26.84,-259.4 26.84,-210.6 147.19,-210.6 147.19,-259.4"/>
+<text text-anchor="middle" x="87.02" y="-240.1" font-family="Arial Bold" font-size="17.00" fill="white">Access Control</text>
+<text text-anchor="middle" x="87.02" y="-219.7" font-family="Arial Bold" font-size="17.00" fill="white">(token gate)</text>
+</g>
+
+<g id="node4" class="node">
+<polygon fill="#1a4a6e" stroke="black" stroke-width="1.5" points="550.84,-64.4 335.61,-64.4 335.61,-15.6 550.84,-15.6 550.84,-64.4"/>
+<text text-anchor="middle" x="443.23" y="-45.1" font-family="Arial Bold" font-size="17.00" fill="white">Communication</text>
+<text text-anchor="middle" x="443.23" y="-24.7" font-family="Arial Bold" font-size="17.00" fill="white">(Discord, Telegram, Forums)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#e74c3c" stroke-width="2" stroke-dasharray="5,2" d="M125.3,-210.3C171.68,-180.08 253.78,-128.23 327.61,-90 340.94,-83.1 355.43,-76.28 369.48,-70"/>
+<polygon fill="#e74c3c" stroke="#e74c3c" stroke-width="2" points="370.64,-73.31 378.38,-66.08 367.81,-66.91 370.64,-73.31"/>
+<text text-anchor="middle" x="246.82" y="-167.08" font-family="Arial Bold" font-size="17.00" fill="#e74c3c">gates entry to</text>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="#1e6e42" stroke="black" stroke-width="1.5" points="158.03,-358.4 16,-358.4 16,-309.6 158.03,-309.6 158.03,-358.4"/>
+<text text-anchor="middle" x="87.02" y="-339.1" font-family="Arial Bold" font-size="17.00" fill="white">Governance Votes</text>
+<text text-anchor="middle" x="87.02" y="-318.7" font-family="Arial Bold" font-size="17.00" fill="white">(token&#45;weighted)</text>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="#1e6e42" stroke="black" stroke-width="1.5" points="530.77,-358.4 355.68,-358.4 355.68,-309.6 530.77,-309.6 530.77,-358.4"/>
+<text text-anchor="middle" x="443.23" y="-339.1" font-family="Arial Bold" font-size="17.00" fill="white">Treasury Disbursement</text>
+<text text-anchor="middle" x="443.23" y="-318.7" font-family="Arial Bold" font-size="17.00" fill="white">(contract execution)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#2ecc71" stroke-width="1.5" d="M158.42,-334C211.36,-334 284.59,-334 343.4,-334"/>
+<polygon fill="#2ecc71" stroke="#2ecc71" stroke-width="1.5" points="343.07,-337.5 353.07,-334 343.07,-330.5 343.07,-337.5"/>
+<text text-anchor="middle" x="246.82" y="-339.1" font-family="Arial Bold" font-size="17.00" fill="#2ecc71">authorizes</text>
+</g>
+
+<g id="node5" class="node">
+<polygon fill="#1a4a6e" stroke="black" stroke-width="1.5" points="510.71,-163.4 375.74,-163.4 375.74,-114.6 510.71,-114.6 510.71,-163.4"/>
+<text text-anchor="middle" x="443.23" y="-144.1" font-family="Arial Bold" font-size="17.00" fill="white">Culture / Norms</text>
+<text text-anchor="middle" x="443.23" y="-123.7" font-family="Arial Bold" font-size="17.00" fill="white">(trust, reputation)</text>
+</g>
+
+<g id="node6" class="node">
+<polygon fill="#154060" stroke="black" stroke-width="1.5" points="777.48,-163.4 682.16,-163.4 682.16,-114.6 777.48,-114.6 777.48,-163.4"/>
+<text text-anchor="middle" x="729.82" y="-144.1" font-family="Arial Bold" font-size="17.00" fill="white">Moderation</text>
+<text text-anchor="middle" x="729.82" y="-123.7" font-family="Arial Bold" font-size="17.00" fill="white">&amp; Curation</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#3498db" stroke-width="1.5" d="M510.95,-139C559.11,-139 623.54,-139 669.82,-139"/>
+<polygon fill="#3498db" stroke="#3498db" stroke-width="1.5" points="669.79,-142.5 679.79,-139 669.79,-135.5 669.79,-142.5"/>
+<text text-anchor="middle" x="616.5" y="-144.1" font-family="Arial Bold" font-size="17.00" fill="#3498db">shapes</text>
+</g>
+</g>
+</svg></figure>
+</div></section>
+<section class="slide" id="three-patterns-daos-membership-nfts-and-social-tokens"><h2 class="slide-title">Three Patterns: DAOs, Membership NFTs, and Social Tokens</h2><div class="slide-body">
+<div style="font-size: 0.65em;">
+<ul>
+<li><p><strong>Decentralized Autonomous Organization - DAOs</strong> — token-weighted control of a shared treasury and protocol; governance is the core function.</p></li>
+<li><p><strong>Membership NFTs</strong> — access control; the NFT is a key that unlocks content, events, or community spaces.</p></li>
+<li><p><strong>Social tokens</strong> — community currency; rewards contribution and aligns incentives around participation.</p></li>
+<li><p>These patterns <strong>mix freely</strong> — most real communities combine elements of all three.</p></li>
+</ul>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 401.13 248.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:535px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 244)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-244 397.13,-244 397.13,4 -4,4"/>
+
+<g id="node1" class="node">
+<polygon fill="#1e6e42" stroke="black" points="99.38,-240 0,-240 0,-172 99.38,-172 99.38,-240"/>
+<text text-anchor="start" x="38.58" y="-228" font-family="Arial" font-weight="bold" font-size="10.00" fill="white">DAO</text>
+<text text-anchor="start" x="8.01" y="-218" font-family="Arial" font-size="10.00" fill="white">──────────</text>
+<text text-anchor="start" x="15.23" y="-208" font-family="Arial" font-size="10.00" fill="white">Token: ERC&#45;20</text>
+<text text-anchor="start" x="13.84" y="-198" font-family="Arial" font-size="10.00" fill="white">Enforces: votes,</text>
+<text text-anchor="start" x="8" y="-188" font-family="Arial" font-size="10.00" fill="white">treasury, upgrades</text>
+<text text-anchor="start" x="11.9" y="-178" font-family="Arial" font-size="10.00" fill="white">Example: Gitcoin</text>
+</g>
+
+<g id="node4" class="node">
+<ellipse fill="#5a1a1a" stroke="black" cx="311.28" cy="-120" rx="81.84" ry="41.01"/>
+<text text-anchor="start" x="295.45" y="-137" font-family="Arial" font-weight="bold" font-size="10.00" fill="white">Hybrid</text>
+<text text-anchor="start" x="269.61" y="-127" font-family="Arial" font-size="10.00" fill="white">──────────</text>
+<text text-anchor="start" x="280.02" y="-117" font-family="Arial" font-size="10.00" fill="white">NFT = identity</text>
+<text text-anchor="start" x="271.11" y="-107" font-family="Arial" font-size="10.00" fill="white">Fungible = budget</text>
+<text text-anchor="start" x="261.41" y="-97" font-family="Arial" font-size="10.00" fill="white">Example: FWB + DAO</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#2ecc71" d="M99.82,-189.72C136.95,-177.42 188.67,-160.29 231.54,-146.08"/>
+<polygon fill="#2ecc71" stroke="#2ecc71" points="232.41,-149.48 240.8,-143.02 230.21,-142.84 232.41,-149.48"/>
+<text text-anchor="middle" x="164.41" y="-186.24" font-family="Arial Bold" font-size="11.00" fill="#2ecc71">add identity layer</text>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="#1a3a5a" stroke="black" points="99.36,-154 0.01,-154 0.01,-86 99.36,-86 99.36,-154"/>
+<text text-anchor="start" x="9.13" y="-142" font-family="Arial" font-weight="bold" font-size="10.00" fill="white">Membership NFT</text>
+<text text-anchor="start" x="8.01" y="-132" font-family="Arial" font-size="10.00" fill="white">──────────</text>
+<text text-anchor="start" x="12.45" y="-122" font-family="Arial" font-size="10.00" fill="white">Token: ERC&#45;721</text>
+<text text-anchor="start" x="11.62" y="-112" font-family="Arial" font-size="10.00" fill="white">Enforces: access</text>
+<text text-anchor="start" x="11.61" y="-102" font-family="Arial" font-size="10.00" fill="white">to content/events</text>
+<text text-anchor="start" x="13.84" y="-92" font-family="Arial" font-size="10.00" fill="white">Example: BAYC</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#3498db" d="M99.82,-120C133,-120 177.84,-120 217.6,-120"/>
+<polygon fill="#3498db" stroke="#3498db" points="217.43,-123.5 227.43,-120 217.43,-116.5 217.43,-123.5"/>
+<text text-anchor="middle" x="164.41" y="-123.3" font-family="Arial Bold" font-size="11.00" fill="#3498db">add governance layer</text>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="#4a3500" stroke="black" points="99.36,-68 0.01,-68 0.01,0 99.36,0 99.36,-68"/>
+<text text-anchor="start" x="18.85" y="-56" font-family="Arial" font-weight="bold" font-size="10.00" fill="white">Social Token</text>
+<text text-anchor="start" x="8.01" y="-46" font-family="Arial" font-size="10.00" fill="white">──────────</text>
+<text text-anchor="start" x="15.23" y="-36" font-family="Arial" font-size="10.00" fill="white">Token: ERC&#45;20</text>
+<text text-anchor="start" x="8.28" y="-26" font-family="Arial" font-size="10.00" fill="white">Enforces: balance;</text>
+<text text-anchor="start" x="9.67" y="-16" font-family="Arial" font-size="10.00" fill="white">signals status/role</text>
+<text text-anchor="start" x="16.35" y="-6" font-family="Arial" font-size="10.00" fill="white">Example: FWB</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#f39c12" d="M99.82,-50.28C136.95,-62.58 188.67,-79.71 231.54,-93.92"/>
+<polygon fill="#f39c12" stroke="#f39c12" points="230.21,-97.16 240.8,-96.98 232.41,-90.52 230.21,-97.16"/>
+<text text-anchor="middle" x="164.41" y="-90.53" font-family="Arial Bold" font-size="11.00" fill="#f39c12">add treasury control</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide" id="case-study-friends-with-benefits"><h2 class="slide-title">Case Study: Friends With Benefits</h2><div class="slide-body" style="font-size: 0.88em;">
+<div style="font-size: 0.72em;">
+<ul>
+<li><p><strong>Friends With Benefits (FWB)</strong> is a social DAO for Web3-focused creators, builders, and cultural organizers.</p></li>
+<li><p><strong>Purpose:</strong> coordinate cultural production, events, writing, collaborations, and member-to-member social capital around Web3.</p></li>
+<li><p><strong>FWB (ERC-20)</strong> functions as a social token: applicants are reviewed, then token ownership gates membership spaces and participation.</p></li>
+<li><p>Members use Discord, IRL events, editorial work, and governance to co-create the community’s direction.</p></li>
+<li><p>The core tension: curation can protect culture, but application review plus token thresholds creates a selective and price-sensitive gate.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="case-study-bored-ape-yacht-club"><h2 class="slide-title">Case Study: Bored Ape Yacht Club</h2><div class="slide-body" style="font-size: 0.88em;">
+<div style="font-size: 0.72em;">
+<ul>
+<li><p><strong>Bored Ape Yacht Club (BAYC)</strong> is a 10,000-piece Ethereum NFT collection that became a membership club and entertainment/IP brand.</p></li>
+<li><p><strong>Purpose:</strong> turn collectible identity into access, events, commercial licensing, and an expandable cultural ecosystem.</p></li>
+<li><p><strong>BAYC (ERC-721)</strong> gates member experiences and links each holder to a specific Ape identity and artwork license.</p></li>
+<li><p><strong>APE (ERC-20)</strong> is a separate ecosystem governance and utility token; holding APE, not BAYC, determines ApeCoin DAO voting.</p></li>
+<li><p>The core tension: NFT ownership, IP licensing, brand management, and DAO governance are related but not the same control surface.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="case-study-doodles"><h2 class="slide-title">Case Study: Doodles</h2><div class="slide-body" style="font-size: 0.88em;">
+<div style="font-size: 0.72em;">
+<ul>
+<li><p><strong>Doodles</strong> began as a colorful Ethereum NFT collection and evolved toward a broader media, entertainment, and collectibles brand.</p></li>
+<li><p><strong>Purpose:</strong> build a character-driven creative universe with holders as early collectors, community members, and brand participants.</p></li>
+<li><p><strong>Doodles (ERC-721)</strong> establishes collectible ownership and links holders to artwork/media license terms and community benefits.</p></li>
+<li><p>Community governance centered on <strong>Doodlebank</strong>, a treasury used to fund holder-facing campaigns, experiences, and experiments.</p></li>
+<li><p>The core tension: holders may expect participatory governance, but brand direction, licensing, and product execution depend on off-chain company decisions.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="case-study-gitcoin"><h2 class="slide-title">Case Study: Gitcoin</h2><div class="slide-body" style="font-size: 0.88em;">
+<div style="font-size: 0.72em;">
+<ul>
+<li><p><strong>Gitcoin</strong> funds open-source and Web3 public goods through grants, matching pools, and governance.</p></li>
+<li><p><strong>Purpose:</strong> direct capital toward public goods that are valuable to the ecosystem but hard to monetize through ordinary markets.</p></li>
+<li><p><strong>GTC (ERC-20)</strong> governs Gitcoin’s decentralization work, grants processes, disputes, and treasury stewardship.</p></li>
+<li><p>Gitcoin popularized <strong>quadratic funding</strong>, where broad community support can receive more matching weight than a few large donors.</p></li>
+<li><p>The core tension: public-goods funding needs open participation, but open participation creates sybil, collusion, and identity-verification pressure.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="case-study-ens-dao"><h2 class="slide-title">Case Study: ENS DAO</h2><div class="slide-body" style="font-size: 0.88em;">
+<div style="font-size: 0.72em;">
+<ul>
+<li><p><strong>Ethereum Name Service (ENS)</strong> maps human-readable names to addresses and other records; the DAO governs the protocol and treasury.</p></li>
+<li><p><strong>Purpose:</strong> maintain decentralized naming infrastructure for Ethereum users, wallets, dApps, and protocols.</p></li>
+<li><p><strong>ENS (ERC-20)</strong> designates voting weight; holders must delegate voting rights before voting or creating proposals.</p></li>
+<li><p>Governance spans <strong>off-chain signaling</strong>, <strong>on-chain executable proposals</strong>, <strong>working groups</strong>, and a written constitution.</p></li>
+<li><p>The core tension: a token vote can update contracts and move treasury funds, but legitimacy also depends on delegates, stewards, norms, and emergency controls.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="case-study-nouns-dao"><h2 class="slide-title">Case Study: Nouns DAO</h2><div class="slide-body" style="font-size: 0.88em;">
+<div style="font-size: 0.72em;">
+<ul>
+<li><p><strong>Nouns DAO</strong> mints and auctions one new Noun NFT roughly every 24 hours, with proceeds deposited into the DAO treasury.</p></li>
+<li><p><strong>Purpose:</strong> fund open-ended public goods, art, software, events, and brand experiments that spread the Nouns identity.</p></li>
+<li><p>Each <strong>Noun (ERC-721)</strong> is an irrevocable DAO membership unit and carries <strong>one vote</strong> in governance.</p></li>
+<li><p>The model links <strong>identity, funding, and governance</strong>: the NFT is the member badge, voting asset, and source of treasury growth.</p></li>
+<li><p>The core tension: daily issuance broadens participation over time, but high auction prices can still concentrate governance among wealthy buyers.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="case-study-constitutiondao"><h2 class="slide-title">Case Study: ConstitutionDAO</h2><div class="slide-body" style="font-size: 0.88em;">
+<div style="font-size: 0.72em;">
+<ul>
+<li><p><strong>ConstitutionDAO</strong> formed in November 2021 for one purpose: collectively bid on a rare first printing of the U.S. Constitution.</p></li>
+<li><p><strong>Purpose:</strong> pool capital quickly around a shared cultural acquisition that no individual participant could easily pursue alone.</p></li>
+<li><p>The group raised roughly <strong>$47M in ETH</strong>, but did not win the <strong>$43.2M</strong> sale once fees, custody, and refund obligations constrained its bid.</p></li>
+<li><p>Contributors could claim <strong>PEOPLE</strong> tokens or redeem them for ETH at the original contribution ratio.</p></li>
+<li><p>After wind-down, the official project stated PEOPLE had <strong>no governance rights or utility</strong> beyond redemption — but the token continued to trade and carry social meaning.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide smaller" id="token-community-examples"><h2 class="slide-title">Token Community Examples</h2><div class="slide-body">
+<div style="font-size: 0.55em;">
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Community</th>
+<th>Pattern</th>
+<th>Token</th>
+<th>What it enforces</th>
+<th>Notable feature</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Friends With Benefits</strong></td>
+<td>Social + DAO</td>
+<td>FWB (ERC-20)</td>
+<td>Discord membership threshold</td>
+<td>Token price creates plutocratic entry barrier</td>
+</tr>
+<tr>
+<td><strong>Bored Ape Yacht Club</strong></td>
+<td>Membership NFT + DAO</td>
+<td>BAYC (ERC-721) + APE (ERC-20)</td>
+<td>Event access, IP rights, ApeCoin governance</td>
+<td>Layered: NFT = identity; APE = treasury control</td>
+</tr>
+<tr>
+<td><strong>Doodles</strong></td>
+<td>Membership NFT + DAO</td>
+<td>Doodles (ERC-721)</td>
+<td>Doodlebank treasury voting</td>
+<td>Community launchpad funded $300K+ in grants</td>
+</tr>
+<tr>
+<td><strong>Gitcoin</strong></td>
+<td>DAO</td>
+<td>GTC (ERC-20)</td>
+<td>Quadratic funding allocation</td>
+<td>Open-source grant funding; sybil resistance required</td>
+</tr>
+<tr>
+<td><strong>ENS DAO</strong></td>
+<td>Protocol DAO</td>
+<td>ENS (ERC-20)</td>
+<td>Protocol and treasury governance</td>
+<td>Token voting around public naming infrastructure</td>
+</tr>
+<tr>
+<td><strong>Nouns DAO</strong></td>
+<td>NFT DAO</td>
+<td>Nouns (ERC-721)</td>
+<td>One NFT = one governance vote</td>
+<td>Daily auction continuously funds treasury</td>
+</tr>
+<tr>
+<td><strong>ConstitutionDAO</strong></td>
+<td>Single-purpose DAO</td>
+<td>PEOPLE (ERC-20)</td>
+<td>Refund claim; proposed governance</td>
+<td>Token meaning persisted after project ended</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><p>Each community answers: <em>what does holding this token actually let you do?</em></p></li>
+<li><p>Each also illustrates a <strong>structural tension</strong> that token governance alone cannot resolve.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="how-token-gating-works"><h2 class="slide-title">How Token Gating Works</h2><div class="slide-body" style="font-size: 0.85em;">
+<ul>
+<li><p>Flow: user connects wallet → <strong>signs a message</strong> (no gas) → contract checks token balance → access granted or denied.</p></li>
+<li><p>Implementations: Discord bots (Collab.Land, Guild.xyz), web apps (wallet auth), physical events (FWB Gatekeeper).</p></li>
+<li><p><strong>No passwords. No accounts. No central database.</strong> Ownership is the credential.</p></li>
+<li><p>Analytical split: <strong>membership list is public</strong> (on-chain); <strong>community content is private</strong> (off-chain).</p></li>
+</ul>
+</div></section>
+<section class="slide" id="token-gating-access-flow"><h2 class="slide-title">Token Gating: Access Flow</h2><div class="slide-body" style="font-size: 0.90em;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 834.80 884.20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1113px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(50.4 833.8)">
+<g id="node1" class="node">
+<polygon fill="#1a3a4a" stroke="black" stroke-width="2.5" points="529,-783.4 205,-783.4 205,-713.8 529,-713.8 529,-783.4"/>
+<text text-anchor="middle" x="367" y="-753.7" font-family="Arial" font-size="17.00" fill="white">(1) User Wallet</text>
+<text text-anchor="middle" x="367" y="-733.3" font-family="Arial" font-size="17.00" fill="white">Connect wallet to bot / dApp</text>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="#4a3500" stroke="black" stroke-width="2.5" points="529,-648.8 205,-648.8 205,-558.8 529,-558.8 529,-648.8"/>
+<text text-anchor="middle" x="367" y="-619.1" font-family="Arial" font-size="17.00" fill="white">(2) Gate Bot / dApp</text>
+<text text-anchor="middle" x="367" y="-598.7" font-family="Arial" font-size="17.00" fill="white">Issues off&#45;chain signature challenge</text>
+<text text-anchor="middle" x="367" y="-578.3" font-family="Arial" font-size="17.00" fill="white">(no gas, no on&#45;chain record)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#3498db" stroke-width="2.5" d="M367,-712.81C367,-712.81 367,-665.37 367,-665.37"/>
+<polygon fill="#3498db" stroke="#3498db" stroke-width="2.5" points="371.2,-665.37 367,-653.37 362.8,-665.37 371.2,-665.37"/>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="#1a3a4a" stroke="black" stroke-width="2.5" points="529,-493.8 205,-493.8 205,-403.8 529,-403.8 529,-493.8"/>
+<text text-anchor="middle" x="367" y="-464.1" font-family="Arial" font-size="17.00" fill="white">(3) User Wallet</text>
+<text text-anchor="middle" x="367" y="-443.7" font-family="Arial" font-size="17.00" fill="white">Signs message — proves key control</text>
+<text text-anchor="middle" x="367" y="-423.3" font-family="Arial" font-size="17.00" fill="white">(still off&#45;chain)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#f39c12" stroke-width="2.5" d="M367,-558.13C367,-558.13 367,-510.46 367,-510.46"/>
+<polygon fill="#f39c12" stroke="#f39c12" stroke-width="2.5" points="371.2,-510.46 367,-498.46 362.8,-510.46 371.2,-510.46"/>
+</g>
+
+<g id="node4" class="node">
+<polygon fill="#1e6e42" stroke="black" stroke-width="3" points="537.41,-338.8 196.59,-338.8 196.59,-269.2 537.41,-269.2 537.41,-338.8"/>
+<text text-anchor="middle" x="367" y="-309.1" font-family="Arial" font-size="17.00" fill="white">(4) Token Contract &#160;· &#160;ON&#45;CHAIN</text>
+<text text-anchor="middle" x="367" y="-288.7" font-family="Arial" font-size="17.00" fill="white">balanceOf(wallet) &#160;or &#160;ownerOf(tokenId)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#2ecc71" stroke-width="2.5" d="M367,-402.98C367,-402.98 367,-355.67 367,-355.67"/>
+<polygon fill="#2ecc71" stroke="#2ecc71" stroke-width="2.5" points="371.2,-355.67 367,-343.67 362.8,-355.67 371.2,-355.67"/>
+</g>
+
+<g id="node5" class="node">
+<polygon fill="#4a3500" stroke="black" stroke-width="2.5" points="529,-204.2 205,-204.2 205,-134.6 529,-134.6 529,-204.2"/>
+<text text-anchor="middle" x="367" y="-174.5" font-family="Arial" font-size="17.00" fill="white">(5) Gate Bot / dApp</text>
+<text text-anchor="middle" x="367" y="-154.1" font-family="Arial" font-size="17.00" fill="white">Receives confirmed / denied result</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#2ecc71" stroke-width="2.5" d="M367,-267.93C367,-267.93 367,-220.89 367,-220.89"/>
+<polygon fill="#2ecc71" stroke="#2ecc71" stroke-width="2.5" points="371.2,-220.89 367,-208.89 362.8,-220.89 371.2,-220.89"/>
+</g>
+
+<g id="node6" class="node">
+<polygon fill="#6b1a1a" stroke="black" stroke-width="2.5" points="324,-59.4 0,-59.4 0,-10.2 324,-10.2 324,-59.4"/>
+<text text-anchor="middle" x="162" y="-29.7" font-family="Arial" font-size="17.00" fill="white">(6a) &#160;Access Denied</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#e74c3c" stroke-width="2.5" stroke-dasharray="5,2" d="M264.5,-133.68C264.5,-133.68 264.5,-75.8 264.5,-75.8"/>
+<polygon fill="#e74c3c" stroke="#e74c3c" stroke-width="2.5" points="268.7,-75.8 264.5,-63.8 260.3,-75.8 268.7,-75.8"/>
+<text text-anchor="middle" x="253.93" y="-77.58" font-family="Arial" font-size="17.00" fill="#e74c3c">no token &#160;</text>
+</g>
+
+<g id="node7" class="node">
+<polygon fill="#1e4a2a" stroke="black" stroke-width="2.5" points="734,-69.6 410,-69.6 410,0 734,0 734,-69.6"/>
+<text text-anchor="middle" x="572" y="-39.9" font-family="Arial" font-size="17.00" fill="white">(6b) &#160;Access Granted</text>
+<text text-anchor="middle" x="572" y="-19.5" font-family="Arial" font-size="17.00" fill="white">Role assigned — resource unlocked</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#2ecc71" stroke-width="2.5" d="M469.5,-133.68C469.5,-133.68 469.5,-86 469.5,-86"/>
+<polygon fill="#2ecc71" stroke="#2ecc71" stroke-width="2.5" points="473.7,-86 469.5,-74 465.3,-86 473.7,-86"/>
+<text text-anchor="middle" x="480.07" y="-87.77" font-family="Arial" font-size="17.00" fill="#2ecc71"> &#160;token held</text>
+</g>
+</g>
+</svg></figure>
+</div></section>
+<section class="slide" id="what-is-minting"><h2 class="slide-title">What Is Minting?</h2><div class="slide-body" style="font-size: 0.88em;">
+<div style="font-size: 0.72em;">
+<ul>
+<li><p><strong>Minting</strong> is a state-writing transaction that produces a new token ID and assigns an initial owner.</p></li>
+<li><p>On Ethereum: a function call to a smart contract; the contract emits a <code>Transfer</code> event from <strong>address zero</strong>.</p></li>
+<li><p>The minter controls: <strong>who can mint</strong>, <strong>how many exist</strong>, <strong>what metadata the token points to</strong>.</p></li>
+<li><p>After minting: the token enters the standard ownership and transfer lifecycle.</p></li>
+</ul>
+<div style="margin-top: -5em;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 1706.15 361.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:2275px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(36 325)">
+<g id="node1" class="node">
+<polygon fill="#4a3500" stroke="black" stroke-width="1.5" points="216,-173.2 0,-173.2 0,-86.8 216,-86.8 216,-173.2"/>
+<text text-anchor="middle" x="108" y="-145.3" font-family="Arial Bold" font-size="17.00" fill="white">mint() call</text>
+<text text-anchor="middle" x="108" y="-124.9" font-family="Arial Bold" font-size="17.00" fill="white">signed tx from</text>
+<text text-anchor="middle" x="108" y="-104.5" font-family="Arial Bold" font-size="17.00" fill="white">authorized address</text>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="#1a2a4a" stroke="black" stroke-width="1.5" points="444.04,-260 319,-130 444.04,0 569.08,-130 444.04,-260"/>
+<text text-anchor="middle" x="444.04" y="-175.7" font-family="Arial Bold" font-size="17.00" fill="white">Contract checks</text>
+<text text-anchor="middle" x="444.04" y="-155.3" font-family="Arial Bold" font-size="17.00" fill="white">mint conditions</text>
+<text text-anchor="middle" x="444.04" y="-114.9" font-family="Arial Bold" font-size="17.00" fill="white">allowlist?</text>
+<text text-anchor="middle" x="444.04" y="-94.5" font-family="Arial Bold" font-size="17.00" fill="white">supply cap?</text>
+<text text-anchor="middle" x="444.04" y="-74.1" font-family="Arial Bold" font-size="17.00" fill="white">payment?</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#f39c12" stroke-width="1.5" d="M216.17,-130C216.17,-130 306.24,-130 306.24,-130"/>
+<polygon fill="#f39c12" stroke="#f39c12" stroke-width="1.5" points="306.24,-133.5 316.24,-130 306.24,-126.5 306.24,-133.5"/>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="#1e6e42" stroke="black" stroke-width="1.5" points="996.15,-289 780.15,-289 780.15,-179 996.15,-179 996.15,-289"/>
+<text text-anchor="middle" x="888.15" y="-269.7" font-family="Arial Bold" font-size="17.00" fill="white">State written</text>
+<text text-anchor="middle" x="888.15" y="-249.3" font-family="Arial Bold" font-size="17.00" fill="white">─────────────</text>
+<text text-anchor="middle" x="888.15" y="-228.9" font-family="Arial Bold" font-size="17.00" fill="white">tokenId → owner</text>
+<text text-anchor="middle" x="888.15" y="-208.5" font-family="Arial Bold" font-size="17.00" fill="white">Transfer emitted</text>
+<text text-anchor="middle" x="888.15" y="-188.1" font-family="Arial Bold" font-size="17.00" fill="white">from 0x0</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#2ecc71" stroke-width="1.5" d="M483.45,-219.5C483.45,-219.5 767.8,-219.5 767.8,-219.5"/>
+<polygon fill="#2ecc71" stroke="#2ecc71" stroke-width="1.5" points="767.8,-223 777.8,-219.5 767.8,-216 767.8,-223"/>
+<text text-anchor="middle" x="674.61" y="-213.1" font-family="Arial Bold" font-size="17.00" fill="#2ecc71"> &#160;conditions met</text>
+</g>
+
+<g id="node6" class="node">
+<polygon fill="#5a1a1a" stroke="black" stroke-width="1.5" points="996.15,-121.2 780.15,-121.2 780.15,-34.8 996.15,-34.8 996.15,-121.2"/>
+<text text-anchor="middle" x="888.15" y="-93.3" font-family="Arial Bold" font-size="17.00" fill="#ffaaaa">Transaction</text>
+<text text-anchor="middle" x="888.15" y="-72.9" font-family="Arial Bold" font-size="17.00" fill="#ffaaaa">reverts</text>
+<text text-anchor="middle" x="888.15" y="-52.5" font-family="Arial Bold" font-size="17.00" fill="#ffaaaa">(nothing written)</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#e74c3c" stroke-width="1.5" stroke-dasharray="5,2" d="M519.63,-78C519.63,-78 767.77,-78 767.77,-78"/>
+<polygon fill="#e74c3c" stroke="#e74c3c" stroke-width="1.5" points="767.77,-81.5 777.77,-78 767.77,-74.5 767.77,-81.5"/>
+<text text-anchor="middle" x="674.61" y="-103.5" font-family="Arial Bold" font-size="17.00" fill="#e74c3c"> &#160;conditions</text>
+<text text-anchor="middle" x="674.61" y="-83.1" font-family="Arial Bold" font-size="17.00" fill="#e74c3c"> &#160;not met</text>
+</g>
+
+<g id="node4" class="node">
+<polygon fill="#6b1a1a" stroke="black" stroke-width="1.5" points="1315.15,-278.8 1099.15,-278.8 1099.15,-189.2 1315.15,-189.2 1315.15,-278.8"/>
+<text text-anchor="middle" x="1207.15" y="-259.5" font-family="Arial Bold" font-size="17.00" fill="white">tokenURI set</text>
+<text text-anchor="middle" x="1207.15" y="-239.1" font-family="Arial Bold" font-size="17.00" fill="white">─────────────</text>
+<text text-anchor="middle" x="1207.15" y="-218.7" font-family="Arial Bold" font-size="17.00" fill="white">pointer to metadata</text>
+<text text-anchor="middle" x="1207.15" y="-198.3" font-family="Arial Bold" font-size="17.00" fill="white">(off&#45;chain storage)</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#2ecc71" stroke-width="1.5" d="M996.59,-234C996.59,-234 1086.47,-234 1086.47,-234"/>
+<polygon fill="#2ecc71" stroke="#2ecc71" stroke-width="1.5" points="1086.47,-237.5 1096.47,-234 1086.47,-230.5 1086.47,-237.5"/>
+</g>
+
+<g id="node5" class="node">
+<polygon fill="#1e6e42" stroke="black" stroke-width="1.5" points="1634.15,-277.2 1418.15,-277.2 1418.15,-190.8 1634.15,-190.8 1634.15,-277.2"/>
+<text text-anchor="middle" x="1526.15" y="-239.1" font-family="Arial Bold" font-size="17.00" fill="white">Token exists</text>
+<text text-anchor="middle" x="1526.15" y="-218.7" font-family="Arial Bold" font-size="17.00" fill="white">on&#45;chain</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#2ecc71" stroke-width="1.5" d="M1315.59,-234C1315.59,-234 1405.47,-234 1405.47,-234"/>
+<polygon fill="#2ecc71" stroke="#2ecc71" stroke-width="1.5" points="1405.47,-237.5 1415.47,-234 1405.47,-230.5 1405.47,-237.5"/>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="minting-on-ethereum"><h2 class="slide-title">Minting on Ethereum</h2><div class="slide-body" style="font-size: 0.83em;">
+<div style="font-size: 0.72em;">
+<ul>
+<li><p><strong>Public mint</strong> — anyone can call <code>mint()</code>; supply cap is the only control. Risk: bot front-running.</p></li>
+<li><p><strong>Allowlist (Merkle proof)</strong> — a hash tree commits allowed addresses; callers prove membership without storing the list on-chain.</p></li>
+<li><p><strong>Signature-based (lazy) mint</strong> — deployer signs a voucher off-chain; buyer submits voucher + payment to mint on demand.</p></li>
+<li><p><strong>Royalty signaling (EIP-2981)</strong> — contract declares royalty recipient and basis points; marketplace enforcement varies.</p></li>
+</ul>
+<div style="margin-top: -9em;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 1297.75 410.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1731px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(43.2 367.6)">
+<g id="node1" class="node">
+<polygon fill="#1a2a4a" stroke="black" stroke-width="1.5" points="545.1,-324.4 450.28,-270.4 545.1,-216.4 639.92,-270.4 545.1,-324.4"/>
+<text text-anchor="middle" x="545.1" y="-265.3" font-family="Arial" font-size="17.00" fill="white">Who can mint?</text>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="#1a4a1a" stroke="black" stroke-width="1.5" points="200.2,-110 0,-110 0,0 200.2,0 200.2,-110"/>
+<text text-anchor="middle" x="100.1" y="-90.7" font-family="Arial" font-size="17.00" fill="white">Public Mint</text>
+<text text-anchor="middle" x="100.1" y="-70.3" font-family="Arial" font-size="17.00" fill="white">─────────────</text>
+<text text-anchor="middle" x="100.1" y="-49.9" font-family="Arial" font-size="17.00" fill="white">Anyone, any time</text>
+<text text-anchor="middle" x="100.1" y="-29.5" font-family="Arial" font-size="17.00" fill="white">Control: supply cap only</text>
+<text text-anchor="middle" x="100.1" y="-9.1" font-family="Arial" font-size="17.00" fill="white">Risk: bot front&#45;running</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#2ecc71" stroke-width="1.5" d="M494.05,-244.92C425.5,-212.04 301.84,-152.75 211.3,-109.33"/>
+<polygon fill="#2ecc71" stroke="#2ecc71" stroke-width="1.5" points="213.01,-106.26 202.48,-105.1 209.98,-112.58 213.01,-106.26"/>
+<text text-anchor="middle" x="364.77" y="-158.1" font-family="Arial" font-size="17.00" fill="#2ecc71">Anyone</text>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="#1a3a4a" stroke="black" stroke-width="1.5" points="509.76,-110 258.45,-110 258.45,0 509.76,0 509.76,-110"/>
+<text text-anchor="middle" x="384.1" y="-90.7" font-family="Arial" font-size="17.00" fill="white">Allowlist — Merkle Proof</text>
+<text text-anchor="middle" x="384.1" y="-70.3" font-family="Arial" font-size="17.00" fill="white">─────────────</text>
+<text text-anchor="middle" x="384.1" y="-49.9" font-family="Arial" font-size="17.00" fill="white">Merkle root stored on&#45;chain</text>
+<text text-anchor="middle" x="384.1" y="-29.5" font-family="Arial" font-size="17.00" fill="white">Caller submits inclusion proof</text>
+<text text-anchor="middle" x="384.1" y="-9.1" font-family="Arial" font-size="17.00" fill="white">Risk: proof generation backend</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#3498db" stroke-width="1.5" d="M517.06,-232.23C493.74,-201.32 460.01,-156.61 432.36,-119.97"/>
+<polygon fill="#3498db" stroke="#3498db" stroke-width="1.5" points="435.29,-118.04 426.47,-112.16 429.7,-122.25 435.29,-118.04"/>
+<text text-anchor="middle" x="533.68" y="-158.1" font-family="Arial" font-size="17.00" fill="#3498db">Pre&#45;approved list</text>
+</g>
+
+<g id="node4" class="node">
+<polygon fill="#4a3500" stroke="black" stroke-width="1.5" points="846.45,-110 567.75,-110 567.75,0 846.45,0 846.45,-110"/>
+<text text-anchor="middle" x="707.1" y="-90.7" font-family="Arial" font-size="17.00" fill="white">Lazy Mint — Signed Voucher</text>
+<text text-anchor="middle" x="707.1" y="-70.3" font-family="Arial" font-size="17.00" fill="white">─────────────</text>
+<text text-anchor="middle" x="707.1" y="-49.9" font-family="Arial" font-size="17.00" fill="white">Deployer backend signs voucher</text>
+<text text-anchor="middle" x="707.1" y="-29.5" font-family="Arial" font-size="17.00" fill="white">Buyer pays gas to mint on demand</text>
+<text text-anchor="middle" x="707.1" y="-9.1" font-family="Arial" font-size="17.00" fill="white">Risk: voucher replay w/o nonce</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#f39c12" stroke-width="1.5" d="M573.32,-232.23C596.79,-201.32 630.72,-156.61 658.54,-119.97"/>
+<polygon fill="#f39c12" stroke="#f39c12" stroke-width="1.5" points="661.21,-122.24 664.47,-112.16 655.64,-118.01 661.21,-122.24"/>
+<text text-anchor="middle" x="692.86" y="-158.1" font-family="Arial" font-size="17.00" fill="#f39c12">Voucher holders</text>
+</g>
+
+<g id="node5" class="node">
+<polygon fill="#5a1a1a" stroke="black" stroke-width="1.5" points="1211.35,-110 904.85,-110 904.85,0 1211.35,0 1211.35,-110"/>
+<text text-anchor="middle" x="1058.1" y="-90.7" font-family="Arial" font-size="17.00" fill="white">Delegated Minter Role</text>
+<text text-anchor="middle" x="1058.1" y="-70.3" font-family="Arial" font-size="17.00" fill="white">─────────────</text>
+<text text-anchor="middle" x="1058.1" y="-49.9" font-family="Arial" font-size="17.00" fill="white">Trusted address has MINTER_ROLE</text>
+<text text-anchor="middle" x="1058.1" y="-29.5" font-family="Arial" font-size="17.00" fill="white">Used for bridges / off&#45;chain issuance</text>
+<text text-anchor="middle" x="1058.1" y="-9.1" font-family="Arial" font-size="17.00" fill="white">Risk: key compromise = unlimited mint</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#e74c3c" stroke-width="1.5" d="M599.03,-246.97C673.63,-215.93 810.99,-158.79 916.09,-115.08"/>
+<polygon fill="#e74c3c" stroke="#e74c3c" stroke-width="1.5" points="917.14,-118.43 925.02,-111.36 914.45,-111.97 917.14,-118.43"/>
+<text text-anchor="middle" x="881.24" y="-158.1" font-family="Arial" font-size="17.00" fill="#e74c3c">Operator / bridge</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="metadata-ipfs-and-the-pointer-problem"><h2 class="slide-title">Metadata, IPFS, and the Pointer Problem</h2><div class="slide-body" style="font-size: 0.83em;">
+<div style="font-size: 0.75em;">
+<ul>
+<li><p>At mint, <code>tokenURI</code> is set — a string pointing to a JSON file containing name, image URL, and traits.</p></li>
+<li><p><strong>Content addressing</strong> (IPFS CID, Arweave TX ID): address is a hash of the content — change the file, address changes.</p></li>
+<li><p><strong>Location addressing</strong> (HTTP URL): address is a server location — server operator can change or delete the content silently.</p></li>
+</ul>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Storage</th>
+<th>Address type</th>
+<th>Mutable?</th>
+<th>Permanent?</th>
+<th>Trust model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>On-chain</td>
+<td>State variable</td>
+<td>No</td>
+<td>Yes</td>
+<td>Chain consensus</td>
+</tr>
+<tr>
+<td>IPFS</td>
+<td>Content hash (CID)</td>
+<td>No (hash changes)</td>
+<td>Only if pinned</td>
+<td>Pinning network</td>
+</tr>
+<tr>
+<td>Arweave</td>
+<td>Content hash (TX ID)</td>
+<td>No</td>
+<td>Paid permanence</td>
+<td>Arweave protocol</td>
+</tr>
+<tr>
+<td>HTTP URL</td>
+<td>Location</td>
+<td><strong>Yes</strong></td>
+<td>Server-dependent</td>
+<td><strong>Server operator</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div></section>
+<section class="slide" id="soulbound-tokens"><h2 class="slide-title">Soulbound Tokens</h2><div class="slide-body">
+<div style="font-size: 0.75em;">
+<ul>
+<li><p>A <strong>Soulbound Token (SBT)</strong> is minted with transfer disabled — bound to one wallet permanently.</p></li>
+<li><p>Use cases: <strong>identity attestations, academic credentials, membership records, on-chain reputation</strong>.</p></li>
+<li><p>Two standards: <strong>ERC-5192</strong> (locks ERC-721 transfer functions) and <strong>ERC-4973</strong> (account-bound; holder can relinquish).</p></li>
+<li><p><strong>The open problem</strong>: non-transferability binds the credential to a <em>wallet</em>, not a <em>person</em>.</p></li>
+</ul>
+</div>
+<div style="margin-top: -7em;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 1832.70 299.10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:2444px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(43.2 255.9)">
+<g id="node1" class="node">
+<polygon fill="#4a3500" stroke="black" stroke-width="1.5" points="200.2,-151.15 0,-151.15 0,-61.55 200.2,-61.55 200.2,-151.15"/>
+<text text-anchor="middle" x="100.1" y="-131.85" font-family="Arial" font-size="17.00" fill="white">Issuer</text>
+<text text-anchor="middle" x="100.1" y="-111.45" font-family="Arial" font-size="17.00" fill="white">─────────────</text>
+<text text-anchor="middle" x="100.1" y="-91.05" font-family="Arial" font-size="17.00" fill="white">Institution / DAO / Peer</text>
+<text text-anchor="middle" x="100.1" y="-70.65" font-family="Arial" font-size="17.00" fill="white">signs mint transaction</text>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="#1e6e42" stroke="black" stroke-width="1.5" points="622.75,-161.35 412.12,-161.35 412.12,-51.35 622.75,-51.35 622.75,-161.35"/>
+<text text-anchor="middle" x="517.43" y="-142.05" font-family="Arial" font-size="17.00" fill="white">Mint SBT</text>
+<text text-anchor="middle" x="517.43" y="-121.65" font-family="Arial" font-size="17.00" fill="white">─────────────</text>
+<text text-anchor="middle" x="517.43" y="-101.25" font-family="Arial" font-size="17.00" fill="white">Transfer functions locked</text>
+<text text-anchor="middle" x="517.43" y="-80.85" font-family="Arial" font-size="17.00" fill="white">at contract level</text>
+<text text-anchor="middle" x="517.43" y="-60.45" font-family="Arial" font-size="17.00" fill="white">(ERC&#45;5192 or ERC&#45;4973)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#f39c12" stroke-width="1.5" d="M200.58,-106.35C260.55,-106.35 337.23,-106.35 400.01,-106.35"/>
+<polygon fill="#f39c12" stroke="#f39c12" stroke-width="1.5" points="399.7,-109.85 409.7,-106.35 399.7,-102.85 399.7,-109.85"/>
+<text text-anchor="middle" x="306.16" y="-111.45" font-family="Arial" font-size="17.00" fill="#f39c12"> &#160;signs mint tx</text>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="#1a3a4a" stroke="black" stroke-width="1.5" points="1070.8,-161.35 865.88,-161.35 865.88,-51.35 1070.8,-51.35 1070.8,-161.35"/>
+<text text-anchor="middle" x="968.34" y="-142.05" font-family="Arial" font-size="17.00" fill="white">Recipient Wallet</text>
+<text text-anchor="middle" x="968.34" y="-121.65" font-family="Arial" font-size="17.00" fill="white">─────────────</text>
+<text text-anchor="middle" x="968.34" y="-101.25" font-family="Arial" font-size="17.00" fill="white">CAN: hold, display,</text>
+<text text-anchor="middle" x="968.34" y="-80.85" font-family="Arial" font-size="17.00" fill="white">use for access</text>
+<text text-anchor="middle" x="968.34" y="-60.45" font-family="Arial" font-size="17.00" fill="white">CANNOT: sell or transfer</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#2ecc71" stroke-width="1.5" d="M623.12,-106.35C692.18,-106.35 782.64,-106.35 853.5,-106.35"/>
+<polygon fill="#2ecc71" stroke="#2ecc71" stroke-width="1.5" points="853.32,-109.85 863.32,-106.35 853.32,-102.85 853.32,-109.85"/>
+<text text-anchor="middle" x="744.31" y="-131.85" font-family="Arial" font-size="17.00" fill="#2ecc71"> &#160;token created</text>
+<text text-anchor="middle" x="744.31" y="-111.45" font-family="Arial" font-size="17.00" fill="#2ecc71"> &#160;transfer disabled</text>
+</g>
+
+<g id="node4" class="node">
+<ellipse fill="#5a1a1a" stroke="black" stroke-width="1.5" cx="1566.96" cy="-106.35" rx="179.35" ry="106.35"/>
+<text text-anchor="middle" x="1566.96" y="-162.25" font-family="Arial" font-size="17.00" fill="white">Real Person?</text>
+<text text-anchor="middle" x="1566.96" y="-141.85" font-family="Arial" font-size="17.00" fill="white">─────────────</text>
+<text text-anchor="middle" x="1566.96" y="-121.45" font-family="Arial" font-size="17.00" fill="white">Binding ONLY IF person</text>
+<text text-anchor="middle" x="1566.96" y="-101.05" font-family="Arial" font-size="17.00" fill="white">controls the private key</text>
+<text text-anchor="middle" x="1566.96" y="-60.65" font-family="Arial" font-size="17.00" fill="white">Key sale = credential sale</text>
+<text text-anchor="middle" x="1566.96" y="-40.25" font-family="Arial" font-size="17.00" fill="white">Key compromise = identity theft</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#e74c3c" stroke-width="2.5" stroke-dasharray="5,2" d="M1071.22,-106.35C1153.95,-106.35 1272.96,-106.35 1373.53,-106.35"/>
+<polygon fill="#e74c3c" stroke="#e74c3c" stroke-width="2.5" points="1373.49,-109.85 1383.49,-106.35 1373.49,-102.85 1373.49,-109.85"/>
+<text text-anchor="middle" x="1229.21" y="-131.85" font-family="Arial" font-size="17.00" fill="#e74c3c"> &#160;assumed — NOT enforced</text>
+<text text-anchor="middle" x="1229.21" y="-111.45" font-family="Arial" font-size="17.00" fill="#e74c3c"> &#160;by any contract</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide" id="minting-on-hyperledger-fabric"><h2 class="slide-title">Minting on Hyperledger Fabric</h2><div class="slide-body">
+<div style="font-size: 0.73em;">
+<ul>
+<li><p>On Fabric, asset creation is <strong>chaincode execution within a consortium</strong> — identity is known at the protocol layer.</p></li>
+<li><p>Asset = <strong>composite key</strong> (<code>type:id</code>) + JSON value (owner MSP, metadata hash, URI).</p></li>
+<li><p><strong>Endorsement policy</strong> defines which organizations must co-sign a mint — governance is explicit.</p></li>
+<li><p>Fabric adds: <strong>known identities, multi-org sign-off, private data</strong>. It removes: <strong>permissionlessness, public verifiability</strong>.</p></li>
+</ul>
+</div>
+<div style="margin-top: -2em;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 983.08 317.40" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1311px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(43.2 274.2)">
+<g id="clust1" class="cluster">
+<polygon fill="#0d1f35" stroke="#3498db" stroke-width="2.5" points="17.68,-8 17.68,-99 647.15,-99 647.15,-8 17.68,-8"/>
+<text text-anchor="middle" x="127.91" y="-83.3" font-family="Arial" font-size="13.00" fill="white">Ethereum — Public, Permissionless</text>
+</g>
+<g id="clust2" class="cluster">
+<polygon fill="#2a1a00" stroke="#f39c12" stroke-width="2.5" points="8,-107 8,-223 888.68,-223 888.68,-107 8,-107"/>
+<text text-anchor="middle" x="154.72" y="-207.3" font-family="Arial" font-size="13.00" fill="white">Hyperledger Fabric — Permissioned Consortium</text>
+</g>
+
+<g id="node1" class="node">
+<polygon fill="#1a3a5a" stroke="#f4f7fb" stroke-width="2" points="144.39,-67.6 25.68,-67.6 25.68,-16.4 144.39,-16.4 144.39,-67.6"/>
+<text text-anchor="middle" x="85.03" y="-52.8" font-family="Arial" font-size="12.00" fill="white">Any wallet</text>
+<text text-anchor="middle" x="85.03" y="-38.4" font-family="Arial" font-size="12.00" fill="white">calls mint()</text>
+<text text-anchor="middle" x="85.03" y="-24" font-family="Arial" font-size="12.00" fill="white">(no CA, no identity)</text>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="#1a3a5a" stroke="#f4f7fb" stroke-width="2" points="403.28,-67.6 273.91,-67.6 273.91,-16.4 403.28,-16.4 403.28,-67.6"/>
+<text text-anchor="middle" x="338.6" y="-52.8" font-family="Arial" font-size="12.00" fill="white">EVM executes</text>
+<text text-anchor="middle" x="338.6" y="-38.4" font-family="Arial" font-size="12.00" fill="white">contract code</text>
+<text text-anchor="middle" x="338.6" y="-24" font-family="Arial" font-size="12.00" fill="white">(deterministic, public)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#3498db" stroke-width="1.8" d="M145.33,-42C179.79,-42 223.58,-42 260.66,-42"/>
+<polygon fill="#3498db" stroke="#3498db" stroke-width="1.8" points="260.24,-45.5 270.24,-42 260.24,-38.5 260.24,-45.5"/>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="#1e6e42" stroke="#f4f7fb" stroke-width="2" points="639.15,-67.6 525.76,-67.6 525.76,-16.4 639.15,-16.4 639.15,-67.6"/>
+<text text-anchor="middle" x="582.46" y="-52.8" font-family="Arial" font-size="12.00" fill="white">State written</text>
+<text text-anchor="middle" x="582.46" y="-38.4" font-family="Arial" font-size="12.00" fill="white">publicly</text>
+<text text-anchor="middle" x="582.46" y="-24" font-family="Arial" font-size="12.00" fill="white">(anyone can read)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#3498db" stroke-width="1.8" d="M404.09,-42C437.47,-42 478.24,-42 512.28,-42"/>
+<polygon fill="#3498db" stroke="#3498db" stroke-width="1.8" points="512.24,-45.5 522.24,-42 512.24,-38.5 512.24,-45.5"/>
+</g>
+
+<g id="node4" class="node">
+<polygon fill="#4a3500" stroke="#f4f7fb" stroke-width="2" points="154.07,-190.6 16,-190.6 16,-139.4 154.07,-139.4 154.07,-190.6"/>
+<text text-anchor="middle" x="85.03" y="-175.8" font-family="Arial" font-size="12.00" fill="white">X.509 Identity</text>
+<text text-anchor="middle" x="85.03" y="-161.4" font-family="Arial" font-size="12.00" fill="white">(CA&#45;issued cert)</text>
+<text text-anchor="middle" x="85.03" y="-147" font-family="Arial" font-size="12.00" fill="white">known at protocol level</text>
+</g>
+
+<g id="node5" class="node">
+<polygon fill="#4a3500" stroke="#f4f7fb" stroke-width="2" points="414.96,-190.6 262.23,-190.6 262.23,-139.4 414.96,-139.4 414.96,-190.6"/>
+<text text-anchor="middle" x="338.6" y="-175.8" font-family="Arial" font-size="12.00" fill="white">Endorsing Peers</text>
+<text text-anchor="middle" x="338.6" y="-161.4" font-family="Arial" font-size="12.00" fill="white">run chaincode</text>
+<text text-anchor="middle" x="338.6" y="-147" font-family="Arial" font-size="12.00" fill="white">multi&#45;org sign&#45;off required</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#f39c12" stroke-width="1.8" d="M154.77,-165C183.8,-165 217.96,-165 248.85,-165"/>
+<polygon fill="#f39c12" stroke="#f39c12" stroke-width="1.8" points="248.69,-168.5 258.69,-165 248.69,-161.5 248.69,-168.5"/>
+<text text-anchor="middle" x="208.15" y="-181.5" font-family="Arial" font-size="11.00" fill="#f39c12"> &#160;authenticated</text>
+<text text-anchor="middle" x="208.15" y="-168.3" font-family="Arial" font-size="11.00" fill="#f39c12"> &#160;proposal</text>
+</g>
+
+<g id="node6" class="node">
+<polygon fill="#1e6e42" stroke="#f4f7fb" stroke-width="2" points="641.82,-190.6 523.1,-190.6 523.1,-139.4 641.82,-139.4 641.82,-190.6"/>
+<text text-anchor="middle" x="582.46" y="-175.8" font-family="Arial" font-size="12.00" fill="white">Orderer sequences</text>
+<text text-anchor="middle" x="582.46" y="-161.4" font-family="Arial" font-size="12.00" fill="white">block committed</text>
+<text text-anchor="middle" x="582.46" y="-147" font-family="Arial" font-size="12.00" fill="white">to channel ledger</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#f39c12" stroke-width="1.8" d="M415.79,-165C445.84,-165 480.17,-165 509.77,-165"/>
+<polygon fill="#f39c12" stroke="#f39c12" stroke-width="1.8" points="509.41,-168.5 519.41,-165 509.41,-161.5 509.41,-168.5"/>
+<text text-anchor="middle" x="469.03" y="-181.5" font-family="Arial" font-size="11.00" fill="#f39c12"> &#160;endorsed</text>
+<text text-anchor="middle" x="469.03" y="-168.3" font-family="Arial" font-size="11.00" fill="#f39c12"> &#160;read/write set</text>
+</g>
+
+<g id="node7" class="node">
+<polygon fill="#5a1a1a" stroke="#f4f7fb" stroke-width="2" points="880.68,-191.8 742.62,-191.8 742.62,-126.2 880.68,-126.2 880.68,-191.8"/>
+<text text-anchor="middle" x="811.65" y="-177" font-family="Arial" font-size="12.00" fill="white">Private Data Collection</text>
+<text text-anchor="middle" x="811.65" y="-162.6" font-family="Arial" font-size="12.00" fill="white">(optional)</text>
+<text text-anchor="middle" x="811.65" y="-148.2" font-family="Arial" font-size="12.00" fill="white">hash on channel</text>
+<text text-anchor="middle" x="811.65" y="-133.8" font-family="Arial" font-size="12.00" fill="white">data off&#45;channel</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#e74c3c" stroke-width="1.8" stroke-dasharray="5,2" d="M642.56,-163.44C669.01,-162.74 700.64,-161.91 729.28,-161.15"/>
+<polygon fill="#e74c3c" stroke="#e74c3c" stroke-width="1.8" points="729.15,-164.65 739.05,-160.89 728.96,-157.66 729.15,-164.65"/>
+<text text-anchor="middle" x="692.22" y="-166.19" font-family="Arial" font-size="11.00" fill="#e74c3c"> &#160;if PDC used</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div></section>
+<section class="slide" id="the-frosties-rug-pull"><h2 class="slide-title">The Frosties Rug Pull</h2><div class="slide-body" style="font-size: 0.83em;">
+<div style="font-size: 0.85em;">
+<ul>
+<li><p>The same minting primitives that enable open creation also enable <strong>rug pulls</strong> — projects that launch, collect mint funds, then abandon, sending value to zero.</p></li>
+<li><p><strong>Frosties</strong> (Jan 2022): 8,888 NFTs sold at 0.04 ETH each — <strong>$1.1M raised and drained within hours</strong> of sellout. Website deactivated, Discord deleted, Twitter posted “I’m sorry.”</p></li>
+<li><p>Operators transferred proceeds through <strong>multiple wallets designed to obfuscate the source</strong> — but every transfer was publicly recorded on-chain.</p></li>
+<li><p>When arrested, the same operators were preparing a <strong>second project (“Embers”)</strong> expected to raise $1.5M — the <strong>wallet reuse</strong> was the forensic link.</p></li>
+<li><p>Broader pattern: study of <strong>758 rug pulls across 10 marketplaces</strong> found wallet reuse is the dominant forensic signal; one cluster attempted <strong>37 rug pulls in three months</strong>.</p></li>
+</ul>
+</div>
+</div></section>
+<section class="slide" id="rug-pull-operator-wallet-graph"><h2 class="slide-title">Rug Pull Operator Wallet Graph</h2><div class="slide-body" style="font-size: 0.90em;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 838.83 692.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1119px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(50.4 642.4)">
+<g id="node1" class="node">
+<polygon fill="#1a3a4a" stroke="black" stroke-width="1.5" points="582.03,-592 258.03,-592 258.03,-550.4 582.03,-550.4 582.03,-592"/>
+<text text-anchor="middle" x="420.03" y="-575.4" font-family="Arial" font-size="14.00" fill="white">(1) &#160;8,888 Frosties Mint — Jan 9 2022</text>
+<text text-anchor="middle" x="420.03" y="-558.6" font-family="Arial" font-size="14.00" fill="white">Public sale at 0.04 ETH each — raises ~$1.1M</text>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="#4a3500" stroke="black" stroke-width="1.5" points="609.44,-462.8 230.63,-462.8 230.63,-421.2 609.44,-421.2 609.44,-462.8"/>
+<text text-anchor="middle" x="420.03" y="-446.2" font-family="Arial" font-size="14.00" fill="white">(2) &#160;Rug Pull — Hours After Sellout</text>
+<text text-anchor="middle" x="420.03" y="-429.4" font-family="Arial" font-size="14.00" fill="white">Website deactivated · Discord deleted · Twitter: &#39;I&#39;m sorry&#39;</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#e74c3c" stroke-width="2" d="M420.03,-550.04C420.03,-530.13 420.03,-499.34 420.03,-475.89"/>
+<polygon fill="#e74c3c" stroke="#e74c3c" stroke-width="2" points="423.53,-476.09 420.03,-466.09 416.53,-476.09 423.53,-476.09"/>
+<text text-anchor="middle" x="473.16" y="-502.7" font-family="Arial" font-size="13.00" fill="#e74c3c"> &#160;sell out, abandon</text>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="#8b1a1a" stroke="black" stroke-width="2.5" points="600.79,-333.6 239.28,-333.6 239.28,-292 600.79,-292 600.79,-333.6"/>
+<text text-anchor="middle" x="420.03" y="-317" font-family="Arial" font-size="14.00" fill="white">(3) &#160;Frosties Wallet → Operator Wallet</text>
+<text text-anchor="middle" x="420.03" y="-300.2" font-family="Arial" font-size="14.00" fill="white">356.56 ETH transferred — visible on&#45;chain to all holders</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#e74c3c" stroke-width="2" d="M420.03,-420.84C420.03,-401.05 420.03,-370.5 420.03,-347.1"/>
+<polygon fill="#e74c3c" stroke="#e74c3c" stroke-width="2" points="423.53,-347.31 420.03,-337.31 416.53,-347.31 423.53,-347.31"/>
+<text text-anchor="middle" x="460.14" y="-373.5" font-family="Arial" font-size="13.00" fill="#e74c3c"> &#160;ETH drained</text>
+</g>
+
+<g id="node4" class="node">
+<polygon fill="#6b1a1a" stroke="black" stroke-width="1.5" points="386.35,-204.4 49.71,-204.4 49.71,-162.8 386.35,-162.8 386.35,-204.4"/>
+<text text-anchor="middle" x="218.03" y="-187.8" font-family="Arial" font-size="14.00" fill="white">(4) &#160;Funds Scattered Across Multiple Wallets</text>
+<text text-anchor="middle" x="218.03" y="-171" font-family="Arial" font-size="14.00" fill="white">Transactions designed to obfuscate source of funds</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#f39c12" stroke-width="2" d="M387.13,-291.08C352.74,-269.42 298.63,-235.35 260.91,-211.6"/>
+<polygon fill="#f39c12" stroke="#f39c12" stroke-width="2" points="263.14,-208.87 252.82,-206.5 259.41,-214.79 263.14,-208.87"/>
+<text text-anchor="middle" x="391.47" y="-244.3" font-family="Arial" font-size="13.00" fill="#f39c12"> &#160;obfuscation attempt</text>
+</g>
+
+<g id="node6" class="node">
+<polygon fill="#1e6e42" stroke="black" stroke-width="3" points="738.03,-75.2 414.03,-75.2 414.03,0 738.03,0 738.03,-75.2"/>
+<text text-anchor="middle" x="576.03" y="-58.6" font-family="Arial" font-size="14.00" fill="white">FORENSIC SIGNAL</text>
+<text text-anchor="middle" x="576.03" y="-41.8" font-family="Arial" font-size="14.00" fill="white">On&#45;chain transfer was publicly visible —</text>
+<text text-anchor="middle" x="576.03" y="-25" font-family="Arial" font-size="14.00" fill="white">holders spotted it immediately.</text>
+<text text-anchor="middle" x="576.03" y="-8.2" font-family="Arial" font-size="14.00" fill="white">IRS&#45;CI + HSI traced wallets to Nguyen &amp; Llacuna</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#2ecc71" stroke-width="2" stroke-dasharray="5,2" d="M440.98,-291.22C450.56,-281.15 461.61,-268.52 470.03,-256 506.32,-202.06 537.48,-133.86 556.45,-88.37"/>
+<polygon fill="#2ecc71" stroke="#2ecc71" stroke-width="2" points="559.63,-89.84 560.2,-79.26 553.15,-87.17 559.63,-89.84"/>
+<text text-anchor="middle" x="564.15" y="-179.7" font-family="Arial" font-size="13.00" fill="#2ecc71"> &#160;key evidence</text>
+</g>
+
+<g id="node5" class="node">
+<polygon fill="#4a3500" stroke="black" stroke-width="1.5" points="342.07,-66.8 0,-66.8 0,-8.4 342.07,-8.4 342.07,-66.8"/>
+<text text-anchor="middle" x="171.03" y="-50.2" font-family="Arial" font-size="14.00" fill="white">(5) &#160;&#39;Embers&#39; — New Project Announced</text>
+<text text-anchor="middle" x="171.03" y="-33.4" font-family="Arial" font-size="14.00" fill="white">Same operators, new brand — expected $1.5M raise</text>
+<text text-anchor="middle" x="171.03" y="-16.6" font-family="Arial" font-size="14.00" fill="white">Arrested before March 26 pre&#45;sale</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#e74c3c" stroke-width="2" d="M211.5,-162.58C204.51,-141.16 193.23,-106.61 184.36,-79.42"/>
+<polygon fill="#e74c3c" stroke="#e74c3c" stroke-width="2" points="187.72,-78.43 181.28,-70.01 181.06,-80.6 187.72,-78.43"/>
+<text text-anchor="middle" x="250.41" y="-115.1" font-family="Arial" font-size="13.00" fill="#e74c3c"> &#160;fund next project</text>
+</g>
+</g>
+</svg></figure>
+
+<!--
+
+## The DAO Re-Entrancy Attack {style="font-size: 0.85em;"}
+
+::: {style="font-size: 0.72em;"}
+
+- **April 2016**: Christoph Jentzsch launches The DAO on Ethereum — a decentralized investment fund. **$150M raised from 11,000+ investors** in history's largest crowdfund at the time, representing ~14% of all ETH in circulation.
+
+- **June 12**: Stephan Tual, a DAO creator, announces a "recursive call bug" has been found — but claims **"no DAO funds at risk."** Programmers begin working on a fix. Over 50 project proposals are awaiting token-holder votes.
+
+- **June 17**: An unknown attacker exploits the unfixed flaw. The `withdraw()` function **sent ETH before updating the caller's balance** — the attacker's contract used its fallback function to re-enter `withdraw()` recursively. **3.6 million ETH (~$60M) drained** into a "child DAO" before anyone could intervene. ETH price crashes from $20+ to under $13 in a day.
+
+- **The response**: A "white hat" counter-strike group used the **same exploit** to race the attacker and rescue remaining funds. But the back-and-forth could have continued indefinitely — so the community voted to **hard fork** on July 20, 2016 (block 192,000), rewriting history to return stolen funds. A minority refused — that chain became **Ethereum Classic (ETC)**, which still runs today.
+
+- **The lesson**: The cryptography held. The chain worked as designed. **The contract code was wrong.** And when it mattered most, the community proved that blockchain immutability is a social commitment, not a physical law.
+:::
+
+::: {.notes}
+
+**Overall Slide Concept**
+
+This slide establishes the DAO exploit as the canonical reminder that tokenized governance and treasury systems inherit smart-contract execution risk. It matters here because the lesson is about communities in practice, and the DAO shows how governance, code, and money can fail together. Emphasize that the chain executed the flawed logic faithfully.
+
+**Key Points**
+
+- The DAO attack was caused by a sequencing flaw, not by a cryptographic or consensus failure.
+- The incident shows that token-governed systems are only as safe as their contract logic and patch discipline.
+- Define re-entrancy briefly as reentering vulnerable contract logic before earlier execution has completed safely.
+
+
+**Sources**
+
+@siegel_understandingdaoattack_2016; @mehar_understandingrevolutionaryflawed_2017; @l34_ethereum_dao_vulnerability_2016; @scharfman_nonfungibletokennft_2024
+
+:::
+
+## Re-Entrancy Drain Loop {style="font-size: 0.90em;"}
+
+::: {style="margin-top: -1em;"}
+```{=html}
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 906.91 660.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:1209px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(36 624.6)">
+<g id="node1" class="node">
+<polygon fill="#5a1a1a" stroke="black" stroke-width="2" points="388.91,-588.6 28.91,-588.6 28.91,-545.4 388.91,-545.4 388.91,-588.6"/>
+<text text-anchor="middle" x="208.91" y="-561.6" font-family="Arial Bold" font-size="18.00" fill="white">(1) Attacker calls withdraw(amount)</text>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="#4a3500" stroke="black" stroke-width="2" points="388.91,-472.4 28.91,-472.4 28.91,-407.6 388.91,-407.6 388.91,-472.4"/>
+<text text-anchor="middle" x="208.91" y="-445.4" font-family="Arial Bold" font-size="18.00" fill="white">(2) DAO checks balance → passes</text>
+<text text-anchor="middle" x="208.91" y="-423.8" font-family="Arial Bold" font-size="18.00" fill="white">balance was never decremented</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#e74c3c" stroke-width="2.5" d="M208.91,-544.51C208.91,-529.13 208.91,-507.82 208.91,-488.53"/>
+<polygon fill="#e74c3c" stroke="#e74c3c" stroke-width="2.5" points="213.11,-488.77 208.91,-476.77 204.71,-488.77 213.11,-488.77"/>
+</g>
+
+<g id="node3" class="node">
+<polygon fill="#4a3500" stroke="black" stroke-width="2" points="388.91,-334.6 28.91,-334.6 28.91,-269.8 388.91,-269.8 388.91,-334.6"/>
+<text text-anchor="middle" x="208.91" y="-307.6" font-family="Arial Bold" font-size="18.00" fill="white">(3) DAO sends ETH to attacker</text>
+<text text-anchor="middle" x="208.91" y="-286" font-family="Arial Bold" font-size="18.00" fill="white">balance STILL not updated</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#f39c12" stroke-width="2.5" d="M208.91,-406.82C208.91,-390.07 208.91,-369.28 208.91,-350.72"/>
+<polygon fill="#f39c12" stroke="#f39c12" stroke-width="2.5" points="213.11,-350.94 208.91,-338.94 204.71,-350.94 213.11,-350.94"/>
+</g>
+
+<g id="node4" class="node">
+<polygon fill="#5a1a1a" stroke="black" stroke-width="3" points="417.82,-196.8 0,-196.8 0,-153.6 417.82,-153.6 417.82,-196.8"/>
+<text text-anchor="middle" x="208.91" y="-169.8" font-family="Arial Bold" font-size="18.00" fill="white">(4) Attacker fallback() fires → calls withdraw() again</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#e74c3c" stroke-width="2.5" d="M208.91,-269.01C208.91,-252.13 208.91,-231.35 208.91,-213.74"/>
+<polygon fill="#e74c3c" stroke="#e74c3c" stroke-width="2.5" points="213.11,-213.83 208.91,-201.83 204.71,-213.83 213.11,-213.83"/>
+</g>
+
+<g id="node6" class="node">
+<polygon fill="#8b1a1a" stroke="black" stroke-width="2" stroke-dasharray="5,2" points="834.91,-64.8 474.91,-64.8 474.91,0 834.91,0 834.91,-64.8"/>
+<text text-anchor="middle" x="654.91" y="-37.8" font-family="Arial Bold" font-size="18.00" fill="white">(6) balances[msg.sender] &#45;= amount</text>
+<text text-anchor="middle" x="654.91" y="-16.2" font-family="Arial Bold" font-size="18.00" fill="white">NEVER REACHED during the loop</text>
+</g>
+
+<g id="edge6" class="edge">
+<path fill="none" stroke="#888888" stroke-width="2.5" stroke-dasharray="1,5" d="M306.2,-268.89C354.44,-250.91 412.56,-226.2 460.91,-196.8 517.51,-162.38 574.58,-111.99 612.03,-76.28"/>
+<polygon fill="#888888" stroke="#888888" stroke-width="2.5" points="614.55,-79.68 620.27,-68.33 608.72,-73.64 614.55,-79.68"/>
+<text text-anchor="middle" x="623.5" y="-171" font-family="Arial" font-size="14.00" fill="#888888">should run next — never reached</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="#e74c3c" stroke-width="3.5" stroke-dasharray="5,2" d="M327.88,-198.24C367.79,-211.92 408.14,-234.05 431.91,-269.8 447.86,-293.78 447.37,-310.3 431.91,-334.6 413.66,-363.3 385.22,-384.24 354.68,-399.48"/>
+<polygon fill="#e74c3c" stroke="#e74c3c" stroke-width="3.5" points="352.98,-395.63 343.86,-404.49 356.51,-403.26 352.98,-395.63"/>
+<text text-anchor="middle" x="519.54" y="-306.4" font-family="Arial" font-size="14.00" fill="#e74c3c">RE&#45;ENTRY → back to ②</text>
+<text text-anchor="middle" x="519.54" y="-289.6" font-family="Arial" font-size="14.00" fill="#e74c3c">balance still unchanged</text>
+</g>
+
+<g id="node5" class="node">
+<polygon fill="#8b1a1a" stroke="black" stroke-width="3" points="388.91,-64.8 28.91,-64.8 28.91,0 388.91,0 388.91,-64.8"/>
+<text text-anchor="middle" x="208.91" y="-37.8" font-family="Arial Bold" font-size="18.00" fill="white">(5) Gas runs out → loop stops</text>
+<text text-anchor="middle" x="208.91" y="-16.2" font-family="Arial Bold" font-size="18.00" fill="white">3.6M ETH ($60M) drained</text>
+</g>
+
+<g id="edge5" class="edge">
+<path fill="none" stroke="#888888" stroke-width="2.5" stroke-dasharray="1,5" d="M208.91,-152.2C208.91,-133.47 208.91,-105.89 208.91,-82.02"/>
+<polygon fill="#888888" stroke="#888888" stroke-width="2.5" points="213.11,-82.02 208.91,-70.02 204.71,-82.02 213.11,-82.02"/>
+<text text-anchor="middle" x="240.43" y="-105" font-family="Arial" font-size="14.00" fill="#888888">eventually</text>
+</g>
+</g>
+</svg></figure>
+```
+:::
+
+::: {style="border: 2px solid #2ecc71; color: black; padding: 0.4em 0.8em; margin-top: -1.em; font-size: 0.50em;"}
+**FIX — Checks-Effects-Interactions:** Set `balances[msg.sender] = 0` **before** sending ETH. Re-entry hits zero balance → reverts. Order of operations is the entire vulnerability.
+:::
+
+::: {.notes}
+
+**Overall Slide Concept**
+
+This diagram slide establishes the recursive loop that made the DAO exploit work. It matters here because seeing the order of operations makes the vulnerability easier to remember than a verbal description alone. Emphasize that the entire attack depends on external control being yielded before balances are updated.
+
+**Key Points**
+
+- The attacker repeatedly reentered before the contract could decrement the recorded balance.
+- The fix is to update state before sending value outward.
+- Define checks-effects-interactions briefly as a defensive ordering pattern that updates internal state before external calls.
+
+**Walkthrough**
+
+1. Start with the initial withdrawal call and the successful balance check.
+2. Follow the ETH transfer to the attacker's fallback and back into `withdraw`.
+3. End with the loop continuing until gas runs out or funds are exhausted.
+
+**Sources**
+
+@siegel_understandingdaoattack_2016; @l34_ethereum_dao_vulnerability_2016
+
+:::
+
+-->
+</div></section>
+<section class="slide" id="centralization-chokepoints"><h2 class="slide-title">Centralization Chokepoints</h2><div class="slide-body" style="font-size: 0.83em;">
+<ul>
+<li><p>Most users reach Ethereum through <strong>Infura or Alchemy</strong> — two centralized API providers. When Infura experienced an outage in 2020, dApps failed; the chain did not.</p></li>
+<li><p><strong>Bridges</strong> are controlled by multisigs far smaller than L1 consensus — the 2023 Multichain collapse proved it.</p></li>
+<li><p><strong>Oracles</strong> aggregate off-chain data through networks with their own, weaker security assumptions.</p></li>
+<li><p>Although Ethereum L1 operates in a decentralized manner, the infrastructure layers many users actually depend on — RPC providers, bridges, and oracles — reintroduce the single points of failure that decentralization was designed to eliminate.</p></li>
+</ul>
+</div></section>
+<section class="slide" id="hidden-infrastructure-growth"><h2 class="slide-title">Hidden Infrastructure Growth</h2><div class="slide-body">
+<div style="font-size: .75em;">
+<ul>
+<li><p>NFT secondary market volume fell ~<strong>37% year-over-year</strong> by late 2025 — the speculative layer collapsed.</p></li>
+<li><p>Simultaneously: over <strong>40% of Fortune 500 companies</strong> integrated token infrastructure for operations.</p></li>
+<li><p>Institutional use cases: <strong>Digital Product Passports</strong> (EU mandate), <strong>supply chain traceability</strong>, <strong>tokenized loyalty</strong>, <strong>fractional real estate</strong>.</p></li>
+<li><p>The speculative layer and the utility layer have <strong>decoupled</strong> — most analysts are watching the wrong one.</p></li>
+</ul>
+</div>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 568.65 151.63" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:759px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 147.63)">
+<polygon fill="white" stroke="none" points="-4,4 -4,-147.63 564.65,-147.63 564.65,4 -4,4"/>
+
+<g id="node1" class="node">
+<polygon fill="#6b1a1a" stroke="black" points="316.67,-80 163.39,-80 163.39,0 316.67,0 316.67,-80"/>
+<text text-anchor="middle" x="240.03" y="-67" font-family="Arial" font-size="10.00" fill="white">Speculative Layer</text>
+<text text-anchor="middle" x="240.03" y="-55" font-family="Arial" font-size="10.00" fill="white">──────────</text>
+<text text-anchor="middle" x="240.03" y="-43" font-family="Arial" font-size="10.00" fill="white">PFP collections</text>
+<text text-anchor="middle" x="240.03" y="-31" font-family="Arial" font-size="10.00" fill="white">Secondary market trading</text>
+<text text-anchor="middle" x="240.03" y="-19" font-family="Arial" font-size="10.00" fill="white">Price speculation</text>
+<text text-anchor="middle" x="240.03" y="-7" font-family="Arial" font-size="10.00" fill="white">STATUS: Collapsed &#45;37% YoY</text>
+</g>
+
+<g id="node2" class="node">
+<polygon fill="#1e6e42" stroke="black" points="560.65,-126 430.73,-126 430.73,-34 560.65,-34 560.65,-126"/>
+<text text-anchor="middle" x="495.69" y="-113" font-family="Arial" font-size="10.00" fill="white">Utility Layer</text>
+<text text-anchor="middle" x="495.69" y="-101" font-family="Arial" font-size="10.00" fill="white">──────────</text>
+<text text-anchor="middle" x="495.69" y="-89" font-family="Arial" font-size="10.00" fill="white">Digital Product Passports</text>
+<text text-anchor="middle" x="495.69" y="-77" font-family="Arial" font-size="10.00" fill="white">Supply chain records</text>
+<text text-anchor="middle" x="495.69" y="-65" font-family="Arial" font-size="10.00" fill="white">Tokenized loyalty</text>
+<text text-anchor="middle" x="495.69" y="-53" font-family="Arial" font-size="10.00" fill="white">SBT credentials</text>
+<text text-anchor="middle" x="495.69" y="-41" font-family="Arial" font-size="10.00" fill="white">STATUS: Growing quietly</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="#f39c12" stroke-dasharray="1,5" d="M317.14,-52C349.51,-57.11 387.16,-63.04 419.44,-68.13"/>
+<polygon fill="#f39c12" stroke="#f39c12" points="418.7,-71.56 429.12,-69.66 419.79,-64.65 418.7,-71.56"/>
+<text text-anchor="middle" x="373.7" y="-80.56" font-family="Arial" font-size="9.00" fill="#f39c12">same primitive</text>
+<text text-anchor="middle" x="373.7" y="-69.76" font-family="Arial" font-size="9.00" fill="#f39c12">different application</text>
+</g>
+
+<g id="node3" class="node">
+<ellipse fill="#4a3500" stroke="black" cx="63.2" cy="-40" rx="63.2" ry="22.63"/>
+<text text-anchor="middle" x="63.2" y="-43" font-family="Arial" font-size="10.00" fill="white">Most analysts</text>
+<text text-anchor="middle" x="63.2" y="-31" font-family="Arial" font-size="10.00" fill="white">watching here ↑</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="#e74c3c" stroke-dasharray="5,2" d="M126.82,-40C134.91,-40 143.3,-40 151.69,-40"/>
+<polygon fill="#e74c3c" stroke="#e74c3c" points="151.59,-43.5 161.59,-40 151.59,-36.5 151.59,-43.5"/>
+</g>
+
+<g id="node4" class="node">
+<ellipse fill="#1a3a5a" stroke="black" cx="240.03" cy="-121" rx="68.7" ry="22.63"/>
+<text text-anchor="middle" x="240.03" y="-124" font-family="Arial" font-size="10.00" fill="white">Operational reality</text>
+<text text-anchor="middle" x="240.03" y="-112" font-family="Arial" font-size="10.00" fill="white">building here ↑</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="#2ecc71" stroke-dasharray="5,2" d="M302.44,-111.08C337.52,-105.4 381.79,-98.25 419.01,-92.23"/>
+<polygon fill="#2ecc71" stroke="#2ecc71" points="419.5,-95.7 428.82,-90.65 418.39,-88.79 419.5,-95.7"/>
+</g>
+</g>
+</svg></figure>
+</div></section>
+<section class="slide" id="analyst-implications"><h2 class="slide-title">Analyst Implications</h2><div class="slide-body">
+<div style="font-size: 0.7em;">
+<ol type="1">
+<li><p><strong>Open membership enumeration</strong> — any token-gated community’s membership list is publicly readable on-chain; no special access required.</p></li>
+<li><p><strong>Pseudonymous coordination at scale</strong> — token-based governance enables decision-making and value transfer among parties who never identify themselves.</p></li>
+<li><p><strong>Permanent, auditable financial records</strong> — every token transfer is timestamped, signed, and immutable; the forensic substrate is always present.</p></li>
+<li><p><strong>Credential and identity systems outside traditional institutions</strong> — SBTs and on-chain attestations create verifiable records with no central issuing authority.</p></li>
+<li><p><strong>Infrastructure concentration as leverage point</strong> — RPC providers, bridges, and oracles are concentrated dependencies; disruption or compromise has outsized downstream effects.</p></li>
+</ol>
+<p><em>Each capability cuts in two directions: it enables legitimate coordination and adversarial coordination with the same mechanism.</em></p>
+</div>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-wang_soktokenizationblockchain_2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">G. Wang and M. Nixon, <span>“<span>SoK</span>: Tokenization on blockchain,”</span> in <em>Proceedings of the 14th <span>IEEE</span>/<span>ACM International Conference</span> on <span>Utility</span> and <span>Cloud Computing Companion</span></em>, Leicester United Kingdom: ACM, Dec. 2021, pp. 1–9. doi: <a href="https://doi.org/10.1145/3492323.3495577">10.1145/3492323.3495577</a>.</div>
+</div>
+<div id="ref-ethereumorg_nfts_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">Ethereum.org, <span>“What are NFTs?”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://ethereum.org/en/nft/">https://ethereum.org/en/nft/</a></div>
+</div>
+<div id="ref-tierno_tokenizedassets_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">P. Tierno, <span>“Tokenized <span>Assets</span>,”</span> Congressional Research Service, Washington, D.C., In Focus IF12670.3, Jan. 2025. Accessed: Sept. 12, 2025. [Online]. Available: <a href="https://www.congress.gov/crs_external_products/IF/PDF/IF12670/IF12670.3.pdf">https://www.congress.gov/crs_external_products/IF/PDF/IF12670/IF12670.3.pdf</a></div>
+</div>
+<div id="ref-vogelsteller_eip20tokenstandard_2015" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">F. Vogelsteller and V. Buterin, <span>“<span>EIP-20</span>: <span>Token Standard</span>.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://eips.ethereum.org/EIPS/eip-20">https://eips.ethereum.org/EIPS/eip-20</a></div>
+</div>
+<div id="ref-hammi_nonfungibletokensreview_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">B. Hammi, S. Zeadally, and A. J. Perez, <span>“Non-fungible tokens: A review,”</span> <em>IEEE Internet of Things Magazine</em>, vol. 6, no. 1, pp. 46–50, Mar. 2023, doi: <a href="https://doi.org/10.1109/IOTM.001.2200244">10.1109/IOTM.001.2200244</a>.</div>
+</div>
+<div id="ref-ipfs_docs_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">IPFS, <span>“IPFS.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://ipfs.tech">https://ipfs.tech</a></div>
+</div>
+<div id="ref-collabland_tokengatingtutorial_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">Collab.Land, <span>“Collab.land <span>Token Gating Tutorial</span>.”</span> Accessed: Mar. 27, 2026. [Online]. Available: <a href="https://docs.collab.land/docs/tutorials/token-gating-tutorial">https://docs.collab.land/docs/tutorials/token-gating-tutorial</a></div>
+</div>
+<div id="ref-ante_nonfungibletokennft_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">L. Ante, <span>“The <span>Non-Fungible Token</span> (<span>NFT</span>) <span>Market</span> and <span>Its Relationship</span> with <span>Bitcoin</span> and <span>Ethereum</span>,”</span> <em>FinTech</em>, vol. 1, no. 3, pp. 216–224, Sept. 2022, doi: <a href="https://doi.org/10.3390/fintech1030017">10.3390/fintech1030017</a>.</div>
+</div>
+<div id="ref-ohlhaver_weyl_buterin_decentralizedsociety_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">P. Ohlhaver, E. G. Weyl, and V. Buterin, <span>“Decentralized <span>Society</span>: <span>Finding Web3</span>’s <span>Soul</span>,”</span> <em>SSRN Electronic Journal</em>, 2022, doi: <a href="https://doi.org/10.2139/ssrn.4105763">10.2139/ssrn.4105763</a>.</div>
+</div>
+<div id="ref-scharfman_nonfungibletokennft_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">J. Scharfman, <span>“Non-fungible token (<span>NFT</span>) fraud, hacks, and controversies,”</span> vol. 2. in Springer books, vol. 2. pp. 307–325, Dec. 2024. doi: <a href="https://doi.org/10.1007/978-3-031-60836-0_11">10.1007/978-3-031-60836-0_11</a>.</div>
+</div>
+<div id="ref-usdoj_frosties_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">U.S. Department of Justice, <span>“<span>United States</span> v. <span>Ethan Nguyen</span> and <span>Andre Llacuna</span>: <span>Complaint</span>,”</span> United States District Court, Southern District of New York, Mar. 2022. Accessed: Mar. 27, 2026. [Online]. Available: <a href="https://www.justice.gov/d9/press-releases/attachments/2022/03/24/us_v._ethan_nguyen_andre_llacuna_complaint.pdf">https://www.justice.gov/d9/press-releases/attachments/2022/03/24/us_v._ethan_nguyen_andre_llacuna_complaint.pdf</a></div>
+</div>
+<div id="ref-zhou_stoppullingmy_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">Y. Zhou, J. Sun, F. Ma, Y. Chen, Z. Yan, and Y. Jiang, <span>“Stop <span>Pulling</span> my <span>Rug</span>: <span>Exposing Rug Pull Risks</span> in <span>Crypto Token</span> to <span>Investors</span>,”</span> in <em>Proceedings of the 46th <span>International Conference</span> on <span>Software Engineering</span>: <span>Software Engineering</span> in <span>Practice</span></em>, Lisbon Portugal: ACM, Apr. 2024, pp. 228–239. doi: <a href="https://doi.org/10.1145/3639477.3639722">10.1145/3639477.3639722</a>.</div>
+</div>
+<div id="ref-l31_infura_ethereum_api_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">Infura, <span>“Ethereum API.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://www.infura.io/product/ethereum">https://www.infura.io/product/ethereum</a></div>
+</div>
+<div id="ref-l31_alchemy_docs_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">Alchemy, <span>“Alchemy documentation.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://www.alchemy.com/docs">https://www.alchemy.com/docs</a></div>
+</div>
+<div id="ref-l31_coindesk_multichain_fantom_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline">CoinDesk, <span>“As multichain wobbles, some fantom-based DeFi projects flee bridged tokens.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://www.coindesk.com/business/2023/06/01/as-multichain-wobbles-some-fantom-based-defi-projects-flee-bridged-tokens">https://www.coindesk.com/business/2023/06/01/as-multichain-wobbles-some-fantom-based-defi-projects-flee-bridged-tokens</a></div>
+</div>
+<div id="ref-l31_bis_crypto_ecosystem_risks_2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[16] </div><div class="csl-right-inline">Bank for International Settlements, <span>“The crypto ecosystem: Key elements and risks.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://www.bis.org/publ/othp72.htm">https://www.bis.org/publ/othp72.htm</a></div>
+</div>
+<div id="ref-l34_c2pa_content_credentials_2026" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[17] </div><div class="csl-right-inline">C2PA, <span>“C2PA.”</span> Accessed: Mar. 23, 2026. [Online]. Available: <a href="https://c2pa.org/">https://c2pa.org/</a></div>
+</div>
+<div id="ref-fda_foodtraceabilityrule_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[18] </div><div class="csl-right-inline">U.S. Food and Drug Administration, <span>“FSMA final rule on requirements for additional traceability records for certain foods.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://www.fda.gov/food/food-safety-modernization-act-fsma/fsma-final-rule-requirements-additional-traceability-records-certain-foods">https://www.fda.gov/food/food-safety-modernization-act-fsma/fsma-final-rule-requirements-additional-traceability-records-certain-foods</a></div>
+</div>
+<div id="ref-sharma_understandingrugpulls_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[19] </div><div class="csl-right-inline">T. Sharma, R. Agarwal, and S. K. Shukla, <span>“Understanding <span>Rug Pulls</span>: <span>An In-Depth Behavioral Analysis</span> of <span>Fraudulent NFT Creators</span>.”</span> Accessed: Oct. 17, 2025. [Online]. Available: <a href="http://arxiv.org/abs/2304.07598">http://arxiv.org/abs/2304.07598</a></div>
+</div>
+<div id="ref-zhu_governancetechnologyblockchain_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[20] </div><div class="csl-right-inline">G. Zhu, D. He, H. An, M. Luo, and C. Peng, <span>“The governance technology for blockchain systems: A survey,”</span> <em>Front. Comput. Sci.</em>, vol. 18, no. 2, p. 182813, Apr. 2024, doi: <a href="https://doi.org/10.1007/s11704-023-3113-x">10.1007/s11704-023-3113-x</a>.</div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>

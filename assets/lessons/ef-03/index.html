@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Ethereum Network</title>
+<link rel="icon" href="../../kit/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../kit/house.css?v=2e0e1e97d948">
+<link rel="stylesheet" href="../../kit/deck.css?v=2e0e1e97d948">
+<script src="../../kit/class.js"></script>
+<script src="../../items.js?v=2e0e1e97d948"></script>
+<script src="../../kit/kit.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/wallet-lib.js?v=2e0e1e97d948"></script>
+<script src="../../kit/lib/course-words.js?v=2e0e1e97d948"></script>
+<script src="../../kit/wallet.js?v=2e0e1e97d948"></script>
+<script src="../../kit/deck.js?v=2e0e1e97d948"></script>
+</head>
+<body>
+<!-- Built by tools/build_lessons.py from blockchain-course/modules/ethereum/03-EF-ethereum_network.qmd. Edit the source, not this file. -->
+<main class="page lesson" data-lesson="ef-03" data-code="03-EF" data-src="f8f30acbacf611aa" data-slides="22">
+<div class="deck" id="deck">
+<section class="slide title-slide" id="title"><div class="slide-body"><p class="eyebrow">Section VII: Ethereum Framework · Lesson 03-EF</p><h1>The Ethereum Network</h1></div></section>
+<section class="slide" id="agenda"><h2 class="slide-title">Agenda</h2><div class="slide-body">
+<ul>
+<li>Explain transaction flow, signatures, and EIP-1559 fee mechanics.</li>
+<li>Describe client diversity, sync modes, and P2P networking.</li>
+<li>Trace how MEV arises from transaction ordering and how PBS addresses it.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="review-the-life-of-an-ethereum-transaction"><h2 class="slide-title">Review: The Life of an Ethereum Transaction</h2><div class="slide-body">
+<p>In the last lesson we covered block structure and PoS consensus. Now we trace what happens <em>inside</em> those blocks – how transactions are built, priced, propagated, and executed.</p>
+<ul>
+<li>A user signs a transaction – a <strong>message</strong> requesting a state change.</li>
+<li>The transaction propagates through <strong>peer-to-peer gossip</strong> into node <strong>mempools</strong>.</li>
+<li><strong>Validators</strong> select pending transactions to include in blocks.</li>
+<li>Every node <strong>re-executes</strong> transactions to verify the same post-state.</li>
+<li>Receipts and logs record what happened for <strong>off-chain consumers</strong>.</li>
+</ul>
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 475.59 37.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:635px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 33.6)">
+<g id="node1" class="node">
+<path fill="#dbeafe" stroke="black" d="M57.64,-29.6C57.64,-29.6 9.87,-29.6 9.87,-29.6 4.93,-29.6 0,-24.67 0,-19.73 0,-19.73 0,-9.87 0,-9.87 0,-4.93 4.93,0 9.87,0 9.87,0 57.64,0 57.64,0 62.57,0 67.51,-4.93 67.51,-9.87 67.51,-9.87 67.51,-19.73 67.51,-19.73 67.51,-24.67 62.57,-29.6 57.64,-29.6"/>
+<text text-anchor="middle" x="33.75" y="-17.5" font-family="Helvetica,sans-Serif" font-size="9.00">User / Wallet</text>
+<text text-anchor="middle" x="33.75" y="-6.7" font-family="Helvetica,sans-Serif" font-size="9.00">(EOA)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#dcfce7" stroke="black" d="M163.16,-29.6C163.16,-29.6 113.37,-29.6 113.37,-29.6 108.44,-29.6 103.51,-24.67 103.51,-19.73 103.51,-19.73 103.51,-9.87 103.51,-9.87 103.51,-4.93 108.44,0 113.37,0 113.37,0 163.16,0 163.16,0 168.09,0 173.02,-4.93 173.02,-9.87 173.02,-9.87 173.02,-19.73 173.02,-19.73 173.02,-24.67 168.09,-29.6 163.16,-29.6"/>
+<text text-anchor="middle" x="138.27" y="-17.5" font-family="Helvetica,sans-Serif" font-size="9.00">Mempool</text>
+<text text-anchor="middle" x="138.27" y="-6.7" font-family="Helvetica,sans-Serif" font-size="9.00">(P2P Gossip)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M67.75,-14.8C75.47,-14.8 83.82,-14.8 91.97,-14.8"/>
+<polygon fill="black" stroke="black" points="91.76,-18.3 101.76,-14.8 91.76,-11.3 91.76,-18.3"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fef3c7" stroke="black" d="M272.68,-29.6C272.68,-29.6 218.89,-29.6 218.89,-29.6 213.96,-29.6 209.02,-24.67 209.02,-19.73 209.02,-19.73 209.02,-9.87 209.02,-9.87 209.02,-4.93 213.96,0 218.89,0 218.89,0 272.68,0 272.68,0 277.62,0 282.55,-4.93 282.55,-9.87 282.55,-9.87 282.55,-19.73 282.55,-19.73 282.55,-24.67 277.62,-29.6 272.68,-29.6"/>
+<text text-anchor="middle" x="245.79" y="-17.5" font-family="Helvetica,sans-Serif" font-size="9.00">Block Builder /</text>
+<text text-anchor="middle" x="245.79" y="-6.7" font-family="Helvetica,sans-Serif" font-size="9.00">Validator</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M173.23,-14.8C180.93,-14.8 189.25,-14.8 197.39,-14.8"/>
+<polygon fill="black" stroke="black" points="197.19,-18.3 207.19,-14.8 197.19,-11.3 197.19,-18.3"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fde68a" stroke="black" d="M364.21,-29.6C364.21,-29.6 328.42,-29.6 328.42,-29.6 323.48,-29.6 318.55,-24.67 318.55,-19.73 318.55,-19.73 318.55,-9.87 318.55,-9.87 318.55,-4.93 323.48,0 328.42,0 328.42,0 364.21,0 364.21,0 369.14,0 374.07,-4.93 374.07,-9.87 374.07,-9.87 374.07,-19.73 374.07,-19.73 374.07,-24.67 369.14,-29.6 364.21,-29.6"/>
+<text text-anchor="middle" x="346.31" y="-17.5" font-family="Helvetica,sans-Serif" font-size="9.00">EVM</text>
+<text text-anchor="middle" x="346.31" y="-6.7" font-family="Helvetica,sans-Serif" font-size="9.00">Execution</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M282.91,-14.8C290.65,-14.8 298.84,-14.8 306.67,-14.8"/>
+<polygon fill="black" stroke="black" points="306.63,-18.3 316.63,-14.8 306.63,-11.3 306.63,-18.3"/>
+</g>
+
+<g id="node5" class="node">
+<path fill="#bbf7d0" stroke="black" d="M457.73,-29.6C457.73,-29.6 419.94,-29.6 419.94,-29.6 415.01,-29.6 410.07,-24.67 410.07,-19.73 410.07,-19.73 410.07,-9.87 410.07,-9.87 410.07,-4.93 415.01,0 419.94,0 419.94,0 457.73,0 457.73,0 462.66,0 467.59,-4.93 467.59,-9.87 467.59,-9.87 467.59,-19.73 467.59,-19.73 467.59,-24.67 462.66,-29.6 457.73,-29.6"/>
+<text text-anchor="middle" x="438.83" y="-17.5" font-family="Helvetica,sans-Serif" font-size="9.00">New State</text>
+<text text-anchor="middle" x="438.83" y="-6.7" font-family="Helvetica,sans-Serif" font-size="9.00">+ Receipt</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M374.47,-14.8C381.96,-14.8 390.24,-14.8 398.27,-14.8"/>
+<polygon fill="black" stroke="black" points="398.24,-18.3 408.24,-14.8 398.24,-11.3 398.24,-18.3"/>
+</g>
+</g>
+</svg></figure>
+</div></section>
+<section class="slide smaller" id="transactions-structure-and-flow"><h2 class="slide-title">Transactions: Structure and Flow</h2><div class="slide-body">
+<ul>
+<li>A transaction is a signed instruction from an EOA describing a desired state change.</li>
+<li>Core fields define:
+<ul>
+<li>Ordering: <code>nonce</code> increments per account, ensuring sequential execution and replay prevention.</li>
+<li>Resource bounds: <code>gasLimit</code>, <code>maxFeePerGas</code>, <code>maxPriorityFeePerGas</code>.</li>
+<li>Intent: <code>to</code>, <code>value</code>, and optional <code>data</code> for contract calls.</li>
+</ul></li>
+<li>Nodes verify the <code>nonce</code> before adding to the mempool; transactions with gaps are held.</li>
+<li>Builders select transactions ordered by effective gas price, processing valid transactions per account in nonce order.</li>
+<li>Each transaction produces a receipt with status, gas used, and emitted logs.</li>
+<li>Type-1 and Type-2 formats add optional access lists and EIP-1559 fee terms.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="eth-execution-network-message"><h2 class="slide-title">ETH Execution-Network Message</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:45%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 188.00 239.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:251px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 235)">
+<g id="node1" class="node">
+<path fill="#dbeafe" stroke="black" d="M168,-231C168,-231 12,-231 12,-231 6,-231 0,-225 0,-219 0,-219 0,-207 0,-207 0,-201 6,-195 12,-195 12,-195 168,-195 168,-195 174,-195 180,-201 180,-207 180,-207 180,-219 180,-219 180,-225 174,-231 168,-231"/>
+<text text-anchor="middle" x="90" y="-209.7" font-family="Helvetica,sans-Serif" font-size="11.00">TCP / IP</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#dcfce7" stroke="black" d="M168,-166C168,-166 12,-166 12,-166 6,-166 0,-160 0,-154 0,-154 0,-142 0,-142 0,-136 6,-130 12,-130 12,-130 168,-130 168,-130 174,-130 180,-136 180,-142 180,-142 180,-154 180,-154 180,-160 174,-166 168,-166"/>
+<text text-anchor="middle" x="90" y="-151.3" font-family="Helvetica,sans-Serif" font-size="11.00">RLPx / devp2p</text>
+<text text-anchor="middle" x="90" y="-138.1" font-family="Helvetica,sans-Serif" font-size="11.00">(encrypted session)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M90,-194.78C90,-189.37 90,-183.24 90,-177.26"/>
+<polygon fill="black" stroke="black" points="93.5,-177.71 90,-167.71 86.5,-177.71 93.5,-177.71"/>
+</g>
+
+<g id="node3" class="node">
+<path fill="#fef3c7" stroke="black" d="M168,-101C168,-101 12,-101 12,-101 6,-101 0,-95 0,-89 0,-89 0,-77 0,-77 0,-71 6,-65 12,-65 12,-65 168,-65 168,-65 174,-65 180,-71 180,-77 180,-77 180,-89 180,-89 180,-95 174,-101 168,-101"/>
+<text text-anchor="middle" x="90" y="-86.3" font-family="Helvetica,sans-Serif" font-size="11.00">ETH Subprotocol</text>
+<text text-anchor="middle" x="90" y="-73.1" font-family="Helvetica,sans-Serif" font-size="11.00">(msg code + payload)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M90,-129.78C90,-124.37 90,-118.24 90,-112.26"/>
+<polygon fill="black" stroke="black" points="93.5,-112.71 90,-102.71 86.5,-112.71 93.5,-112.71"/>
+</g>
+
+<g id="node4" class="node">
+<path fill="#fde68a" stroke="black" d="M168,-36C168,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 168,0 168,0 174,0 180,-6 180,-12 180,-12 180,-24 180,-24 180,-30 174,-36 168,-36"/>
+<text text-anchor="middle" x="90" y="-21.3" font-family="Helvetica,sans-Serif" font-size="11.00">RLP&#45;encoded</text>
+<text text-anchor="middle" x="90" y="-8.1" font-family="Helvetica,sans-Serif" font-size="11.00">payload</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M90,-64.78C90,-59.37 90,-53.24 90,-47.26"/>
+<polygon fill="black" stroke="black" points="93.5,-47.71 90,-37.71 86.5,-47.71 93.5,-47.71"/>
+</g>
+</g>
+</svg></figure>
+</div><div class="column" style="width:55%;">
+<ul>
+<li><strong>TCP/IP</strong> – standard transport layer</li>
+<li><strong>RLPx/devp2p</strong> – EC-based handshake, encrypted frames, capability negotiation (e.g. <code>eth/68</code>, <code>snap/1</code>)</li>
+<li><strong>ETH subprotocol</strong> – message code identifies the type: <code>NewBlock</code>, <code>Transactions</code>, <code>GetBlockHeaders</code>, etc.</li>
+<li><strong>Payload</strong> – RLP-encoded structs/lists; request IDs tie req/resp pairs</li>
+</ul>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="transaction-fields-and-signatures"><h2 class="slide-title">Transaction Fields and Signatures</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:55%;">
+<ul>
+<li>Each transaction is digitally signed to prove control of the sender’s EOA.</li>
+<li>The signed payload encodes: <code>nonce</code>, <code>gasLimit</code>, fee fields, <code>to</code>, <code>value</code>, <code>data</code>, <code>chainId</code>.</li>
+<li>Encoding uses RLP (legacy) or SSZ (newer) for deterministic byte layout.</li>
+<li><code>chainId</code> (EIP-155) binds signature to a specific network.</li>
+<li><code>to = null</code> indicates contract creation; <code>data</code> holds init code.</li>
+<li>Clients reject invalid signatures, bad <code>gasLimit</code>, or insufficient balance before gossip.</li>
+</ul>
+</div><div class="column" style="width:45%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 170.00 343.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:227px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 339.6)">
+<g id="clust1" class="cluster">
+<path fill="none" stroke="#94a3b8" d="M20,-8C20,-8 142,-8 142,-8 148,-8 154,-14 154,-20 154,-20 154,-315.6 154,-315.6 154,-321.6 148,-327.6 142,-327.6 142,-327.6 20,-327.6 20,-327.6 14,-327.6 8,-321.6 8,-315.6 8,-315.6 8,-20 8,-20 8,-14 14,-8 20,-8"/>
+<text text-anchor="middle" x="69.2" y="-313.7" font-family="Helvetica,sans-Serif" font-size="11.00">EIP&#45;1559 Transaction</text>
+</g>
+
+<g id="node1" class="node">
+<path fill="#dbeafe" stroke="black" d="M138.6,-298.4C138.6,-298.4 23.4,-298.4 23.4,-298.4 19.8,-298.4 16.2,-294.8 16.2,-291.2 16.2,-291.2 16.2,-284 16.2,-284 16.2,-280.4 19.8,-276.8 23.4,-276.8 23.4,-276.8 138.6,-276.8 138.6,-276.8 142.2,-276.8 145.8,-280.4 145.8,-284 145.8,-284 145.8,-291.2 145.8,-291.2 145.8,-294.8 142.2,-298.4 138.6,-298.4"/>
+<text text-anchor="middle" x="81" y="-284.6" font-family="Helvetica,sans-Serif" font-size="10.00">chainId</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#dbeafe" stroke="black" d="M138.6,-265.8C138.6,-265.8 23.4,-265.8 23.4,-265.8 19.8,-265.8 16.2,-262.2 16.2,-258.6 16.2,-258.6 16.2,-251.4 16.2,-251.4 16.2,-247.8 19.8,-244.2 23.4,-244.2 23.4,-244.2 138.6,-244.2 138.6,-244.2 142.2,-244.2 145.8,-247.8 145.8,-251.4 145.8,-251.4 145.8,-258.6 145.8,-258.6 145.8,-262.2 142.2,-265.8 138.6,-265.8"/>
+<text text-anchor="middle" x="81" y="-252" font-family="Helvetica,sans-Serif" font-size="10.00">nonce</text>
+</g>
+
+
+<g id="node3" class="node">
+<path fill="#fef3c7" stroke="black" d="M138.6,-233.2C138.6,-233.2 23.4,-233.2 23.4,-233.2 19.8,-233.2 16.2,-229.6 16.2,-226 16.2,-226 16.2,-218.8 16.2,-218.8 16.2,-215.2 19.8,-211.6 23.4,-211.6 23.4,-211.6 138.6,-211.6 138.6,-211.6 142.2,-211.6 145.8,-215.2 145.8,-218.8 145.8,-218.8 145.8,-226 145.8,-226 145.8,-229.6 142.2,-233.2 138.6,-233.2"/>
+<text text-anchor="middle" x="81" y="-219.4" font-family="Helvetica,sans-Serif" font-size="10.00">maxPriorityFee</text>
+</g>
+
+
+<g id="node4" class="node">
+<path fill="#fef3c7" stroke="black" d="M138.6,-200.6C138.6,-200.6 23.4,-200.6 23.4,-200.6 19.8,-200.6 16.2,-197 16.2,-193.4 16.2,-193.4 16.2,-186.2 16.2,-186.2 16.2,-182.6 19.8,-179 23.4,-179 23.4,-179 138.6,-179 138.6,-179 142.2,-179 145.8,-182.6 145.8,-186.2 145.8,-186.2 145.8,-193.4 145.8,-193.4 145.8,-197 142.2,-200.6 138.6,-200.6"/>
+<text text-anchor="middle" x="81" y="-186.8" font-family="Helvetica,sans-Serif" font-size="10.00">maxFeePerGas</text>
+</g>
+
+
+<g id="node5" class="node">
+<path fill="#fef3c7" stroke="black" d="M138.6,-168C138.6,-168 23.4,-168 23.4,-168 19.8,-168 16.2,-164.4 16.2,-160.8 16.2,-160.8 16.2,-153.6 16.2,-153.6 16.2,-150 19.8,-146.4 23.4,-146.4 23.4,-146.4 138.6,-146.4 138.6,-146.4 142.2,-146.4 145.8,-150 145.8,-153.6 145.8,-153.6 145.8,-160.8 145.8,-160.8 145.8,-164.4 142.2,-168 138.6,-168"/>
+<text text-anchor="middle" x="81" y="-154.2" font-family="Helvetica,sans-Serif" font-size="10.00">gasLimit</text>
+</g>
+
+
+<g id="node6" class="node">
+<path fill="#dcfce7" stroke="black" d="M138.6,-135.4C138.6,-135.4 23.4,-135.4 23.4,-135.4 19.8,-135.4 16.2,-131.8 16.2,-128.2 16.2,-128.2 16.2,-121 16.2,-121 16.2,-117.4 19.8,-113.8 23.4,-113.8 23.4,-113.8 138.6,-113.8 138.6,-113.8 142.2,-113.8 145.8,-117.4 145.8,-121 145.8,-121 145.8,-128.2 145.8,-128.2 145.8,-131.8 142.2,-135.4 138.6,-135.4"/>
+<text text-anchor="middle" x="81" y="-121.6" font-family="Helvetica,sans-Serif" font-size="10.00">to</text>
+</g>
+
+
+<g id="node7" class="node">
+<path fill="#dcfce7" stroke="black" d="M138.6,-102.8C138.6,-102.8 23.4,-102.8 23.4,-102.8 19.8,-102.8 16.2,-99.2 16.2,-95.6 16.2,-95.6 16.2,-88.4 16.2,-88.4 16.2,-84.8 19.8,-81.2 23.4,-81.2 23.4,-81.2 138.6,-81.2 138.6,-81.2 142.2,-81.2 145.8,-84.8 145.8,-88.4 145.8,-88.4 145.8,-95.6 145.8,-95.6 145.8,-99.2 142.2,-102.8 138.6,-102.8"/>
+<text text-anchor="middle" x="81" y="-89" font-family="Helvetica,sans-Serif" font-size="10.00">value</text>
+</g>
+
+
+<g id="node8" class="node">
+<path fill="#dcfce7" stroke="black" d="M138.6,-70.2C138.6,-70.2 23.4,-70.2 23.4,-70.2 19.8,-70.2 16.2,-66.6 16.2,-63 16.2,-63 16.2,-55.8 16.2,-55.8 16.2,-52.2 19.8,-48.6 23.4,-48.6 23.4,-48.6 138.6,-48.6 138.6,-48.6 142.2,-48.6 145.8,-52.2 145.8,-55.8 145.8,-55.8 145.8,-63 145.8,-63 145.8,-66.6 142.2,-70.2 138.6,-70.2"/>
+<text text-anchor="middle" x="81" y="-56.4" font-family="Helvetica,sans-Serif" font-size="10.00">data</text>
+</g>
+
+
+<g id="node9" class="node">
+<path fill="#fee2e2" stroke="black" d="M138.6,-37.6C138.6,-37.6 23.4,-37.6 23.4,-37.6 19.8,-37.6 16.2,-34 16.2,-30.4 16.2,-30.4 16.2,-23.2 16.2,-23.2 16.2,-19.6 19.8,-16 23.4,-16 23.4,-16 138.6,-16 138.6,-16 142.2,-16 145.8,-19.6 145.8,-23.2 145.8,-23.2 145.8,-30.4 145.8,-30.4 145.8,-34 142.2,-37.6 138.6,-37.6"/>
+<text text-anchor="middle" x="81" y="-23.8" font-family="Helvetica,sans-Serif" font-size="10.00">v, r, s</text>
+</g>
+
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide" id="eip-1559-fee-mechanics"><h2 class="slide-title">EIP-1559 Fee Mechanics</h2><div class="slide-body">
+<ul>
+<li>Base fee adjusts per block to target 15M gas usage; burned each block.</li>
+<li>Users specify <code>max_fee_per_gas</code> and <code>max_priority_fee_per_gas</code> (tip to proposer).</li>
+<li>Effective gas price = <code>min(max_fee, base_fee + priority_fee)</code>.</li>
+<li>Overpaying refunds the difference between <code>max_fee</code> and actual fee to the sender.</li>
+</ul>
+</div></section>
+<section class="slide" id="gas-strategy-and-ux"><h2 class="slide-title">Gas Strategy and UX</h2><div class="slide-body">
+<ul>
+<li><code>gas_limit</code> must exceed expected execution cost; unused gas is refunded (minus intrinsic cost).</li>
+<li>Gas estimation relies on simulated execution; complex contracts may require manual buffers.</li>
+<li>Reverts still consume gas up to the failure point.</li>
+<li>Bundling actions into one transaction can save gas but raises failure risk.</li>
+<li>Builders/relays may enforce inclusion lists or filters – consider for MEV-aware design.</li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>MEV (Maximal Extractable Value):</strong> extra profit a block builder or validator can earn by choosing how to order, include, or exclude transactions.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="the-mempool"><h2 class="slide-title">The Mempool</h2><div class="slide-body">
+<ul>
+<li>When a user submits a transaction, it enters a local <strong>mempool</strong> (memory pool) – a holding area of unconfirmed transactions.</li>
+<li>The EL gossips new transactions to peers via devp2p; within seconds most nodes have a similar (but not identical) view.</li>
+<li>Transactions sit in the mempool <strong>sorted by effective gas price</strong>; builders pull the most profitable ones first.</li>
+<li>The mempool is <strong>public by default</strong> – anyone running a node can watch pending transactions in real time.
+<ul>
+<li>This visibility is what enables MEV: searchers monitor the mempool to find arbitrage, liquidation, and sandwich opportunities.</li>
+</ul></li>
+<li><strong>Private/direct submission:</strong> users can bypass the public mempool by sending transactions directly to builders (e.g. via Flashbots Protect), hiding their intent until the block is built.</li>
+<li>Each Ethereum account has a <strong>nonce</strong> (sequence number, not cryptographic) – a strict counter (0, 1, 2, …) that must increment by exactly one. Resubmitting with the same nonce and a higher fee <strong>replaces</strong> a stuck transaction.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="two-networks-one-chain"><h2 class="slide-title">Two Networks, One Chain</h2><div class="slide-body">
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li>The <strong>Consensus Layer (CL)</strong> runs the Beacon Chain: validator duties, fork-choice, and finality. It speaks <strong>libp2p</strong>.</li>
+<li>The <strong>Execution Layer (EL)</strong> runs the EVM, maintains world state, and manages the mempool. It speaks <strong>devp2p/RLPx</strong>.</li>
+<li>They are joined locally by the <strong>Engine API</strong> (JSON-RPC):
+<ul>
+<li><strong>CL sends EL:</strong> the execution payload (block header + transactions) and fork-choice state (head, safe, and finalized block hashes).</li>
+<li><strong>EL replies:</strong> <strong>VALID</strong> (executed, state root matches), <strong>INVALID</strong> (state root mismatch or bad transaction), or <strong>SYNCING</strong> (EL hasn’t caught up to the parent block yet).</li>
+</ul></li>
+<li>The CL uses this status to accept or reject the block for its fork-choice rule.</li>
+</ul>
+</div><div class="column" style="width:40%;">
+<figure class="diagram dot"><svg
+ viewBox="0.00 0.00 146.18 223.20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:195px">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 219.2)">
+<g id="node1" class="node">
+<path fill="#dbeafe" stroke="black" d="M98.13,-215.2C98.13,-215.2 17.07,-215.2 17.07,-215.2 12.13,-215.2 7.2,-210.27 7.2,-205.33 7.2,-205.33 7.2,-195.47 7.2,-195.47 7.2,-190.53 12.13,-185.6 17.07,-185.6 17.07,-185.6 98.13,-185.6 98.13,-185.6 103.07,-185.6 108,-190.53 108,-195.47 108,-195.47 108,-205.33 108,-205.33 108,-210.27 103.07,-215.2 98.13,-215.2"/>
+<text text-anchor="middle" x="57.6" y="-203.1" font-family="Helvetica,sans-Serif" font-size="9.00">Consensus Client</text>
+<text text-anchor="middle" x="57.6" y="-192.3" font-family="Helvetica,sans-Serif" font-size="9.00">(libp2p)</text>
+</g>
+
+<g id="node2" class="node">
+<path fill="#fef3c7" stroke="black" d="M46.87,-131.03C46.87,-131.03 10.73,-112.97 10.73,-112.97 5.37,-110.28 5.37,-104.92 10.73,-102.23 10.73,-102.23 46.87,-84.17 46.87,-84.17 52.23,-81.48 62.97,-81.48 68.33,-84.17 68.33,-84.17 104.47,-102.23 104.47,-102.23 109.83,-104.92 109.83,-110.28 104.47,-112.97 104.47,-112.97 68.33,-131.03 68.33,-131.03 62.97,-133.72 52.23,-133.72 46.87,-131.03"/>
+<text text-anchor="middle" x="57.6" y="-110.3" font-family="Helvetica,sans-Serif" font-size="9.00">Engine API</text>
+<text text-anchor="middle" x="57.6" y="-99.5" font-family="Helvetica,sans-Serif" font-size="9.00">(JSON&#45;RPC)</text>
+</g>
+
+<g id="edge1" class="edge">
+<path fill="none" stroke="black" d="M36.36,-185.41C31.73,-181.24 27.46,-176.25 24.9,-170.6 21.39,-162.82 22.17,-159.48 24.9,-151.4 26.65,-146.25 29.29,-141.22 32.33,-136.54"/>
+<polygon fill="black" stroke="black" points="34.99,-138.82 38.07,-128.69 29.34,-134.69 34.99,-138.82"/>
+<text text-anchor="middle" x="44.25" y="-158.6" font-family="Helvetica,sans-Serif" font-size="8.00">head block</text>
+</g>
+
+<g id="edge4" class="edge">
+<path fill="none" stroke="black" d="M63.12,-133.95C64.88,-145.18 66.04,-158.55 64.6,-170.6 64.46,-171.8 64.28,-173.02 64.08,-174.25"/>
+<polygon fill="black" stroke="black" points="60.73,-173.18 62.08,-183.69 67.58,-174.63 60.73,-173.18"/>
+<text text-anchor="middle" x="95.27" y="-163.4" font-family="Helvetica,sans-Serif" font-size="8.00">status +</text>
+<text text-anchor="middle" x="95.27" y="-153.8" font-family="Helvetica,sans-Serif" font-size="8.00"> &#160;latestValidHash</text>
+</g>
+
+<g id="node3" class="node">
+<path fill="#dcfce7" stroke="black" d="M98.13,-29.6C98.13,-29.6 17.07,-29.6 17.07,-29.6 12.13,-29.6 7.2,-24.67 7.2,-19.73 7.2,-19.73 7.2,-9.87 7.2,-9.87 7.2,-4.93 12.13,0 17.07,0 17.07,0 98.13,0 98.13,0 103.07,0 108,-4.93 108,-9.87 108,-9.87 108,-19.73 108,-19.73 108,-24.67 103.07,-29.6 98.13,-29.6"/>
+<text text-anchor="middle" x="57.6" y="-17.5" font-family="Helvetica,sans-Serif" font-size="9.00">Execution Client</text>
+<text text-anchor="middle" x="57.6" y="-6.7" font-family="Helvetica,sans-Serif" font-size="9.00">(devp2p)</text>
+</g>
+
+<g id="edge2" class="edge">
+<path fill="none" stroke="black" d="M35.88,-89.22C28.74,-82.17 21.67,-73.42 17.9,-63.8 14.78,-55.86 14.02,-52.2 17.9,-44.6 19.18,-42.08 20.81,-39.72 22.65,-37.54"/>
+<polygon fill="black" stroke="black" points="24.72,-40.4 29.58,-30.98 19.91,-35.32 24.72,-40.4"/>
+<text text-anchor="middle" x="44.25" y="-56.6" font-family="Helvetica,sans-Serif" font-size="8.00">block header +</text>
+<text text-anchor="middle" x="44.25" y="-47" font-family="Helvetica,sans-Serif" font-size="8.00">transactions</text>
+</g>
+
+<g id="edge3" class="edge">
+<path fill="none" stroke="black" d="M66.06,-29.98C68.32,-34.49 70.45,-39.62 71.6,-44.6 73.69,-53.67 72.88,-63.5 70.86,-72.6"/>
+<polygon fill="black" stroke="black" points="67.5,-71.59 68.18,-82.17 74.24,-73.48 67.5,-71.59"/>
+<text text-anchor="middle" x="105.5" y="-56.6" font-family="Helvetica,sans-Serif" font-size="8.00"> &#160;VALID / INVALID</text>
+<text text-anchor="middle" x="105.5" y="-47" font-family="Helvetica,sans-Serif" font-size="8.00">/ SYNCING</text>
+</g>
+</g>
+</svg></figure>
+</div>
+</div>
+</div></section>
+<section class="slide smaller" id="block-production-anatomy-of-a-slot"><h2 class="slide-title">Block Production: Anatomy of a Slot</h2><div class="slide-body">
+<p>Every 12 seconds, one validator is selected to propose a block. Here is the sequence:</p>
+<ol type="1">
+<li>The <strong>CL selects a proposer</strong> for this slot via the RANDAO-based shuffling algorithm.</li>
+<li>The proposer’s CL calls <code>engine_forkchoiceUpdatedV*</code> with <strong>payload attributes</strong>, telling its local EL: “start building a block.”</li>
+<li>The <strong>EL assembles an execution payload</strong> from its mempool – selecting transactions by effective gas price, respecting per-account nonce order.</li>
+<li>The CL retrieves the payload via <code>engine_getPayloadV*</code>, wraps it into a <strong>Beacon block</strong> (adding attestations, slashings, sync committee data), and <strong>signs</strong> it.</li>
+<li>The signed block is <strong>broadcast via libp2p</strong> GossipSub to the rest of the network.</li>
+<li><strong>Receiving validators</strong> pass the execution payload to their own EL via <code>engine_newPayloadV*</code>, which re-executes the transactions and returns VALID/INVALID/SYNCING.</li>
+<li>If VALID, the CL <strong>attests</strong> to the block, and after enough attestations accumulate, the block is <strong>justified</strong> and eventually <strong>finalized</strong>.</li>
+</ol>
+</div></section>
+<section class="slide smaller" id="nodes-and-clients"><h2 class="slide-title">Nodes and Clients</h2><div class="slide-body">
+<ul>
+<li>Execution clients (Geth, Nethermind, Besu, Erigon) run EVM and state transition.</li>
+<li>Consensus clients (Prysm, Lighthouse, Teku, Nimbus, Lodestar) run Beacon Chain logic.</li>
+<li>Three primary node types:
+<ul>
+<li><strong>Full node</strong> – runs both an execution and consensus client. Stores current state, verifies every new block. <em>Validators</em> pair a full node with a validator service to propose and attest. <em>Non-validating</em> full nodes verify independently without staking.</li>
+<li><strong>Archive node</strong> – a full node that also retains all historical state (terabytes). Required for queries like “what was this contract’s storage two years ago?” without recomputation.</li>
+<li><strong>Light client</strong> – stores only block headers and requests Merkle proofs on demand. Minimal resources, but depends on at least one honest full-node peer to serve proofs. Typically runs only a consensus light client; execution-layer light clients are still maturing (portal network).</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="client-diversity-pairing-practices"><h2 class="slide-title">Client Diversity &amp; Pairing Practices</h2><div class="slide-body">
+<ul>
+<li>Diversity mitigates correlated bugs, as shown in these examples involving Prysm:
+<ul>
+<li><strong>May 2023:</strong> Prysm and Teku clients choked on attestations with old target checkpoints, causing resource exhaustion.
+<ul>
+<li>Finality was lost for multiple epochs – the first time ever on mainnet – triggering Ethereum’s inactivity leak mechanism.</li>
+<li>Non-affected clients maintained the chain; patched in Prysm v4.0.4.</li>
+</ul></li>
+<li><strong>Dec 2025 (Fusaka upgrade):</strong> a bug in Prysm v7.0.0 caused nodes to reprocess stale attestations, exhausting CPU/memory.
+<ul>
+<li>~23% of validators affected; participation dropped to ~75% (nearly breaching the 2/3 finality threshold).</li>
+<li>~248 blocks missed over ~4.4 hours; validators lost ~382 ETH (~$1.18M).</li>
+<li>Resolved via an emergency runtime flag, then permanent fix later.</li>
+</ul></li>
+<li>In both cases, client diversity prevented a full finality failure.</li>
+</ul></li>
+<li>Community dashboards track share of each client combination.</li>
+<li>Some organizations run canary validators before upgrading production fleets.</li>
+</ul>
+</div></section>
+<section class="slide" id="sync-modes-data-availability"><h2 class="slide-title">Sync Modes &amp; Data Availability</h2><div class="slide-body">
+<ul>
+<li>Full sync replays blocks from genesis; resource-intensive but trust-minimized.</li>
+<li>Snap sync (geth/Nethermind) downloads state snapshots + verifies Merkle proofs.</li>
+<li>Archive mode retains historical state for each block – required for some analytics.</li>
+<li>Light clients track headers, request proofs on demand (in development via portal network).</li>
+<li>Checkpoint sync (post-Merge default) starts from a recent finalized checkpoint.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="execution-layer-networking-devp2p-rlpx"><h2 class="slide-title">Execution-Layer Networking (devp2p / RLPx)</h2><div class="slide-body">
+<ul>
+<li>The <strong>devp2p stack</strong> defines how Ethereum nodes discover, authenticate, and communicate.<br />
+</li>
+<li>It includes:
+<ul>
+<li><strong>Discovery (v4/v5):</strong> UDP-based peer discovery using Ethereum Node Records (ENRs).<br />
+</li>
+<li><strong>RLPx transport:</strong> session handshake, encryption, and multiplexing over TCP.<br />
+</li>
+<li><strong>Capability negotiation:</strong> peers advertise supported subprotocols (e.g., <code>eth/66</code>, <code>snap/1</code>).<br />
+</li>
+<li><strong>Subprotocol messaging:</strong> each capability defines its own message set and encoding.<br />
+</li>
+</ul></li>
+<li>Typical message types:
+<ul>
+<li><code>eth</code>: <code>NewBlock</code>, <code>NewBlockHashes</code>, <code>Transactions</code>, <code>GetBlockHeaders</code>, <code>GetBlockBodies</code>.<br />
+</li>
+<li><code>snap</code>: <code>GetAccountRange</code>, <code>GetStorageRanges</code>, etc. for fast state sync.<br />
+</li>
+</ul></li>
+<li>Peer scoring and limits protect against spam and eclipse attacks.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="aside-trust-mechanisms-in-ethereum-networking"><h2 class="slide-title">Aside: Trust Mechanisms in Ethereum Networking</h2><div class="slide-body">
+<ul>
+<li>Ethereum clients operate in an <strong>open, permissionless network</strong> – every peer connection must be <em>evaluated</em> for trustworthiness.</li>
+<li>Remember the peer scoring and reputation models from our trust and P2P lectures? Ethereum clients implement exactly those ideas.</li>
+<li><strong>Examples of peer-scoring behavior:</strong>
+<ul>
+<li>Responds correctly to requests: score increases.<br />
+</li>
+<li>Serves stale or malformed data: score decreases.<br />
+</li>
+<li>Floods invalid transactions or blocks: large penalty or disconnect.<br />
+</li>
+<li>Fails to respond or times out repeatedly: moderate penalty.<br />
+</li>
+<li>Maintains reliable connection and valid data exchange: slow positive drift.</li>
+</ul></li>
+<li><strong>Client implementations:</strong>
+<ul>
+<li><em>Geth</em> uses numeric reputation scores (−3000 to +100).<br />
+</li>
+<li><em>Nethermind</em> and <em>Erigon</em> use adaptive credit and bucket models.<br />
+</li>
+<li><em>Besu</em> tiers peers into trust levels with exponential backoff for misbehavior.</li>
+</ul></li>
+</ul>
+</div></section>
+<section class="slide smaller" id="consensus-layer-networking-libp2p-gossipsub"><h2 class="slide-title">Consensus-Layer Networking (libp2p / GossipSub)</h2><div class="slide-body">
+<ul>
+<li>The <strong>consensus layer</strong> (Beacon Chain) uses libp2p, a modular P2P framework from IPFS.<br />
+</li>
+<li>libp2p provides:
+<ul>
+<li><strong>Transports:</strong> TCP, QUIC, or WebSockets for secure, multiplexed connections.<br />
+</li>
+<li><strong>Encryption:</strong> Noise or TLS handshakes for authenticated channels.<br />
+</li>
+<li><strong>Peer discovery:</strong> via bootnodes, DNS records, or discovery topics.<br />
+</li>
+<li><strong>Pub/Sub overlay:</strong> <strong>GossipSub</strong> for message dissemination.<br />
+</li>
+</ul></li>
+<li>GossipSub organizes messages by topics:
+<ul>
+<li>Beacon blocks, attestations, sync committees, voluntary exits, etc.<br />
+</li>
+</ul></li>
+<li>Each topic forms a rotating <strong>mesh</strong> of peers to balance bandwidth, diversity, and resilience.</li>
+</ul>
+</div></section>
+<section class="slide smaller" id="maximal-extractable-value-mev"><h2 class="slide-title">Maximal Extractable Value (MEV)</h2><div class="slide-body">
+<ul>
+<li><p><strong>MEV</strong> is the extra profit a block producer (builder or validator) can earn by <strong>choosing how to order, include, or exclude</strong> transactions in a block.</p></li>
+<li><p><strong>Arbitrage</strong> – exploit price gaps between DEXes.</p>
+<ul>
+<li><em>Ex: token at 100 DAI on Uniswap, 102 on Sushiswap.</em></li>
+</ul></li>
+<li><p><strong>Liquidations</strong> – seize undercollateralized loans.</p>
+<ul>
+<li><em>Ex: Aave loan below threshold; liquidator gets 5% discount.</em></li>
+</ul></li>
+<li><p><strong>Sandwich attacks</strong> – front/back-run a user’s swap.</p>
+<ul>
+<li><em>Ex: buy before Alice’s swap, sell after, profit on price move.</em></li>
+</ul></li>
+<li><p><strong>Censorship/delay</strong> – withhold transactions for advantage.</p>
+<ul>
+<li><em>Ex: delay oracle update to profit from stale prices.</em></li>
+</ul></li>
+</ul>
+<div class="callout-note" data-appearance="simple">
+<p><strong>DeFi terms:</strong> <strong>DEX</strong> = decentralized exchange (e.g. Uniswap). <strong>DAI</strong> = USD-pegged stablecoin. <strong>Aave</strong> = decentralized lending protocol.</p>
+</div>
+</div></section>
+<section class="slide smaller" id="builder-relay-stack-and-mev"><h2 class="slide-title">Builder / Relay Stack and MEV</h2><div class="slide-body">
+<ul>
+<li><strong>Goal:</strong> separate <em>block proposing</em> (validator duty) from <em>block building</em> (searching for profitable transaction orderings).</li>
+</ul>
+<ol type="1">
+<li><strong>Searchers</strong> Off-chain actors scanning the mempool for <strong>MEV opportunities</strong>.
+<ul>
+<li>Submit <em>bundles</em> of transactions with bid values to <strong>builders</strong>.</li>
+</ul></li>
+<li><strong>Builders</strong> <em>(off-chain)</em>
+<ul>
+<li>Aggregate normal txs + MEV bundles to <strong>assemble full blocks</strong> with estimates of value/gas use.</li>
+</ul></li>
+<li><strong>Relays</strong> <em>(off-chain coordination services)</em>
+<ul>
+<li>Receive built blocks, verify validity, and <strong>blindly forward block headers</strong> (hash + bid value) to validators running <strong>MEV-Boost</strong>.</li>
+</ul></li>
+<li><strong>Validators (Proposers)</strong> <em>(on L1 consensus layer)</em>
+<ul>
+<li>Run <strong>MEV-Boost</strong> client alongside their validator software.<br />
+</li>
+<li>After signature, relay releases the full block body for inclusion.</li>
+</ul></li>
+</ol>
+<ul>
+<li>MEV Demo here: <a href="/assets/labs/ether_mev/mev_builders.html">/assets/labs/ether_mev/</a></li>
+</ul>
+</div></section>
+<section class="slide" id="conclusion-putting-it-all-together"><h2 class="slide-title">Conclusion: Putting It All Together</h2><div class="slide-body">
+<ul>
+<li><strong>Transactions and Execution:</strong> EOA -&gt; mempools -&gt; EVM execution.<br />
+</li>
+<li><strong>Networking:</strong> Distinct but coordinated P2P networks:
+<ul>
+<li>The <strong>execution layer (devp2p/RLPx)</strong> gossips transactions and execution payloads.<br />
+</li>
+<li>The <strong>consensus layer (libp2p/GossipSub)</strong> spreads attestations, block proposals, and sync data.<br />
+</li>
+</ul></li>
+<li><strong>Economic Design:</strong> base fees that burn ETH and priority tips reward inclusion.</li>
+</ul>
+<p><strong>Next:</strong> we look at what runs inside those execution payloads – smart contracts and Solidity.</p>
+</div></section>
+<section class="slide unnumbered" id="references"><h2 class="slide-title">References</h2><div class="slide-body">
+
+</div></section>
+<section class="slide sources" id="sources"><h2 class="slide-title">Sources</h2><div class="slide-body">
+<div id="ref-ethereum.org_transactionsdeveloperdocs_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">Ethereum.org, <span>“Transactions — <span>Developer Docs</span>.”</span> 2025. Available: <a href="https://ethereum.org/en/developers/docs/transactions/">https://ethereum.org/en/developers/docs/transactions/</a></div>
+</div>
+<div id="ref-ethereum.org_networksdeveloperdocs_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">Ethereum.org, <span>“Networks — <span>Developer Docs</span>.”</span> 2025. Available: <a href="https://ethereum.org/en/developers/docs/networks/">https://ethereum.org/en/developers/docs/networks/</a></div>
+</div>
+<div id="ref-go-ethereumgeth_gettingstarted_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">Go-Ethereum (Geth), <span>“Getting <span>Started</span>.”</span> 2025. Available: <a href="https://geth.ethereum.org/docs/getting-started">https://geth.ethereum.org/docs/getting-started</a></div>
+</div>
+<div id="ref-ethereumorg_jsonrpcapi_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">Ethereum.org, <span>“JSON-RPC API.”</span> Accessed: Mar. 18, 2026. [Online]. Available: <a href="https://ethereum.org/en/developers/docs/apis/json-rpc/">https://ethereum.org/en/developers/docs/apis/json-rpc/</a></div>
+</div>
+<div id="ref-ethereum.org_nodesclientsdeveloper_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">Ethereum.org, <span>“Nodes and <span>Clients</span> — <span>Developer Docs</span>.”</span> 2025. Available: <a href="https://ethereum.org/en/developers/docs/nodes-and-clients/">https://ethereum.org/en/developers/docs/nodes-and-clients/</a></div>
+</div>
+<div id="ref-buterin_eip1559feemarket_2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">V. Buterin, E. Conner, R. Dudley, M. Slipper, I. Norden, and A. Bakhta, <span>“<span>EIP-1559</span>: <span>Fee</span> market change for <span>ETH</span> 1.0 chain.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://eips.ethereum.org/EIPS/eip-1559">https://eips.ethereum.org/EIPS/eip-1559</a></div>
+</div>
+<div id="ref-ethereum.org_gasfeesdeveloper_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">Ethereum.org, <span>“Gas and <span>Fees</span> — <span>Developer Docs</span>.”</span> 2025. Available: <a href="https://ethereum.org/en/developers/docs/gas/">https://ethereum.org/en/developers/docs/gas/</a></div>
+</div>
+<div id="ref-flashbotsltd_flashbots_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">Flashbots, Ltd, <span>“Flashbots.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://www.flashbots.net">https://www.flashbots.net</a></div>
+</div>
+<div id="ref-ethereumdevelopers_proofofstakepos_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">Ethereum Developers, <span>“Proof-of-stake (<span>PoS</span>).”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://ethereum.org/developers/docs/consensus-mechanisms/pos/">https://ethereum.org/developers/docs/consensus-mechanisms/pos/</a></div>
+</div>
+<div id="ref-ethereumdevelopers_blockproposal_2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">Ethereum Developers, <span>“Block proposal.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://ethereum.org/developers/docs/consensus-mechanisms/pos/block-proposal/">https://ethereum.org/developers/docs/consensus-mechanisms/pos/block-proposal/</a></div>
+</div>
+<div id="ref-etheralpha_clientdiversityethereum_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">Ether Alpha, <span>“Client <span>Diversity</span> | <span>Ethereum</span>.”</span> Accessed: Oct. 27, 2025. [Online]. Available: <a href="https://clientdiversity.org">https://clientdiversity.org</a></div>
+</div>
+<div id="ref-offchain_ethereumbeaconchain_2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">Beaconcha.in, <span>“Ethereum <span>Beacon Chain</span> epochs 200750–200756: <span>Finality</span> issues.”</span> Accessed: Mar. 27, 2026. [Online]. Available: <a href="https://beaconcha.in/epoch/200752">https://beaconcha.in/epoch/200752</a></div>
+</div>
+<div id="ref-hristov_ethereumvalidatorslost_2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">M. Hristov, <span>“Ethereum <span>Validators Lost Over</span> $1 <span>Million</span> to <span>Prysm Bug</span>.”</span> Accessed: Mar. 27, 2026. [Online]. Available: <a href="https://beincrypto.com/ethereum-validators-lost-over-1-million-to-prysm-bug/">https://beincrypto.com/ethereum-validators-lost-over-1-million-to-prysm-bug/</a></div>
+</div>
+</div></section>
+</div>
+</main>
+<script src="notes.js?v=2e0e1e97d948"></script>
+<script>Kit.runLesson();</script>
+</body>
+</html>
